@@ -20,6 +20,14 @@ Stack: Python, Polymarket Gamma/CLOB APIs, Claude or OpenAI API.
 Session start order: ../AGENTS.md -> ../docs/service-design/README.md -> ../docs/tech-design/README.md
 (Sections 6-10) -> tasks/active.md -> ../standards.md
 
+Before implementation:
+- Check tasks/active.md.
+- Select a task assigned to your role or agent name.
+- Confirm the task ID, owner, assignee, branch, and status.
+- Create or switch to branch: [role]/[TASK-ID]-[short-slug].
+- Do not commit directly to main/master.
+- If the task requires approval under AGENTS.md, stop and ask the user first.
+
 Implementation principles:
 - Metrics: change_24h/7d = price(now) - price(now-window); if fewer data
   points than the window requires, set the field null and
