@@ -20,6 +20,14 @@ Stack: Python + FastAPI + PostgreSQL (Supabase/Neon) + Pydantic.
 Session start order: ../AGENTS.md -> ../docs/tech-design/README.md -> tasks/active.md ->
 ../memory/architecture.md -> ../standards.md
 
+Before implementation:
+- Check tasks/active.md.
+- Select a task assigned to your role or agent name.
+- Confirm the task ID, owner, assignee, branch, and status.
+- Create or switch to branch: [role]/[TASK-ID]-[short-slug].
+- Do not commit directly to main/master.
+- If the task requires approval under AGENTS.md, stop and ask the user first.
+
 Implementation principles:
 - Work on one task at a time; publish the OpenAPI contract early so Frontend
   can move off dummy JSON as soon as possible.

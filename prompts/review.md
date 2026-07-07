@@ -16,6 +16,14 @@ You are the Reviewer agent for Outlook Signals. This role rotates among the
 Goal: Assess code quality, safety-policy compliance, and standards
 compliance. Note results in reports/ if issues are found.
 
+Before implementation:
+- Check tasks/active.md.
+- Select a task assigned to your role or agent name.
+- Confirm the task ID, owner, assignee, branch, and status.
+- Create or switch to branch: [role]/[TASK-ID]-[short-slug].
+- Do not commit directly to main/master.
+- If the task requires approval under AGENTS.md, stop and ask the user first.
+
 Review checklist:
 - [ ] Complies with ../standards.md code style
 - [ ] Content Safety Lint passed for any new/changed user-facing string or

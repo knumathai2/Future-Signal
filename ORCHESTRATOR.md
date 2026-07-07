@@ -13,6 +13,73 @@ Five-day hackathon, four people. These playbooks assume each role above is a per
 
 ---
 
+## PM Task Assignment Workflow
+
+Run this workflow at the start of each project day before implementation begins.
+
+```
+[PM/Planner]  Review tasks/backlog.md for today's planned work
+    ↓
+Move selected work into tasks/active.md
+    ↓
+For each active task, assign Owner, Assignee, Branch, and Status
+    ↓
+[Role Agent]  Select only work assigned to its role or explicit Assignee
+    ↓
+Confirm or create the listed Branch before starting work
+    ↓
+On completion, move the task to tasks/completed.md during Session End Checklist
+```
+
+Rules:
+
+- PM checks `tasks/backlog.md` before daily work starts.
+- PM moves only today's selected work into `tasks/active.md`.
+- Each active task must include `Owner`, `Assignee`, `Branch`, and `Status`.
+- `Assignee` uses role names, not individual names.
+- `Status` must be one of: `assigned`, `in_progress`, `blocked`, `review`, `completed`.
+- Each role works only on tasks assigned to its role or explicit Assignee.
+- Before any implementation, the worker confirms the current branch or creates/switches to the branch listed in `tasks/active.md`.
+- Completed work moves from `tasks/active.md` to `tasks/completed.md` as part of the Session End Checklist.
+- No one commits directly to `main` or `master`.
+
+## Automation Script Design
+
+These scripts are design targets only until explicitly implemented. Default behavior must always be preview-only. File writes and git branch operations are allowed only through a separate approval option or explicit user confirmation.
+
+### `scripts/assign_tasks.py --day 1`
+
+Purpose: assign planned work for a given project day from `tasks/backlog.md` into `tasks/active.md`.
+
+Responsibilities:
+
+- Read `tasks/backlog.md`.
+- Find tasks matching the provided `--day` value.
+- Select eligible work by `Owner`.
+- Fill `Assignee` from the role mapping.
+- Generate `Branch` using `[role-prefix]/[TASK-ID]-[short-kebab-slug]`.
+- Set `Status` to `assigned`.
+- Print a preview of proposed `tasks/active.md` changes before writing.
+- Require PM approval before modifying task files.
+
+### `scripts/start_task.py TASK-005`
+
+Purpose: help a role agent start the correct active task on the correct branch.
+
+Responsibilities:
+
+- Accept a `TASK-ID` or `ISS-ID`.
+- Find the matching row in `tasks/active.md`.
+- Display `ID`, `Task`, `Owner`, `Assignee`, `Branch`, and `Status`.
+- Check the current git branch.
+- If already on the listed branch, confirm readiness.
+- If not, propose the needed git switch/create command.
+- Never run git branch commands by default.
+- Execute git commands only after explicit user approval.
+- Refuse direct work on `main` or `master`.
+
+---
+
 ## Feature Workflow (Day 1–4 build work)
 
 ```
