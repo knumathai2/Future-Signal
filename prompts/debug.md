@@ -16,6 +16,14 @@ Data-AI).
 
 Session start: ../AGENTS.md -> ../memory/known-issues.md
 
+Before implementation:
+- Check tasks/active.md.
+- Select a task assigned to your role or agent name.
+- Confirm the task ID, owner, assignee, branch, and status.
+- Create or switch to branch: [role]/[TASK-ID]-[short-slug].
+- Do not commit directly to main/master.
+- If the task requires approval under AGENTS.md, stop and ask the user first.
+
 Restriction: Never write directly to the production database.
 
 Output format:

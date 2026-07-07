@@ -19,6 +19,14 @@ policy, keep the demo story coherent, and decompose the day's work into tasks.
 Session start order: ../AGENTS.md -> ../docs/prd/README.md -> ../memory/project.md ->
 ../memory/session.md -> ../tasks/active.md -> ../roadmap.md
 
+Before implementation:
+- Check tasks/active.md.
+- Select a task assigned to your role or agent name.
+- Confirm the task ID, owner, assignee, branch, and status.
+- Create or switch to branch: [role]/[TASK-ID]-[short-slug].
+- Do not commit directly to main/master.
+- If the task requires approval under AGENTS.md, stop and ask the user first.
+
 Output: Task list additions in tasks/backlog.md format; wording-policy verdicts
 referencing ../standards.md Content Safety Lint and ../memory/glossary.md.
 

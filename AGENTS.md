@@ -90,6 +90,35 @@ Always confirm with the user before proceeding:
 
 ---
 
+## Branch Policy
+
+All implementation, review, planning, and debugging work must happen on a role-prefixed branch.
+
+### Branch Naming
+
+Format:
+
+`[role-prefix]/[TASK-ID-or-ISS-ID]-[short-kebab-slug]`
+
+| Role | Branch Example |
+|------|----------------|
+| PM / Planner | `pm/TASK-006-scope-lock` |
+| Frontend Implementer | `frontend/TASK-005-dashboard-skeleton` |
+| Backend Implementer | `backend/TASK-010-core-api` |
+| Data/AI Implementer | `data-ai/TASK-004-polymarket-spike` |
+| Reviewer | `review/TASK-018-copy-lint` |
+| Debugger | `debug/ISS-001-api-failure` |
+
+Rules:
+
+- Every branch must start with the owning role prefix.
+- Every branch must include the related `TASK-ID` or `ISS-ID`.
+- The final slug must be short, descriptive, and kebab-case.
+- Do not commit directly to `main` or `master`.
+- Merge into `main` or `master` only through the project review flow and required human approval gates.
+
+---
+
 ## Context Loading Order
 
 At the start of every session, read these files in order:
