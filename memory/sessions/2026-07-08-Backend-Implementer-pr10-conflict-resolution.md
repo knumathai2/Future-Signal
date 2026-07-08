@@ -1,15 +1,11 @@
 <!--
-Purpose:        Current session state — context handoff among agents
-Owner:          Currently active agent
-Update Trigger: Read at session start; must update before session ends
+Purpose:        Archived session state
+Owner:          Backend Implementer
+Update Trigger: Session archive
 Harness Version: 1.1
 -->
 
-# Current Session — Outlook Signals
-
-> After this session, copy this file to `memory/sessions/YYYY-MM-DD-[ROLE].md`.
-
----
+# Session Archive — PR #10 Conflict Resolution
 
 ## Session Info
 
