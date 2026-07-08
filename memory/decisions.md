@@ -219,3 +219,17 @@ _Last updated: 2026-07-08_
 **Rationale**: TASK-008/TASK-010 need a stable handoff contract, while fallback/display consumers must not accidentally render raw external source text.
 **Trade-offs**: The sample description is intentionally generic until a later, policy-reviewed description-generation path exists.
 **Consequences**: The refreshed 50-record `normalized_samples.json` has no null required fields, all top-level descriptions are strings, and invalid candidates are quarantined rather than producing partial normalized records.
+
+---
+
+### ADR-015: TASK-008 bootstraps `markets`/`market_outcomes` rows and ships a P0-only metric set
+
+- **Date**: 2026-07-08
+- **Status**: Accepted
+- **Decided by**: Data/AI Implementer
+
+**Context**: Technical Design §6 steps 3-5 (`app/core/snapshot_metrics.py`) need a stable `markets.id` UUID to write `market_snapshots`/`market_metrics` rows against, but TASK-007's normalize step (steps 1-2) never touches the database - it only produces normalized dicts/JSON, confirmed by `collector.py` having zero SQLAlchemy imports. No other task in `tasks/active.md` claims ownership of populating `markets`/`market_outcomes` from normalized data. Separately, Service Design §5's metric table marks `change_24h`, `change_7d`, the simplified "market confidence score," and the simplified "issue heat score" as P0, while `volatility_score`, `attention_score`, and a `caution_low_activity`/`caution_high_volatility` confidence split are P1 or an open design question (`known-issues.md`'s "Minimum volume/liquidity floor" item).
+**Decision**: (1) `snapshot_metrics.py` does a minimal get-or-create of `markets` (by `polymarket_condition_id`) and its one tracked `market_outcomes` row as plumbing inside steps 3-4, updating only `markets.last_seen_at`/`status` in place (the one exception to append-only per §4.10) - no new table or column. (2) `market_metrics.confidence_level` is populated with only `sufficient`/`insufficient_data` this task; `caution_low_activity`/`caution_high_volatility` are left unused pending the open volume/liquidity-floor decision. (3) `heat_score` uses a placeholder bounded formula (`|change_24h| * 500 + min(volume_24h / 50, 30)`, capped at 100); `volatility_score`/`attention_score` are always `null` (P1, not computed).
+**Rationale**: Building markets/outcomes rows here is the only place in the current step 1-8 pipeline where it can happen without inventing a new task; it satisfies the existing schema's FK contract rather than adding a feature. Withholding `caution_low_activity` avoids fabricating an un-approved policy threshold under the project's no-fabrication rule, applied to thresholds as well as data. The heat_score formula is explicitly sanctioned as a starting point by Service Design §5 ("can start as a simple weighted rank... don't need full composite v1") and by `known-issues.md`'s existing "heat_score weighting formula - start simple, tune once real data is visible" note.
+**Trade-offs**: `confidence_level` currently only distinguishes "have a 24h change" from "don't" - it does not yet flag a technically-sufficient-history market that's actually low-volume/thin or high-volatility. `heat_score` values are not yet tuned against real batch behavior.
+**Consequences**: TASK-009's `±5pp` threshold detector can rely on `change_24h` as implemented. A future task should resolve the volume/liquidity floor open question and add `volatility_score` before `caution_low_activity`/`caution_high_volatility` can be populated - tracked in `known-issues.md`.
