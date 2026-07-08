@@ -20,18 +20,26 @@ Based on testing the `/events` endpoint:
 - **History Token**: The token for the "Yes" outcome (first token in `clobTokenIds`) is captured as `price_history_token` to be used for charting price histories.
 - **Price History Source**: Set to `CLOB` to indicate that price history will be fetched via the Polymarket CLOB API using the history token.
 
-## 3. Pagination Behavior
+## 3. CLOB Price History Validation
+- **Endpoint**: `GET https://clob.polymarket.com/prices-history`
+- **Reference**: https://docs.polymarket.com/api-reference/markets/get-prices-history
+- **Query shape**: `market=<clobTokenId>&interval=1w&fidelity=60`
+- **Observed response**: `{"history": [{"t": <unix timestamp seconds>, "p": <price number>}, ...]}`
+- **Sample fixture**: `clob_prices_history_sample.json` records a successful response for `market_id=691547` with 169 hourly-ish points.
+- **Implementation note**: Official Polymarket docs use the query parameter name `market`, but it takes the CLOB token/asset id from `clobTokenIds`.
+
+## 4. Pagination Behavior
 The Gamma API supports standard `limit` and `offset` query parameters.
 - Example: `?limit=10&offset=20` retrieves 10 items skipping the first 20.
 - No special pagination headers were observed in the response.
 
-## 4. Rate-Limit Observations
+## 5. Rate-Limit Observations
 - A rapid test of 30 requests at 10 requests per second completed with a 100% success rate (all 200 OK).
 - The API does not return standard `X-RateLimit-*` headers.
 - Conclusion: Practical rate limits are sufficiently high for a 5-day hackathon MVP's batch collector running at a reasonable interval.
 
-## 5. Known Issues / Missing Fields
+## 6. Known Issues / Missing Fields
 - `resolutionSource`: Often empty or missing in both the event and market data.
 - `current_value`: Requires parsing from `outcomePrices` string array.
-- CLOB `prices-history` response shape still needs validation before collector wiring.
 - **Data Hygiene**: The raw Gamma API often includes product-unsafe prediction framing in titles and tags, requiring separation into display-safe `ui_display` fields.
+- **Sample scope**: Personal entertainment / celebrity markets are excluded from sample generation so fixtures stay aligned with the product's global-issue framing.

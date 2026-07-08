@@ -1,5 +1,15 @@
 import json
 
+EXCLUDED_SAMPLE_TAG_SLUGS = {
+    "celebrities",
+    "culture",
+    "music",
+    "pop-culture",
+    "taylor-swift",
+}
+
+EXCLUDED_SAMPLE_TITLE_TERMS = ("pregnant",)
+
 
 def parse_float(value):
     if value in (None, ""):
@@ -17,6 +27,21 @@ def process_samples():
     for item in data:
         if len(samples) >= 10:
             break
+
+        raw_tags = item.get("tags") or []
+        tag_slugs = {
+            (tag.get("slug") or "").lower()
+            for tag in raw_tags
+            if isinstance(tag, dict)
+        }
+        title_text = " ".join(
+            value or ""
+            for value in (item.get("title"), item.get("description"))
+        ).lower()
+        if tag_slugs & EXCLUDED_SAMPLE_TAG_SLUGS or any(
+            term in title_text for term in EXCLUDED_SAMPLE_TITLE_TERMS
+        ):
+            continue
 
         # active binary market check:
         # Polymarket events usually contain "markets", and binary ones have outcomes ["Yes", "No"]
@@ -48,8 +73,6 @@ def process_samples():
         market = valid_market
         clob_token_ids = json.loads(market.get("clobTokenIds", "[]"))
         history_token = clob_token_ids[0] if clob_token_ids else None
-
-        raw_tags = item.get("tags") or []
 
         sample = {
             "id": item.get("id"),

@@ -40,7 +40,6 @@ Not bugs, but unresolved decisions that will surface as real blockers during the
 ## Known Data Issues
 
 - `resolutionSource`: Often empty or missing in both the event and market data. (Found during TASK-004 spike)
-- CLOB `prices-history` response shape still needs validation before collector wiring.
 
 
 ## Issue Template

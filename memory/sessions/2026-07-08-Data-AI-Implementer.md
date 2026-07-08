@@ -18,7 +18,7 @@ Harness Version: 1.1
 - [x] Switched to `data-ai/TASK-004-polymarket-spike`.
 - [x] Read `AGENTS.md`, PRD, Technical Design, Service Design, and prompts.
 - [x] Processed 10 representative active binary market samples and saved to `polymarket_samples.json`.
-- [x] Created `reports/polymarket-spike-findings.md` documenting fields and rate limits.
+- [x] Created `reports/polymarket-spike-findings.md` documenting fields, rate limits, and CLOB price-history shape.
 - [x] Moved `TASK-004` from `tasks/active.md` to `tasks/completed.md`.
 - [x] Added `resolutionSource` missing-data observation to `memory/known-issues.md`.
 
@@ -26,8 +26,9 @@ Harness Version: 1.1
 
 - `resolutionSource` is often empty or missing in public data. Backend/frontend should not rely on this field being populated.
 - Gamma API does not return standard rate-limit headers but handled 10 requests per second during the spike. Pagination uses `limit` and `offset`.
+- CLOB `prices-history` returns `history` points shaped as `{t, p}`; sample response saved in `clob_prices_history_sample.json`.
 
 ## Next Steps
 
 1. Backend and frontend can use `polymarket_samples.json` as a Day 2 sample fixture.
-2. Data/AI should validate actual CLOB price-history response shape before the production collector depends on it.
+2. Data/AI should wire collector history parsing against the documented `{t, p}` shape.

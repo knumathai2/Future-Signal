@@ -13,6 +13,7 @@ def sanitize_json(file_path):
                 'resolvedBy',
                 'proxyAddress',
                 'address',
+                'assetAddress',
             ]
             for k in keys_to_delete:
                 if k in node:
