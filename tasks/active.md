@@ -18,7 +18,7 @@ Day 2 work is assigned as of 2026-07-08. The goal is to connect the real data pa
 | TASK-007 | Batch collector: fetch + normalize (steps 1-2) | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-007-fetch-normalize` | review |
 | TASK-008 | Batch collector: snapshot + metrics (steps 3-5) | Data/AI Implementer + Backend | Data/AI Implementer + Backend Implementer | `data-ai/TASK-008-snapshot-metrics` | assigned |
 | TASK-009 | Expectation-shift detection (±5pp threshold) | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-009-shift-detection` | assigned |
-| TASK-010 | `/api/issues`, `/api/issues/:id`, `/api/issues/:id/history` | Backend Implementer | Backend Implementer | `backend/TASK-010-core-api` | assigned |
+| TASK-010 | `/api/issues`, `/api/issues/:id`, `/api/issues/:id/history` | Backend Implementer | Backend Implementer | `backend/TASK-010-core-api` | review |
 | TASK-012 | Home dashboard UI (ranked issue cards) | Frontend Implementer | Frontend Implementer | `frontend/TASK-012-dashboard-ranking` | assigned |
 
 `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-011`, and `TASK-031` completed 2026-07-08 — see `tasks/completed.md`.
