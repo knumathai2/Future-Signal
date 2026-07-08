@@ -1,0 +1,1078 @@
+[
+  {
+    "id": "16183",
+    "market_id": "691547",
+    "raw_data": {
+      "title": "Kraken IPO by December 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if Kraken completes an Initial Public Offering (IPO) by the listed date ET, as confirmed by official company announcements and credible news sources. Otherwise, this market will resolve to \"No.\"\n\nThe IPO refers to the first sale of stock by the listed company to the public on any recognized stock exchange.\n\nIf Kraken is acquired by another company that is already public, this market will immediately resolve to \"No.\"\n\nThe resolution source for this market is a consensus of credible reporting.",
+      "event_title": "Kraken IPO by ___ ?",
+      "event_description": "This market will resolve to \"Yes\" if Kraken (US-based cryptocurrency exchange) completes an Initial Public Offering (IPO) by December 31, 2025, 11:59 PM ET, as confirmed by official company announcements or credible news sources. The IPO refers to the first sale of stock by Kraken to the public on any recognized stock exchange.\n\nIf Kraken merges with another entity, is acquired, or ceases to exist before the market resolves, the market will also resolve to \"No\".\n\nThis market will resolve early if Kraken completes an IPO by December 31, 2025, 11:59 PM ET.\n\nThe resolution source for this market is a consensus of credible reporting.",
+      "category_tag": [
+        {
+          "id": "21",
+          "label": "Crypto",
+          "slug": "crypto",
+          "forceShow": false,
+          "publishedAt": "2023-11-02 21:03:54.55+00",
+          "updatedBy": 15,
+          "createdAt": "2023-11-02T21:03:54.564Z",
+          "updatedAt": "2026-03-09T22:28:03.349847Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "101300",
+          "label": "exchange",
+          "slug": "exchange",
+          "createdAt": "2024-11-21T17:09:30.941319Z",
+          "updatedAt": "2026-04-17T21:11:05.93931Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "120",
+          "label": "Finance",
+          "slug": "finance",
+          "forceShow": false,
+          "publishedAt": "2023-11-02 21:22:21.615+00",
+          "createdAt": "2023-11-02T21:22:21.62Z",
+          "updatedAt": "2026-04-17T20:17:43.066649Z",
+          "isCarousel": false,
+          "requiresTranslation": false
+        },
+        {
+          "id": "107",
+          "label": "Business",
+          "slug": "business",
+          "forceShow": false,
+          "publishedAt": "2023-11-02 21:20:37.48+00",
+          "createdAt": "2023-11-02T21:20:37.488Z",
+          "updatedAt": "2026-04-17T20:26:28.786983Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "101588",
+          "label": "2025 Predictions",
+          "slug": "2025-predictions",
+          "forceShow": false,
+          "createdAt": "2024-12-30T20:11:13.144816Z",
+          "updatedAt": "2026-04-15T20:30:55.933838Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "102137",
+          "label": "Featured",
+          "slug": "featured",
+          "forceShow": true,
+          "createdAt": "2025-05-16T09:58:40.682219Z",
+          "updatedAt": "2026-04-17T20:26:28.761286Z",
+          "isCarousel": false,
+          "requiresTranslation": false
+        },
+        {
+          "id": "600",
+          "label": "IPOs",
+          "slug": "ipos",
+          "forceShow": false,
+          "publishedAt": "2023-11-30 16:53:29.136+00",
+          "createdAt": "2023-11-30T16:53:29.141Z",
+          "updatedAt": "2026-04-17T20:24:27.888545Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "105297",
+          "label": "Crypto Listings",
+          "slug": "crypto-listings",
+          "createdAt": "2026-06-09T20:34:36.11836Z",
+          "updatedAt": "2026-06-09T20:35:01.983304Z",
+          "requiresTranslation": false
+        }
+      ],
+      "resolution_source": ""
+    },
+    "ui_display": {
+      "neutral_title": "Outlook on this issue",
+      "neutral_tags": [
+        {
+          "label": "Issue change",
+          "slug": "issue-change"
+        },
+        {
+          "label": "Public data",
+          "slug": "public-data"
+        }
+      ]
+    },
+    "metrics": {
+      "current_value": 0.27,
+      "volume": 545031.3013150019,
+      "liquidity": 5137.6916
+    },
+    "clobTokenIds": [
+      "34626184950254225208692030156208941308358060420950772251072421141618169142241",
+      "28557614648090529004584076028720900603196666949274543515794672175624115225556"
+    ],
+    "price_history_token": "34626184950254225208692030156208941308358060420950772251072421141618169142241",
+    "price_history_source": "CLOB",
+    "created_at": "2025-11-19T15:48:14.624315Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2027-01-01T05:00:00Z",
+    "event_created_at": "2024-12-31T18:18:36.692417Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2027-01-01T05:00:00Z"
+  },
+  {
+    "id": "16263",
+    "market_id": "2694508",
+    "raw_data": {
+      "title": "Macron out by July 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if Emmanuel Macron ceases to be President of France for any length of time between market creation and July 31, 2026, 11:59 PM ET (inclusive). Otherwise, this market will resolve to \"No\".\n\nIf Macron departs from office before the expiry date, the market should resolve immediately.\n\nThe primary resolution source for this market will be information from the government of France, however a consensus of credible reporting will also be used.",
+      "event_title": "Macron out by...?",
+      "event_description": "This market will resolve to \"Yes\" if Emmanuel Macron ceases to be President of France for any length of time between January 2 and December 31, 2025, 11:59 PM ET (inclusive). Otherwise, this market will resolve to \"No\".\n\nIf Macron departs from office before the expiry date, the market should resolve immediately.\n\nThe primary resolution source for this market will be information from the government of France, however a consensus of credible reporting will also be used.",
+      "category_tag": [
+        {
+          "id": "1378",
+          "label": "France",
+          "slug": "france",
+          "forceShow": false,
+          "publishedAt": "2024-02-21 00:21:54.303+00",
+          "createdAt": "2024-02-21T00:21:54.404Z",
+          "updatedAt": "2026-04-17T20:46:36.664748Z",
+          "isCarousel": false,
+          "requiresTranslation": false
+        },
+        {
+          "id": "2",
+          "label": "Politics",
+          "slug": "politics",
+          "forceShow": false,
+          "publishedAt": "2023-10-25 18:55:50.674+00",
+          "updatedBy": 13,
+          "createdAt": "2023-10-25T18:55:50.681Z",
+          "updatedAt": "2026-04-17T20:39:54.201881Z",
+          "forceHide": true,
+          "requiresTranslation": false
+        },
+        {
+          "id": "101619",
+          "label": "Macron",
+          "slug": "macron",
+          "createdAt": "2025-01-03T19:28:40.482628Z",
+          "updatedAt": "2026-04-17T21:11:46.159817Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "101588",
+          "label": "2025 Predictions",
+          "slug": "2025-predictions",
+          "forceShow": false,
+          "createdAt": "2024-12-30T20:11:13.144816Z",
+          "updatedAt": "2026-04-15T20:30:55.933838Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "101970",
+          "label": "World",
+          "slug": "world",
+          "forceShow": false,
+          "createdAt": "2025-03-19T23:36:08.498099Z",
+          "updatedAt": "2026-04-17T17:18:59.135061Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "100453",
+          "label": "resign",
+          "slug": "resign",
+          "createdAt": "2024-09-12T19:52:49.084783Z",
+          "updatedAt": "2026-04-17T20:43:53.73096Z",
+          "requiresTranslation": false
+        }
+      ],
+      "resolution_source": ""
+    },
+    "ui_display": {
+      "neutral_title": "Outlook on this issue",
+      "neutral_tags": [
+        {
+          "label": "Issue change",
+          "slug": "issue-change"
+        },
+        {
+          "label": "Public data",
+          "slug": "public-data"
+        }
+      ]
+    },
+    "metrics": {
+      "current_value": 0.01,
+      "volume": 9604.990341999996,
+      "liquidity": 31326.96569
+    },
+    "clobTokenIds": [
+      "28543399540889573521326455114444614843465304193358852739098843595402438285283",
+      "64737144597035632498370333432882203102562861720967881889541302920852035334778"
+    ],
+    "price_history_token": "28543399540889573521326455114444614843465304193358852739098843595402438285283",
+    "price_history_source": "CLOB",
+    "created_at": "2026-06-26T15:56:20.157318Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2026-07-31T12:00:00Z",
+    "event_created_at": "2025-01-03T19:28:39.855536Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2026-06-30T12:00:00Z"
+  },
+  {
+    "id": "16423",
+    "market_id": "2354064",
+    "raw_data": {
+      "title": "Will the next UK election be called by December 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if the date of the next UK general election is declared by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nFor this market to resolve to \"Yes\" it is only necessary that the election date be declared, not that the election actually occur within the market timeframe.\n\nThe primary resolution source for this market will be official information from the government of the United Kingdom, however a consensus of credible reporting will also be used.",
+      "event_title": "UK election called by...?",
+      "event_description": "This is a market on predicting the date when the UK general election will be officially called.",
+      "category_tag": [
+        {
+          "id": "734",
+          "label": "UK",
+          "slug": "uk",
+          "forceShow": false,
+          "publishedAt": "2023-12-13 20:16:30.79+00",
+          "createdAt": "2023-12-13T20:16:30.802Z",
+          "updatedAt": "2026-04-24T16:00:06.360895Z",
+          "isCarousel": false,
+          "requiresTranslation": false
+        },
+        {
+          "id": "100606",
+          "label": "pedophile",
+          "slug": "pedophile",
+          "createdAt": "2024-09-20T13:53:50.802346Z",
+          "updatedAt": "2026-04-17T20:41:35.16048Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "101319",
+          "label": "Starmer",
+          "slug": "starmer",
+          "createdAt": "2024-11-25T18:49:24.982919Z",
+          "updatedAt": "2026-04-17T20:32:49.912398Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "100228",
+          "label": "England",
+          "slug": "england",
+          "createdAt": "2024-05-23T20:07:04.412778Z",
+          "updatedAt": "2026-04-17T20:32:49.920368Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "105448",
+          "label": "UK Labour Leadership",
+          "slug": "uk-labour-leadership",
+          "forceShow": false,
+          "createdAt": "2026-06-19T18:05:55.430817Z",
+          "updatedAt": "2026-06-19T18:10:02.053388Z",
+          "isCarousel": false,
+          "requiresTranslation": false
+        }
+      ],
+      "resolution_source": ""
+    },
+    "ui_display": {
+      "neutral_title": "Outlook on this issue",
+      "neutral_tags": [
+        {
+          "label": "Issue change",
+          "slug": "issue-change"
+        },
+        {
+          "label": "Public data",
+          "slug": "public-data"
+        }
+      ]
+    },
+    "metrics": {
+      "current_value": 0.16,
+      "volume": 9373.758547000003,
+      "liquidity": 1673.2402
+    },
+    "clobTokenIds": [
+      "31627048520492227354616069874124458767757243686332730237616510640600462926383",
+      "37064221817179838225957455025143891294172126736355626367799841115771049178138"
+    ],
+    "price_history_token": "31627048520492227354616069874124458767757243686332730237616510640600462926383",
+    "price_history_source": "CLOB",
+    "created_at": "2026-05-25T15:34:30.060986Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-01-06T13:06:31.446876Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2025-12-31T12:00:00Z"
+  },
+  {
+    "id": "17526",
+    "market_id": "677404",
+    "raw_data": {
+      "title": "China x India military clash by December 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if there is a military encounter between the military forces of China (People's Republic of China) and India between January 29, 2025 and December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nA \"military encounter\" is defined as any incident involving the use of force such as missile strikes, artillery fire, exchange of gunfire, or other forms of direct military engagement between Chinese and Indian military forces. Hand-to-hand combat with the use of melee weapons between military personnel, will qualify. For example the 2020 Galwan Valley clash and the 2022 Yangtse clash would both count.\n\nNon-violent actions, such as warning shots, artillery fire into uninhabited areas, or missile launches that land in territorial waters or pass through airspace, will not qualify for a \"Yes\" resolution. Intentional ship ramming that results in significant damage to (e.g., a hole in the hull) or the sinking of a military ship by another will count toward a \"Yes\" resolution, however minor damage (scrapes, dents) will not.\n\nNote: the China Coast Guard (CCG) is part of the military, however the Indian Coast Guard (ICG) is not.\n\nThe resolution source for this market will be a consensus of credible reporting.",
+      "event_title": "China x India military clash by...?",
+      "event_description": "This is a market on the likelihood of a military clash between China and India occurring by December 31.",
+      "category_tag": [
+        {
+          "id": "100265",
+          "label": "Geopolitics",
+          "slug": "geopolitics",
+          "forceShow": true,
+          "createdAt": "2024-06-12T20:13:03.615956Z",
+          "updatedAt": "2026-04-17T20:49:04.209055Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "2",
+          "label": "Politics",
+          "slug": "politics",
+          "forceShow": false,
+          "publishedAt": "2023-10-25 18:55:50.674+00",
+          "updatedBy": 13,
+          "createdAt": "2023-10-25T18:55:50.681Z",
+          "updatedAt": "2026-04-17T20:39:54.201881Z",
+          "forceHide": true,
+          "requiresTranslation": false
+        },
+        {
+          "id": "303",
+          "label": "China",
+          "slug": "china",
+          "forceShow": false,
+          "publishedAt": "2023-11-02 21:52:11.147+00",
+          "createdAt": "2023-11-02T21:52:11.155Z",
+          "updatedAt": "2026-04-17T20:49:04.250426Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "518",
+          "label": "India",
+          "slug": "india",
+          "forceShow": false,
+          "publishedAt": "2023-11-16 17:32:54.137+00",
+          "createdAt": "2023-11-16T17:32:54.147Z",
+          "updatedAt": "2026-04-17T17:23:51.978133Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "101970",
+          "label": "World",
+          "slug": "world",
+          "forceShow": false,
+          "createdAt": "2025-03-19T23:36:08.498099Z",
+          "updatedAt": "2026-04-17T17:18:59.135061Z",
+          "requiresTranslation": false
+        }
+      ],
+      "resolution_source": ""
+    },
+    "ui_display": {
+      "neutral_title": "Outlook on this issue",
+      "neutral_tags": [
+        {
+          "label": "Issue change",
+          "slug": "issue-change"
+        },
+        {
+          "label": "Public data",
+          "slug": "public-data"
+        }
+      ]
+    },
+    "metrics": {
+      "current_value": 0.085,
+      "volume": 191377.3311959998,
+      "liquidity": 14893.2588
+    },
+    "clobTokenIds": [
+      "36135303630970774358991758965953725374791089628290212294816140371870983436829",
+      "100818499003359884559774352671825765184103958625070066814408985574716007147193"
+    ],
+    "price_history_token": "36135303630970774358991758965953725374791089628290212294816140371870983436829",
+    "price_history_source": "CLOB",
+    "created_at": "2025-11-11T22:49:28.471177Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-01-30T19:15:09.756401Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2025-12-31T12:00:00Z"
+  },
+  {
+    "id": "17549",
+    "market_id": "2749382",
+    "raw_data": {
+      "title": "NATO/EU troops fighting in Ukraine by December 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if active military personnel officially affiliated with any NATO or EU country enter Ukraine for combat-related military purposes directly pertaining to the ongoing conflict with Russia by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nFor military personnel to qualify toward a \"Yes\" resolution, they must be 1) officially acknowledged as active military by the NATO or EU entity or member state they are affiliated with; 2) be publicly acknowledged by NATO or an EU-affiliated entity to have entered Ukraine for a combat-related military purpose directly pertaining to the ongoing conflict with Russia.\n\nFor military personnel to qualify toward a \"Yes\" resolution they need be active duty and acknowledged as described above. Participation in a combat role is necessary for this market to resolve to \"Yes\" (e.g. military personnel providing training or intelligence support would not qualify toward a \"Yes\" resolution, however drone pilots or infantry directly attacking Russian troops, or soldiers targeting and downing missiles from Ukrainian soil would qualify toward a \"Yes\" resolution).\n\nThe primary resolution source for this market will be official information from NATO, the EU, or member states of either entity, however a consensus of credible reporting will also be used.",
+      "event_title": "NATO/EU troops fighting in Ukraine by...?",
+      "event_description": "This market will resolve to \"Yes\" if active military personnel officially affiliated with any NATO or EU country enter Ukraine for combat-related military purposes directly pertaining to the ongoing conflict with Russia by December 31, 2025, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nFor military personnel to qualify toward a \"Yes\" resolution, they must be 1) officially acknowledged as active military by the NATO or EU entity or member state they are affiliated with; 2) be publicly acknowledged by NATO or an EU-affiliated entity to have entered Ukraine for a combat-related military purpose directly pertaining to the ongoing conflict with Russia.\n\nFor military personnel to qualify toward a \"Yes\" resolution they need be active duty and acknowledged as described above. Participation in a combat role is necessary for this market to resolve to \"Yes\" (e.g. military personnel providing training or intelligence support would not qualify toward a \"Yes\" resolution, however drone pilots or infantry directly attacking Russian troops, or soldiers targeting and downing missiles from Ukrainian soil would qualify toward a \"Yes\" resolution).\n\nThe primary resolution source for this market will be official information from NATO, the EU, or member states of either entity, however a consensus of credible reporting will also be used.",
+      "category_tag": [
+        {
+          "id": "96",
+          "label": "Ukraine",
+          "slug": "ukraine",
+          "forceShow": false,
+          "publishedAt": "2023-11-02 21:18:49.922+00",
+          "updatedBy": 15,
+          "createdAt": "2023-11-02T21:18:49.94Z",
+          "updatedAt": "2026-04-17T21:11:46.161003Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "2",
+          "label": "Politics",
+          "slug": "politics",
+          "forceShow": false,
+          "publishedAt": "2023-10-25 18:55:50.674+00",
+          "updatedBy": 13,
+          "createdAt": "2023-10-25T18:55:50.681Z",
+          "updatedAt": "2026-04-17T20:39:54.201881Z",
+          "forceHide": true,
+          "requiresTranslation": false
+        },
+        {
+          "id": "100265",
+          "label": "Geopolitics",
+          "slug": "geopolitics",
+          "forceShow": true,
+          "createdAt": "2024-06-12T20:13:03.615956Z",
+          "updatedAt": "2026-04-17T20:49:04.209055Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "95",
+          "label": "Russia",
+          "slug": "russia",
+          "forceShow": false,
+          "publishedAt": "2023-11-02 21:18:49.314+00",
+          "createdAt": "2023-11-02T21:18:49.32Z",
+          "updatedAt": "2026-04-15T21:03:39.348071Z",
+          "isCarousel": false,
+          "requiresTranslation": false
+        },
+        {
+          "id": "192",
+          "label": "NATO",
+          "slug": "nato",
+          "forceShow": false,
+          "publishedAt": "2023-11-02 21:32:51.07+00",
+          "createdAt": "2023-11-02T21:32:51.092Z",
+          "updatedAt": "2026-04-17T20:50:30.212255Z",
+          "isCarousel": false,
+          "requiresTranslation": false
+        },
+        {
+          "id": "1476",
+          "label": "eu",
+          "slug": "eu",
+          "publishedAt": "2024-02-27 19:09:27.069+00",
+          "createdAt": "2024-02-27T19:09:27.118Z",
+          "updatedAt": "2026-04-17T20:40:55.167153Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "101970",
+          "label": "World",
+          "slug": "world",
+          "forceShow": false,
+          "createdAt": "2025-03-19T23:36:08.498099Z",
+          "updatedAt": "2026-04-17T17:18:59.135061Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "102498",
+          "label": "Trump-Zelenskyy",
+          "slug": "trump-zelenskyy",
+          "createdAt": "2025-08-16T20:50:50.502628Z",
+          "updatedAt": "2026-04-17T20:33:29.987909Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "102505",
+          "label": "Security Guarantee",
+          "slug": "security-guarantee",
+          "forceShow": false,
+          "createdAt": "2025-08-18T23:08:34.205919Z",
+          "updatedAt": "2026-04-17T21:10:45.639987Z",
+          "isCarousel": false,
+          "requiresTranslation": false
+        }
+      ],
+      "resolution_source": ""
+    },
+    "ui_display": {
+      "neutral_title": "Outlook on this issue",
+      "neutral_tags": [
+        {
+          "label": "Issue change",
+          "slug": "issue-change"
+        },
+        {
+          "label": "Public data",
+          "slug": "public-data"
+        }
+      ]
+    },
+    "metrics": {
+      "current_value": 0.095,
+      "volume": 18485.247354999996,
+      "liquidity": 20530.7213
+    },
+    "clobTokenIds": [
+      "83822435716035660497147241422577858668594129234727507087266598622219382324322",
+      "17799682251044587344253612662468317771332927166743838473163687802268935485073"
+    ],
+    "price_history_token": "83822435716035660497147241422577858668594129234727507087266598622219382324322",
+    "price_history_source": "CLOB",
+    "created_at": "2026-06-30T23:39:02.930267Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-01-31T00:57:34.582889Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2026-12-31T12:00:00Z"
+  },
+  {
+    "id": "17858",
+    "market_id": "1323364",
+    "raw_data": {
+      "title": "Ukraine recognizes Russian sovereignty over its territory by December 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if a deal in which Ukraine agrees to formally recognize Russian sovereignty over any UN-recognized Ukrainian territory is reached between the Russian Federation and Ukraine by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \u201cNo\u201d.\n\nThe deal must be a publicly announced mutual agreement. \n\nIf such an agreement is officially reached before the resolution date, this market will resolve to \"Yes\", regardless of if/when the agreement goes into effect.\n\nAn agreement by Ukraine formally recognizing Russian sovereignty over any UN-recognized Ukrainian territory for any amount of time will count.\n\nAn agreement by Ukraine formally recognizing Russian sovereignty over any UN-recognized Ukrainian territory as a precondition of a more comprehensive peace process or deal will qualify, even if the agreement is not finalized or part of a formalized peace deal. The September 8, 1995, \u201cAgreed Basic Principles\u201d between Bosnia and Yugoslavia, which recognized the borders and sovereignty of Bosnia and Herzegovina, and was later formalized through the Dayton Peace Agreement, is an example of a qualifying agreement.\n\nAn official unilateral pledge by Ukraine formally recognizing Russian sovereignty over any UN-recognized Ukrainian territory will qualify for a \u201cYes\u201d resolution even if not part of an agreement with Russia.\n\nThe April 19, 2013, Brussels Agreement between Serbia and Kosovo, in which Serbia recognized Kosovo\u2019s de facto administration but did not formally grant de jure recognition, would not be considered a qualifying agreement under this market, as this market requires formal recognition of sovereignty rather than acknowledgment of administrative control.\n\nThe primary resolution source for this market will be an official announcement by Ukraine and/or the Russian Federation, however, an overwhelming consensus of credible reporting confirming an agreement has been reached will also qualify.\n",
+      "event_title": "Ukraine recognizes Russian sovereignty over its territory by...?",
+      "event_description": "This market will resolve to \"Yes\" if a deal in which Ukraine agrees to formally recognize Russian sovereignty over any UN-recognized Ukrainian territory is reached between the Russian Federation and Ukraine by December 31, 2025, 11:59 PM ET. Otherwise, this market will resolve to \u201cNo\u201d.\n\nThe deal must be a publicly announced mutual agreement. \n\nIf such an agreement is officially reached before the resolution date, this market will resolve to \"Yes\", regardless of if/when the agreement goes into effect.\n\nAn agreement by Ukraine formally recognizing Russian sovereignty over any UN-recognized Ukrainian territory for any amount of time will count.\n\nAn agreement by Ukraine formally recognizing Russian sovereignty over any UN-recognized Ukrainian territory as a precondition of a more comprehensive peace process or deal will qualify, even if the agreement is not finalized or part of a formalized peace deal. The September 8, 1995, \u201cAgreed Basic Principles\u201d between Bosnia and Yugoslavia, which recognized the borders and sovereignty of Bosnia and Herzegovina, and was later formalized through the Dayton Peace Agreement, is an example of a qualifying agreement.\n\nAn official unilateral pledge by Ukraine formally recognizing Russian sovereignty over any UN-recognized Ukrainian territory will qualify for a \u201cYes\u201d resolution even if not part of an agreement with Russia.\n\nThe April 19, 2013, Brussels Agreement between Serbia and Kosovo, in which Serbia recognized Kosovo\u2019s de facto administration but did not formally grant de jure recognition, would not be considered a qualifying agreement under this market, as this market requires formal recognition of sovereignty rather than acknowledgment of administrative control.\n\nThe primary resolution source for this market will be an official announcement by Ukraine and/or the Russian Federation, however, an overwhelming consensus of credible reporting confirming an agreement has been reached will also qualify.\n",
+      "category_tag": [
+        {
+          "id": "2",
+          "label": "Politics",
+          "slug": "politics",
+          "forceShow": false,
+          "publishedAt": "2023-10-25 18:55:50.674+00",
+          "updatedBy": 13,
+          "createdAt": "2023-10-25T18:55:50.681Z",
+          "updatedAt": "2026-04-17T20:39:54.201881Z",
+          "forceHide": true,
+          "requiresTranslation": false
+        },
+        {
+          "id": "100265",
+          "label": "Geopolitics",
+          "slug": "geopolitics",
+          "forceShow": true,
+          "createdAt": "2024-06-12T20:13:03.615956Z",
+          "updatedAt": "2026-04-17T20:49:04.209055Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "101794",
+          "label": "Foreign Policy",
+          "slug": "foreign-policy",
+          "forceShow": false,
+          "createdAt": "2025-02-06T17:24:29.604203Z",
+          "updatedAt": "2026-04-17T20:15:51.294685Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "96",
+          "label": "Ukraine",
+          "slug": "ukraine",
+          "forceShow": false,
+          "publishedAt": "2023-11-02 21:18:49.922+00",
+          "updatedBy": 15,
+          "createdAt": "2023-11-02T21:18:49.94Z",
+          "updatedAt": "2026-04-17T21:11:46.161003Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "101191",
+          "label": "Trump Presidency",
+          "slug": "trump-presidency",
+          "forceShow": false,
+          "createdAt": "2024-11-06T04:59:43.354523Z",
+          "updatedAt": "2026-04-17T20:26:48.722731Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "126",
+          "label": "Trump",
+          "slug": "trump",
+          "forceShow": false,
+          "publishedAt": "2023-11-02 21:23:16.384+00",
+          "updatedBy": 15,
+          "createdAt": "2023-11-02T21:23:16.39Z",
+          "updatedAt": "2026-04-17T20:39:14.206724Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "270",
+          "label": "putin",
+          "slug": "putin",
+          "publishedAt": "2023-11-02 21:46:19.507+00",
+          "createdAt": "2023-11-02T21:46:19.528Z",
+          "updatedAt": "2026-04-17T20:26:28.78978Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "452",
+          "label": "zelensky",
+          "slug": "zelensky",
+          "publishedAt": "2023-11-03 17:22:47.009+00",
+          "createdAt": "2023-11-03T17:22:47.024Z",
+          "updatedAt": "2026-04-17T21:09:42.938407Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "101970",
+          "label": "World",
+          "slug": "world",
+          "forceShow": false,
+          "createdAt": "2025-03-19T23:36:08.498099Z",
+          "updatedAt": "2026-04-17T17:18:59.135061Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "102477",
+          "label": "Trump-Putin",
+          "slug": "trump-putin",
+          "forceShow": false,
+          "createdAt": "2025-08-08T18:39:10.061786Z",
+          "updatedAt": "2026-04-17T21:08:43.019802Z",
+          "isCarousel": false,
+          "requiresTranslation": false
+        },
+        {
+          "id": "102498",
+          "label": "Trump-Zelenskyy",
+          "slug": "trump-zelenskyy",
+          "createdAt": "2025-08-16T20:50:50.502628Z",
+          "updatedAt": "2026-04-17T20:33:29.987909Z",
+          "requiresTranslation": false
+        }
+      ],
+      "resolution_source": ""
+    },
+    "ui_display": {
+      "neutral_title": "Outlook on this issue",
+      "neutral_tags": [
+        {
+          "label": "Issue change",
+          "slug": "issue-change"
+        },
+        {
+          "label": "Public data",
+          "slug": "public-data"
+        }
+      ]
+    },
+    "metrics": {
+      "current_value": 0.041,
+      "volume": 74778.97907999998,
+      "liquidity": 34331.398
+    },
+    "clobTokenIds": [
+      "111407906413483830198481741547621131014289190946534570245645667771579973364067",
+      "112468620935063687606410022378078855998390735429551163191251582889945981781902"
+    ],
+    "price_history_token": "111407906413483830198481741547621131014289190946534570245645667771579973364067",
+    "price_history_source": "CLOB",
+    "created_at": "2026-02-03T00:49:21.271194Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-02-06T22:01:47.648437Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2026-12-31T12:00:00Z"
+  },
+  {
+    "id": "18558",
+    "market_id": "2261102",
+    "raw_data": {
+      "title": "Ukraine election called by December 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if the next Ukrainian presidential election is scheduled by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nThis market is about whether a date for the next Ukrainian election is announced between market creation and December 31, 2026, 11:59 PM ET. Whether the election is supposed to take place during this timeframe or later will have no effect on the resolution of this market.\n\nThe primary resolution source for this market is official information from the Government of Ukraine; however, a consensus of credible reporting may also be used.\n",
+      "event_title": "Ukraine election called by...?",
+      "event_description": "This market will resolve to \"Yes\" if the next Ukrainian presidential election is scheduled in 2025. Otherwise, this market will resolve to \"No\".\n\nThis market is about whether a date for the next Ukrainian election is announced between February 14 and December 31, 2025, 11:59 PM ET. Whether the election is supposed to take place in 2025 or later will have no effect on the resolution to this market.\n\nThe primary resolution source for this market is official information from the Government of Ukraine however a consensus of credible reporting may also be used.\n",
+      "category_tag": [
+        {
+          "id": "96",
+          "label": "Ukraine",
+          "slug": "ukraine",
+          "forceShow": false,
+          "publishedAt": "2023-11-02 21:18:49.922+00",
+          "updatedBy": 15,
+          "createdAt": "2023-11-02T21:18:49.94Z",
+          "updatedAt": "2026-04-17T21:11:46.161003Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "100265",
+          "label": "Geopolitics",
+          "slug": "geopolitics",
+          "forceShow": true,
+          "createdAt": "2024-06-12T20:13:03.615956Z",
+          "updatedAt": "2026-04-17T20:49:04.209055Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "2",
+          "label": "Politics",
+          "slug": "politics",
+          "forceShow": false,
+          "publishedAt": "2023-10-25 18:55:50.674+00",
+          "updatedBy": 13,
+          "createdAt": "2023-10-25T18:55:50.681Z",
+          "updatedAt": "2026-04-17T20:39:54.201881Z",
+          "forceHide": true,
+          "requiresTranslation": false
+        },
+        {
+          "id": "101794",
+          "label": "Foreign Policy",
+          "slug": "foreign-policy",
+          "forceShow": false,
+          "createdAt": "2025-02-06T17:24:29.604203Z",
+          "updatedAt": "2026-04-17T20:15:51.294685Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "101970",
+          "label": "World",
+          "slug": "world",
+          "forceShow": false,
+          "createdAt": "2025-03-19T23:36:08.498099Z",
+          "updatedAt": "2026-04-17T17:18:59.135061Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "102498",
+          "label": "Trump-Zelenskyy",
+          "slug": "trump-zelenskyy",
+          "createdAt": "2025-08-16T20:50:50.502628Z",
+          "updatedAt": "2026-04-17T20:33:29.987909Z",
+          "requiresTranslation": false
+        }
+      ],
+      "resolution_source": ""
+    },
+    "ui_display": {
+      "neutral_title": "Outlook on this issue",
+      "neutral_tags": [
+        {
+          "label": "Issue change",
+          "slug": "issue-change"
+        },
+        {
+          "label": "Public data",
+          "slug": "public-data"
+        }
+      ]
+    },
+    "metrics": {
+      "current_value": 0.18,
+      "volume": 58224.84572099999,
+      "liquidity": 20575.4964
+    },
+    "clobTokenIds": [
+      "108022836882070634894978103447460059415631393810246745281341648986501895644031",
+      "50035578024412312502715156279765769139689669299163153792052060268176088979005"
+    ],
+    "price_history_token": "108022836882070634894978103447460059415631393810246745281341648986501895644031",
+    "price_history_source": "CLOB",
+    "created_at": "2026-05-14T15:47:25.888438Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-02-13T19:39:15.966366Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2026-12-31T12:00:00Z"
+  },
+  {
+    "id": "18571",
+    "market_id": "1807912",
+    "raw_data": {
+      "title": "Will any country leave NATO by December 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if any member state formally withdraws from NATO or provides an official notice of denunciation to NATO by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nA notice of denunciation refers to the submission of a notice of withdrawal as per Article 13 of the North Atlantic Treaty.\n\nA country's exit from NATO\u2019s integrated military command structure will not be sufficient to resolve this market to \"Yes\". That country must either withdraw or submit a notice of denunciation to trigger a \"Yes\" resolution.\n\nThe resolution source will be official information from the relevant government and NATO, however a consensus of credible reporting may also be used.",
+      "event_title": "Will any country leave NATO by...?",
+      "event_description": "This market will resolve to \"Yes\" if any member state formally withdraws from NATO or provides an official notice of denunciation to NATO by December 31, 2025, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nA notice of denunciation refers to the submission of a notice of withdrawal as per Article 13 of the North Atlantic Treaty.\n\nA country's exit from NATO\u2019s integrated military command structure will not be sufficient to resolve this market to \"Yes\". That country must either withdraw or submit a notice of denunciation to trigger a \"Yes\" resolution.\n\nThe resolution source will be official information from the relevant government and NATO, however a consensus of credible reporting may also be used.",
+      "category_tag": [
+        {
+          "id": "192",
+          "label": "NATO",
+          "slug": "nato",
+          "forceShow": false,
+          "publishedAt": "2023-11-02 21:32:51.07+00",
+          "createdAt": "2023-11-02T21:32:51.092Z",
+          "updatedAt": "2026-04-17T20:50:30.212255Z",
+          "isCarousel": false,
+          "requiresTranslation": false
+        },
+        {
+          "id": "100265",
+          "label": "Geopolitics",
+          "slug": "geopolitics",
+          "forceShow": true,
+          "createdAt": "2024-06-12T20:13:03.615956Z",
+          "updatedAt": "2026-04-17T20:49:04.209055Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "2",
+          "label": "Politics",
+          "slug": "politics",
+          "forceShow": false,
+          "publishedAt": "2023-10-25 18:55:50.674+00",
+          "updatedBy": 13,
+          "createdAt": "2023-10-25T18:55:50.681Z",
+          "updatedAt": "2026-04-17T20:39:54.201881Z",
+          "forceHide": true,
+          "requiresTranslation": false
+        },
+        {
+          "id": "101970",
+          "label": "World",
+          "slug": "world",
+          "forceShow": false,
+          "createdAt": "2025-03-19T23:36:08.498099Z",
+          "updatedAt": "2026-04-17T17:18:59.135061Z",
+          "requiresTranslation": false
+        }
+      ],
+      "resolution_source": ""
+    },
+    "ui_display": {
+      "neutral_title": "Outlook on this issue",
+      "neutral_tags": [
+        {
+          "label": "Issue change",
+          "slug": "issue-change"
+        },
+        {
+          "label": "Public data",
+          "slug": "public-data"
+        }
+      ]
+    },
+    "metrics": {
+      "current_value": 0.0435,
+      "volume": 253005.74997299988,
+      "liquidity": 25798.69969
+    },
+    "clobTokenIds": [
+      "97672112380588518658859221422581522664938121648778223046012006536512218182756",
+      "111540681317740103557967262084337258765868556750780059317482948108124337120382"
+    ],
+    "price_history_token": "97672112380588518658859221422581522664938121648778223046012006536512218182756",
+    "price_history_source": "CLOB",
+    "created_at": "2026-03-31T15:38:07.695444Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-02-13T22:27:42.74491Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2026-12-31T12:00:00Z"
+  },
+  {
+    "id": "18576",
+    "market_id": "677358",
+    "raw_data": {
+      "title": "Ukraine election held by December 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if national elections for the parliament and/or presidency of Ukraine are held between February 12, 2025, and December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nThis market is based on whether national elections are actually held in Ukraine within the specified dates. Merely scheduling an election will not be sufficient to resolve this market to \"Yes\".\n\nIf elections are officially scheduled for a date outside this market's timeframe, this market will immediately resolve to \"No\".\n\nThe primary resolution source for this market will be official information from the government of Ukraine, however a consensus of credible reporting will also be used.",
+      "event_title": "Ukraine election held by...?",
+      "event_description": "This market will resolve to \"Yes\" if national elections for the parliament and/or presidency of Ukraine are held between February 12 and December 31, 2025, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nThis market is based on whether national elections are actually held in Ukraine within the specified dates. Merely scheduling an election will not be sufficient to resolve this market to \"Yes\".\n\nIf elections are officially scheduled for a date outside of 2025, this market will immediately resolve to \"No\".\n\nThe primary resolution source for this market will be official information from the government of Ukraine, however a consensus of credible reporting will also be used.",
+      "category_tag": [
+        {
+          "id": "96",
+          "label": "Ukraine",
+          "slug": "ukraine",
+          "forceShow": false,
+          "publishedAt": "2023-11-02 21:18:49.922+00",
+          "updatedBy": 15,
+          "createdAt": "2023-11-02T21:18:49.94Z",
+          "updatedAt": "2026-04-17T21:11:46.161003Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "2",
+          "label": "Politics",
+          "slug": "politics",
+          "forceShow": false,
+          "publishedAt": "2023-10-25 18:55:50.674+00",
+          "updatedBy": 13,
+          "createdAt": "2023-10-25T18:55:50.681Z",
+          "updatedAt": "2026-04-17T20:39:54.201881Z",
+          "forceHide": true,
+          "requiresTranslation": false
+        },
+        {
+          "id": "100265",
+          "label": "Geopolitics",
+          "slug": "geopolitics",
+          "forceShow": true,
+          "createdAt": "2024-06-12T20:13:03.615956Z",
+          "updatedAt": "2026-04-17T20:49:04.209055Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "101794",
+          "label": "Foreign Policy",
+          "slug": "foreign-policy",
+          "forceShow": false,
+          "createdAt": "2025-02-06T17:24:29.604203Z",
+          "updatedAt": "2026-04-17T20:15:51.294685Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "101970",
+          "label": "World",
+          "slug": "world",
+          "forceShow": false,
+          "createdAt": "2025-03-19T23:36:08.498099Z",
+          "updatedAt": "2026-04-17T17:18:59.135061Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "102498",
+          "label": "Trump-Zelenskyy",
+          "slug": "trump-zelenskyy",
+          "createdAt": "2025-08-16T20:50:50.502628Z",
+          "updatedAt": "2026-04-17T20:33:29.987909Z",
+          "requiresTranslation": false
+        }
+      ],
+      "resolution_source": ""
+    },
+    "ui_display": {
+      "neutral_title": "Outlook on this issue",
+      "neutral_tags": [
+        {
+          "label": "Issue change",
+          "slug": "issue-change"
+        },
+        {
+          "label": "Public data",
+          "slug": "public-data"
+        }
+      ]
+    },
+    "metrics": {
+      "current_value": 0.09,
+      "volume": 220343.30507699976,
+      "liquidity": 16172.3761
+    },
+    "clobTokenIds": [
+      "109439459397675447272341488571573598040211823291452380402543262182060250075424",
+      "65651447697756505945607381171434271908621057725573696706081861343152172944468"
+    ],
+    "price_history_token": "109439459397675447272341488571573598040211823291452380402543262182060250075424",
+    "price_history_source": "CLOB",
+    "created_at": "2025-11-11T22:24:22.343831Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-02-13T23:40:55.577987Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2025-12-31T12:00:00Z"
+  },
+  {
+    "id": "25391",
+    "market_id": "2676035",
+    "raw_data": {
+      "title": "Spain snap election called by August 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if the next Spanish general election is scheduled between market creation and August 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nThis market is about whether a date for the next Spanish election is announced within the stated timeframe. The date the election is scheduled to take place on will have no effect on the resolution to this market.\n\nThe primary resolution source for this market is official information from the Government of Spain however a consensus of credible reporting may also be used.",
+      "event_title": "Spain snap election called by...?",
+      "event_description": "This market will resolve to \"Yes\" if the next Spanish general election is scheduled between May 28 and December 31, 2025, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nThis market is about whether a date for the next Spanish election is announced within the stated timeframe. The date the election is scheduled to take place on will have no effect on the resolution to this market.\n\nThe primary resolution source for this market is official information from the Government of Spain however a consensus of credible reporting may also be used.",
+      "category_tag": [
+        {
+          "id": "2",
+          "label": "Politics",
+          "slug": "politics",
+          "forceShow": false,
+          "publishedAt": "2023-10-25 18:55:50.674+00",
+          "updatedBy": 13,
+          "createdAt": "2023-10-25T18:55:50.681Z",
+          "updatedAt": "2026-04-17T20:39:54.201881Z",
+          "forceHide": true,
+          "requiresTranslation": false
+        },
+        {
+          "id": "1597",
+          "label": "Global Elections",
+          "slug": "global-elections",
+          "forceShow": true,
+          "publishedAt": "2024-03-07 20:44:01.258+00",
+          "createdBy": 15,
+          "updatedBy": 15,
+          "createdAt": "2024-03-07T20:41:56.773Z",
+          "updatedAt": "2026-04-17T21:08:23.096987Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "144",
+          "label": "Elections",
+          "slug": "elections",
+          "forceShow": false,
+          "publishedAt": "2023-11-02 21:24:31.008+00",
+          "updatedBy": 13,
+          "createdAt": "2023-11-02T21:24:31.198Z",
+          "updatedAt": "2026-04-17T17:22:31.696566Z",
+          "forceHide": true,
+          "requiresTranslation": false
+        },
+        {
+          "id": "366",
+          "label": "world affairs",
+          "slug": "world-affairs",
+          "publishedAt": "2023-11-02 22:05:44.425+00",
+          "createdAt": "2023-11-02T22:05:44.48Z",
+          "updatedAt": "2026-04-17T20:47:56.524437Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "101970",
+          "label": "World",
+          "slug": "world",
+          "forceShow": false,
+          "createdAt": "2025-03-19T23:36:08.498099Z",
+          "updatedAt": "2026-04-17T17:18:59.135061Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "105438",
+          "label": "International Election Props",
+          "slug": "international-election-props",
+          "forceShow": false,
+          "createdAt": "2026-06-17T15:26:47.896107Z",
+          "updatedAt": "2026-06-17T15:30:02.043026Z",
+          "isCarousel": false,
+          "requiresTranslation": false
+        }
+      ],
+      "resolution_source": ""
+    },
+    "ui_display": {
+      "neutral_title": "Outlook on this issue",
+      "neutral_tags": [
+        {
+          "label": "Issue change",
+          "slug": "issue-change"
+        },
+        {
+          "label": "Public data",
+          "slug": "public-data"
+        }
+      ]
+    },
+    "metrics": {
+      "current_value": 0.04,
+      "volume": 3589.0694730000005,
+      "liquidity": 16488.0362
+    },
+    "clobTokenIds": [
+      "53107233019936818776932537419928255013820188991890096631827301058948809573990",
+      "103533043587935563046576444710847485034787596543228838053472803805384813876872"
+    ],
+    "price_history_token": "53107233019936818776932537419928255013820188991890096631827301058948809573990",
+    "price_history_source": "CLOB",
+    "created_at": "2026-06-24T23:10:33.820263Z",
+    "updated_at": "2026-07-08T02:41:29.117393Z",
+    "end_date": "2026-08-31T23:59:00Z",
+    "event_created_at": "2025-05-28T17:17:11.280439Z",
+    "event_updated_at": "2026-07-08T02:41:35.907392Z",
+    "event_end_date": "2026-08-31T12:00:00Z"
+  }
+]
