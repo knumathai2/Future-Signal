@@ -290,14 +290,17 @@ def compute_change_for_window(
     return round(current_price - reference.price, 4)
 
 
-def compute_confidence_level(change_24h: float | None) -> str:
+def compute_confidence_level(change_24h: float | None, change_7d: float | None) -> str:
     """Simplified "market confidence score" (Service Design §5, P0 version):
     `insufficient_data` whenever there isn't enough trailing history to
-    compute `change_24h`, `sufficient` otherwise. `caution_low_activity` /
-    `caution_high_volatility` are accepted by the schema but intentionally
-    not populated yet - see known-issues.md (open volume/liquidity floor
-    question, and volatility_score is P1/not computed by this task)."""
-    return "insufficient_data" if change_24h is None else "sufficient"
+    compute either MVP change window, `sufficient` otherwise.
+    `caution_low_activity` / `caution_high_volatility` are accepted by the
+    schema but intentionally not populated yet - see known-issues.md (open
+    volume/liquidity floor question, and volatility_score is P1/not computed
+    by this task)."""
+    if change_24h is None or change_7d is None:
+        return "insufficient_data"
+    return "sufficient"
 
 
 def compute_heat_score(change_24h: float | None, volume_24h: float | None) -> float | None:
@@ -329,7 +332,7 @@ def build_metric(
         volatility_score=None,  # P1 stretch goal, not computed by TASK-008
         attention_score=None,  # P1 stretch goal, not computed by TASK-008
         heat_score=compute_heat_score(change_24h, current_volume_24h),
-        confidence_level=compute_confidence_level(change_24h),
+        confidence_level=compute_confidence_level(change_24h, change_7d),
     )
 
 
@@ -381,6 +384,8 @@ def run_snapshot_and_metrics(
         try:
             market = get_or_create_market(db, normalized, run_timestamp)
             ensure_tracked_outcome(db, market, normalized)
+            market_id = market.id
+            db.commit()
         except SQLAlchemyError as exc:
             db.rollback()
             logger.error("Failed to upsert market %s: %s", condition_id, exc)
@@ -396,12 +401,12 @@ def run_snapshot_and_metrics(
             )
             continue
 
-        history = fetch_history(db, market.id)  # step 3 input: previous snapshot(s)
+        history = fetch_history(db, market_id)  # step 3 input: previous snapshot(s)
         delta = compute_raw_delta(normalized, history[0] if history else None)
 
-        snapshot = build_snapshot(market.id, normalized, run_timestamp)
+        snapshot = build_snapshot(market_id, normalized, run_timestamp)
         snapshots.append(snapshot)
-        context_by_market_id[market.id] = {
+        context_by_market_id[market_id] = {
             "condition_id": condition_id,
             "history": history,
             "is_new_market": delta.is_new_market,

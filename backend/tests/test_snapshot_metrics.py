@@ -13,7 +13,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
-from sqlalchemy import BigInteger, create_engine
+from sqlalchemy import BigInteger, create_engine, event
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -80,6 +80,13 @@ def db():
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
+
+    @event.listens_for(engine, "connect")
+    def _enable_foreign_keys(dbapi_connection, _connection_record):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA foreign_keys=ON")
+        cursor.close()
+
     Base.metadata.create_all(
         engine,
         tables=[
@@ -149,8 +156,10 @@ def test_compute_change_for_window_picks_closest_snapshot_at_or_before_boundary(
 
 
 def test_compute_confidence_level():
-    assert compute_confidence_level(None) == "insufficient_data"
-    assert compute_confidence_level(0.05) == "sufficient"
+    assert compute_confidence_level(None, None) == "insufficient_data"
+    assert compute_confidence_level(0.05, None) == "insufficient_data"
+    assert compute_confidence_level(None, 0.12) == "insufficient_data"
+    assert compute_confidence_level(0.05, 0.12) == "sufficient"
 
 
 def test_compute_heat_score_none_without_change():
@@ -312,10 +321,64 @@ def test_run_snapshot_and_metrics_computes_change_24h_on_second_run(db):
     outcome = result.markets[0]
     assert outcome.is_new_market is False
     assert outcome.change_24h == pytest.approx(0.1)
-    assert outcome.confidence_level == "sufficient"
+    assert outcome.change_7d is None
+    assert outcome.confidence_level == "insufficient_data"
 
     metric = db.query(MarketMetric).order_by(MarketMetric.computed_at.desc()).first()
     assert metric.heat_score is not None
+
+
+def test_run_snapshot_and_metrics_sufficient_only_when_24h_and_7d_exist(db):
+    run_snapshot_and_metrics([_normalized(current_value=0.4)], db)
+
+    market = db.query(Market).one()
+    seven_day_reference = db.query(MarketSnapshot).one()
+    seven_day_reference.captured_at = datetime.now(UTC) - timedelta(days=8)
+    db.add(
+        MarketSnapshot(
+            market_id=market.id,
+            captured_at=datetime.now(UTC) - timedelta(hours=25),
+            price=0.5,
+            volume_24h=450.0,
+            volume_total=9000.0,
+            liquidity=1800.0,
+        )
+    )
+    db.commit()
+
+    result = run_snapshot_and_metrics([_normalized(current_value=0.6)], db)
+
+    outcome = result.markets[0]
+    assert outcome.change_24h == pytest.approx(0.1)
+    assert outcome.change_7d == pytest.approx(0.2)
+    assert outcome.confidence_level == "sufficient"
+
+
+def test_run_snapshot_and_metrics_snapshot_fallback_preserves_new_parent_rows(db):
+    result = run_snapshot_and_metrics(
+        [
+            _normalized(polymarket_condition_id="a", current_value=0.5),
+            _normalized(polymarket_condition_id="b", current_value=None),
+            _normalized(polymarket_condition_id="c", current_value=0.7),
+        ],
+        db,
+    )
+
+    assert result.markets_processed == 2
+    assert result.markets_failed == 1
+
+    outcomes = {market.polymarket_condition_id: market for market in result.markets}
+    assert outcomes["a"].snapshot_stored is True
+    assert outcomes["a"].metric_stored is True
+    assert outcomes["b"].snapshot_stored is False
+    assert outcomes["b"].metric_stored is False
+    assert outcomes["c"].snapshot_stored is True
+    assert outcomes["c"].metric_stored is True
+
+    assert db.query(Market).count() == 3
+    assert db.query(MarketOutcome).count() == 3
+    assert db.query(MarketSnapshot).count() == 2
+    assert db.query(MarketMetric).count() == 2
 
 
 def test_run_snapshot_and_metrics_skips_when_duplicate_run_in_progress(db):

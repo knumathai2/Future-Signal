@@ -15,7 +15,7 @@ Harness Version: 1.1
 
 - **Date**: 2026-07-08
 - **Agent Role**: Data/AI Implementer
-- **Session Goal**: Implement `TASK-008` (batch collector snapshot + metrics, Technical Design §6 steps 3-5).
+- **Session Goal**: Resolve PR #13 `CHANGES_REQUESTED` for `TASK-008`.
 - **Branch**: `data-ai/TASK-008-snapshot-metrics`
 
 ## Previous Session Summary
@@ -46,10 +46,16 @@ records with all required top-level fields).
       bootstrap, raw-delta calc, batched snapshot insert with
       retry-once-then-skip, and `change_24h`/`change_7d`/`heat_score`/
       `confidence_level` calculation with a strict no-fabrication rule.
-- [x] Wrote `backend/tests/test_snapshot_metrics.py` (18 tests) exercising
+- [x] Wrote `backend/tests/test_snapshot_metrics.py` (20 tests) exercising
       the pipeline against an in-memory SQLite DB (local/dev-safe path,
       mirroring `tests/conftest.py`'s pattern), including a full end-to-end
       run against the real, committed `normalized_samples.json`.
+- [x] Resolved PR #13 review feedback: `confidence_level` now remains
+      `insufficient_data` unless both MVP windows (`change_24h` and
+      `change_7d`) are computable, and parent `markets`/`market_outcomes`
+      rows are committed before snapshot fallback can roll back a batch.
+- [x] Added regression coverage for 24h-present/7d-missing metrics and for
+      snapshot partial failure with SQLite foreign-key checks enabled.
 - [x] Fixed a real cross-backend datetime bug found during testing: ORM
       objects re-read after `db.commit()` lose timezone info on SQLite
       (ints vs. Postgres TIMESTAMPTZ staying tz-aware), which broke the
@@ -73,6 +79,8 @@ records with all required top-level fields).
       fabricated delta.
 - [x] `market_snapshots`/`market_metrics` batch inserts fail safely
       (retry once, then log-and-skip that market only).
+- [x] Snapshot fallback no longer loses newly bootstrapped parent rows when
+      one bad snapshot row forces a batch rollback.
 - [x] No step 6 (signals), step 7 (collection log writes), or step 8
       (AI report trigger) logic was added - out of scope, confirmed by
       code review of the diff before finishing.
@@ -106,8 +114,9 @@ records with all required top-level fields).
 ## Verification
 
 - `backend/.venv/Scripts/python.exe -m ruff check app/core/snapshot_metrics.py tests/test_snapshot_metrics.py` -> passed.
-- `backend/.venv/Scripts/python.exe -m pytest tests/test_snapshot_metrics.py -v` -> 18 passed.
-- `backend/.venv/Scripts/python.exe -m pytest tests -v` -> 40 passed (no regressions).
+- `backend/.venv/bin/python -m pytest backend/tests/test_snapshot_metrics.py -v` -> 20 passed.
+- `backend/.venv/bin/python -m ruff check backend` -> passed.
+- `backend/.venv/bin/python -m pytest backend/tests` -> 42 passed (no regressions).
 - `git diff --check` -> passed.
 - Content-safety wording scan over the new module/test file -> no
   prohibited-term hits.
