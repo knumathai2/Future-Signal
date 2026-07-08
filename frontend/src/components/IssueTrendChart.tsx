@@ -80,6 +80,9 @@ export function IssueTrendChart({ issue, windowKey }: IssueTrendChartProps) {
 
   const domain = useMemo(() => {
     const values = visibleHistory.map((point) => point.value);
+    if (values.length === 0) {
+      return [0, 100] as [number, number];
+    }
     const min = Math.min(...values);
     const max = Math.max(...values);
     const padding = Math.max(2, (max - min) * 0.16);

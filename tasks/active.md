@@ -16,12 +16,9 @@ Day 2 work is assigned as of 2026-07-08. The goal is to connect the real data pa
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
 | TASK-007 | Batch collector: fetch + normalize (steps 1-2) | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-007-fetch-normalize` | review |
-| TASK-008 | Batch collector: snapshot + metrics (steps 3-5) | Data/AI Implementer + Backend | Data/AI Implementer + Backend Implementer | `data-ai/TASK-008-snapshot-metrics` | assigned |
-| TASK-009 | Expectation-shift detection (±5pp threshold) | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-009-shift-detection` | assigned |
 | TASK-010 | `/api/issues`, `/api/issues/:id`, `/api/issues/:id/history` | Backend Implementer | Backend Implementer | `backend/TASK-010-core-api` | review |
-| TASK-012 | Home dashboard UI (ranked issue cards) | Frontend Implementer | Frontend Implementer | `frontend/TASK-012-dashboard-ranking` | assigned |
 
-`TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-011`, and `TASK-031` completed 2026-07-08 — see `tasks/completed.md`.
+`TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-008`, `TASK-009`, `TASK-011`, `TASK-012`, and `TASK-031` completed 2026-07-08 — see `tasks/completed.md`.
 
 ## Day 2 Assignment Notes
 
@@ -55,62 +52,20 @@ Day 2 work is assigned as of 2026-07-08. The goal is to connect the real data pa
   - [x] Invalid records are skipped with structured error details instead of failing the whole run.
   - [x] A local run produces a normalized sample artifact suitable for `TASK-008` and `TASK-010`.
 
-### TASK-008: Batch collector snapshot + metrics
-- **Owner**: Data/AI Implementer + Backend
-- **Assignee**: Data/AI Implementer + Backend Implementer
-- **Branch**: `data-ai/TASK-008-snapshot-metrics`
-- **Status**: assigned
-- **Priority**: High
-- **Day**: Day 2
-- **Description**: Store current snapshots and calculate `change_24h`, `change_7d`, `heat_score`, and `confidence_level` from the accepted schema draft.
-- **Definition of Done**:
-  - [ ] Snapshot and metric rows can be produced from normalized data in a local/dev-safe path.
-  - [ ] Missing 24h/7d references produce `null` metrics plus `insufficient_data`, never fabricated values.
-  - [ ] `data_as_of` and calculation reference time are available for API payloads.
-  - [ ] Shared or production database writes are not performed without explicit human approval.
-
-### TASK-009: Expectation-shift detection
-- **Owner**: Data/AI Implementer
-- **Assignee**: Data/AI Implementer
-- **Branch**: `data-ai/TASK-009-shift-detection`
-- **Status**: assigned
-- **Priority**: High
-- **Day**: Day 2
-- **Description**: Add the MVP threshold detector for `abs(change_24h) >= 5pp` with duplicate suppression for the same window.
-- **Definition of Done**:
-  - [ ] Threshold is implemented as a named constant with tests around boundary values.
-  - [ ] Detector emits only the MVP `expectation_shift` type and `medium` severity.
-  - [ ] Duplicate detections in the same rolling window are suppressed.
-  - [ ] Output is ready for the detail/API response shape without adding P1 feed scope.
-
 ### TASK-010: Core read API endpoints
 - **Owner**: Backend Implementer
 - **Assignee**: Backend Implementer
 - **Branch**: `backend/TASK-010-core-api`
-- **Status**: assigned
+- **Status**: review
 - **Priority**: High
 - **Day**: Day 2
 - **Description**: Replace hardcoded issue responses with a read path aligned to the accepted contract and latest available metrics/history.
 - **Definition of Done**:
-  - [ ] `/api/issues`, `/api/issues/{id}`, and `/api/issues/{id}/history` preserve the accepted response fields.
-  - [ ] Query params remain Pydantic-validated for `window`, `sort`, `limit`, and `offset`.
-  - [ ] Unknown IDs and invalid params have tested error behavior.
-  - [ ] Last-known-good or static fallback behavior is documented if live data is unavailable.
-  - [ ] No public path or schema field introduces prohibited market-terminal wording.
-
-### TASK-012: Home dashboard UI
-- **Owner**: Frontend Implementer
-- **Assignee**: Frontend Implementer
-- **Branch**: `frontend/TASK-012-dashboard-ranking`
-- **Status**: assigned
-- **Priority**: High
-- **Day**: Day 2
-- **Description**: Convert the Day 1 dashboard shell into the Day 2 ranked issue-card experience backed by the accepted issue-list contract when available.
-- **Definition of Done**:
-  - [ ] Frontend issue types are reconciled with `GET /api/issues` response fields.
-  - [ ] Dashboard can render API data and retain a static fallback for demo resilience.
-  - [ ] Issue cards keep current value, 24h/7d change, caution badge, and data-as-of timestamp in the same viewport.
-  - [ ] Loading, empty, and error states remain neutral and pass wording lint if changed.
+  - [x] `/api/issues`, `/api/issues/{id}`, and `/api/issues/{id}/history` preserve the accepted response fields.
+  - [x] Query params remain Pydantic-validated for `window`, `sort`, `limit`, and `offset`.
+  - [x] Unknown IDs and invalid params have tested error behavior.
+  - [x] Last-known-good or static fallback behavior is documented if live data is unavailable.
+  - [x] No public path or schema field introduces prohibited market-terminal wording.
 
 ## Status Values
 
@@ -134,7 +89,7 @@ These rows show the required format only. Do not treat them as active assignment
 ```
 ### TASK-XXX: [Title]
 - **Owner**: [PM | Frontend Implementer | Backend Implementer | Data/AI Implementer]
-- **Assignee**: [PM / Planner | Frontend Implementer | Backend Implementer | Data/AI Implementer | Reviewer | Debugger]
+- **Assignee**: [PM / Planner | Frontend Implementer | Backend Implementer | Data/AI Implementer]
 - **Branch**: [role-prefix]/[TASK-ID]-[short-kebab-slug]
 - **Status**: assigned | in_progress | blocked | review | completed
 - **Priority**: High | Medium | Low

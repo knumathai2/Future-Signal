@@ -20,7 +20,10 @@ type IssueDetailProps = {
 
 const CHART_WINDOWS: ChartWindow[] = ["24h", "7d", "30d"];
 
-function changeForWindow(issue: Issue, chartWindow: ChartWindow): number {
+function changeForWindow(
+  issue: Issue,
+  chartWindow: ChartWindow,
+): number | null | undefined {
   if (chartWindow === "24h") {
     return issue.change24h;
   }
@@ -34,8 +37,18 @@ function changeForWindow(issue: Issue, chartWindow: ChartWindow): number {
 
 function buildSummary(issue: Issue, chartWindow: ChartWindow): string {
   const change = changeForWindow(issue, chartWindow);
-  const direction =
-    Math.abs(change) < 0.05 ? "held near its prior reading" : change > 0 ? "moved upward" : "moved downward";
+  const movementSentence =
+    change === null || change === undefined || Number.isNaN(change)
+      ? `does not have enough reference data for a ${windowLabel(
+          chartWindow,
+        )} change calculation`
+      : `${
+          Math.abs(change) < 0.05
+            ? "held near its prior reading"
+            : change > 0
+              ? "moved upward"
+              : "moved downward"
+        } by ${formatPercentagePointChange(change)}`;
   const marker = issue.inflectionPoints[0];
   const markerSentence = marker
     ? `The largest threshold marker in the stored history appears on ${formatShortDate(
@@ -48,9 +61,7 @@ function buildSummary(issue: Issue, chartWindow: ChartWindow): string {
 
   return `Over the past ${windowLabel(
     chartWindow,
-  )}, the reflected expectation value ${direction} by ${formatPercentagePointChange(
-    change,
-  )} in Polymarket public data. ${markerSentence} ${relatedSentence} ${
+  )}, the reflected expectation value ${movementSentence} in Polymarket public data. ${markerSentence} ${relatedSentence} ${
     CAUTION_COPY[issue.cautionLevel].detail
   }`;
 }

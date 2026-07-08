@@ -18,7 +18,7 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 ## Current State
 
 - **Version**: v0.2.0-day2-allocation
-- **Phase**: Day 2 assigned; data pipeline and core API/UI integration ready to start
+- **Phase**: Day 2 in progress; TASK-010 core API work is on latest `main`, and TASK-012 dashboard UI integration has been reviewed and updated.
 - **Next milestone**: Day 2 — real data path through ranking API and dashboard v1 (see `../roadmap.md` and `../reports/day-2-work-allocation.md`)
 - **Overall health**: 🟢 Good — the project now has a working local skeleton and remains within the narrowed MVP scope
 
@@ -51,8 +51,8 @@ Future Signal/
 
 | Area | Current state |
 |---|---|
-| Frontend | Dashboard, issue cards, detail view, Recharts line chart, caution badges, data-as-of timestamps, fallback states, and template-summary shell run against typed dummy data. Day 2 `TASK-012` is assigned to reconcile the dummy shape with `/api/issues` and render ranked API-or-fallback data. |
-| Backend | FastAPI app, `/api/health`, accepted `/api/issues`/detail/history/report/category contract, Pydantic schemas, and contract tests exist. `TASK-010` PR #10 now wires issue list/detail/history to live reads with static fallback and is in review. Schema draft is accepted but unapplied. |
+| Frontend | Integrated home dashboard, issue cards, detail view, and Recharts line chart with backend FastAPI routes, adding filters, sorting tabs, error fallback states, and review-hardened insufficient-data display for missing change references. |
+| Backend | FastAPI app, `/api/health`, accepted `/api/issues`/detail/history/report/category contract, Pydantic schemas, and contract tests exist. `TASK-010` PR #10 wires issue list/detail/history to live reads with static fallback. Schema draft is accepted but unapplied. |
 | Data/AI | Gamma/CLOB field shape, pagination, rate-limit behavior, CLOB history query shape, and a 10-item sample set are documented. Day 2 `TASK-007`, `TASK-008`, and `TASK-009` are assigned for normalization, metrics, and the MVP expectation-shift detector. |
 | PM / Safety | P0 scope remains locked; wording policy references `standards.md` and `memory/glossary.md`; Day 2 allocation is recorded in `reports/day-2-work-allocation.md`, and PM now acts as scope gatekeeper while implementation proceeds. |
 
@@ -68,7 +68,8 @@ Future Signal/
 | 2026-07-08 | Day 1 implementation status checkpoint recorded in `reports/day-1-implementation-status.md` |
 | 2026-07-08 | Day 1 closed: API contract accepted (ADR-008), DB schema draft accepted but unapplied (ADR-011), no Day 1 tasks remain active |
 | 2026-07-08 | Day 2 work assigned: `TASK-031` completed the allocation; `TASK-007`, `TASK-008`, `TASK-009`, `TASK-010`, and `TASK-012` moved into active execution order |
-| 2026-07-08 | PR #10 (`TASK-010`) reviewed; reviewer hardening added for live detail/history fallback paths and ADR-013 confirmation remains required before merge |
+| 2026-07-08 | PR #10 (`TASK-010`) added live core API read paths with static fallback behavior |
+| 2026-07-08 | PR #12 (`TASK-012`) reviewed; nullable change metrics now remain visible as insufficient data instead of `0.0pp` |
 
 ## Constraints
 
