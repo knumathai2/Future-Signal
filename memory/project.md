@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Project: Outlook Signals
 
-_Last updated: 2026-07-07_
+_Last updated: 2026-07-08_
 
 ## Summary
 
@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.1.0-dev (pre-Day-1)
-- **Phase**: Harness + planning docs complete (PRD, Service Design, Technical Design, UX Design) — implementation not yet started
-- **Next milestone**: Day 1 — finalize scope, validate Polymarket data, screen skeleton (see `../roadmap.md`)
-- **Overall health**: 🟢 Good — scope is well-defined and narrowed per PRD v1.1 rescoping
+- **Version**: v0.1.0-day1
+- **Phase**: Day 1 closed; ready to start Day 2 data pipeline and core API/UI integration
+- **Next milestone**: Day 2 — data pipeline + core UI/API integration (see `../roadmap.md`)
+- **Overall health**: 🟢 Good — the project now has a working local skeleton and remains within the narrowed MVP scope
 
 ## Tech Summary
 
@@ -41,9 +41,20 @@ Future Signal/
     │   ├── service-design/     # Data/metrics/AI/signal spec (v1.0)
     │   ├── tech-design/        # Architecture/schema/API/pipeline spec (v1.0)
     │   └── ux-design/          # Screens/copy policy/safety guardrails (v1.0)
-    ├── frontend/               # (to be created Day 1)
-    └── backend/                # (to be created Day 1)
+    ├── frontend/               # React/Vite dummy-data dashboard/detail/chart flow
+    ├── backend/                # FastAPI scaffold, mock read API, schema draft
+    ├── reports/                # Implementation status and data-spike findings
+    └── memory/                 # Working project/session state
 ```
+
+## Implementation Snapshot
+
+| Area | Current state |
+|---|---|
+| Frontend | Dashboard, issue cards, detail view, Recharts line chart, caution badges, data-as-of timestamps, fallback states, and template-summary shell run against typed dummy data. |
+| Backend | FastAPI app, `/api/health`, accepted `/api/issues`/detail/history/report/category contract, Pydantic schemas, and contract tests exist. Routes return hardcoded sample data until DB wiring starts. Schema draft is accepted but unapplied. |
+| Data/AI | Gamma/CLOB field shape, pagination, rate-limit behavior, CLOB history query shape, and a 10-item sample set are documented. Batch collector and metric persistence are Day 2 work. |
+| PM / Safety | P0 scope remains locked; wording policy references `standards.md` and `memory/glossary.md`; Day 1 status checkpoint is recorded in `reports/day-1-implementation-status.md`. |
 
 ## Recent Changes
 
@@ -52,6 +63,10 @@ Future Signal/
 | 2026-07-07 | AI Development Harness v1.1 initial setup (Standard tier) |
 | 2026-07-07 | PRD rescoped to v1.1 (hackathon-narrowed from broader "global issue outlook platform" concept) |
 | 2026-07-07 | Service Design, Technical Design, UX Design written as companion specs to PRD |
+| 2026-07-08 | Day 1 implementation scaffold completed: frontend dummy flow, backend mock API contract, DB schema draft, health endpoint |
+| 2026-07-08 | Polymarket Gamma/CLOB spike completed with 10 sample records and a CLOB history fixture |
+| 2026-07-08 | Day 1 implementation status checkpoint recorded in `reports/day-1-implementation-status.md` |
+| 2026-07-08 | Day 1 closed: API contract accepted (ADR-008), DB schema draft accepted but unapplied (ADR-011), no Day 1 tasks remain active |
 
 ## Constraints
 
