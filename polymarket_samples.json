@@ -87,39 +87,15 @@
       "resolution_source": ""
     },
     "ui_display": {
-      "neutral_title": "Will this event occur?",
+      "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "Crypto",
-          "slug": "crypto"
+          "label": "Signal",
+          "slug": "signal"
         },
         {
-          "label": "exchange",
-          "slug": "exchange"
-        },
-        {
-          "label": "Finance",
-          "slug": "finance"
-        },
-        {
-          "label": "Business",
-          "slug": "business"
-        },
-        {
-          "label": "2025 Predictions",
-          "slug": "2025-predictions"
-        },
-        {
-          "label": "Featured",
-          "slug": "featured"
-        },
-        {
-          "label": "IPOs",
-          "slug": "ipos"
-        },
-        {
-          "label": "Crypto Listings",
-          "slug": "crypto-listings"
+          "label": "Forecast",
+          "slug": "forecast"
         }
       ]
     },
@@ -134,9 +110,12 @@
     ],
     "price_history_token": "34626184950254225208692030156208941308358060420950772251072421141618169142241",
     "price_history_source": "CLOB",
-    "created_at": "2024-12-31T18:18:36.692417Z",
-    "updated_at": "2026-07-08T00:47:44.328256Z",
-    "end_date": "2027-01-01T05:00:00Z"
+    "created_at": "2025-11-19T15:48:14.624315Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2027-01-01T05:00:00Z",
+    "event_created_at": "2024-12-31T18:18:36.692417Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2027-01-01T05:00:00Z"
   },
   {
     "id": "16263",
@@ -206,31 +185,15 @@
       "resolution_source": ""
     },
     "ui_display": {
-      "neutral_title": "Will this event occur?",
+      "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "France",
-          "slug": "france"
+          "label": "Signal",
+          "slug": "signal"
         },
         {
-          "label": "Politics",
-          "slug": "politics"
-        },
-        {
-          "label": "Macron",
-          "slug": "macron"
-        },
-        {
-          "label": "2025 Predictions",
-          "slug": "2025-predictions"
-        },
-        {
-          "label": "World",
-          "slug": "world"
-        },
-        {
-          "label": "resign",
-          "slug": "resign"
+          "label": "Forecast",
+          "slug": "forecast"
         }
       ]
     },
@@ -245,9 +208,12 @@
     ],
     "price_history_token": "28543399540889573521326455114444614843465304193358852739098843595402438285283",
     "price_history_source": "CLOB",
-    "created_at": "2025-01-03T19:28:39.855536Z",
-    "updated_at": "2026-07-08T00:47:44.328256Z",
-    "end_date": "2026-06-30T12:00:00Z"
+    "created_at": "2026-06-26T15:56:20.157318Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2026-07-31T12:00:00Z",
+    "event_created_at": "2025-01-03T19:28:39.855536Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2026-06-30T12:00:00Z"
   },
   {
     "id": "16423",
@@ -305,27 +271,15 @@
       "resolution_source": ""
     },
     "ui_display": {
-      "neutral_title": "Will this event occur?",
+      "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "UK",
-          "slug": "uk"
+          "label": "Signal",
+          "slug": "signal"
         },
         {
-          "label": "pedophile",
-          "slug": "pedophile"
-        },
-        {
-          "label": "Starmer",
-          "slug": "starmer"
-        },
-        {
-          "label": "England",
-          "slug": "england"
-        },
-        {
-          "label": "UK Labour Leadership",
-          "slug": "uk-labour-leadership"
+          "label": "Forecast",
+          "slug": "forecast"
         }
       ]
     },
@@ -340,9 +294,12 @@
     ],
     "price_history_token": "31627048520492227354616069874124458767757243686332730237616510640600462926383",
     "price_history_source": "CLOB",
-    "created_at": "2025-01-06T13:06:31.446876Z",
-    "updated_at": "2026-07-08T00:47:44.328256Z",
-    "end_date": "2025-12-31T12:00:00Z"
+    "created_at": "2026-05-25T15:34:30.060986Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-01-06T13:06:31.446876Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2025-12-31T12:00:00Z"
   },
   {
     "id": "17526",
@@ -405,27 +362,15 @@
       "resolution_source": ""
     },
     "ui_display": {
-      "neutral_title": "Will this event occur?",
+      "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "Geopolitics",
-          "slug": "geopolitics"
+          "label": "Signal",
+          "slug": "signal"
         },
         {
-          "label": "Politics",
-          "slug": "politics"
-        },
-        {
-          "label": "China",
-          "slug": "china"
-        },
-        {
-          "label": "India",
-          "slug": "india"
-        },
-        {
-          "label": "World",
-          "slug": "world"
+          "label": "Forecast",
+          "slug": "forecast"
         }
       ]
     },
@@ -440,9 +385,12 @@
     ],
     "price_history_token": "36135303630970774358991758965953725374791089628290212294816140371870983436829",
     "price_history_source": "CLOB",
-    "created_at": "2025-01-30T19:15:09.756401Z",
-    "updated_at": "2026-07-08T00:47:44.328256Z",
-    "end_date": "2025-12-31T12:00:00Z"
+    "created_at": "2025-11-11T22:49:28.471177Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-01-30T19:15:09.756401Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2025-12-31T12:00:00Z"
   },
   {
     "id": "17549",
@@ -545,43 +493,15 @@
       "resolution_source": ""
     },
     "ui_display": {
-      "neutral_title": "Will this event occur?",
+      "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "Ukraine",
-          "slug": "ukraine"
+          "label": "Signal",
+          "slug": "signal"
         },
         {
-          "label": "Politics",
-          "slug": "politics"
-        },
-        {
-          "label": "Geopolitics",
-          "slug": "geopolitics"
-        },
-        {
-          "label": "Russia",
-          "slug": "russia"
-        },
-        {
-          "label": "NATO",
-          "slug": "nato"
-        },
-        {
-          "label": "eu",
-          "slug": "eu"
-        },
-        {
-          "label": "World",
-          "slug": "world"
-        },
-        {
-          "label": "Trump-Zelenskyy",
-          "slug": "trump-zelenskyy"
-        },
-        {
-          "label": "Security Guarantee",
-          "slug": "security-guarantee"
+          "label": "Forecast",
+          "slug": "forecast"
         }
       ]
     },
@@ -596,9 +516,12 @@
     ],
     "price_history_token": "83822435716035660497147241422577858668594129234727507087266598622219382324322",
     "price_history_source": "CLOB",
-    "created_at": "2025-01-31T00:57:34.582889Z",
-    "updated_at": "2026-07-08T00:47:44.328256Z",
-    "end_date": "2026-12-31T12:00:00Z"
+    "created_at": "2026-06-30T23:39:02.930267Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-01-31T00:57:34.582889Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2026-12-31T12:00:00Z"
   },
   {
     "id": "17858",
@@ -717,51 +640,15 @@
       "resolution_source": ""
     },
     "ui_display": {
-      "neutral_title": "Will this event occur?",
+      "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "Politics",
-          "slug": "politics"
+          "label": "Signal",
+          "slug": "signal"
         },
         {
-          "label": "Geopolitics",
-          "slug": "geopolitics"
-        },
-        {
-          "label": "Foreign Policy",
-          "slug": "foreign-policy"
-        },
-        {
-          "label": "Ukraine",
-          "slug": "ukraine"
-        },
-        {
-          "label": "Trump Presidency",
-          "slug": "trump-presidency"
-        },
-        {
-          "label": "Trump",
-          "slug": "trump"
-        },
-        {
-          "label": "putin",
-          "slug": "putin"
-        },
-        {
-          "label": "zelensky",
-          "slug": "zelensky"
-        },
-        {
-          "label": "World",
-          "slug": "world"
-        },
-        {
-          "label": "Trump-Putin",
-          "slug": "trump-putin"
-        },
-        {
-          "label": "Trump-Zelenskyy",
-          "slug": "trump-zelenskyy"
+          "label": "Forecast",
+          "slug": "forecast"
         }
       ]
     },
@@ -776,9 +663,12 @@
     ],
     "price_history_token": "111407906413483830198481741547621131014289190946534570245645667771579973364067",
     "price_history_source": "CLOB",
-    "created_at": "2025-02-06T22:01:47.648437Z",
-    "updated_at": "2026-07-08T00:47:44.328256Z",
-    "end_date": "2026-12-31T12:00:00Z"
+    "created_at": "2026-02-03T00:49:21.271194Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-02-06T22:01:47.648437Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2026-12-31T12:00:00Z"
   },
   {
     "id": "18558",
@@ -849,31 +739,15 @@
       "resolution_source": ""
     },
     "ui_display": {
-      "neutral_title": "Will this event occur?",
+      "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "Ukraine",
-          "slug": "ukraine"
+          "label": "Signal",
+          "slug": "signal"
         },
         {
-          "label": "Geopolitics",
-          "slug": "geopolitics"
-        },
-        {
-          "label": "Politics",
-          "slug": "politics"
-        },
-        {
-          "label": "Foreign Policy",
-          "slug": "foreign-policy"
-        },
-        {
-          "label": "World",
-          "slug": "world"
-        },
-        {
-          "label": "Trump-Zelenskyy",
-          "slug": "trump-zelenskyy"
+          "label": "Forecast",
+          "slug": "forecast"
         }
       ]
     },
@@ -888,9 +762,12 @@
     ],
     "price_history_token": "108022836882070634894978103447460059415631393810246745281341648986501895644031",
     "price_history_source": "CLOB",
-    "created_at": "2025-02-13T19:39:15.966366Z",
-    "updated_at": "2026-07-08T00:47:44.328256Z",
-    "end_date": "2026-12-31T12:00:00Z"
+    "created_at": "2026-05-14T15:47:25.888438Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-02-13T19:39:15.966366Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2026-12-31T12:00:00Z"
   },
   {
     "id": "18571",
@@ -944,23 +821,15 @@
       "resolution_source": ""
     },
     "ui_display": {
-      "neutral_title": "Will this event occur?",
+      "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "NATO",
-          "slug": "nato"
+          "label": "Signal",
+          "slug": "signal"
         },
         {
-          "label": "Geopolitics",
-          "slug": "geopolitics"
-        },
-        {
-          "label": "Politics",
-          "slug": "politics"
-        },
-        {
-          "label": "World",
-          "slug": "world"
+          "label": "Forecast",
+          "slug": "forecast"
         }
       ]
     },
@@ -975,9 +844,12 @@
     ],
     "price_history_token": "97672112380588518658859221422581522664938121648778223046012006536512218182756",
     "price_history_source": "CLOB",
-    "created_at": "2025-02-13T22:27:42.74491Z",
-    "updated_at": "2026-07-08T00:47:44.328256Z",
-    "end_date": "2026-12-31T12:00:00Z"
+    "created_at": "2026-03-31T15:38:07.695444Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-02-13T22:27:42.74491Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2026-12-31T12:00:00Z"
   },
   {
     "id": "18576",
@@ -1048,31 +920,15 @@
       "resolution_source": ""
     },
     "ui_display": {
-      "neutral_title": "Will this event occur?",
+      "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "Ukraine",
-          "slug": "ukraine"
+          "label": "Signal",
+          "slug": "signal"
         },
         {
-          "label": "Politics",
-          "slug": "politics"
-        },
-        {
-          "label": "Geopolitics",
-          "slug": "geopolitics"
-        },
-        {
-          "label": "Foreign Policy",
-          "slug": "foreign-policy"
-        },
-        {
-          "label": "World",
-          "slug": "world"
-        },
-        {
-          "label": "Trump-Zelenskyy",
-          "slug": "trump-zelenskyy"
+          "label": "Forecast",
+          "slug": "forecast"
         }
       ]
     },
@@ -1087,9 +943,12 @@
     ],
     "price_history_token": "109439459397675447272341488571573598040211823291452380402543262182060250075424",
     "price_history_source": "CLOB",
-    "created_at": "2025-02-13T23:40:55.577987Z",
-    "updated_at": "2026-07-08T00:47:44.328256Z",
-    "end_date": "2025-12-31T12:00:00Z"
+    "created_at": "2025-11-11T22:24:22.343831Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-02-13T23:40:55.577987Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2025-12-31T12:00:00Z"
   },
   {
     "id": "22448",
@@ -1143,23 +1002,15 @@
       "resolution_source": ""
     },
     "ui_display": {
-      "neutral_title": "Will this event occur?",
+      "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "Music",
-          "slug": "music"
+          "label": "Signal",
+          "slug": "signal"
         },
         {
-          "label": "Celebrities",
-          "slug": "celebrities"
-        },
-        {
-          "label": "Culture",
-          "slug": "pop-culture"
-        },
-        {
-          "label": "Taylor Swift",
-          "slug": "taylor-swift"
+          "label": "Forecast",
+          "slug": "forecast"
         }
       ]
     },
@@ -1174,8 +1025,11 @@
     ],
     "price_history_token": "44827572479353518081244438746113968420401867280288091969239280589388541478697",
     "price_history_source": "CLOB",
-    "created_at": "2025-04-07T21:37:05.120083Z",
-    "updated_at": "2026-07-08T00:47:44.328256Z",
-    "end_date": "2026-12-31T12:00:00Z"
+    "created_at": "2025-12-28T18:05:27.904845Z",
+    "updated_at": "2026-07-08T00:47:37.812873Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-04-07T21:37:05.120083Z",
+    "event_updated_at": "2026-07-08T00:47:44.328256Z",
+    "event_end_date": "2026-12-31T12:00:00Z"
   }
 ]
