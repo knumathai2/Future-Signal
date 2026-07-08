@@ -149,3 +149,17 @@ _Last updated: 2026-07-08_
 **Rationale**: This matches the Day 1 instruction to proceed without waiting for the API and avoids adding a router dependency.
 **Trade-offs**: Browser URL state is not shareable yet; the API integration pass will need to replace the dummy source.
 **Consequences**: Frontend and backend can align on the `Issue` shape while preserving the P0 demo flow.
+
+---
+
+### ADR-010: PR #6 audit risk is temporarily accepted without a Vite major upgrade
+
+- **Date**: 2026-07-08
+- **Status**: Accepted
+- **Decided by**: User / Frontend Implementer
+
+**Context**: PR #6 originally cleared `npm audit` by moving the frontend build stack to Vite 8, but that crossed a major-version boundary and triggered the `dependencies.md` approval gate. Reverting to the approved Vite 5.x range restores the project-approved dependency policy but leaves `npm audit` reporting Vite/esbuild development-server advisories.
+**Decision**: Keep PR #6 on the approved Vite 5.x / `@vitejs/plugin-react` 4.x major ranges and temporarily accept the dev-server audit warning for this PR. Do not reintroduce the Vite major upgrade in PR #6.
+**Rationale**: The PR's scope is dashboard/detail UI against dummy JSON. A major build-tool upgrade is broader than the feature and requires explicit approval plus full manual demo-flow retest. The reported advisories affect the dev-server/tooling path rather than the generated static production bundle.
+**Trade-offs**: `npm audit` remains non-zero until a separately approved Vite major upgrade lands.
+**Consequences**: PR #6 can be reviewed for merge based on build/lint/copy-safety checks, with `npm audit` recorded as an accepted temporary risk. A future dependency-maintenance task should request approval for the Vite major upgrade and perform the required manual demo-flow retest.

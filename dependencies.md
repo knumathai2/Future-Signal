@@ -64,3 +64,7 @@ _Last updated: 2026-07-08_
 - Minor / patch: Reviewer sign-off then proceed
 - Security patches: Apply immediately, Reviewer reviews after
 - Given the 5-day window: avoid any dependency upgrade during the hackathon unless it fixes a blocking bug
+
+## Temporary Audit Decisions
+
+- 2026-07-08 / PR #6: Keep frontend on the approved Vite 5.x major range and temporarily accept the Vite/esbuild dev-server audit warning. Clearing it requires a Vite major upgrade, which is deferred to a separate dependency-maintenance task with explicit approval and full manual demo-flow retest (ADR-010).
