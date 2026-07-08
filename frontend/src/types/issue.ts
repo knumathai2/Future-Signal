@@ -27,9 +27,9 @@ export type Issue = {
   description: string;
   category: string;
   currentExpectationValue: number;
-  change24h: number;
-  change7d: number;
-  change30d?: number;
+  change24h: number | null;
+  change7d: number | null;
+  change30d?: number | null;
   cautionLevel: CautionLevel;
   dataAsOf: string;
   history: IssueHistoryPoint[];
