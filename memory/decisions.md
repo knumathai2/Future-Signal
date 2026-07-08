@@ -107,3 +107,17 @@ _Last updated: 2026-07-08_
 **Rationale**: These tasks map directly to PRD §14 Day 1 deliverables: screen structure, API contract, sample data, scope lock, and presentation key messages.
 **Trade-offs**: Backend has several small Day 1 tasks, so sequencing matters: scaffold and health endpoint first, then contract/schema draft.
 **Consequences**: Each role has a concrete branch and Day 1 Definition of Done; schema application remains behind the human-approval gate in `AGENTS.md`.
+
+---
+
+### ADR-007: TASK-005 frontend uses local state and dummy issue contract
+
+- **Date**: 2026-07-08
+- **Status**: Accepted
+- **Decided by**: Frontend Implementer
+
+**Context**: The frontend needed a usable dashboard/detail flow before the backend API is ready.
+**Decision**: Implement dashboard-to-detail navigation with React local state and a typed dummy issue data contract under `frontend/src/data`.
+**Rationale**: This matches the Day 1 instruction to proceed without waiting for the API and avoids adding a router dependency.
+**Trade-offs**: Browser URL state is not shareable yet; the API integration pass will need to replace the dummy source.
+**Consequences**: Frontend and backend can align on the `Issue` shape while preserving the P0 demo flow.

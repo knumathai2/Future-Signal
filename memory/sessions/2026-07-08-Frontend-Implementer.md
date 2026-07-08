@@ -7,8 +7,6 @@ Harness Version: 1.1
 
 # Current Session — Outlook Signals
 
-> After this session, copy this file to `memory/sessions/YYYY-MM-DD-[ROLE].md`.
-
 ---
 
 ## Session Info

@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Known Issues — Outlook Signals
 
-_Last updated: 2026-07-07_
+_Last updated: 2026-07-08_
 
 ## Active Bugs
 
@@ -19,7 +19,7 @@ _Last updated: 2026-07-07_
 
 | ID | Description | Impact | Target Resolution |
 |----|-------------|--------|-------------------|
-| — | (none yet) | — | — |
+| TD-001 | Frontend production build reports a chunk-size warning, likely from Recharts in the first bundle. | Non-blocking for the MVP; initial load could be optimized later. | Consider lazy-loading the detail/chart route after MVP flow stabilizes. |
 
 ## Resolved
 
