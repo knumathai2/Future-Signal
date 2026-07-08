@@ -15,7 +15,7 @@ Day 2 work is assigned as of 2026-07-08. The goal is to connect the real data pa
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-007 | Batch collector: fetch + normalize (steps 1-2) | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-007-fetch-normalize` | assigned |
+| TASK-007 | Batch collector: fetch + normalize (steps 1-2) | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-007-fetch-normalize` | review |
 | TASK-008 | Batch collector: snapshot + metrics (steps 3-5) | Data/AI Implementer + Backend | Data/AI Implementer + Backend Implementer | `data-ai/TASK-008-snapshot-metrics` | assigned |
 | TASK-009 | Expectation-shift detection (±5pp threshold) | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-009-shift-detection` | assigned |
 | TASK-010 | `/api/issues`, `/api/issues/:id`, `/api/issues/:id/history` | Backend Implementer | Backend Implementer | `backend/TASK-010-core-api` | review |
@@ -45,15 +45,15 @@ Day 2 work is assigned as of 2026-07-08. The goal is to connect the real data pa
 - **Owner**: Data/AI Implementer
 - **Assignee**: Data/AI Implementer
 - **Branch**: `data-ai/TASK-007-fetch-normalize`
-- **Status**: assigned
+- **Status**: review
 - **Priority**: High
 - **Day**: Day 2
 - **Description**: Implement Gamma/CLOB fetch and normalization for the curated 30-50 binary-market sample set using the Day 1 spike findings.
 - **Definition of Done**:
-  - [ ] Curated market input list is documented or generated from accepted sample criteria.
-  - [ ] Normalized records include required market/outcome/current-value/activity fields.
-  - [ ] Invalid records are skipped with structured error details instead of failing the whole run.
-  - [ ] A local run produces a normalized sample artifact suitable for `TASK-008` and `TASK-010`.
+  - [x] Curated market input list is documented or generated from accepted sample criteria.
+  - [x] Normalized records include required market/outcome/current-value/activity fields.
+  - [x] Invalid records are skipped with structured error details instead of failing the whole run.
+  - [x] A local run produces a normalized sample artifact suitable for `TASK-008` and `TASK-010`.
 
 ### TASK-008: Batch collector snapshot + metrics
 - **Owner**: Data/AI Implementer + Backend
