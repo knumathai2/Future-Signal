@@ -191,3 +191,17 @@ _Last updated: 2026-07-08_
 **Rationale**: The PR's scope is dashboard/detail UI against dummy JSON. A major build-tool upgrade is broader than the feature and requires explicit approval plus full manual demo-flow retest. The reported advisories affect the dev-server/tooling path rather than the generated static production bundle.
 **Trade-offs**: `npm audit` remains non-zero until a separately approved Vite major upgrade lands.
 **Consequences**: PR #6 can be reviewed for merge based on build/lint/copy-safety checks, with `npm audit` recorded as an accepted temporary risk. A future dependency-maintenance task should request approval for the Vite major upgrade and perform the required manual demo-flow retest.
+
+---
+
+### ADR-013: `/api/issues` degrades to `200` + static fallback, not `503`, when live data is unavailable
+
+- **Date**: 2026-07-08
+- **Status**: Accepted
+- **Decided by**: Backend Implementer (flagged for PM/Frontend confirmation)
+
+**Context**: `TASK-010` wired `/api/issues`, `/api/issues/:id`, and `/api/issues/:id/history` to real Postgres reads via `app/db/session.py::get_db()`. As of this task, `TASK-007`/`TASK-008` had not produced any `market_snapshots`/`market_metrics` rows, and `DATABASE_URL` is also commonly unset in local dev. Technical Design §5 mentions `503` for a "degrade to last-known-good data" case, which is ambiguous about whether the response body is still served on a `503`.
+**Decision**: When `DATABASE_URL` is unset, a live query fails, or `market_snapshots` has zero rows, the affected endpoints return `200` with the existing static sample dataset (`_FALLBACK_ISSUES` in `app/api/routes/issues.py`) and its fixed `data_as_of`, not `503`. Every fallback is logged via `logger.warning("FALLBACK: ...")` with the specific reason, so it can never become a silent permanent substitute once real data lands.
+**Rationale**: Matches `reports/day-2-work-allocation.md`'s Judging Q&A seed ("the API and frontend keep a static/last-known-good fallback path with honest timestamps") and `TASK-012`'s DoD ("retain a static fallback for demo resilience") - a `503` would force the frontend into an error state instead of a usable demo dashboard.
+**Trade-offs**: `503` as specified in Technical Design §5 is not implemented; if a future need arises to distinguish "serving fallback data" from "serving live data" at the HTTP layer (e.g. for monitoring), that will require either a new response field (contract change, needs approval) or an out-of-band signal (e.g. a response header), not implemented here.
+**Consequences**: `backend/API_CONTRACT.md`'s Error shape section now documents this instead of the "not yet triggerable" `503` placeholder. Flagged for explicit PM/Frontend confirmation the same way ADR-008 was, since it affects demo behavior even though it does not change the response schema.
