@@ -16,10 +16,9 @@ Day 2 work is assigned as of 2026-07-08. The goal is to connect the real data pa
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
 | TASK-007 | Batch collector: fetch + normalize (steps 1-2) | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-007-fetch-normalize` | review |
-| TASK-009 | Expectation-shift detection (±5pp threshold) | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-009-shift-detection` | assigned |
 | TASK-010 | `/api/issues`, `/api/issues/:id`, `/api/issues/:id/history` | Backend Implementer | Backend Implementer | `backend/TASK-010-core-api` | review |
 
-`TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-008`, `TASK-011`, `TASK-012`, and `TASK-031` completed 2026-07-08 — see `tasks/completed.md`.
+`TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-008`, `TASK-009`, `TASK-011`, `TASK-012`, and `TASK-031` completed 2026-07-08 — see `tasks/completed.md`.
 
 ## Day 2 Assignment Notes
 
@@ -52,20 +51,6 @@ Day 2 work is assigned as of 2026-07-08. The goal is to connect the real data pa
   - [x] Normalized records include required market/outcome/current-value/activity fields.
   - [x] Invalid records are skipped with structured error details instead of failing the whole run.
   - [x] A local run produces a normalized sample artifact suitable for `TASK-008` and `TASK-010`.
-
-### TASK-009: Expectation-shift detection
-- **Owner**: Data/AI Implementer
-- **Assignee**: Data/AI Implementer
-- **Branch**: `data-ai/TASK-009-shift-detection`
-- **Status**: assigned
-- **Priority**: High
-- **Day**: Day 2
-- **Description**: Add the MVP threshold detector for `abs(change_24h) >= 5pp` with duplicate suppression for the same window.
-- **Definition of Done**:
-  - [ ] Threshold is implemented as a named constant with tests around boundary values.
-  - [ ] Detector emits only the MVP `expectation_shift` type and `medium` severity.
-  - [ ] Duplicate detections in the same rolling window are suppressed.
-  - [ ] Output is ready for the detail/API response shape without adding P1 feed scope.
 
 ### TASK-010: Core read API endpoints
 - **Owner**: Backend Implementer
