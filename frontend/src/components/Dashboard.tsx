@@ -64,6 +64,10 @@ function ErrorState({ staleDataAsOf }: { staleDataAsOf: string }) {
   );
 }
 
+function absoluteChangeValue(value: number | null | undefined): number {
+  return value === null || value === undefined ? -1 : Math.abs(value);
+}
+
 export function Dashboard({
   issues,
   status,
@@ -82,7 +86,10 @@ export function Dashboard({
   const topReassessedIssues = issues;
 
   const weeklyRows = [...issues]
-    .sort((left, right) => Math.abs(right.change7d) - Math.abs(left.change7d))
+    .sort(
+      (left, right) =>
+        absoluteChangeValue(right.change7d) - absoluteChangeValue(left.change7d),
+    )
     .slice(0, 5);
 
   const shouldShowIssueLists =

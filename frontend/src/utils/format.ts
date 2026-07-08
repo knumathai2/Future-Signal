@@ -34,7 +34,13 @@ export function formatExpectationValue(value: number): string {
   return `${Math.round(value)}%`;
 }
 
-export function formatPercentagePointChange(value: number): string {
+export function formatPercentagePointChange(
+  value: number | null | undefined,
+): string {
+  if (value === null || value === undefined || Number.isNaN(value)) {
+    return "insufficient data";
+  }
+
   if (Math.abs(value) < 0.05) {
     return "0.0pp";
   }
@@ -117,19 +123,19 @@ export interface ApiIssueHistoryResponse {
   points: ApiHistoryPoint[];
 }
 
+function toPercentagePoint(value: number | null | undefined): number | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  return Number((value * 100).toFixed(1));
+}
+
 export function mapApiIssueToFrontendIssue(
   apiIssue: ApiIssueSummary,
   dataAsOf: string,
 ): Issue {
   const currentExpectationValue = apiIssue.current_value * 100;
-  const change24h =
-    apiIssue.change_24h !== null && apiIssue.change_24h !== undefined
-      ? apiIssue.change_24h * 100
-      : 0;
-  const change7d =
-    apiIssue.change_7d !== null && apiIssue.change_7d !== undefined
-      ? apiIssue.change_7d * 100
-      : 0;
 
   return {
     id: apiIssue.id,
@@ -137,8 +143,8 @@ export function mapApiIssueToFrontendIssue(
     description: "",
     category: apiIssue.category,
     currentExpectationValue: Number(currentExpectationValue.toFixed(1)),
-    change24h: Number(change24h.toFixed(1)),
-    change7d: Number(change7d.toFixed(1)),
+    change24h: toPercentagePoint(apiIssue.change_24h),
+    change7d: toPercentagePoint(apiIssue.change_7d),
     cautionLevel: apiIssue.confidence_level,
     dataAsOf,
     history: [],
@@ -175,10 +181,10 @@ export function mapApiIssueDetailToFrontendIssue(
   }));
 
   const currentExpectationValue = apiDetail.current_value * 100;
-  const change24h = apiDetail.change_24h !== null ? apiDetail.change_24h * 100 : 0;
-  const change7d = apiDetail.change_7d !== null ? apiDetail.change_7d * 100 : 0;
+  const change24h = toPercentagePoint(apiDetail.change_24h);
+  const change7d = toPercentagePoint(apiDetail.change_7d);
 
-  let change30d = undefined;
+  let change30d: number | null = null;
   if (history.length > 0) {
     change30d = Number((currentExpectationValue - history[0].value).toFixed(1));
   }
@@ -189,8 +195,8 @@ export function mapApiIssueDetailToFrontendIssue(
     description: apiDetail.description,
     category: apiDetail.category,
     currentExpectationValue: Number(currentExpectationValue.toFixed(1)),
-    change24h: Number(change24h.toFixed(1)),
-    change7d: Number(change7d.toFixed(1)),
+    change24h,
+    change7d,
     change30d,
     cautionLevel: apiDetail.confidence_level,
     dataAsOf: apiDetail.data_as_of,
