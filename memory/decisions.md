@@ -152,6 +152,20 @@ _Last updated: 2026-07-08_
 
 ---
 
+### ADR-012: Day 2 active work limited to P0 data path, core API, and dashboard integration
+
+- **Date**: 2026-07-08
+- **Status**: Accepted
+- **Decided by**: PM / Planner
+
+**Context**: Day 1 closed with a working frontend dummy flow, accepted mock API contract, accepted-unapplied schema draft, and validated Polymarket field samples. The next risk is spreading Day 2 effort across attractive P1 work before the real data path reaches the dashboard.
+**Decision**: Complete `TASK-031` for Day 2 allocation, then assign Day 2 active implementation work to `TASK-007`, `TASK-008`, `TASK-009`, `TASK-010`, and `TASK-012` only. Keep category filtering, `/api/signals` feed, volatility/attention metrics, report generation, event candidates, deployment, and copy-polish passes deferred until the P0 data/API/dashboard path is usable.
+**Rationale**: This matches PRD §14's Day 2 deliverables: dashboard v1, ranking API, change-calculation data, and candidate issue list for the demo. It also preserves the PRD §13.1 operating principle that frontend, backend, and data work can proceed in parallel as long as the contract and handoff order stay explicit.
+**Trade-offs**: Some visible polish and richer metrics remain idle even if they would improve the demo surface. The team may need a follow-up Day 2/3 bridge if live metric data arrives late.
+**Consequences**: `tasks/active.md` is the Day 2 source of execution truth for implementation, `tasks/completed.md` records `TASK-031`, `tasks/backlog.md` no longer lists the moved Day 2 tasks, and `reports/day-2-work-allocation.md` records the sequence. Applying the schema draft to any shared or production database remains a separate human-approval gate.
+
+---
+
 ### ADR-009: TASK-005 frontend uses local state and dummy issue contract
 
 - **Date**: 2026-07-08
