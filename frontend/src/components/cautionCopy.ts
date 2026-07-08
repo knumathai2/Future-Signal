@@ -8,27 +8,27 @@ type CautionCopy = {
 
 export const CAUTION_COPY: Record<CautionLevel, CautionCopy> = {
   sufficient: {
-    label: "Data sufficient",
+    label: "해석 주의",
     detail:
-      "Data points and activity level are above the monitoring threshold. Interpretation still requires caution.",
+      "데이터 지점과 활동 수준이 기준 이상이지만, 공개 데이터에 반영된 기대값은 신중하게 해석해야 합니다.",
     className: "border-line bg-line-soft text-ink-soft",
   },
   caution_low_activity: {
-    label: "Activity caution",
+    label: "낮은 활동 주의",
     detail:
-      "Activity level is below the usual threshold, so interpretation requires extra caution.",
+      "활동 수준이 기준보다 낮아 관측된 변화를 더 신중하게 해석해야 합니다.",
     className: "border-accent-soft bg-accent-soft text-[#7a4a2a]",
   },
   caution_high_volatility: {
-    label: "Volatility caution",
+    label: "변동성 주의",
     detail:
-      "A large recent move appears with elevated volatility. Further verification is needed.",
+      "최근 큰 변화와 높은 변동성이 함께 관측되어 추가 확인이 필요합니다.",
     className: "border-accent bg-accent-soft text-ink",
   },
   insufficient_data: {
-    label: "Insufficient data",
+    label: "데이터 부족",
     detail:
-      "There are not enough time-series points for a complete trend reading.",
+      "완전한 흐름을 읽기에는 시계열 지점이 충분하지 않습니다.",
     className: "border-dashed border-line bg-transparent text-ink-faint",
   },
 };
