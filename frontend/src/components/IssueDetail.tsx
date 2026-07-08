@@ -4,6 +4,7 @@ import { CAUTION_COPY } from "./cautionCopy";
 import { IssueTrendChart } from "./IssueTrendChart";
 import { MetricTile } from "./MetricTile";
 import {
+  formatCategoryLabel,
   formatDataTimestamp,
   formatExpectationValue,
   formatPercentagePointChange,
@@ -39,29 +40,29 @@ function buildSummary(issue: Issue, chartWindow: ChartWindow): string {
   const change = changeForWindow(issue, chartWindow);
   const movementSentence =
     change === null || change === undefined || Number.isNaN(change)
-      ? `does not have enough reference data for a ${windowLabel(
+      ? `공개 데이터에 반영된 기대값은 ${windowLabel(
           chartWindow,
-        )} change calculation`
+        )} 변화 계산에 필요한 기준 데이터가 충분하지 않습니다`
       : `${
           Math.abs(change) < 0.05
-            ? "held near its prior reading"
+            ? "공개 데이터에 반영된 기대값은 이전 관측값과 비슷한 수준으로 관측되었습니다"
             : change > 0
-              ? "moved upward"
-              : "moved downward"
-        } by ${formatPercentagePointChange(change)}`;
+              ? "공개 데이터에 반영된 기대값은 상승 방향으로 관측되었습니다"
+              : "공개 데이터에 반영된 기대값은 하락 방향으로 관측되었습니다"
+        } (${formatPercentagePointChange(change)})`;
   const marker = issue.inflectionPoints[0];
   const markerSentence = marker
-    ? `The largest threshold marker in the stored history appears on ${formatShortDate(
+    ? `저장된 이력의 기준선 통과 표시는 ${formatShortDate(
         marker.timestamp,
-      )}, with an observed change of ${formatPercentagePointChange(marker.change)}.`
-    : "No threshold marker is present in the stored history.";
+      )}에 있으며, 관측된 변화는 ${formatPercentagePointChange(marker.change)}입니다.`
+    : "저장된 이력에는 기준선 통과 표시가 없습니다.";
   const relatedSentence = issue.relatedEventCandidates?.length
-    ? "Related event candidates are listed for context only and are not presented as causes."
-    : "No related event candidate is listed for this issue.";
+    ? "관련 사건 후보는 맥락 확인용이며 원인으로 제시하지 않습니다."
+    : "이 이슈에는 관련 사건 후보가 등록되어 있지 않습니다.";
 
-  return `Over the past ${windowLabel(
+  return `최근 ${windowLabel(
     chartWindow,
-  )}, the reflected expectation value ${movementSentence} in Polymarket public data. ${markerSentence} ${relatedSentence} ${
+  )} 동안 ${movementSentence}. ${markerSentence} ${relatedSentence} ${
     CAUTION_COPY[issue.cautionLevel].detail
   }`;
 }
@@ -81,53 +82,55 @@ export function IssueDetail({ issue, dataStatus = "ready", onBack }: IssueDetail
         onClick={onBack}
         className="text-sm font-semibold text-ink-soft transition hover:text-accent"
       >
-        Back to dashboard
+        대시보드로 돌아가기
       </button>
 
       <header className="mt-5">
         {dataStatus === "error" ? (
           <div className="mb-4 rounded-lg border border-line bg-card px-4 py-3">
-            <h2 className="text-sm font-bold text-ink">Showing last available data</h2>
+            <h2 className="text-sm font-bold text-ink">
+              마지막으로 확인 가능한 데이터를 표시합니다
+            </h2>
             <p className="mt-1 text-sm leading-6 text-ink-soft">
-              The latest refresh did not complete. This detail view uses the same
-              fallback issue set shown on the dashboard.
+              최신 새로고침이 완료되지 않아 대시보드와 같은 백업 이슈 목록을
+              기준으로 상세 화면을 표시합니다.
             </p>
           </div>
         ) : null}
 
         <div className="flex flex-wrap items-center gap-3">
-          <span className="text-[11px] font-bold uppercase tracking-wider text-ink-faint">
-            {issue.category}
+          <span className="text-[11px] font-bold text-ink-faint">
+            {formatCategoryLabel(issue.category)}
           </span>
           <CautionBadge level={issue.cautionLevel} />
         </div>
-        <h1 className="mt-3 max-w-4xl text-3xl font-bold tracking-tight text-ink">
+        <h1 className="mt-3 max-w-4xl text-3xl font-bold text-ink">
           {issue.title}
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-ink-soft">
           {issue.description}
         </p>
         <p className="mt-2 text-xs text-ink-faint">
-          Data as of {formatDataTimestamp(issue.dataAsOf)}
+          데이터 기준 시각: {formatDataTimestamp(issue.dataAsOf)}
         </p>
       </header>
 
       <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-4">
         <MetricTile
           primary
-          label="Reflected expectation value"
+          label="공개 데이터에 반영된 기대값"
           value={formatExpectationValue(issue.currentExpectationValue)}
         />
         <MetricTile
-          label="24h observed change"
+          label="24시간 관측 변화"
           value={formatPercentagePointChange(issue.change24h)}
         />
         <MetricTile
-          label="7d observed change"
+          label="7일 관측 변화"
           value={formatPercentagePointChange(issue.change7d)}
         />
         <MetricTile
-          label="30d observed change"
+          label="30일 관측 변화"
           value={formatPercentagePointChange(issue.change30d ?? issue.change7d)}
         />
       </section>
@@ -135,17 +138,17 @@ export function IssueDetail({ issue, dataStatus = "ready", onBack }: IssueDetail
       <section className="mt-4 rounded-lg border border-line bg-card px-4 py-3">
         <CautionBadge level={issue.cautionLevel} withDetail />
         <p className="mt-2 text-sm leading-6 text-ink-soft">
-          This value reflects public data activity, not a certified fact about a
-          real-world outcome. Data may be incomplete or volatile.
+          이 값은 공개 데이터에 반영된 기대값이며 실제 사건에 대한 확정 사실이
+          아닙니다. 데이터가 불완전하거나 변동성이 클 수 있습니다.
         </p>
       </section>
 
       <section className="mt-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h2 className="text-lg font-bold text-ink">
-            Reflected expectation value over time
+            공개 데이터에 반영된 기대값 추이
           </h2>
-          <div className="flex gap-2" aria-label="Chart window">
+          <div className="flex gap-2" aria-label="차트 기간">
             {CHART_WINDOWS.map((windowOption) => (
               <button
                 key={windowOption}
@@ -157,7 +160,7 @@ export function IssueDetail({ issue, dataStatus = "ready", onBack }: IssueDetail
                     : "rounded-full border border-line px-3 py-1.5 text-xs font-bold text-ink-soft transition hover:border-accent hover:text-accent"
                 }
               >
-                {windowOption}
+                {windowLabel(windowOption)}
               </button>
             ))}
           </div>
@@ -168,10 +171,10 @@ export function IssueDetail({ issue, dataStatus = "ready", onBack }: IssueDetail
       </section>
 
       <section className="mt-10">
-        <h2 className="text-lg font-bold text-ink">Related event candidates</h2>
+        <h2 className="text-lg font-bold text-ink">관련 사건 후보</h2>
         <p className="mt-1 text-sm leading-6 text-ink-faint">
-          Manually curated context to review alongside observed change; not
-          presented as causes.
+          관측된 변화와 함께 확인할 수 있도록 수동으로 정리한 후보 맥락입니다.
+          원인으로 제시하지 않습니다.
         </p>
 
         {issue.relatedEventCandidates?.length ? (
@@ -191,36 +194,34 @@ export function IssueDetail({ issue, dataStatus = "ready", onBack }: IssueDetail
           </div>
         ) : (
           <p className="mt-4 rounded-lg border border-dashed border-line px-4 py-4 text-sm text-ink-faint">
-            No related event candidate has been identified for this issue.
+            이 이슈에는 등록된 관련 사건 후보가 없습니다.
           </p>
         )}
       </section>
 
       <section className="mt-10 rounded-lg border border-line bg-card p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-bold text-ink">Issue summary</h2>
-          <span className="text-[11px] font-semibold uppercase tracking-wider text-ink-faint">
-            Template-based data summary
+          <h2 className="text-lg font-bold text-ink">이슈 요약</h2>
+          <span className="text-[11px] font-semibold text-ink-faint">
+            템플릿 기반 데이터 요약
           </span>
         </div>
         <p className="mt-4 max-w-4xl text-sm leading-7 text-ink">{summary}</p>
         <p className="mt-4 border-t border-line-soft pt-3 text-xs leading-6 text-ink-faint">
-          This summary is generated from the dummy data contract and may contain
-          incomplete context. It is not advice of any kind.
+          이 요약은 현재 데이터 계약에 맞춘 템플릿으로 생성되며, 맥락이
+          불완전할 수 있습니다. 어떤 종류의 조언도 아닙니다.
         </p>
       </section>
 
       <footer className="mt-10 border-t border-line pt-5 text-xs leading-6 text-ink-faint">
         <p className="max-w-3xl">
-          Outlook Signals is an information analysis and issue-monitoring
-          service. It does not provide financial, legal, political, or other
-          professional advice.
+          Outlook Signals는 공개 데이터 기반의 정보 분석 및 이슈 관찰 서비스입니다.
+          금융, 법률, 정치 또는 그 밖의 전문적 조언을 제공하지 않습니다.
         </p>
         <p className="mt-2 max-w-3xl">
-          This indicator reflects changing expectations in Polymarket public
-          data. It does not represent the judgment of the public at large, and
-          interpretation requires caution depending on data activity level and
-          volatility.
+          이 지표는 Polymarket 공개 데이터에 반영된 기대값의 변화를 보여줍니다.
+          전체 대중의 판단을 대표하지 않으며, 데이터 활동 수준과 변동성에 따라
+          해석에 주의가 필요합니다.
         </p>
       </footer>
     </div>
