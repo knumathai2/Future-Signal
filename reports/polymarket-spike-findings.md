@@ -11,8 +11,8 @@ Based on testing the `/events` endpoint:
 - **Description**: `description`
 - **Category/Tags**: Found in `tags` (array of objects with `label` and `slug`). Mapped to `raw_data.category_tag` and replaced with `ui_display.neutral_tags`.
 - **Current Value/Price**: Located in the valid inner market's `outcomePrices` array. For binary markets, it's typically a string like `"0"`, `"0.34"`.
-- **Volume**: `volume`
-- **Liquidity**: `liquidity`
+- **Volume**: valid inner market `volume` / `volumeNum` / `volumeClob`
+- **Liquidity**: valid inner market `liquidity` / `liquidityNum` / `liquidityClob`
 - **Dates**: `createdAt`, `updatedAt`, `endDate`
 
 ## 2. Gamma Token Discovery
@@ -33,4 +33,5 @@ The Gamma API supports standard `limit` and `offset` query parameters.
 ## 5. Known Issues / Missing Fields
 - `resolutionSource`: Often empty or missing in both the event and market data.
 - `current_value`: Requires parsing from `outcomePrices` string array.
+- CLOB `prices-history` response shape still needs validation before collector wiring.
 - **Data Hygiene**: The raw Gamma API often includes product-unsafe prediction framing in titles and tags, requiring separation into display-safe `ui_display` fields.
