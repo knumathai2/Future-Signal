@@ -12,10 +12,13 @@ paths use `issues` / `signals` / `reports` / `categories` — never `markets`,
 `bets`, `trades`, `positions`, or `profits` (enforced by
 `tests/test_issues_contract.py::test_public_paths_never_use_market_terminal_vocabulary`).
 
-**Current implementation state**: routes return hardcoded sample data, not
-live Postgres reads — TASK-002's schema has not been applied to any
-database yet. DB wiring is a follow-up once TASK-002 is approved; response
-shapes are not expected to change at that point.
+**Current implementation state** (TASK-010): routes read from Postgres via
+`app/db/session.py::get_db()` when `DATABASE_URL` is set and live
+`market_snapshots` data exists. TASK-002's schema is still unapplied to any
+shared/production database, and TASK-007/TASK-008 (the batch collector)
+have not produced data yet as of this writing, so in practice every
+environment currently serves the static fallback described below. Response
+shapes did not change from the earlier mock-only draft.
 
 ## `GET /api/health`
 
@@ -127,14 +130,10 @@ If no report exists yet:
 
 `404` if `id` is unknown.
 
-### Open item for PM sign-off
-
-Technical Design §5 specifies "`204` with a body hint
-`{"status": "not_yet_generated"}`" for the no-report-yet case. **HTTP `204
-No Content` cannot carry a response body** per spec — most HTTP clients
-discard it. This draft instead returns `200` with
-`{"status": "not_yet_generated"}` so the frontend can read it. Flagging for
-PM/Frontend confirmation before this is treated as final.
+Per ADR-008, this returns `200` with `{"status": "not_yet_generated"}`
+rather than Technical Design §5's originally proposed `204` (HTTP `204 No
+Content` cannot carry a body per spec, so most clients would discard the
+hint). This is accepted as final, not an open item.
 
 ## `GET /api/categories`
 
@@ -147,10 +146,18 @@ PM/Frontend confirmation before this is treated as final.
 - `404` — unknown id, FastAPI default `{"detail": "..."}` shape (not yet
   normalized to the `ErrorResponse` schema in `app/schemas/issues.py` —
   flagged as a follow-up, low risk to change before frontend depends on it).
-- `400` — invalid `window`/`sort` enum value.
-- `503` — reserved for the "degrade to last-known-good data" fallback
-  (Technical Design §5); not yet triggerable since there is no live DB read
-  path yet.
+- `422` — invalid `window`/`sort` enum value. (This document previously said
+  `400`; FastAPI's built-in `Query(pattern=...)` validation — which
+  TASK-010 preserves unchanged — returns `422` with
+  `{"detail": [...]}`, not `400`. Flagged as a pre-existing doc/implementation
+  mismatch, not a TASK-010 regression; see `memory/known-issues.md`.)
+- **No `503`.** TASK-010 implements the "degrade to last-known-good data"
+  requirement (Technical Design §5, PRD §8.1) as `200` with the static
+  sample dataset and an honest `data_as_of`, not a `503`, so the dashboard
+  never has to render a hard-error state during a demo. This applies when
+  `DATABASE_URL` is unset or unreachable, or when no `market_snapshots` rows
+  exist yet (e.g. TASK-008 has not run) — see the FALLBACK NOTE in
+  `app/api/routes/issues.py` and `reports/task-010-core-api-notes.md`.
 
 ## Wording alignment with `memory/glossary.md`
 
