@@ -1,13 +1,6 @@
-<!--
-Purpose:        Current session state — context handoff between agents
-Owner:          Currently active agent
-Update Trigger: Read at session start; must update before session ends
-Harness Version: 1.1
--->
-
 # Current Session — Outlook Signals
 
-> After this session, copy this file to `memory/sessions/YYYY-MM-DD-[ROLE].md`.
+> Archived from `memory/session.md` after PR #10 review follow-up.
 
 ---
 

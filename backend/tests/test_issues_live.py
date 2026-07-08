@@ -5,6 +5,9 @@ fallback-path coverage in test_issues_contract.py is left untouched and
 continues to exercise the static sample dataset (no DATABASE_URL is set in
 the test environment, so those tests never hit the live path).
 """
+from sqlalchemy.exc import SQLAlchemyError
+
+from app.api.routes import issues as issues_routes
 from tests.conftest import (
     MARKET_ID,
     MARKET_ID_NO_METRIC,
@@ -46,6 +49,26 @@ def test_get_issue_detail_live_data(live_client, db_session):
     assert "candidate, not a cause" in body["related_events"][0]["note"]
 
 
+def test_detail_auxiliary_query_failure_keeps_core_issue(
+    live_client, db_session, monkeypatch
+):
+    seed_basic_market(db_session)
+
+    def fail_query(*args, **kwargs):
+        raise SQLAlchemyError("simulated auxiliary query failure")
+
+    monkeypatch.setattr(issues_routes, "load_signals_for_market", fail_query)
+    monkeypatch.setattr(issues_routes, "load_related_events_for_market", fail_query)
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == str(MARKET_ID)
+    assert body["signals"] == []
+    assert body["related_events"] == []
+
+
 def test_get_issue_unknown_id_live_mode_is_404(live_client, db_session):
     seed_basic_market(db_session)
 
@@ -63,6 +86,26 @@ def test_get_issue_history_live_data(live_client, db_session):
     body = response.json()
     assert body["window"] == "7d"
     assert len(body["points"]) == 1
+    assert body["points"][0]["value"] == 0.63
+
+
+def test_history_query_failure_returns_latest_snapshot_point(
+    live_client, db_session, monkeypatch
+):
+    seed_basic_market(db_session)
+
+    def fail_query(*args, **kwargs):
+        raise SQLAlchemyError("simulated history query failure")
+
+    monkeypatch.setattr(issues_routes, "load_history_points", fail_query)
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/history?window=7d")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["window"] == "7d"
+    assert len(body["points"]) == 1
+    assert body["points"][0]["captured_at"].startswith("2026-07-08T09:00:00")
     assert body["points"][0]["value"] == 0.63
 
 
