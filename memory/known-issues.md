@@ -25,6 +25,7 @@ _Last updated: 2026-07-08_
 | TD-005 | PR #9's TASK-007 normalized sample artifact is not yet shaped for the accepted downstream schema and lacks structured skip/error details. | Blocks reliable handoff to `TASK-008` and `TASK-010`; downstream code would need to infer normalized fields from nested raw source data. | Data/AI Implementer should revise PR #9 before merge; see `reports/review-2026-07-08-TASK-007-fetch-normalize.md`. |
 | TD-006 | PR #9's committed sample artifact stores raw external descriptions that trigger project wording lint if used as fallback/display data. | Raw source text could leak into user-facing surfaces unless a non-display boundary or sanitization step is added. | Keep raw source payloads separate from display-ready fields and run wording lint before using the artifact in frontend/API fallback paths. |
 | TD-007 | `backend/API_CONTRACT.md`'s Error shape section documents invalid `window`/`sort` as FastAPI's current `422` behavior rather than forcing the original `400` plan. | Low; frontend should code against `422`. Changing it to `400` would be a public behavior change beyond the TASK-010 conflict-resolution scope. | Leave documented as actual behavior unless PM/Frontend request a separate API-error normalization task. |
+| TD-008 | `TASK-008`'s `market_metrics.confidence_level` only distinguishes `sufficient`/`insufficient_data`; `caution_low_activity`/`caution_high_volatility` are accepted by the schema but never populated (see ADR-015). | `/api/issues` caution badges can't yet flag a technically-sufficient-history market that's actually thin or highly volatile. | Resolve the "Minimum volume/liquidity floor" open question below, add `volatility_score` (P1), then extend `compute_confidence_level` in `app/core/snapshot_metrics.py`. |
 
 ## Resolved
 
@@ -32,13 +33,15 @@ _Last updated: 2026-07-08_
 |----|-------------|----------|--------|
 | DQ-001 | API no-report-yet response shape needed PM/Frontend sign-off. | 2026-07-08 | ADR-008 accepted `200 {"status": "not_yet_generated"}` as the canonical response. |
 | TD-004 | `backend/API_CONTRACT.md` still contained stale "draft/open item" wording for the report-empty response even though ADR-008 accepted `200 {"status": "not_yet_generated"}`. | 2026-07-08 | Cleaned up during `TASK-010` - "Open item for PM sign-off" section now states the accepted behavior as final; response shape unchanged. |
+| TD-005 | PR #9's TASK-007 normalized sample artifact was not shaped for the accepted downstream schema and lacked structured skip/error details. | 2026-07-08 | Fixed by the PR #9 review-fix commit recorded in ADR-014; verified during `TASK-008` that the merged `normalized_samples.json` has all required top-level fields (0 nulls across 50 records) and `skipped_records.json` carries structured reasons. |
+| TD-006 | PR #9's committed sample artifact stored raw external descriptions that could trip the project wording lint if used as fallback/display data. | 2026-07-08 | Fixed by ADR-014 (`description_policy: raw_source_descriptions_omitted`); verified during `TASK-008`'s dependency check that no raw source text remains in the committed artifact. |
 
 ## Open Design Questions Carried From Planning Docs
 
 Not bugs, but unresolved decisions that will surface as real blockers during the build — resolve these on Day 1-2, don't let them idle:
 
 - Category taxonomy: Polymarket's own tags vs. manual mapping (PRD §20.4, Service Design §12.1)
-- Minimum volume/liquidity floor: exclude from ranking entirely vs. badge as low-confidence (PRD §20.5, Service Design §12.2)
+- Minimum volume/liquidity floor: exclude from ranking entirely vs. badge as low-confidence (PRD §20.5, Service Design §12.2). Still unresolved as of `TASK-008` - see TD-008; `confidence_level` ships without `caution_low_activity` until this is decided.
 - Inflection-point threshold: fixed ±5pp vs. volatility-adjusted (PRD §20.6)
 - Confidence/caution badge: single composite score vs. separate qualitative badges (Service Design §12.4, UX Design §14.2)
 - Static-JSON fallback path finalization for API failure during the live demo (PRD §20.9, Technical Design §12 "demo script + fallback data")
