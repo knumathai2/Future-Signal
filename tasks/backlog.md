@@ -8,17 +8,14 @@ Harness Version: 1.1
 # Backlog — Outlook Signals
 
 _Last updated: 2026-07-08_
-_Remaining backlog after Day 1 kickoff assignment; active work lives in `tasks/active.md`._
+_Remaining backlog after Day 2 assignment; active work lives in `tasks/active.md`._
+
+Day 2 allocation moved `TASK-007`, `TASK-008`, `TASK-009`, `TASK-010`, and `TASK-012` to `tasks/active.md`. `TASK-031` was created directly from PRD §14's Day 2 PM work because that PM task was missing from the original backlog.
 
 ## Must-Have (P0)
 
 | ID | Task | Owner | Day | Size | Notes |
 |----|------|-------|-----|------|-------|
-| TASK-007 | Batch collector: fetch + normalize (steps 1–2) | Data/AI Implementer | 1–2 | M | Technical Design §6 |
-| TASK-008 | Batch collector: snapshot + metrics (steps 3–5) | Data/AI Implementer + Backend | 2 | M | Needs TASK-002, TASK-007 |
-| TASK-009 | Signal detection (±5pp threshold) | Data/AI Implementer | 2 | S | Technical Design §8 |
-| TASK-010 | `/api/issues`, `/api/issues/:id`, `/api/issues/:id/history` | Backend Implementer | 2 | M | Core read endpoints |
-| TASK-012 | Home dashboard UI (ranked issue cards) | Frontend Implementer | 2 | M | Depends on TASK-010 |
 | TASK-013 | Issue detail UI + Recharts line chart | Frontend Implementer | 3 | M | Depends on `/history` endpoint |
 | TASK-014 | Interpretation-caution badge component | Frontend Implementer | 3 | S | Reusable, per UX Design |
 | TASK-015 | AI report generation function (template + banned-phrase filter) | Data/AI Implementer | 3–4 | L | Technical Design §9–10 — highest-risk task |
