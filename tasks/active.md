@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Active Tasks — Outlook Signals
 
-_Last updated: 2026-07-08_
+_Last updated: 2026-07-08 (Backend Implementer session)_
 
 ## In Progress
 
@@ -15,11 +15,11 @@ _Last updated: 2026-07-08_
 |----|------|-------|----------|--------|--------|
 | TASK-006 | Finalize MVP scope doc, prohibited-wording policy, and Day 1 presentation story | PM | PM / Planner | `pm/TASK-006-day-1-allocation` | in_progress |
 | TASK-005 | Wireframe dashboard/detail screens; start UI against dummy JSON | Frontend Implementer | Frontend Implementer | `frontend/TASK-005-dashboard-skeleton` | assigned |
-| TASK-001 | Repo scaffold: create `/frontend` and `/backend` project shells | Backend Implementer | Backend Implementer | `backend/TASK-001-repo-scaffold` | assigned |
-| TASK-011 | Add `/api/health` endpoint | Backend Implementer | Backend Implementer | `backend/TASK-011-health-endpoint` | assigned |
-| TASK-003 | API contract draft and response-shape agreement | Backend Implementer + PM | Backend Implementer | `backend/TASK-003-api-contract` | assigned |
-| TASK-002 | DB schema draft for MVP tables | Backend Implementer | Backend Implementer | `backend/TASK-002-db-schema` | assigned |
+| TASK-003 | API contract draft and response-shape agreement | Backend Implementer + PM | Backend Implementer | `backend/TASK-003-api-contract` | review |
+| TASK-002 | DB schema draft for MVP tables | Backend Implementer | Backend Implementer | `backend/TASK-002-db-schema` | review |
 | TASK-004 | Polymarket Gamma/CLOB live spike; confirm field structure and collect 10 sample markets | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-004-polymarket-spike` | assigned |
+
+`TASK-001` and `TASK-011` completed 2026-07-08 — see `tasks/completed.md`.
 
 ## Day 1 Assignment Notes
 
@@ -59,64 +59,37 @@ _Last updated: 2026-07-08_
   - [ ] Every data-bearing placeholder has visible data-as-of and interpretation-caution placement.
   - [ ] UI copy passes the project wording policy.
 
-### TASK-001: Repo scaffold
-
-- **Owner**: Backend Implementer
-- **Assignee**: Backend Implementer
-- **Branch**: `backend/TASK-001-repo-scaffold`
-- **Status**: assigned
-- **Priority**: High
-- **Day**: Day 1
-- **Description**: Create the `/frontend` and `/backend` project shells using the agreed monorepo stack.
-- **Definition of Done**:
-  - [ ] `/frontend` exists with Vite, React, TypeScript, Tailwind CSS, and npm scripts.
-  - [ ] `/backend` exists with FastAPI, Python package layout, and pip dependency files.
-  - [ ] Local run commands are documented or discoverable in project files.
-  - [ ] No secrets or environment files are printed or committed.
-
-### TASK-011: Add `/api/health` endpoint
-
-- **Owner**: Backend Implementer
-- **Assignee**: Backend Implementer
-- **Branch**: `backend/TASK-011-health-endpoint`
-- **Status**: assigned
-- **Priority**: High
-- **Day**: Day 1
-- **Description**: Add the minimal backend health endpoint early so local API setup can be verified quickly.
-- **Definition of Done**:
-  - [ ] `GET /api/health` returns a stable JSON status payload.
-  - [ ] Endpoint uses FastAPI conventions and is included in OpenAPI docs.
-  - [ ] Response does not expose secrets, credentials, or deployment internals.
-
 ### TASK-003: API contract draft and response-shape agreement
 
 - **Owner**: Backend Implementer + PM
 - **Assignee**: Backend Implementer
 - **Branch**: `backend/TASK-003-api-contract`
-- **Status**: assigned
+- **Status**: review (blocked on PM sign-off)
 - **Priority**: High
 - **Day**: Day 1
 - **Description**: Draft the read-only MVP API contract and align response fields with frontend dummy JSON and Data/AI sample output.
 - **Definition of Done**:
-  - [ ] Contract covers `/api/issues`, `/api/issues/:id`, `/api/issues/:id/history`, `/api/issues/:id/report`, and `/api/health`.
-  - [ ] Responses include data-as-of timestamps and caution-level fields where metrics are present.
-  - [ ] Public-facing route names use `issues`, `signals`, `reports`, and `categories`, not market-terminal vocabulary.
+  - [x] Contract covers `/api/issues`, `/api/issues/:id`, `/api/issues/:id/history`, `/api/issues/:id/report`, and `/api/health`. Also includes `/api/categories`.
+  - [x] Responses include data-as-of timestamps and caution-level fields where metrics are present.
+  - [x] Public-facing route names use `issues`, `signals`, `reports`, and `categories`, not market-terminal vocabulary (test-enforced: `backend/tests/test_issues_contract.py`).
   - [ ] PM reviews names and response copy for safety framing before implementation depends on them.
+- **Notes**: Draft is runnable — Pydantic schemas + mock-data routes in `backend/app/schemas/issues.py` / `backend/app/api/routes/issues.py`, full writeup in `backend/API_CONTRACT.md`. One open item flagged for PM: Technical Design §5's "`204` with a body hint" for not-yet-generated reports is invalid per HTTP semantics (204 cannot carry a body); drafted as `200` + `{"status": "not_yet_generated"}` instead, pending confirmation.
 
 ### TASK-002: DB schema draft for MVP tables
 
 - **Owner**: Backend Implementer
 - **Assignee**: Backend Implementer
 - **Branch**: `backend/TASK-002-db-schema`
-- **Status**: assigned
+- **Status**: review (draft complete, not applied)
 - **Priority**: High
 - **Day**: Day 1
 - **Description**: Draft the MVP database schema for the batch-fed, read-only dashboard.
 - **Definition of Done**:
-  - [ ] Draft includes `markets`, `market_outcomes`, `market_snapshots`, `market_metrics`, `issue_signals`, `ai_reports`, `related_events`, and `data_collection_logs`.
-  - [ ] No `users`, `watchlists`, wallet-level, or participant-level table is introduced.
-  - [ ] Snapshot and metric tables follow the append-only strategy from Technical Design §4.10.
-  - [ ] Human approval is obtained before applying schema changes to any shared or production database.
+  - [x] Draft includes `markets`, `market_outcomes`, `market_snapshots`, `market_metrics`, `issue_signals`, `ai_reports`, `related_events`, and `data_collection_logs`.
+  - [x] No `users`, `watchlists`, wallet-level, or participant-level table is introduced.
+  - [x] Snapshot and metric tables follow the append-only strategy from Technical Design §4.10.
+  - [ ] Human approval is obtained before applying schema changes to any shared or production database — **not yet requested; schema remains unapplied.**
+- **Notes**: Draft DDL at `backend/migrations/001_initial_schema.sql`, mirrored as SQLAlchemy models in `backend/app/db/models.py` (not wired to any route). Plain SQL used instead of Alembic since the migration-tool choice is still an open Day 1 decision (`commands.md`).
 
 ### TASK-004: Polymarket Gamma/CLOB live spike
 
