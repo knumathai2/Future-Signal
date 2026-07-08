@@ -162,7 +162,7 @@ def get_issue_report(issue_id: str) -> IssueReportResponse | ReportNotYetGenerat
             ),
             uncertainty_summary=(
                 "Data reliability is sufficient for this window; "
-                "interpret short-term moves cautiously."
+                "interpret recent movements cautiously."
             ),
             neutral_conclusion=(
                 "This reflects a shift in public expectation data, "
