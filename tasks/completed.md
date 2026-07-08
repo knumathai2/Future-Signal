@@ -13,6 +13,8 @@ _Last updated: 2026-07-08_
 |----|------|-----------|-------|-------|
 | — | AI Development Harness v1.1 initial setup | 2026-07-07 | PM | Standard tier, monorepo, npm+pip, GitHub Actions |
 | TASK-001 | Repo scaffold: `/frontend` + `/backend` project shells | 2026-07-08 | Backend Implementer | `backend/TASK-001-repo-scaffold`. FastAPI app import-smoke-tested; frontend hand-scaffolded (npm/node unavailable in this environment, not run). |
+| TASK-002 | DB schema draft for MVP tables | 2026-07-08 | Backend Implementer | Draft accepted as a Day 1 artifact in ADR-011. Migration remains unapplied; applying schema changes to any shared or production database still requires separate human approval. |
+| TASK-003 | API contract draft and response-shape agreement | 2026-07-08 | Backend Implementer + PM | PM/Frontend sign-off recorded. Public route names and response fields are accepted for Day 2 implementation dependency; ADR-008 accepts `200 {"status": "not_yet_generated"}` for the no-report-yet response. |
 | TASK-011 | Add `GET /api/health` endpoint | 2026-07-08 | Backend Implementer | `backend/TASK-011-health-endpoint`. Verified via pytest + a live uvicorn request; appears in `/openapi.json`. |
 | TASK-004 | Polymarket Gamma/CLOB live spike | 2026-07-08 | Data/AI Implementer | Gamma fields, pagination, rate-limits, CLOB history shape documented; samples saved |
 | TASK-005 | Wireframe dashboard/detail screens; start UI against dummy JSON | 2026-07-08 | Frontend Implementer | React/Vite/Tailwind/Recharts UI implemented with dashboard, issue cards, detail view, caution badges, data-as-of timestamps, dummy data contract, and loading/empty/error states. |

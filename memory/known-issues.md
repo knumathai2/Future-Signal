@@ -27,6 +27,7 @@ _Last updated: 2026-07-08_
 
 | ID | Description | Resolved | Method |
 |----|-------------|----------|--------|
+| DQ-001 | API no-report-yet response shape needed PM/Frontend sign-off. | 2026-07-08 | ADR-008 accepted `200 {"status": "not_yet_generated"}` as the canonical response. |
 
 ## Open Design Questions Carried From Planning Docs
 
@@ -38,7 +39,6 @@ Not bugs, but unresolved decisions that will surface as real blockers during the
 - Confidence/caution badge: single composite score vs. separate qualitative badges (Service Design §12.4, UX Design §14.2)
 - Static-JSON fallback path finalization for API failure during the live demo (PRD §20.9, Technical Design §12 "demo script + fallback data")
 - `heat_score` weighting formula — start simple, tune once real data is visible (Technical Design §16.2)
-- API no-report-yet response: `backend/API_CONTRACT.md` proposes `200 {"status": "not_yet_generated"}` instead of the invalid "204 with body" wording in Technical Design §5; PM/Frontend sign-off still required before depending on it.
 
 ## Known Data Issues
 
