@@ -11,13 +11,13 @@ _Last updated: 2026-07-08_
 
 ## In Progress
 
+Day 1 is closed as of 2026-07-08. No Day 1 tasks remain active. Day 2 tasks should be pulled from `tasks/backlog.md` when each owner is ready to start.
+
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-006 | Finalize MVP scope doc, prohibited-wording policy, and Day 1 presentation story | PM | PM / Planner | `pm/TASK-006-day-1-allocation` | in_progress |
-| TASK-003 | API contract draft and response-shape agreement | Backend Implementer + PM | Backend Implementer | `backend/TASK-003-api-contract` | review |
-| TASK-002 | DB schema draft for MVP tables | Backend Implementer | Backend Implementer | `backend/TASK-002-db-schema` | review |
+| — | (none) | — | — | — | — |
 
-`TASK-001`, `TASK-004`, `TASK-005`, and `TASK-011` completed 2026-07-08 — see `tasks/completed.md`.
+`TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, and `TASK-011` completed 2026-07-08 — see `tasks/completed.md`.
 
 ## Day 1 Assignment Notes
 
@@ -27,54 +27,13 @@ _Last updated: 2026-07-08_
 - **Data/AI Implementer** validates Polymarket Gamma/CLOB fields and produces the 10-market sample set before `TASK-007` starts.
 - **Reviewer / Debugger** are not spun up as separate Day 1 roles unless a concrete issue appears; content-safety checks stay embedded in each role's Definition of Done.
 
-### TASK-006: Finalize MVP scope doc, prohibited-wording policy, and Day 1 presentation story
+## Day 1 Closeout Checklist
 
-- **Owner**: PM
-- **Assignee**: PM / Planner
-- **Branch**: `pm/TASK-006-day-1-allocation`
-- **Status**: in_progress
-- **Priority**: High
-- **Day**: Day 1
-- **Description**: Lock the P0/P1/P2 boundary for the hackathon, confirm prohibited wording against `standards.md` and `memory/glossary.md`, and draft the first presentation story.
-- **Definition of Done**:
-  - [ ] MVP scope is confirmed against PRD §6.3-6.5 with no P1/P2 pull-in.
-  - [ ] Wording policy references `standards.md` and `memory/glossary.md`.
-  - [ ] Draft key messages frame the product as information analysis and issue monitoring.
-  - [ ] Any new wording avoids outcome prediction, causal assertion, and action-oriented framing.
-
-### TASK-003: API contract draft and response-shape agreement
-
-- **Owner**: Backend Implementer + PM
-- **Assignee**: Backend Implementer
-- **Branch**: `backend/TASK-003-api-contract`
-- **Status**: review (blocked on PM sign-off)
-- **Priority**: High
-- **Day**: Day 1
-- **Description**: Draft the read-only MVP API contract and align response fields with frontend dummy JSON and Data/AI sample output.
-- **Definition of Done**:
-  - [x] Contract covers `/api/issues`, `/api/issues/:id`, `/api/issues/:id/history`, `/api/issues/:id/report`, and `/api/health`. Also includes `/api/categories`.
-  - [x] Responses include data-as-of timestamps and caution-level fields where metrics are present.
-  - [x] Public-facing route names use `issues`, `signals`, `reports`, and `categories`, not market-terminal vocabulary (test-enforced: `backend/tests/test_issues_contract.py`).
-  - [ ] PM reviews names and response copy for safety framing before implementation depends on them.
-- **Notes**: Draft is runnable — Pydantic schemas + mock-data routes in `backend/app/schemas/issues.py` / `backend/app/api/routes/issues.py`, full writeup in `backend/API_CONTRACT.md`. One open item flagged for PM: Technical Design §5's "`204` with a body hint" for not-yet-generated reports is invalid per HTTP semantics (204 cannot carry a body); drafted as `200` + `{"status": "not_yet_generated"}` instead, pending confirmation.
-
-### TASK-002: DB schema draft for MVP tables
-
-- **Owner**: Backend Implementer
-- **Assignee**: Backend Implementer
-- **Branch**: `backend/TASK-002-db-schema`
-- **Status**: review (draft complete, not applied)
-- **Priority**: High
-- **Day**: Day 1
-- **Description**: Draft the MVP database schema for the batch-fed, read-only dashboard.
-- **Definition of Done**:
-  - [x] Draft includes `markets`, `market_outcomes`, `market_snapshots`, `market_metrics`, `issue_signals`, `ai_reports`, `related_events`, and `data_collection_logs`.
-  - [x] No `users`, `watchlists`, wallet-level, or participant-level table is introduced.
-  - [x] Snapshot and metric tables follow the append-only strategy from Technical Design §4.10.
-  - [ ] Human approval is obtained before applying schema changes to any shared or production database — **not yet requested; schema remains unapplied.**
-- **Notes**: Draft DDL at `backend/migrations/001_initial_schema.sql`, mirrored as SQLAlchemy models in `backend/app/db/models.py` (not wired to any route). Plain SQL used instead of Alembic since the migration-tool choice is still an open Day 1 decision (`commands.md`).
-
-
+| ID | Item | Blocking task | Status |
+|----|------|---------------|--------|
+| D1-CLOSE-001 | PM/Frontend sign-off on API contract, including the no-report-yet response shape. | `TASK-003` | closed — ADR-008 accepted |
+| D1-CLOSE-002 | DB schema draft accepted as a Day 1 artifact while remaining unapplied until separate human approval. | `TASK-002` | closed — ADR-011 accepted |
+| D1-CLOSE-003 | Move remaining Day 1 tasks to completed or document a named blocker after the two decisions above. | `TASK-002`, `TASK-003` | closed |
 
 ## Status Values
 
