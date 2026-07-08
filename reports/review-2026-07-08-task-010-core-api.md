@@ -6,7 +6,7 @@ _Target: PR #10 / `backend/TASK-010-core-api`_
 
 ## Verdict
 
-Request Changes before merge.
+Approved after follow-up.
 
 ## Findings
 
@@ -20,12 +20,12 @@ Request Changes before merge.
    the core issue and returns empty `signals`/`related_events`, while history
    returns the latest snapshot point already loaded for the issue.
 
-2. **Remaining approval gate: ADR-013 needs explicit PM/Frontend confirmation.**
+2. **Resolved after review: ADR-013 confirmation recorded.**
    The PR documents `200` + static fallback instead of Technical Design §5's
    `503` fallback note. The response shape is unchanged, but this is still a
-   public API behavior decision and ADR-013 itself says it is flagged for
-   PM/Frontend confirmation. Do not merge until that confirmation is recorded,
-   or adjust the contract/behavior in a follow-up.
+   public API behavior decision. The 2026-07-08 follow-up records the required
+   user/PM-gate confirmation in ADR-013, so the previous Request Changes
+   blocker is resolved.
 
 ## Verification
 
@@ -41,3 +41,8 @@ Request Changes before merge.
 - User-facing API paths remain under `issues`, `signals`, `reports`, and
   `categories`.
 - Data responses still include `data_as_of` and `confidence_level`.
+
+## Follow-Up
+
+- 2026-07-08: ADR-013 confirmation recorded in `memory/decisions.md`; PR #10
+  can move from Request Changes to approval if validation remains green.

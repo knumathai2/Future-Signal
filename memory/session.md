@@ -14,49 +14,44 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-08
-- **Agent Role**: Debugger / Backend Implementer
-- **Session Goal**: Resolve `backend/TASK-010-core-api` conflicts with `origin/main`
+- **Agent Role**: Reviewer / Backend Implementer
+- **Session Goal**: Resolve PR #10 `CHANGES_REQUESTED` blocker
 - **Branch**: `backend/TASK-010-core-api`
 
 ## Previous Session Summary
 
-PR #10 on `backend/TASK-010-core-api` had reviewer follow-up work for live
-read fallback hardening. Meanwhile `origin/main` advanced through PR #11,
-which added TASK-007 review records and updated shared memory files.
+PR #10 was merge-clean after `origin/main` conflict resolution, but GitHub still
+showed `CHANGES_REQUESTED`. The remaining review blocker was not code; it asked
+for explicit confirmation of ADR-013's `200` + static fallback behavior.
 
 ## Current Work
 
-- [x] Read `AGENTS.md`, PRD index, Technical Design index, `memory/project.md`,
-      `memory/session.md`, `tasks/active.md`, and debug prompt.
-- [x] Confirmed the worktree was clean on `backend/TASK-010-core-api`.
-- [x] Fetched `origin/main` and `origin/backend/TASK-010-core-api`.
-- [x] Reproduced merge conflicts with `git merge origin/main`.
-- [x] Resolved conflicts in `memory/known-issues.md` by preserving both sides:
-      TASK-007 review debt stays active as `TD-005`/`TD-006`, TASK-010's
-      FastAPI error-status note moves to `TD-007`, and resolved `TD-004`
-      remains in the resolved table.
-- [x] Resolved `memory/session.md` as this conflict-resolution session rather
-      than choosing either prior review session.
-- [x] Preserved `origin/main`'s added TASK-007 review archive/report files.
+- [x] Confirmed current branch and PR #10 review state.
+- [x] Re-read `AGENTS.md` and inspected the Request Changes review body.
+- [x] Updated ADR-013 in `memory/decisions.md` to record the user/PM-gate
+      confirmation requested by the review.
+- [x] Updated `reports/review-2026-07-08-task-010-core-api.md` from Request
+      Changes to approved-after-follow-up.
 
 ## Completed This Session
 
-- [x] Merge conflicts from `origin/main` are resolved locally.
-- [x] Backend tests and Ruff passed after conflict resolution.
-- [x] Conflict resolution is ready to commit and push.
+- [x] The documented `CHANGES_REQUESTED` blocker is resolved in repo docs.
+- [x] Public API behavior and response shape were not changed.
+- [x] Backend tests and Ruff passed after the documentation update.
 
 ## Issues Found / Decisions Made
 
-- Actual merge conflicts were limited to `memory/known-issues.md` and
-  `memory/session.md`.
-- No code conflict was present in backend API files.
-- No schema change, migration edit, dependency change, deployment, production
-  DB write, or external paid API call was performed.
+- ADR-013 remains: `/api/issues` degrades to `200` + static fallback when live
+  data is unavailable.
+- The prior blocker is resolved by recording explicit user/PM-gate confirmation
+  rather than changing the API behavior to `503`.
+- No schema change, dependency change, migration edit, deployment, production DB
+  write, or external paid API call was performed.
 
 ## Next Session: To-Do
 
-1. Push the merge resolution to `backend/TASK-010-core-api`.
-2. Re-check PR #10 mergeability after push.
+1. Commit and push the documentation update.
+2. Submit an approving review on PR #10.
 
 ## Verification
 
@@ -65,6 +60,5 @@ which added TASK-007 review records and updated shared memory files.
 
 ## Important Context
 
-The merge brings PR #11's TASK-007 review documentation into the PR #10 branch.
-The only manual resolution decision was technical-debt numbering and replacing
-the current-session handoff with this conflict-resolution session.
+This session addresses the GitHub review state only. It does not alter the live
+API code that was already reviewed and conflict-resolved.
