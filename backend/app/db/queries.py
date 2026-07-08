@@ -34,6 +34,7 @@ class LiveIssue:
     market: Market
     outcome_label: str
     current_value: float
+    captured_at: datetime
     change_24h: float | None
     change_7d: float | None
     heat_score: float | None
@@ -107,6 +108,7 @@ def load_live_issues(db: Session) -> tuple[list[LiveIssue], datetime] | None:
                 market=market,
                 outcome_label=outcome.outcome_label,
                 current_value=float(snapshot.price),
+                captured_at=snapshot.captured_at,
                 change_24h=(
                     float(metric.change_24h)
                     if metric and metric.change_24h is not None

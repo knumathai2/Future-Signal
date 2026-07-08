@@ -71,7 +71,9 @@ path only." Documented in `API_CONTRACT.md` and `memory/known-issues.md`.
 
 - `tests/test_issues_live.py` (new): live-path list/detail/history, unknown
   id → 404, missing-metric → null fields + `insufficient_data`, empty DB →
-  fallback, invalid `sort` → 422. Uses an in-memory SQLite DB
+  fallback, invalid `sort` → 422, and auxiliary detail/history query failures
+  degrade without turning the issue/detail route into a 500. Uses an
+  in-memory SQLite DB
   (`tests/conftest.py`) with two dialect-only `@compiles` shims (JSONB → a
   SQLite `JSON` column, and Postgres `UUID` forced to `CHAR(32)` so it
   doesn't get miscoerced by SQLite's numeric type affinity) — test-only,
@@ -79,4 +81,5 @@ path only." Documented in `API_CONTRACT.md` and `memory/known-issues.md`.
 - `tests/test_issues_contract.py` (pre-existing): unchanged and still
   passing — it never sets `DATABASE_URL`, so it continues to exercise the
   fallback path exactly as before.
-- `ruff check .` and `pytest` both pass locally (17 tests).
+- `ruff check .` and `pytest` both pass locally (19 tests after reviewer
+  hardening).

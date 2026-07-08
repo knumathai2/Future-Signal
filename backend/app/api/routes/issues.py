@@ -164,8 +164,25 @@ def _issue_summary_from_live(live: LiveIssue) -> IssueSummary:
 
 
 def _issue_detail_from_live(db: Session, live: LiveIssue, data_as_of: datetime) -> IssueDetail:
-    signals = load_signals_for_market(db, live.market.id)
-    related = load_related_events_for_market(db, live.market.id)
+    try:
+        signals = load_signals_for_market(db, live.market.id)
+    except SQLAlchemyError:
+        logger.warning(
+            "FALLBACK: live signal query failed, serving issue detail without signals.",
+            exc_info=True,
+        )
+        signals = []
+
+    try:
+        related = load_related_events_for_market(db, live.market.id)
+    except SQLAlchemyError:
+        logger.warning(
+            "FALLBACK: live related-event query failed, serving issue detail without "
+            "related events.",
+            exc_info=True,
+        )
+        related = []
+
     return IssueDetail(
         id=str(live.market.id),
         title=live.market.title,
@@ -286,13 +303,25 @@ def get_issue_history(
         if match is None:
             raise HTTPException(status_code=404, detail="Unknown issue id.")
         since = data_as_of - _window_to_timedelta(window)
-        points = load_history_points(db, match.market.id, since)
+        try:
+            points = load_history_points(db, match.market.id, since)
+        except SQLAlchemyError:
+            logger.warning(
+                "FALLBACK: live history query failed, serving latest snapshot only.",
+                exc_info=True,
+            )
+            points = []
+        history_points = [
+            HistoryPoint(captured_at=p.captured_at, value=float(p.price)) for p in points
+        ]
+        if not history_points:
+            history_points = [
+                HistoryPoint(captured_at=match.captured_at, value=match.current_value)
+            ]
         return IssueHistoryResponse(
             data_as_of=data_as_of,
             window=window,
-            points=[
-                HistoryPoint(captured_at=p.captured_at, value=float(p.price)) for p in points
-            ],
+            points=history_points,
         )
 
     if issue_id not in _FALLBACK_ISSUES:
