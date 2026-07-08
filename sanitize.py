@@ -7,7 +7,13 @@ def sanitize_json(file_path):
     def sanitize(node):
         if isinstance(node, dict):
             # Keys to delete
-            keys_to_delete = ['marketMakerAddress', 'submitted_by', 'resolvedBy', 'proxyAddress', 'address']
+            keys_to_delete = [
+                'marketMakerAddress',
+                'submitted_by',
+                'resolvedBy',
+                'proxyAddress',
+                'address',
+            ]
             for k in keys_to_delete:
                 if k in node:
                     del node[k]

@@ -1,5 +1,11 @@
 import json
-from datetime import datetime, timezone
+
+
+def parse_float(value):
+    if value in (None, ""):
+        return None
+    return float(value)
+
 
 def process_samples():
     with open("gamma_response_sample.json", "r", encoding="utf-8") as f:
@@ -29,8 +35,8 @@ def process_samples():
                 continue
 
             prices = json.loads(market.get("outcomePrices", "[]"))
-            current_value = float(prices[0]) if prices else 0.0
-            if current_value <= 0:
+            current_value = parse_float(prices[0]) if prices else None
+            if current_value is None or current_value <= 0:
                 continue
 
             valid_market = market
@@ -57,13 +63,23 @@ def process_samples():
                 "resolution_source": item.get("resolutionSource") or market.get("resolutionSource"),
             },
             "ui_display": {
-                "neutral_title": "Outlook on this issue",  # Placeholder for AI-generated neutral title
-                "neutral_tags": [{"label": "Issue change", "slug": "issue-change"}, {"label": "Public data", "slug": "public-data"}],
+                # Placeholder for AI-generated neutral title.
+                "neutral_title": "Outlook on this issue",
+                "neutral_tags": [
+                    {"label": "Issue change", "slug": "issue-change"},
+                    {"label": "Public data", "slug": "public-data"},
+                ],
             },
             "metrics": {
                 "current_value": current_value,
-                "volume": item.get("volume"),
-                "liquidity": item.get("liquidity"),
+                "volume": parse_float(
+                    market.get("volume") or market.get("volumeNum") or market.get("volumeClob")
+                ),
+                "liquidity": parse_float(
+                    market.get("liquidity")
+                    or market.get("liquidityNum")
+                    or market.get("liquidityClob")
+                ),
             },
             "clobTokenIds": clob_token_ids,
             "price_history_token": history_token,
@@ -80,7 +96,9 @@ def process_samples():
         if not sample["raw_data"]["category_tag"]:
             missing_unstable.add("tags (often empty or missing)")
         if not sample["raw_data"]["resolution_source"]:
-            missing_unstable.add("resolutionSource (often empty or missing in both event and market)")
+            missing_unstable.add(
+                "resolutionSource (often empty or missing in both event and market)"
+            )
 
         samples.append(sample)
 
