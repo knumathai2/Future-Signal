@@ -2,12 +2,17 @@ import { useEffect, useMemo, useState } from "react";
 import { Dashboard } from "./components/Dashboard";
 import { IssueDetail } from "./components/IssueDetail";
 import {
-  dummyDataAsOf,
-  dummyIssues,
   staleDummyDataAsOf,
   staleDummyIssues,
 } from "./data/dummyIssues";
-import type { DataStatus } from "./types/issue";
+import type { DataStatus, Issue } from "./types/issue";
+import {
+  mapApiIssueToFrontendIssue,
+  mapApiIssueDetailToFrontendIssue,
+  ApiIssueListResponse,
+  ApiIssueDetail,
+  ApiIssueHistoryResponse,
+} from "./utils/format";
 
 type Screen = "dashboard" | "detail";
 
@@ -32,31 +37,149 @@ function statusFromQuery(): DataStatus | null {
 export default function App() {
   const forcedStatus = useMemo(() => statusFromQuery(), []);
   const [screen, setScreen] = useState<Screen>("dashboard");
-  const initialIssues = forcedStatus === "error" ? staleDummyIssues : dummyIssues;
-  const [selectedIssueId, setSelectedIssueId] = useState(initialIssues[0]?.id ?? "");
+  const [selectedIssueId, setSelectedIssueId] = useState("");
+  
+  // Dashboard states
   const [status, setStatus] = useState<DataStatus>(forcedStatus ?? "loading");
-  const [issues, setIssues] = useState(() =>
-    forcedStatus === "empty" ? [] : initialIssues,
-  );
-  const activeDataAsOf = status === "error" ? staleDummyDataAsOf : dummyDataAsOf;
+  const [issues, setIssues] = useState<Issue[]>([]);
+  const [apiDataAsOf, setApiDataAsOf] = useState(staleDummyDataAsOf);
+  const [categories, setCategories] = useState<string[]>([]);
+  
+  // Filter/Query states
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeWindow, setActiveWindow] = useState<"24h" | "7d">("24h");
+  const [activeSort, setActiveSort] = useState<"heat" | "change" | "recent">("heat");
+  
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // Detail states
+  const [detailIssue, setDetailIssue] = useState<Issue | null>(null);
+  const [detailStatus, setDetailStatus] = useState<DataStatus>("loading");
+
+  // Load categories list
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const res = await fetch("/api/categories");
+        if (!res.ok) throw new Error("Failed to load categories");
+        const data = await res.json();
+        setCategories(data.categories || []);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+    loadCategories();
+  }, []);
+
+  // Fetch dashboard issues
   useEffect(() => {
     if (forcedStatus) {
-      return undefined;
+      if (forcedStatus === "empty") {
+        setIssues([]);
+        setStatus("empty");
+      } else if (forcedStatus === "error") {
+        setIssues(staleDummyIssues);
+        setStatus("error");
+        setApiDataAsOf(staleDummyDataAsOf);
+      } else {
+        setIssues([]);
+        setStatus("loading");
+      }
+      return;
     }
 
-    const timer = window.setTimeout(() => {
-      setIssues(dummyIssues);
-      setStatus(dummyIssues.length ? "ready" : "empty");
-    }, 320);
+    let isMounted = true;
+    async function loadIssues() {
+      setStatus("loading");
+      try {
+        const params = new URLSearchParams();
+        if (activeCategory) {
+          params.append("category", activeCategory);
+        }
+        params.append("window", activeWindow);
+        params.append("sort", activeSort);
 
-    return () => window.clearTimeout(timer);
-  }, [forcedStatus]);
+        const res = await fetch(`/api/issues?${params.toString()}`);
+        if (!res.ok) throw new Error("API failed");
+        const data = (await res.json()) as ApiIssueListResponse;
 
-  const selectedIssue = useMemo(
-    () => issues.find((issue) => issue.id === selectedIssueId) ?? issues[0],
-    [issues, selectedIssueId],
-  );
+        if (isMounted) {
+          const mapped = data.issues.map((i) =>
+            mapApiIssueToFrontendIssue(i, data.data_as_of),
+          );
+          setIssues(mapped);
+          setApiDataAsOf(data.data_as_of);
+          setStatus(mapped.length ? "ready" : "empty");
+        }
+      } catch (err) {
+        console.error(err);
+        if (isMounted) {
+          setIssues(staleDummyIssues);
+          setApiDataAsOf(staleDummyDataAsOf);
+          setStatus("error");
+        }
+      }
+    }
+
+    loadIssues();
+    return () => {
+      isMounted = false;
+    };
+  }, [activeCategory, activeWindow, activeSort, refreshTrigger, forcedStatus]);
+
+  // Fetch issue detail + history when selected
+  useEffect(() => {
+    if (screen !== "detail" || !selectedIssueId) {
+      return;
+    }
+
+    if (forcedStatus) {
+      if (forcedStatus === "error") {
+        const fallback = staleDummyIssues.find((i) => i.id === selectedIssueId) || staleDummyIssues[0];
+        setDetailIssue(fallback);
+        setDetailStatus("error");
+      } else if (forcedStatus === "empty") {
+        setDetailIssue(null);
+        setDetailStatus("empty");
+      } else {
+        setDetailIssue(null);
+        setDetailStatus("loading");
+      }
+      return;
+    }
+
+    let isMounted = true;
+    async function loadDetail() {
+      setDetailStatus("loading");
+      try {
+        const detailRes = await fetch(`/api/issues/${selectedIssueId}`);
+        if (!detailRes.ok) throw new Error("Failed to load details");
+        const apiDetail = (await detailRes.json()) as ApiIssueDetail;
+
+        const historyRes = await fetch(`/api/issues/${selectedIssueId}/history?window=30d`);
+        if (!historyRes.ok) throw new Error("Failed to load history");
+        const apiHistory = (await historyRes.json()) as ApiIssueHistoryResponse;
+
+        if (isMounted) {
+          const mapped = mapApiIssueDetailToFrontendIssue(apiDetail, apiHistory);
+          setDetailIssue(mapped);
+          setDetailStatus("ready");
+        }
+      } catch (err) {
+        console.error(err);
+        if (isMounted) {
+          const fallback = staleDummyIssues.find((i) => i.id === selectedIssueId) || staleDummyIssues[0];
+          setDetailIssue(fallback);
+          setDetailStatus("error");
+        }
+      }
+    }
+
+    loadDetail();
+    return () => {
+      isMounted = false;
+    };
+  }, [screen, selectedIssueId, refreshTrigger, forcedStatus]);
 
   function handleIssueSelect(issueId: string) {
     setSelectedIssueId(issueId);
@@ -65,23 +188,44 @@ export default function App() {
   }
 
   function handleRefresh() {
-    if (forcedStatus) {
-      setStatus(forcedStatus);
-      return;
-    }
-
-    setStatus("loading");
-    window.setTimeout(() => {
-      setIssues(dummyIssues);
-      setStatus(dummyIssues.length ? "ready" : "empty");
-    }, 420);
+    setRefreshTrigger((prev) => prev + 1);
   }
 
-  if (screen === "detail" && selectedIssue) {
+  if (screen === "detail") {
+    if (detailStatus === "loading") {
+      return (
+        <div className="mx-auto min-h-screen w-full max-w-[1180px] px-4 py-6 sm:px-8 lg:px-10 lg:py-10 flex flex-col items-center justify-center">
+          <div className="text-sm font-semibold text-ink-soft animate-pulse">Loading issue details...</div>
+          <button
+            type="button"
+            onClick={() => setScreen("dashboard")}
+            className="mt-4 text-sm font-semibold text-accent hover:underline"
+          >
+            Back to dashboard
+          </button>
+        </div>
+      );
+    }
+
+    if (detailStatus === "empty" || !detailIssue) {
+      return (
+        <div className="mx-auto min-h-screen w-full max-w-[1180px] px-4 py-6 sm:px-8 lg:px-10 lg:py-10 text-center">
+          <h2 className="text-base font-bold text-ink">Issue detail not found</h2>
+          <button
+            type="button"
+            onClick={() => setScreen("dashboard")}
+            className="mt-4 text-sm font-semibold text-accent hover:underline"
+          >
+            Back to dashboard
+          </button>
+        </div>
+      );
+    }
+
     return (
       <IssueDetail
-        issue={selectedIssue}
-        dataStatus={status}
+        issue={detailIssue}
+        dataStatus={detailStatus}
         onBack={() => setScreen("dashboard")}
       />
     );
@@ -91,10 +235,17 @@ export default function App() {
     <Dashboard
       issues={issues}
       status={status}
-      dataAsOf={activeDataAsOf}
+      dataAsOf={apiDataAsOf}
       staleDataAsOf={staleDummyDataAsOf}
       onIssueSelect={handleIssueSelect}
       onRefresh={handleRefresh}
+      categories={categories}
+      activeCategory={activeCategory}
+      onCategoryChange={setActiveCategory}
+      activeWindow={activeWindow}
+      onWindowChange={setActiveWindow}
+      activeSort={activeSort}
+      onSortChange={setActiveSort}
     />
   );
 }
