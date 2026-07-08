@@ -13,6 +13,13 @@ type DashboardProps = {
   staleDataAsOf: string;
   onIssueSelect: (issueId: string) => void;
   onRefresh: () => void;
+  categories: string[];
+  activeCategory: string | null;
+  onCategoryChange: (category: string | null) => void;
+  activeWindow: "24h" | "7d";
+  onWindowChange: (window: "24h" | "7d") => void;
+  activeSort: "heat" | "change" | "recent";
+  onSortChange: (sort: "heat" | "change" | "recent") => void;
 };
 
 function DashboardSkeleton() {
@@ -38,8 +45,8 @@ function EmptyState() {
     <div className="rounded-lg border border-dashed border-line px-6 py-14 text-center">
       <h3 className="text-base font-bold text-ink">No issues are available yet</h3>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-ink-soft">
-        The dummy data source is empty. Once issue records are available, the
-        dashboard will rank them by observed change.
+        The database is empty for the selected filters. Once issue records are available, the
+        dashboard will display them.
       </p>
     </div>
   );
@@ -64,10 +71,15 @@ export function Dashboard({
   staleDataAsOf,
   onIssueSelect,
   onRefresh,
+  categories,
+  activeCategory,
+  onCategoryChange,
+  activeWindow,
+  onWindowChange,
+  activeSort,
+  onSortChange,
 }: DashboardProps) {
-  const topReassessedIssues = [...issues].sort(
-    (left, right) => Math.abs(right.change24h) - Math.abs(left.change24h),
-  );
+  const topReassessedIssues = issues;
 
   const weeklyRows = [...issues]
     .sort((left, right) => Math.abs(right.change7d) - Math.abs(left.change7d))
@@ -130,9 +142,85 @@ export function Dashboard({
         </div>
       </section>
 
+      {/* Filters and Controls */}
+      <section className="mt-8 flex flex-col gap-4 border-b border-line-soft pb-5">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-semibold uppercase tracking-wider text-ink-faint mr-2">Category:</span>
+          <button
+            type="button"
+            onClick={() => onCategoryChange(null)}
+            className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
+              activeCategory === null
+                ? "bg-ink text-card border border-ink"
+                : "bg-card text-ink-soft border border-line hover:border-accent hover:text-accent"
+            }`}
+          >
+            All
+          </button>
+          {categories.map((category) => (
+            <button
+              key={category}
+              type="button"
+              onClick={() => onCategoryChange(category)}
+              className={`rounded-full px-3 py-1.5 text-xs font-bold capitalize transition ${
+                activeCategory === category
+                  ? "bg-ink text-card border border-ink"
+                  : "bg-card text-ink-soft border border-line hover:border-accent hover:text-accent"
+              }`}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-4 mt-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-ink-faint">Sort by:</span>
+            <div className="inline-flex rounded-lg border border-line p-0.5 bg-card">
+              {(["heat", "change", "recent"] as const).map((sortOption) => (
+                <button
+                  key={sortOption}
+                  type="button"
+                  onClick={() => onSortChange(sortOption)}
+                  className={`rounded-md px-3 py-1.5 text-xs font-bold capitalize transition ${
+                    activeSort === sortOption
+                      ? "bg-line-soft text-ink font-extrabold"
+                      : "text-ink-soft hover:text-accent"
+                  }`}
+                >
+                  {sortOption === "change" ? "shift magnitude" : sortOption}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-ink-faint">Time window:</span>
+            <div className="inline-flex rounded-lg border border-line p-0.5 bg-card">
+              {(["24h", "7d"] as const).map((windowOption) => (
+                <button
+                  key={windowOption}
+                  type="button"
+                  onClick={() => onWindowChange(windowOption)}
+                  className={`rounded-md px-3 py-1.5 text-xs font-bold transition ${
+                    activeWindow === windowOption
+                      ? "bg-line-soft text-ink font-extrabold"
+                      : "text-ink-soft hover:text-accent"
+                  }`}
+                >
+                  {windowOption}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="mt-8">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-lg font-bold text-ink">Largest 24-hour shifts</h2>
+          <h2 className="text-lg font-bold text-ink">
+            Largest {activeWindow === "24h" ? "24-hour" : "7-day"} shifts
+          </h2>
         </div>
 
         <div className="mt-4">
