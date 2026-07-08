@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Decision Log — Outlook Signals
 
-_Last updated: 2026-07-07_
+_Last updated: 2026-07-08_
 
 ## Template
 
@@ -93,3 +93,17 @@ _Last updated: 2026-07-07_
 **Rationale**: Keeps role ownership, task IDs, and branch names aligned before implementation starts, while preserving human approval for file writes and git operations.
 **Trade-offs**: Adds a small process step before coding starts.
 **Consequences**: Agents must choose only assigned work from `tasks/active.md`, confirm the listed branch before starting, and never commit directly to `main` or `master`.
+
+---
+
+### ADR-006: Day 1 active work limited to P0 kickoff tasks
+
+- **Date**: 2026-07-08
+- **Status**: Accepted
+- **Decided by**: PM / Planner
+
+**Context**: Day 1 needed role-by-role assignment without expanding hackathon scope or blocking frontend work on backend/data availability.
+**Decision**: Move `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, and `TASK-011` into `tasks/active.md`; keep `TASK-007` in backlog until the Polymarket field/rate-limit spike validates the data shape.
+**Rationale**: These tasks map directly to PRD §14 Day 1 deliverables: screen structure, API contract, sample data, scope lock, and presentation key messages.
+**Trade-offs**: Backend has several small Day 1 tasks, so sequencing matters: scaffold and health endpoint first, then contract/schema draft.
+**Consequences**: Each role has a concrete branch and Day 1 Definition of Done; schema application remains behind the human-approval gate in `AGENTS.md`.
