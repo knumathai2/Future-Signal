@@ -13,7 +13,7 @@ _Last updated: 2026-07-08_
 
 | ID | Severity | Description | Found | Owner |
 |----|----------|-------------|-------|-------|
-| — | — | (none — implementation not yet started) | — | — |
+| — | — | (none currently recorded) | — | — |
 
 ## Technical Debt
 

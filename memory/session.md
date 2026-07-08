@@ -15,49 +15,47 @@ Harness Version: 1.1
 
 - **Date**: 2026-07-08
 - **Agent Role**: Frontend Implementer
-- **Session Goal**: Implement `TASK-005` dashboard/detail UI against dummy JSON
+- **Session Goal**: Resolve `frontend/TASK-005-dashboard-skeleton` conflicts with `origin/main`
 
 ## Previous Session Summary
 
-The PM session assigned Day 1 work and listed `TASK-005` for the Frontend Implementer on `frontend/TASK-005-dashboard-skeleton`.
+`origin/main` already includes backend scaffold/API/schema work from PR #5. The frontend branch separately implemented `TASK-005`, so GitHub reported conflicts where both branches added or changed the initial frontend scaffold and shared harness memory/task files.
 
 ## Current Work
 
-- [x] Read `AGENTS.md`, PRD, UX Design, memory files, `tasks/active.md`, `standards.md`, and the frontend implementation prompt.
-- [x] Switched work onto `frontend/TASK-005-dashboard-skeleton`.
-- [x] Converted the supplied static dashboard/detail design into React + TypeScript + Tailwind components.
-- [x] Added typed dummy issue data and a future API-aligned `Issue` contract.
-- [x] Implemented dashboard issue ranking, issue cards, detail view, Recharts line chart, caution badges, related event candidates, and template summary.
-- [x] Added visible data-as-of timestamps and interpretation-caution text on data-bearing screens.
-- [x] Added basic loading, empty, and error UI states.
-- [x] Ran copy/wording lint across frontend source for the prohibited terms list.
-- [x] Ran `npm run build`.
+- [x] Fetched latest `origin/main`.
+- [x] Merged `origin/main` into `frontend/TASK-005-dashboard-skeleton`.
+- [x] Resolved frontend scaffold conflicts by keeping the `TASK-005` React UI implementation and preserving `main`'s lint/format scaffold.
+- [x] Resolved `.gitignore` by combining frontend, backend, env, cache, and editor ignores.
+- [x] Resolved task/memory conflicts by preserving completed backend work and completed frontend work.
+- [x] Renumbered the frontend local-state ADR to ADR-009 because `origin/main` already had ADR-007 and ADR-008.
+- [x] Ran `npm install`, `npm run build`, `npm run lint`, `npm audit`, and prohibited-wording scan after conflict resolution.
 
 ## Completed This Session
 
-- [x] Completed `TASK-005`.
-- [x] Added `/frontend` React/Vite/Tailwind/Recharts implementation files.
-- [x] Updated `tasks/active.md`, `tasks/completed.md`, `memory/decisions.md`, and `memory/known-issues.md`.
+- [x] Conflict selections made for code and project-memory files.
+- [x] `TASK-005` remains completed.
+- [x] Backend additions from `origin/main` are retained.
 
 ## Issues Found / Decisions Made
 
-- ADR-007 recorded: frontend uses local state plus a typed dummy issue contract until the backend API is ready.
-- TD-001 recorded: Vite build reports a non-blocking chunk-size warning likely caused by Recharts.
-- `npm audit` and `npm audit --omit=dev` both report 0 vulnerabilities after updating Vite dev tooling within the declared stack.
+- Correct selection for `frontend/src/App.tsx`, `frontend/src/index.css`, `frontend/src/main.tsx`, and Tailwind theme was the frontend branch, because `origin/main` only had the placeholder scaffold.
+- Correct selection for backend files was `origin/main`, because those files came from the already-merged backend PR.
+- Correct selection for `package.json` was a merge: keep `main`'s lint/format scripts and ESLint dependencies, while keeping the TASK-005 Recharts UI dependency and Vite audit update.
+
+## Next Session: To-Do
+
+1. Push the merge-resolution commit to `origin/frontend/TASK-005-dashboard-skeleton`.
+2. Confirm GitHub no longer reports PR conflicts.
+3. Consider lazy-loading chart/detail code later if the Vite chunk-size warning becomes important.
 
 ## Verification
 
 - `npm run build` passes.
-- `npm audit` passes.
-- `npm audit --omit=dev` passes.
-- Local Vite server responds at `http://127.0.0.1:5173/`.
-
-## Next Session: To-Do
-
-1. Backend/Data-AI should align their API/sample output with `frontend/src/types/issue.ts`.
-2. When the real API is ready, replace `frontend/src/data/dummyIssues.ts` with fetch-backed data loading.
-3. Consider lazy-loading the detail/chart code if the Recharts bundle warning becomes a priority.
+- `npm run lint` passes.
+- `npm audit` reports 0 vulnerabilities.
+- Prohibited-wording scan across frontend source returns no matches.
 
 ## Important Context
 
-Every data-bearing frontend view now includes a visible data-as-of timestamp and interpretation-caution placement. Related event candidates are manually curated context only and are not presented as causes.
+The intended merge result is: `origin/main` backend/API/schema scaffold plus the `TASK-005` frontend dashboard/detail implementation.

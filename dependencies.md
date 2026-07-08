@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # dependencies.md — Outlook Signals Dependencies
 
-_Last updated: 2026-07-07_
+_Last updated: 2026-07-08_
 
 ## Core Dependencies — Frontend
 
@@ -27,6 +27,8 @@ _Last updated: 2026-07-07_
 | uvicorn | ASGI server |
 | pydantic | Request/response models, data validation |
 | sqlalchemy (or equivalent) | Postgres ORM/query layer |
+| psycopg[binary] | Postgres driver paired with SQLAlchemy — approved 2026-07-08 (TASK-001, human approval) |
+| python-dotenv | Local-dev `.env` loading only, not used in deployed environments — approved 2026-07-08 (TASK-001, human approval) |
 | httpx or requests | Polymarket Gamma/CLOB API calls |
 | anthropic (or openai) | Template-constrained AI report generation |
 

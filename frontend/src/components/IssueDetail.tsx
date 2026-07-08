@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
-import { CautionBadge, CAUTION_COPY } from "./CautionBadge";
+import { CautionBadge } from "./CautionBadge";
+import { CAUTION_COPY } from "./cautionCopy";
 import { IssueTrendChart } from "./IssueTrendChart";
 import { MetricTile } from "./MetricTile";
 import {
