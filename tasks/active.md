@@ -13,11 +13,10 @@ _Last updated: 2026-07-08_
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-006 | Finalize MVP scope doc, prohibited-wording policy, and Day 1 presentation story | PM | PM / Planner | `pm/TASK-006-day-1-allocation` | in_progress |
 | TASK-003 | API contract draft and response-shape agreement | Backend Implementer + PM | Backend Implementer | `backend/TASK-003-api-contract` | review |
 | TASK-002 | DB schema draft for MVP tables | Backend Implementer | Backend Implementer | `backend/TASK-002-db-schema` | review |
 
-`TASK-001`, `TASK-004`, `TASK-005`, and `TASK-011` completed 2026-07-08 — see `tasks/completed.md`.
+`TASK-001`, `TASK-004`, `TASK-005`, `TASK-006`, and `TASK-011` completed 2026-07-08 — see `tasks/completed.md`.
 
 ## Day 1 Assignment Notes
 
@@ -26,21 +25,6 @@ _Last updated: 2026-07-08_
 - **Backend Implementer** sequences work as scaffold and health endpoint first, then API contract and schema draft. Applying schema changes to any shared or production database still requires human approval under `AGENTS.md`.
 - **Data/AI Implementer** validates Polymarket Gamma/CLOB fields and produces the 10-market sample set before `TASK-007` starts.
 - **Reviewer / Debugger** are not spun up as separate Day 1 roles unless a concrete issue appears; content-safety checks stay embedded in each role's Definition of Done.
-
-### TASK-006: Finalize MVP scope doc, prohibited-wording policy, and Day 1 presentation story
-
-- **Owner**: PM
-- **Assignee**: PM / Planner
-- **Branch**: `pm/TASK-006-day-1-allocation`
-- **Status**: in_progress
-- **Priority**: High
-- **Day**: Day 1
-- **Description**: Lock the P0/P1/P2 boundary for the hackathon, confirm prohibited wording against `standards.md` and `memory/glossary.md`, and draft the first presentation story.
-- **Definition of Done**:
-  - [ ] MVP scope is confirmed against PRD §6.3-6.5 with no P1/P2 pull-in.
-  - [ ] Wording policy references `standards.md` and `memory/glossary.md`.
-  - [ ] Draft key messages frame the product as information analysis and issue monitoring.
-  - [ ] Any new wording avoids outcome prediction, causal assertion, and action-oriented framing.
 
 ### TASK-003: API contract draft and response-shape agreement
 
