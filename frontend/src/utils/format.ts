@@ -7,20 +7,37 @@ import type {
   RelatedEventCandidate,
 } from "../types/issue";
 
-const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("en-US", {
+const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
+  year: "numeric",
   month: "numeric",
   day: "numeric",
-  year: "numeric",
-  hour: "numeric",
+  hour: "2-digit",
   minute: "2-digit",
+  hourCycle: "h23",
   timeZone: "UTC",
 });
 
-const SHORT_DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
+const SHORT_DATE_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
   month: "numeric",
   day: "numeric",
   timeZone: "UTC",
 });
+
+const CATEGORY_LABELS: Record<string, string> = {
+  climate: "기후",
+  culture: "문화",
+  education: "교육",
+  energy: "에너지",
+  environment: "환경",
+  "global affairs": "국제 이슈",
+  health: "보건",
+  international: "국제",
+  economy: "경제",
+  politics: "정치",
+  science: "과학",
+  technology: "기술",
+  world: "세계",
+};
 
 export function formatDataTimestamp(timestamp: string): string {
   return `${DATE_TIME_FORMATTER.format(new Date(timestamp))} UTC`;
@@ -38,7 +55,7 @@ export function formatPercentagePointChange(
   value: number | null | undefined,
 ): string {
   if (value === null || value === undefined || Number.isNaN(value)) {
-    return "insufficient data";
+    return "데이터 부족";
   }
 
   if (Math.abs(value) < 0.05) {
@@ -51,14 +68,20 @@ export function formatPercentagePointChange(
 
 export function windowLabel(windowKey: ChartWindow): string {
   if (windowKey === "24h") {
-    return "24 hours";
+    return "24시간";
   }
 
   if (windowKey === "7d") {
-    return "7 days";
+    return "7일";
   }
 
-  return "30 days";
+  return "30일";
+}
+
+export function formatCategoryLabel(category: string): string {
+  const normalized = category.trim().toLowerCase().replace(/[_-]+/g, " ");
+
+  return CATEGORY_LABELS[normalized] ?? category;
 }
 
 export interface ApiIssueSummary {
@@ -169,7 +192,7 @@ export function mapApiIssueDetailToFrontendIssue(
       inflectionPoints.push({
         timestamp: history[i].timestamp,
         change,
-        label: "Observed change exceeded the 5pp threshold",
+        label: "관측된 변화가 5pp 기준선을 넘었습니다",
       });
     }
   }

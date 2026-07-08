@@ -195,13 +195,15 @@ export default function App() {
     if (detailStatus === "loading") {
       return (
         <div className="mx-auto min-h-screen w-full max-w-[1180px] px-4 py-6 sm:px-8 lg:px-10 lg:py-10 flex flex-col items-center justify-center">
-          <div className="text-sm font-semibold text-ink-soft animate-pulse">Loading issue details...</div>
+          <div className="text-sm font-semibold text-ink-soft animate-pulse">
+            이슈 상세 정보를 불러오는 중입니다...
+          </div>
           <button
             type="button"
             onClick={() => setScreen("dashboard")}
             className="mt-4 text-sm font-semibold text-accent hover:underline"
           >
-            Back to dashboard
+            대시보드로 돌아가기
           </button>
         </div>
       );
@@ -210,13 +212,15 @@ export default function App() {
     if (detailStatus === "empty" || !detailIssue) {
       return (
         <div className="mx-auto min-h-screen w-full max-w-[1180px] px-4 py-6 sm:px-8 lg:px-10 lg:py-10 text-center">
-          <h2 className="text-base font-bold text-ink">Issue detail not found</h2>
+          <h2 className="text-base font-bold text-ink">
+            이슈 상세 정보를 찾을 수 없습니다
+          </h2>
           <button
             type="button"
             onClick={() => setScreen("dashboard")}
             className="mt-4 text-sm font-semibold text-accent hover:underline"
           >
-            Back to dashboard
+            대시보드로 돌아가기
           </button>
         </div>
       );

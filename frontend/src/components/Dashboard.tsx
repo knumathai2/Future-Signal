@@ -1,8 +1,10 @@
 import { CautionBadge } from "./CautionBadge";
 import { IssueCard } from "./IssueCard";
 import {
+  formatCategoryLabel,
   formatDataTimestamp,
   formatPercentagePointChange,
+  windowLabel,
 } from "../utils/format";
 import type { DataStatus, Issue } from "../types/issue";
 
@@ -43,10 +45,10 @@ function DashboardSkeleton() {
 function EmptyState() {
   return (
     <div className="rounded-lg border border-dashed border-line px-6 py-14 text-center">
-      <h3 className="text-base font-bold text-ink">No issues are available yet</h3>
+      <h3 className="text-base font-bold text-ink">표시할 이슈가 아직 없습니다</h3>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-ink-soft">
-        The database is empty for the selected filters. Once issue records are available, the
-        dashboard will display them.
+        선택한 필터에 해당하는 데이터가 비어 있습니다. 이슈 기록이 준비되면
+        대시보드에 표시됩니다.
       </p>
     </div>
   );
@@ -55,13 +57,27 @@ function EmptyState() {
 function ErrorState({ staleDataAsOf }: { staleDataAsOf: string }) {
   return (
     <div className="mb-4 rounded-lg border border-line bg-card px-5 py-4">
-      <h3 className="text-base font-bold text-ink">Showing last available data</h3>
+      <h3 className="text-base font-bold text-ink">
+        마지막으로 확인 가능한 데이터를 표시합니다
+      </h3>
       <p className="mt-1 text-sm leading-6 text-ink-soft">
-        The latest refresh did not complete. Displaying the last available
-        issue set from {formatDataTimestamp(staleDataAsOf)}.
+        최신 새로고침이 완료되지 않아 {formatDataTimestamp(staleDataAsOf)} 기준의
+        마지막 이슈 목록을 표시합니다.
       </p>
     </div>
   );
+}
+
+function sortLabel(sortOption: "heat" | "change" | "recent"): string {
+  if (sortOption === "heat") {
+    return "재평가 강도";
+  }
+
+  if (sortOption === "change") {
+    return "변화 폭";
+  }
+
+  return "최근 기준";
 }
 
 function absoluteChangeValue(value: number | null | undefined): number {
@@ -104,33 +120,33 @@ export function Dashboard({
             <rect x="8" y="5" width="4" height="13" fill="oklch(22% 0.02 55)" />
             <rect x="14" y="1" width="4" height="17" fill="oklch(52% 0.13 45)" />
           </svg>
-          <span className="text-xl font-extrabold tracking-tight">Outlook Signals</span>
+          <span className="text-xl font-extrabold">Outlook Signals</span>
         </div>
 
         <div className="flex flex-wrap items-center gap-4 text-sm">
           <a className="text-ink-soft hover:text-accent" href="#information-note">
-            Information note
+            정보 안내
           </a>
           <span className="text-xs text-ink-faint">
-            Data as of {formatDataTimestamp(dataAsOf)}
+            데이터 기준 시각: {formatDataTimestamp(dataAsOf)}
           </span>
           <button
             type="button"
             onClick={onRefresh}
             className="rounded-full border border-line px-3 py-1.5 text-xs font-bold text-ink-soft transition hover:border-accent hover:text-accent"
           >
-            Refresh data
+            데이터 새로고침
           </button>
         </div>
       </header>
 
       <section className="mt-8">
-        <h1 className="max-w-3xl text-3xl font-bold tracking-tight text-ink">
-          Today's most reassessed issues
+        <h1 className="max-w-3xl text-3xl font-bold text-ink">
+          최근 관측된 재평가가 큰 이슈
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 text-ink-soft">
-          See how the reflected expectation value has shifted on major global
-          issues, based on Polymarket public data.
+          Polymarket 공개 데이터에 반영된 기대값이 주요 이슈에서 어떻게 달라졌는지
+          관찰할 수 있습니다.
         </p>
       </section>
 
@@ -142,17 +158,17 @@ export function Dashboard({
           <div>
             <CautionBadge level="sufficient" />
             <p className="mt-2 text-sm leading-6 text-ink-soft">
-              Figures reflect Polymarket public data, not certified facts about
-              real-world outcomes. Interpretation requires caution.
+              수치는 Polymarket 공개 데이터에 반영된 기대값이며 실제 사건에 대한
+              확정 사실이 아닙니다. 해석에 주의가 필요합니다.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Filters and Controls */}
+      {/* Filters */}
       <section className="mt-8 flex flex-col gap-4 border-b border-line-soft pb-5">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-semibold uppercase tracking-wider text-ink-faint mr-2">Category:</span>
+          <span className="mr-2 text-xs font-semibold text-ink-faint">분류:</span>
           <button
             type="button"
             onClick={() => onCategoryChange(null)}
@@ -160,49 +176,49 @@ export function Dashboard({
               activeCategory === null
                 ? "bg-ink text-card border border-ink"
                 : "bg-card text-ink-soft border border-line hover:border-accent hover:text-accent"
-            }`}
+              }`}
           >
-            All
+            전체
           </button>
           {categories.map((category) => (
             <button
               key={category}
               type="button"
               onClick={() => onCategoryChange(category)}
-              className={`rounded-full px-3 py-1.5 text-xs font-bold capitalize transition ${
+              className={`rounded-full px-3 py-1.5 text-xs font-bold transition ${
                 activeCategory === category
                   ? "bg-ink text-card border border-ink"
                   : "bg-card text-ink-soft border border-line hover:border-accent hover:text-accent"
               }`}
             >
-              {category}
+              {formatCategoryLabel(category)}
             </button>
           ))}
         </div>
 
         <div className="flex flex-wrap items-center justify-between gap-4 mt-2">
           <div className="flex items-center gap-2">
-            <span className="text-xs text-ink-faint">Sort by:</span>
+            <span className="text-xs text-ink-faint">정렬:</span>
             <div className="inline-flex rounded-lg border border-line p-0.5 bg-card">
               {(["heat", "change", "recent"] as const).map((sortOption) => (
                 <button
                   key={sortOption}
                   type="button"
                   onClick={() => onSortChange(sortOption)}
-                  className={`rounded-md px-3 py-1.5 text-xs font-bold capitalize transition ${
+                  className={`rounded-md px-3 py-1.5 text-xs font-bold transition ${
                     activeSort === sortOption
                       ? "bg-line-soft text-ink font-extrabold"
                       : "text-ink-soft hover:text-accent"
                   }`}
                 >
-                  {sortOption === "change" ? "shift magnitude" : sortOption}
+                  {sortLabel(sortOption)}
                 </button>
               ))}
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-ink-faint">Time window:</span>
+            <span className="text-xs text-ink-faint">기간:</span>
             <div className="inline-flex rounded-lg border border-line p-0.5 bg-card">
               {(["24h", "7d"] as const).map((windowOption) => (
                 <button
@@ -215,7 +231,7 @@ export function Dashboard({
                       : "text-ink-soft hover:text-accent"
                   }`}
                 >
-                  {windowOption}
+                  {windowLabel(windowOption)}
                 </button>
               ))}
             </div>
@@ -226,7 +242,7 @@ export function Dashboard({
       <section className="mt-8">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-lg font-bold text-ink">
-            Largest {activeWindow === "24h" ? "24-hour" : "7-day"} shifts
+            {windowLabel(activeWindow)} 기준 관측 변화가 큰 이슈
           </h2>
         </div>
 
@@ -250,7 +266,7 @@ export function Dashboard({
 
       {shouldShowIssueLists ? (
         <section className="mt-10">
-          <h2 className="text-lg font-bold text-ink">Notable shifts this week</h2>
+          <h2 className="text-lg font-bold text-ink">이번 주 관측 변화</h2>
           <div className="mt-4 overflow-hidden rounded-lg border border-line">
             {weeklyRows.map((issue) => (
               <button
@@ -260,8 +276,8 @@ export function Dashboard({
                 className="flex w-full flex-col gap-3 border-b border-line-soft bg-card px-4 py-4 text-left last:border-b-0 transition hover:bg-line-soft sm:flex-row sm:items-center sm:justify-between"
               >
                 <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-ink-faint">
-                    {issue.category}
+                  <span className="text-[11px] font-bold text-ink-faint">
+                    {formatCategoryLabel(issue.category)}
                   </span>
                   <span className="text-sm font-semibold text-ink">{issue.title}</span>
                 </div>
@@ -282,15 +298,13 @@ export function Dashboard({
         className="mt-10 border-t border-line pt-5 text-xs leading-6 text-ink-faint"
       >
         <p className="max-w-3xl">
-          Outlook Signals is an information analysis and issue-monitoring
-          service. It does not provide financial, legal, political, or other
-          professional advice.
+          Outlook Signals는 공개 데이터 기반의 정보 분석 및 이슈 관찰 서비스입니다.
+          금융, 법률, 정치 또는 그 밖의 전문적 조언을 제공하지 않습니다.
         </p>
         <p className="mt-2 max-w-3xl">
-          This indicator reflects changing expectations in Polymarket public
-          data. It does not represent the judgment of the public at large, and
-          interpretation requires caution depending on data activity level and
-          volatility.
+          이 지표는 Polymarket 공개 데이터에 반영된 기대값의 변화를 보여줍니다.
+          전체 대중의 판단을 대표하지 않으며, 데이터 활동 수준과 변동성에 따라
+          해석에 주의가 필요합니다.
         </p>
       </footer>
     </div>
