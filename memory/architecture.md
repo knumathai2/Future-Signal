@@ -73,5 +73,6 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** �
 - `GET /api/health` is live (mock/no DB dependency).
 - `GET /api/issues`, `/api/issues/:id`, `/api/issues/:id/history`, `/api/issues/:id/report`, `/api/categories` exist but return **hardcoded sample data**, not live Postgres reads — see `backend/API_CONTRACT.md`; ADR-008 accepts the no-report-yet response shape.
 - DB schema draft is accepted (`backend/migrations/001_initial_schema.sql` + `backend/app/db/models.py`) but **not applied to any database** — human approval still required before applying, per `AGENTS.md` and ADR-011.
+- `TASK-007` collector now fetches active Gamma events, validates binary market candidates, writes 50 normalized sample records, and quarantines skipped candidates with structured reasons. Per ADR-014, the artifact emits a display-safe `description: str` and omits raw source descriptions.
 - Backend local setup should use Python 3.11 on this machine; the default Python 3.9 runtime could not install the pinned `psycopg[binary]==3.2.3` binary package.
 - Next backend step after Day 2 assignment: `TASK-010` wires `app/api/routes/issues.py`/`categories.py` toward latest available data while preserving the accepted public contract. Any shared or production schema application remains separately approval-gated.
