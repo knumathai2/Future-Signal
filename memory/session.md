@@ -1,5 +1,5 @@
 <!--
-Purpose:        Current session state — context handoff between agents
+Purpose:        Current session state — context handoff among agents
 Owner:          Currently active agent
 Update Trigger: Read at session start; must update before session ends
 Harness Version: 1.1
@@ -7,53 +7,75 @@ Harness Version: 1.1
 
 # Current Session — Outlook Signals
 
+> After this session, copy this file to `memory/sessions/YYYY-MM-DD-[ROLE].md`.
+
 ---
 
 ## Session Info
 
 - **Date**: 2026-07-08
-- **Agent Role**: Frontend Implementer
-- **Session Goal**: Integrate the home dashboard UI with real backend API routes (TASK-012)
-- **Branch**: `frontend/TASK-012-home-dashboard-ui`
+- **Agent Role**: Reviewer
+- **Session Goal**: Review PR #12 (`TASK-012`) and push review fixes.
+- **Branch**: `review/TASK-012-dashboard-api-review`
 
 ## Previous Session Summary
 
-The PM session finalized the Day 2 allocation. The Frontend Implementer was assigned `TASK-012` to reconcile frontend types with `GET /api/issues` and replace dummy lists with live API calls.
+PR #12 integrated the home dashboard and detail view with backend API routes
+for `TASK-012`. The PR was open against `main` and GitHub reported
+`mergeStateStatus: DIRTY` because `memory/session.md` conflicted with the
+latest `origin/main`.
 
 ## Current Work
 
-- [x] Read `AGENTS.md`, PRD, UX Design, memory files, `tasks/active.md`, and frontend implementation prompt.
-- [x] Switched to task branch `frontend/TASK-012-home-dashboard-ui`.
-- [x] Synced the parent workspace directory with the nested repo `main` branch to resolve out-of-sync Day 2 setup.
-- [x] Added dynamic API proxy configuration to `vite.config.ts`.
-- [x] Declared backend API response types and mapping helpers in `src/utils/format.ts`.
-- [x] Reconciled 0-1 range float values from the API with 0-100 range values expected by the React UI.
-- [x] Hardened Recharts domain bounds calculation in `IssueTrendChart.tsx` to handle empty/loading history.
-- [x] Updated `Dashboard.tsx` to accept dynamic category filters, sorting selectors, window toggles, and backend-driven issue listings.
-- [x] Integrated `App.tsx` with `/api/categories`, `/api/issues`, `/api/issues/{id}`, and `/api/issues/{id}/history?window=30d`.
-- [x] Preserved and integrated loading skeletons, empty screens, and fallback error states with stale dummy issues.
-- [x] Verified static analysis with `npm run lint` and build with `npm run build`.
+- [x] Read `AGENTS.md`, PRD/UX/API context, project memory, active tasks, and
+      the reviewer prompt.
+- [x] Confirmed PR #12 metadata, changed files, lack of existing review
+      comments, and dirty merge state.
+- [x] Preserved the original workspace's uncommitted `memory/session.md`
+      changes by creating a separate worktree.
+- [x] Created review branch `review/TASK-012-dashboard-api-review` from
+      `origin/frontend/TASK-012-home-dashboard-ui`.
+- [x] Reviewed the frontend API mapping, dashboard/detail screens, fallback
+      behavior, data-as-of/caution surfaces, and wording policy.
+- [x] Ran initial frontend `typecheck`, `lint`, and `build`.
+- [x] Fixed the review blocker where API `null` change metrics were rendered
+      as `0.0pp` instead of an insufficient-data state.
+- [x] Merged `origin/main` into the review branch and resolved the
+      documentation-only conflict in `memory/session.md`.
 
 ## Completed This Session
 
-- [x] TASK-012 completed and moved to `tasks/completed.md`.
-- [x] Reconciled frontend typings with the API contract.
-- [x] Dynamic filter pills, window toggles, and sort buttons added to dashboard and wired to endpoints.
-- [x] Hardened chart and dynamic loading details view.
+- [x] `change_24h`, `change_7d`, and derived `change30d` now preserve
+      insufficient reference data through the frontend type and formatting
+      path.
+- [x] Dashboard weekly sorting handles missing weekly change values without
+      treating them as zero movement.
+- [x] Detail summaries now explain when a selected window lacks enough
+      reference data instead of implying no observed change.
+- [x] PR #12's main-merge conflict has been resolved on the review branch.
 
 ## Issues Found / Decisions Made
 
-- Added proxy to Vite config to make relative `/api` paths work seamlessly in development.
-- Implemented detail and history fetching during issue click to prevent rendering empty/incomplete detail screens from list summaries.
-- Local Node/npm was not in path; ran the task using the Visual Studio community MSBuild Node/npm binaries which worked successfully.
+- Found one blocking review issue: nullable API metrics were collapsed to
+  `0.0pp`, which conflicts with PRD §8.5 and TASK-008's rule that missing
+  references must remain visible as insufficient data.
+- No dependency, schema, public API, infrastructure, deployment, production DB,
+  or paid external API change was made.
+- No new AGENTS.md absolute restriction violation was found in the reviewed
+  frontend code.
 
 ## Next Session: To-Do
 
-1. Data/AI should complete snapshotting/metrics (`TASK-008`) and expectation shift detection (`TASK-009`).
-2. Backend should complete core read API Postgres wiring (`TASK-010`).
-3. Frontend should proceed with further detail UI changes or AI report integrations.
+1. Re-run final frontend validation after the merge-conflict resolution commit.
+2. Push the updated PR #12 branch and submit the GitHub review verdict.
+3. Continue `TASK-008`, `TASK-009`, and `TASK-010` in their owning branches.
 
 ## Verification
 
-- `npm run lint` - Passed with 0 errors/warnings.
-- `npm run build` - Passed successfully with the accepted chunk-size warning.
+- `npm ci` -> installed existing lockfile dependencies for the review worktree.
+- `npm run typecheck` -> passed.
+- `npm run lint` -> passed.
+- `npm run build` -> passed with the existing Recharts chunk-size warning.
+- Content wording scan over `frontend/src` -> no prohibited or use-carefully
+  wording hits after word-boundary filtering.
+- `git diff --check` -> passed before merge conflict resolution.
