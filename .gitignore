@@ -1,8 +1,29 @@
-node_modules/
-dist/
+# Secrets / env
 .env
 .env.*
 !.env.example
+
+# Backend (Python)
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.egg-info/
+backend/.pytest_cache/
+backend/.ruff_cache/
 __pycache__/
 .pytest_cache/
 .ruff_cache/
+
+# Frontend (Node)
+node_modules/
+dist/
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/*.tsbuildinfo
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
