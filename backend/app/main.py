@@ -7,6 +7,7 @@ directly - that is the batch collector's job.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes import health
 from app.core.config import settings
 
 app = FastAPI(
@@ -21,3 +22,5 @@ app.add_middleware(
     allow_methods=["GET"],
     allow_headers=["*"],
 )
+
+app.include_router(health.router)
