@@ -19,9 +19,8 @@ Day 2 work is assigned as of 2026-07-08. The goal is to connect the real data pa
 | TASK-008 | Batch collector: snapshot + metrics (steps 3-5) | Data/AI Implementer + Backend | Data/AI Implementer + Backend Implementer | `data-ai/TASK-008-snapshot-metrics` | assigned |
 | TASK-009 | Expectation-shift detection (±5pp threshold) | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-009-shift-detection` | assigned |
 | TASK-010 | `/api/issues`, `/api/issues/:id`, `/api/issues/:id/history` | Backend Implementer | Backend Implementer | `backend/TASK-010-core-api` | assigned |
-| TASK-012 | Home dashboard UI (ranked issue cards) | Frontend Implementer | Frontend Implementer | `frontend/TASK-012-dashboard-ranking` | assigned |
 
-`TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-011`, and `TASK-031` completed 2026-07-08 — see `tasks/completed.md`.
+`TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-011`, `TASK-012`, and `TASK-031` completed 2026-07-08 — see `tasks/completed.md`.
 
 ## Day 2 Assignment Notes
 
@@ -97,20 +96,6 @@ Day 2 work is assigned as of 2026-07-08. The goal is to connect the real data pa
   - [ ] Unknown IDs and invalid params have tested error behavior.
   - [ ] Last-known-good or static fallback behavior is documented if live data is unavailable.
   - [ ] No public path or schema field introduces prohibited market-terminal wording.
-
-### TASK-012: Home dashboard UI
-- **Owner**: Frontend Implementer
-- **Assignee**: Frontend Implementer
-- **Branch**: `frontend/TASK-012-dashboard-ranking`
-- **Status**: assigned
-- **Priority**: High
-- **Day**: Day 2
-- **Description**: Convert the Day 1 dashboard shell into the Day 2 ranked issue-card experience backed by the accepted issue-list contract when available.
-- **Definition of Done**:
-  - [ ] Frontend issue types are reconciled with `GET /api/issues` response fields.
-  - [ ] Dashboard can render API data and retain a static fallback for demo resilience.
-  - [ ] Issue cards keep current value, 24h/7d change, caution badge, and data-as-of timestamp in the same viewport.
-  - [ ] Loading, empty, and error states remain neutral and pass wording lint if changed.
 
 ## Status Values
 

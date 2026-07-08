@@ -18,7 +18,7 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 ## Current State
 
 - **Version**: v0.2.0-day2-allocation
-- **Phase**: Day 2 assigned; data pipeline and core API/UI integration ready to start
+- **Phase**: Day 2 in progress; TASK-012 dashboard UI integration completed.
 - **Next milestone**: Day 2 — real data path through ranking API and dashboard v1 (see `../roadmap.md` and `../reports/day-2-work-allocation.md`)
 - **Overall health**: 🟢 Good — the project now has a working local skeleton and remains within the narrowed MVP scope
 
@@ -51,7 +51,7 @@ Future Signal/
 
 | Area | Current state |
 |---|---|
-| Frontend | Dashboard, issue cards, detail view, Recharts line chart, caution badges, data-as-of timestamps, fallback states, and template-summary shell run against typed dummy data. Day 2 `TASK-012` is assigned to reconcile the dummy shape with `/api/issues` and render ranked API-or-fallback data. |
+| Frontend | Integrated home dashboard, issue cards, detail view, and Recharts line chart with backend FastAPI routes, adding filters, sorting tabs, and error fallback states. |
 | Backend | FastAPI app, `/api/health`, accepted `/api/issues`/detail/history/report/category contract, Pydantic schemas, and contract tests exist. Routes return hardcoded sample data until `TASK-010` wires the read path to latest available data. Schema draft is accepted but unapplied. |
 | Data/AI | Gamma/CLOB field shape, pagination, rate-limit behavior, CLOB history query shape, and a 10-item sample set are documented. Day 2 `TASK-007`, `TASK-008`, and `TASK-009` are assigned for normalization, metrics, and the MVP expectation-shift detector. |
 | PM / Safety | P0 scope remains locked; wording policy references `standards.md` and `memory/glossary.md`; Day 2 allocation is recorded in `reports/day-2-work-allocation.md`, and PM now acts as scope gatekeeper while implementation proceeds. |
