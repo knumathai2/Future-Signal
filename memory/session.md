@@ -14,65 +14,80 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-08
-- **Agent Role**: Debugger
-- **Session Goal**: Resolve PR #15 merge conflict for local stack startup verification notes.
-- **Branch**: `backend/TASK-010-core-api`
+- **Agent Role**: PM / Planner + Reviewer
+- **Session Goal**: Verify Day 2 completion and perform Day 2 closeout documentation if proven complete.
+- **Branch**: `pm/TASK-031-day-2-closeout`
 
 ## Previous Session Summary
 
-`main` advanced through PR #12, PR #13, and PR #14 after PR #15 was opened.
-The PR #15 branch recorded local frontend/backend startup verification in
-`memory/session.md`, while `main` now records the completed `TASK-009`
-Data/AI session in the same handoff file.
+`origin/main` advanced through PR #9 (`TASK-007`), PR #10 (`TASK-010`),
+PR #12 (`TASK-012`), PR #13 (`TASK-008`), PR #14 (`TASK-009`), and PR #15
+(local stack startup notes). The checked-out branch at session start was
+`backend/TASK-010-core-api`; this closeout created
+`pm/TASK-031-day-2-closeout` from the latest `origin/main`.
 
 ## Current Work
 
-- [x] Read `AGENTS.md`, `docs/prd/README.md`, `memory/project.md`,
-      `memory/session.md`, `memory/known-issues.md`, `tasks/active.md`, and
-      `prompts/debug.md`.
-- [x] Confirmed PR #15 is open from `backend/TASK-010-core-api` into `main`
-      and GitHub reports it as `DIRTY`.
-- [x] Fetched latest `origin/main` and reproduced the merge conflict locally.
-- [x] Confirmed the only unresolved conflict was `memory/session.md`.
-- [x] Preserved the PR #15 local stack startup and verification notes in
-      `memory/sessions/2026-07-08-Debugger-local-stack-startup.md`.
-- [x] Rewrote `memory/session.md` as the current conflict-resolution handoff.
+- [x] Read `AGENTS.md`, PRD schedule files, project/session/task ledgers,
+      roadmap, Day 2 allocation, PM/reviewer prompts, safety wording docs,
+      and relevant Day 2 review/session records.
+- [x] Ran `git status --short --branch` and fetched latest `origin`.
+- [x] Verified GitHub PR metadata: PR #9, #10, #12, #13, #14, and #15 are
+      closed and merged.
+- [x] Cross-checked review reports, completed-task records, session archives,
+      branch state, and current artifacts rather than relying only on old
+      review reports.
+- [x] Verified final `TASK-007` artifacts directly after noting the old
+      negative re-review targeted an earlier commit than the merged PR head.
+- [x] Ran backend/frontend verification and wording/conflict-marker checks.
+- [x] Created `reports/day-2-closeout-plan.md`.
+- [x] Moved `TASK-007` and `TASK-010` out of `tasks/active.md` and into
+      `tasks/completed.md`.
+- [x] Marked Day 2 closed in `roadmap.md` and updated `memory/project.md`.
+- [x] Cleaned stale TASK-007 known-issue duplicates and updated architecture
+      status to reflect the Day 2 merged data/API/dashboard baseline.
 
 ## Completed This Session
 
-- [x] Resolved the `memory/session.md` content conflict from merging
-      `origin/main` into `backend/TASK-010-core-api`.
-- [x] Kept the local stack verification record from PR #15 without replacing
-      `main`'s newer TASK-009 handoff history.
-- [x] No source code, schema, public API, dependency, deployment
-      configuration, or production data was changed by the conflict
-      resolution itself.
+- [x] Day 2 closeout verdict: closed.
+- [x] No source code, schema, dependency, migration, public API interface,
+      infrastructure, deployment config, shared database, or production
+      database was changed.
+- [x] No new ADR was added because this session made no new product,
+      architecture, wording-policy, schema, dependency, infrastructure, or
+      public API decision.
 
 ## Issues Found / Decisions Made
 
-- Root cause: two sessions updated `memory/session.md` for different handoffs.
-  The durable PR #15 content now lives in an archived session file, while
-  `memory/session.md` remains available for the active handoff.
-- No persistent bug was added to `memory/known-issues.md`.
-- No product, architecture, wording-policy, schema, dependency, infrastructure,
-  or public API decision was made.
+- Documentation lag was found: `tasks/active.md`, `tasks/completed.md`,
+  `roadmap.md`, `memory/project.md`, and `memory/architecture.md` did not yet
+  reflect that the Day 2 PRs had merged. This session resolves that ledger
+  drift.
+- TD-008 remains open: low-activity/high-volatility caution levels need the
+  volume/liquidity threshold decision before implementation.
+- No new persistent bug was added.
 
 ## Next Session: To-Do
 
-1. Push the merge-resolution commit for PR #15 if GitHub still reports the PR
-   as dirty after local verification.
-2. Continue Day 2 implementation from the active task list; PR #15 is
-   documentation-only.
+1. PM should open Day 3 active tasks for interpretation-caution/disclaimer
+   text, detail/chart/tooltip refinement, issue-detail/history continuation,
+   and inflection-point/caution-badge logic.
+2. Keep shared/dev database schema application behind explicit human approval.
+3. Resolve the minimum volume/liquidity floor question before populating
+   `caution_low_activity` or `caution_high_volatility`.
 
 ## Verification
 
-- `rg -n '^(<<<<<<<|=======|>>>>>>>)' memory/session.md
-  memory/sessions/2026-07-08-Debugger-local-stack-startup.md` -> no conflict
-  markers found.
-- `git diff --check origin/main --` -> passed for the PR #15 resolution diff.
-- `git diff --cached --check` reports trailing whitespace already present in
-  merged `origin/main` changes (`frontend/src/App.tsx` and the TASK-012 review
-  report) when comparing the merge to the older branch head; the PR #15 diff
-  itself is clean.
-- Merge conflict status before staging showed only `memory/session.md` as
-  unresolved.
+- `git fetch --prune origin` -> `origin/main` updated to PR #15 merge commit.
+- GitHub PR metadata -> PR #9, #10, #12, #13, #14, and #15 are merged.
+- `backend/.venv/bin/python -m ruff check backend` -> passed.
+- `backend/.venv/bin/python -m pytest backend/tests` -> 56 passed.
+- `npm run typecheck` -> passed.
+- `npm run lint` -> passed.
+- `npm run build` -> passed with the known Recharts/Vite chunk-size warning
+  tracked as TD-001.
+- Conflict-marker scan -> no markers found.
+- Hard-block wording scan over `frontend/src`, `backend/app`,
+  `normalized_samples.json`, and `skipped_records.json` -> no hits.
+- Normalized artifact probe -> 50 records with required handoff fields
+  present; skipped artifact probe -> 19 structured skipped records.

@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.2.0-day2-allocation
-- **Phase**: Day 2 in progress; TASK-010 core API work is on latest `main`, and TASK-012 dashboard UI integration has been reviewed and updated.
-- **Next milestone**: Day 2 — real data path through ranking API and dashboard v1 (see `../roadmap.md` and `../reports/day-2-work-allocation.md`)
-- **Overall health**: 🟢 Good — the project now has a working local skeleton and remains within the narrowed MVP scope
+- **Version**: v0.3.0-day2-closed
+- **Phase**: Day 2 closed; Day 3 ready
+- **Next milestone**: Day 3 — detail screen, chart/tooltip refinement, inflection-point markers, and interpretation-caution text
+- **Overall health**: 🟢 Good — the Day 2 data/API/dashboard path is merged, verified, and still within the narrowed MVP scope
 
 ## Tech Summary
 
@@ -51,10 +51,10 @@ Future Signal/
 
 | Area | Current state |
 |---|---|
-| Frontend | Integrated home dashboard, issue cards, detail view, and Recharts line chart with backend FastAPI routes, adding filters, sorting tabs, error fallback states, and review-hardened insufficient-data display for missing change references. |
-| Backend | FastAPI app, `/api/health`, accepted `/api/issues`/detail/history/report/category contract, Pydantic schemas, and contract tests exist. `TASK-010` PR #10 wires issue list/detail/history to live reads with static fallback. Schema draft is accepted but unapplied. |
-| Data/AI | Gamma/CLOB field shape, pagination, rate-limit behavior, CLOB history query shape, and a 10-item sample set are documented. Day 2 `TASK-007`, `TASK-008`, and `TASK-009` are assigned for normalization, metrics, and the MVP expectation-shift detector. |
-| PM / Safety | P0 scope remains locked; wording policy references `standards.md` and `memory/glossary.md`; Day 2 allocation is recorded in `reports/day-2-work-allocation.md`, and PM now acts as scope gatekeeper while implementation proceeds. |
+| Frontend | Dashboard v1 is integrated with backend routes and static fallback, including ranked issue cards, category/window/sort controls, detail view, Recharts line chart, error fallback states, data-as-of timestamps, caution badges, and review-hardened insufficient-data display for missing change references. |
+| Backend | FastAPI app, `/api/health`, accepted `/api/issues`/detail/history/report/category contract, Pydantic schemas, and contract tests exist. `TASK-010` merged live issue list/detail/history read paths with documented static fallback behavior. Schema draft is accepted but unapplied. |
+| Data/AI | `TASK-007` produced 50 normalized records and structured skip details; `TASK-008` computes 24h/7d metrics through a local/dev-safe path; `TASK-009` inserts MVP expectation-shift detector rows from the ±5pp threshold. |
+| PM / Safety | P0 scope remains locked; wording policy references `standards.md` and `memory/glossary.md`; Day 2 closeout is recorded in `reports/day-2-closeout-plan.md`, and Day 3 can begin from the verified data/API/dashboard baseline. |
 
 ## Recent Changes
 
@@ -68,8 +68,13 @@ Future Signal/
 | 2026-07-08 | Day 1 implementation status checkpoint recorded in `reports/day-1-implementation-status.md` |
 | 2026-07-08 | Day 1 closed: API contract accepted (ADR-008), DB schema draft accepted but unapplied (ADR-011), no Day 1 tasks remain active |
 | 2026-07-08 | Day 2 work assigned: `TASK-031` completed the allocation; `TASK-007`, `TASK-008`, `TASK-009`, `TASK-010`, and `TASK-012` moved into active execution order |
+| 2026-07-08 | PR #9 (`TASK-007`) merged 50 normalized sample records and structured skip details |
 | 2026-07-08 | PR #10 (`TASK-010`) added live core API read paths with static fallback behavior |
 | 2026-07-08 | PR #12 (`TASK-012`) reviewed; nullable change metrics now remain visible as insufficient data instead of `0.0pp` |
+| 2026-07-08 | PR #13 (`TASK-008`) merged 24h/7d snapshot metric calculation |
+| 2026-07-08 | PR #14 (`TASK-009`) merged the MVP expectation-shift detector |
+| 2026-07-08 | PR #15 recorded local stack startup verification notes |
+| 2026-07-08 | Day 2 closed; `tasks/active.md` has no remaining Day 2 tasks and Day 3 is ready to start |
 
 ## Constraints
 
