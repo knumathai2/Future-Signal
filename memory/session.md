@@ -1,5 +1,5 @@
 <!--
-Purpose:        Current session state — context handoff between agents
+Purpose:        Current session state — context handoff among agents
 Owner:          Currently active agent
 Update Trigger: Read at session start; must update before session ends
 Harness Version: 1.1
@@ -14,51 +14,70 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-08
-- **Agent Role**: PM / Planner
-- **Session Goal**: Assign Day 2 work and align task, roadmap, report, decision, and memory docs
-- **Branch**: `pm/TASK-031-day-2-allocation`
+- **Agent Role**: Reviewer
+- **Session Goal**: Review PR #9 / `data-ai/TASK-007-fetch-normalize` for TASK-007 batch collector fetch and normalize
+- **Branch**: `review/TASK-007-fetch-normalize`
 
 ## Previous Session Summary
 
-Day 1 was closed on `pm/TASK-006-day-1-allocation`. The project entered Day 2 with a working frontend dummy flow, accepted mock API contract, accepted-unapplied schema draft, and Polymarket Gamma/CLOB spike findings.
+Day 2 work was allocated and `TASK-007` was assigned to the Data/AI Implementer on
+`data-ai/TASK-007-fetch-normalize`.
 
 ## Current Work
 
-- [x] Read `AGENTS.md`, PRD, service/technical/UX design docs, `memory/project.md`, `memory/session.md`, `tasks/active.md`, `tasks/backlog.md`, `roadmap.md`, PM prompt, standards, and glossary.
-- [x] Confirmed the working tree was clean before edits.
-- [x] Created `pm/TASK-031-day-2-allocation` from the existing PM Day 1 closeout branch state.
-- [x] Assigned Day 2 implementation work to `TASK-007`, `TASK-008`, `TASK-009`, `TASK-010`, and `TASK-012`.
-- [x] Created and completed `TASK-031` for PM Day 2 allocation, scenario seed, judging Q&A seed, and scope guardrails.
-- [x] Added `reports/day-2-work-allocation.md`.
-- [x] Updated `tasks/active.md`, `tasks/backlog.md`, `tasks/completed.md`, `roadmap.md`, `memory/project.md`, `memory/architecture.md`, `memory/decisions.md`, and `memory/known-issues.md`.
+- [x] Read `AGENTS.md`, PRD, Service Design, Technical Design, `memory/project.md`,
+      `memory/session.md`, `tasks/active.md`, reviewer prompt, Data/AI prompt,
+      `standards.md`, and `memory/glossary.md`.
+- [x] Inspected PR #9 metadata and changed files.
+- [x] Reviewed `backend/app/core/collector.py`, `backend/requirements.txt`, and
+      `normalized_samples.json` against TASK-007 Definition of Done.
+- [x] Ran backend tests with `backend/.venv/bin/python -m pytest backend/tests`.
+- [x] Ran style/content checks against the PR files.
+- [x] Created `reports/review-2026-07-08-TASK-007-fetch-normalize.md`.
+- [x] Submitted a Request Changes review on PR #9.
 
 ## Completed This Session
 
-- [x] `TASK-031` completed and moved to `tasks/completed.md`.
-- [x] Day 2 active implementation board now contains only assigned implementer work: `TASK-007`, `TASK-008`, `TASK-009`, `TASK-010`, and `TASK-012`.
-- [x] Day 2 sequencing and handoff order recorded in `reports/day-2-work-allocation.md`.
-- [x] ADR-012 recorded: Day 2 stays limited to the P0 data path, core API, and dashboard integration.
+- [x] PR #9 review completed with verdict: Request Changes.
+- [x] Review findings recorded in `reports/review-2026-07-08-TASK-007-fetch-normalize.md`.
+- [x] New review-blocking issues recorded in `memory/known-issues.md`.
 
 ## Issues Found / Decisions Made
 
-- New technical debt recorded as `TD-004`: `backend/API_CONTRACT.md` still has stale "draft/open item" wording for the report-empty response, even though ADR-008 accepted `200 {"status": "not_yet_generated"}`.
-- Decision recorded in ADR-012: defer P1/P2 features until `TASK-007`, `TASK-008`, `TASK-010`, and `TASK-012` produce a usable data/API/dashboard path.
-- No scope expansion, new dependency, public API change, schema application, infrastructure change, or deployment was performed.
+- The normalized sample artifact has 50 records, but it does not expose the
+  accepted downstream fields at top level, so `TASK-008` and `TASK-010` would
+  need to re-parse nested raw source data.
+- Invalid/skipped records are mostly discarded through `continue` paths or a
+  plain log line, not structured per-record error details.
+- `backend/requirements.txt` adds `requests`; dependency approval and runtime
+  setup need to be reconciled before merge.
+- PR files failed whitespace/style checks.
+- The committed sample artifact includes raw external descriptions that trigger
+  the project wording lint if the artifact becomes fallback or display data.
+
+No schema change, public API change, deployment, paid API call, or production
+database write was performed.
 
 ## Next Session: To-Do
 
-1. Data/AI should start `TASK-007` on `data-ai/TASK-007-fetch-normalize`.
-2. Backend should start `TASK-010` on `backend/TASK-010-core-api`, preserving the accepted response shape and cleaning stale contract wording if touched.
-3. Frontend should start `TASK-012` on `frontend/TASK-012-dashboard-ranking`, beginning with dummy/API shape reconciliation.
-4. `TASK-008` and `TASK-009` should follow once normalized records and `change_24h` are available.
-5. Keep shared/production DB schema application behind separate human approval.
+1. Data/AI Implementer should revise PR #9 to output schema-aligned normalized
+   records with structured skip/error details.
+2. Data/AI Implementer should resolve the dependency gate for the HTTP client.
+3. Data/AI Implementer should remove style/whitespace failures and rerun checks.
+4. Reviewer should re-review PR #9 after the next push.
 
 ## Verification
 
-- Documentation/task-board changes only; no code tests were required.
-- Git working tree should contain only planning/memory/report updates from this session.
-- User-facing product strings were not changed.
+- `backend/.venv/bin/python -m pytest backend/tests` -> 10 passed.
+- `backend/.venv/bin/python -m ruff check backend/app/core/collector.py` on the
+  PR checkout -> failed for import ordering and line-length violations.
+- `git diff --check origin/main...data-ai/TASK-007-fetch-normalize` -> failed for
+  trailing whitespace in `backend/app/core/collector.py`.
+- Content lint over the committed sample artifact found project hard-block terms
+  inside raw external descriptions.
 
 ## Important Context
 
-The current branch `pm/TASK-031-day-2-allocation` was created from local PM closeout state, not directly from `origin/main`; that local state already included Day 1 closeout documentation. The active implementation work now belongs to role-specific branches listed in `tasks/active.md`.
+The primary workspace had unrelated uncommitted work on `backend/TASK-010-core-api`
+(`backend/app/db/queries.py`). To avoid touching that work, this review record was
+created in a separate git worktree at `../Future-Signal-review-task007`.
