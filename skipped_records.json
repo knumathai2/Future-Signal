@@ -1,35 +1,65 @@
 [
   {
+    "event_id": "17549",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 521103: Closed or inactive",
+      "Market 2749382: Missing required fields ['volume_24h']",
+      "Market 610236: Closed or inactive"
+    ]
+  },
+  {
     "event_id": "22448",
     "reason": "Excluded tag or title term",
     "tags": [
-      "pop-culture",
+      "celebrities",
       "music",
-      "taylor-swift",
-      "celebrities"
+      "pop-culture",
+      "taylor-swift"
     ],
-    "title_text": "taylor swift pregnant by...? this market will resolve to \"yes\" if taylor swift announces that she is pregnant between market creation and the listed date et. otherwise, this market will resolve to \"no\".\n\nonly credible announcements will qualify. pregnancy announcements that are not credible, for example jokes, will not suffice.    \n\nthe resolution source will be statements from taylor swift or her representatives; however, a definitive consensus of credible media reporting may be considered."
+    "title": "Taylor Swift pregnant by...?"
+  },
+  {
+    "event_id": "22527",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 535741: Closed or inactive",
+      "Market 2695405: Missing required fields ['volume_24h']",
+      "Market 623964: Closed or inactive",
+      "Market 813505: Closed or inactive",
+      "Market 813506: Missing required fields ['volume_24h']"
+    ]
   },
   {
     "event_id": "23784",
     "reason": "Excluded tag or title term",
     "tags": [
-      "politics",
       "all",
-      "pop-culture",
-      "gta-vi"
+      "gta-vi",
+      "politics",
+      "pop-culture"
     ],
-    "title_text": "what will happen before gta vi? this is a market on predicting events that will occur before the release of grand theft auto vi."
+    "title": "What will happen before GTA VI?"
   },
   {
     "event_id": "24383",
     "reason": "Excluded tag or title term",
     "tags": [
       "courts",
-      "pop-culture",
-      "movies"
+      "movies",
+      "pop-culture"
     ],
-    "title_text": "harvey weinstein prison time? this market will resolve according to the prison sentence, if any, imposed on harvey weinstein as part of his ongoing new york retrial (people of the state of new york v. harvey weinstein) by july 31, 2026, 11:59 pm et.\n\nthis market will resolve immediately based on the first sentence rendered in this case, regardless of any appeals. if weinstein is found not guilty, there is a mistrial, or if the first sentencing does not include any jail or prison time, this market will resolve to \"no prison time.\"\n\nif no sentencing takes place by july 31, 2026, 11:59 pm et, this market will also resolve to \"no prison time.\"\n\nfor the purposes of this market, it does not matter whether the sentence is concurrent or consecutive to any existing sentence weinstein is already serving. the market will resolve based on the total prison sentence imposed in this case.\n\nthe primary resolution source for this market will be official information from the new york court system or other involved u.s. government sources; however, a consensus of credible reporting may also be used.\n"
+    "title": "Harvey Weinstein prison time?"
+  },
+  {
+    "event_id": "25410",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 548080: Closed or inactive",
+      "Market 648872: Closed or inactive",
+      "Market 1124834: Missing required fields ['volume_24h']",
+      "Market 1127402: Closed or inactive"
+    ]
   },
   {
     "event_id": "25413",
@@ -38,6 +68,14 @@
       "Market 548083: Closed or inactive",
       "Market 2749367: End date 2025-12-31T12:00:00Z is in the past",
       "Market 610256: Closed or inactive"
+    ]
+  },
+  {
+    "event_id": "25487",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 548324: Closed or inactive",
+      "Market 1068702: Missing required fields ['volume_24h']"
     ]
   },
   {
@@ -50,12 +88,103 @@
     ]
   },
   {
+    "event_id": "27831",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 2100106: Missing required fields ['volume_24h']",
+      "Market 2244109: Missing required fields ['volume_24h']",
+      "Market 553886: Closed or inactive",
+      "Market 553887: Closed or inactive",
+      "Market 553888: Closed or inactive",
+      "Market 622738: Missing required fields ['volume_24h']"
+    ]
+  },
+  {
     "event_id": "32226",
     "reason": "No valid binary market found",
     "market_skip_reasons": [
       "Market 562811: Closed or inactive",
       "Market 1057348: Closed or inactive",
       "Market 1057349: End date 2025-12-31T00:00:00Z is in the past"
+    ]
+  },
+  {
+    "event_id": "33685",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 566718: Closed or inactive",
+      "Market 700881: Closed or inactive",
+      "Market 1939065: Missing required fields ['volume_24h']"
+    ]
+  },
+  {
+    "event_id": "34768",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 569887: Closed or inactive",
+      "Market 1068762: Missing required fields ['volume_24h']"
+    ]
+  },
+  {
+    "event_id": "34863",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 569994: Closed or inactive",
+      "Market 1068728: Missing required fields ['volume_24h']"
+    ]
+  },
+  {
+    "event_id": "39836",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 2693968: Missing required fields ['volume_24h']",
+      "Market 581639: Closed or inactive",
+      "Market 581644: Closed or inactive",
+      "Market 623307: Closed or inactive",
+      "Market 623607: Closed or inactive",
+      "Market 623608: Closed or inactive",
+      "Market 644804: Closed or inactive",
+      "Market 651769: Closed or inactive"
+    ]
+  },
+  {
+    "event_id": "40091",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 582465: Closed or inactive",
+      "Market 582466: Closed or inactive",
+      "Market 1068384: Missing required fields ['volume_24h']"
+    ]
+  },
+  {
+    "event_id": "42365",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 589648: Closed or inactive",
+      "Market 663544: Closed or inactive",
+      "Market 956450: Closed or inactive",
+      "Market 1107737: End date 2026-03-31T00:00:00Z is in the past"
+    ]
+  },
+  {
+    "event_id": "43352",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 593983: Missing required fields ['volume_24h']",
+      "Market 593984: Closed or inactive",
+      "Market 593985: Closed or inactive",
+      "Market 593986: Closed or inactive",
+      "Market 593987: Closed or inactive",
+      "Market 593988: Closed or inactive",
+      "Market 593989: Closed or inactive"
+    ]
+  },
+  {
+    "event_id": "44993",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 599081: Closed or inactive",
+      "Market 690651: Missing required fields ['volume_24h']"
     ]
   }
 ]
