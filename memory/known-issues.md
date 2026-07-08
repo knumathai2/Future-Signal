@@ -7,19 +7,20 @@ Harness Version: 1.1
 
 # Known Issues — Outlook Signals
 
-_Last updated: 2026-07-07_
+_Last updated: 2026-07-08_
 
 ## Active Bugs
 
 | ID | Severity | Description | Found | Owner |
 |----|----------|-------------|-------|-------|
-| — | — | (none — implementation not yet started) | — | — |
+| — | — | (none currently recorded) | — | — |
 
 ## Technical Debt
 
 | ID | Description | Impact | Target Resolution |
 |----|-------------|--------|-------------------|
-| — | (none yet) | — | — |
+| TD-001 | Frontend production build reports a chunk-size warning, likely from Recharts in the first bundle. | Non-blocking for the MVP; initial load could be optimized later. | Consider lazy-loading the detail/chart route after MVP flow stabilizes. |
+| TD-002 | `npm audit` reports Vite/esbuild dev-server vulnerabilities when frontend dependencies stay within the approved Vite 5.x major range. | Dev-server security warning; clearing it requires a Vite major upgrade that needs human approval. | Temporarily accepted for PR #6 by ADR-010; revisit in a dependency-maintenance task with explicit Vite major-upgrade approval and manual demo-flow retest. |
 
 ## Resolved
 
