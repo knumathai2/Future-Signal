@@ -969,53 +969,76 @@
     "event_end_date": "2025-12-31T12:00:00Z"
   },
   {
-    "id": "22448",
-    "market_id": "1048199",
+    "id": "25391",
+    "market_id": "2676035",
     "raw_data": {
-      "title": "Taylor Swift pregnant before 2027?",
-      "description": "This market will resolve to \"Yes\" if Taylor Swift announces that she is pregnant between December 28, 2025, and December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nOnly credible announcements will qualify. Pregnancy announcements that are not credible, for example jokes, will not suffice.    \n\nThe resolution source will be statements from Taylor Swift or her representatives; however, a definitive consensus of credible media reporting may be considered.",
-      "event_title": "Taylor Swift pregnant by...?",
-      "event_description": "This market will resolve to \"Yes\" if Taylor Swift announces that she is pregnant between market creation and the listed date ET. Otherwise, this market will resolve to \"No\".\n\nOnly credible announcements will qualify. Pregnancy announcements that are not credible, for example jokes, will not suffice.    \n\nThe resolution source will be statements from Taylor Swift or her representatives; however, a definitive consensus of credible media reporting may be considered.",
+      "title": "Spain snap election called by August 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if the next Spanish general election is scheduled between market creation and August 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nThis market is about whether a date for the next Spanish election is announced within the stated timeframe. The date the election is scheduled to take place on will have no effect on the resolution to this market.\n\nThe primary resolution source for this market is official information from the Government of Spain however a consensus of credible reporting may also be used.",
+      "event_title": "Spain snap election called by...?",
+      "event_description": "This market will resolve to \"Yes\" if the next Spanish general election is scheduled between May 28 and December 31, 2025, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nThis market is about whether a date for the next Spanish election is announced within the stated timeframe. The date the election is scheduled to take place on will have no effect on the resolution to this market.\n\nThe primary resolution source for this market is official information from the Government of Spain however a consensus of credible reporting may also be used.",
       "category_tag": [
         {
-          "id": "100",
-          "label": "Music",
-          "slug": "music",
+          "id": "2",
+          "label": "Politics",
+          "slug": "politics",
           "forceShow": false,
-          "publishedAt": "2023-11-02 21:19:29.061+00",
-          "createdAt": "2023-11-02T21:19:29.066Z",
-          "updatedAt": "2026-04-17T20:16:43.013972Z",
+          "publishedAt": "2023-10-25 18:55:50.674+00",
+          "updatedBy": 13,
+          "createdAt": "2023-10-25T18:55:50.681Z",
+          "updatedAt": "2026-04-17T20:39:54.201881Z",
+          "forceHide": true,
           "requiresTranslation": false
         },
         {
-          "id": "286",
-          "label": "Celebrities",
-          "slug": "celebrities",
-          "forceShow": false,
-          "publishedAt": "2023-11-02 21:48:48.368+00",
-          "createdAt": "2023-11-02T21:48:48.383Z",
-          "updatedAt": "2026-04-17T20:34:55.010856Z",
-          "requiresTranslation": false
-        },
-        {
-          "id": "596",
-          "label": "Culture",
-          "slug": "pop-culture",
-          "forceShow": false,
-          "publishedAt": "2023-11-29 18:40:13.013+00",
-          "createdAt": "2023-11-29T18:40:14.63Z",
-          "updatedAt": "2026-04-17T20:31:50.147585Z",
-          "requiresTranslation": false
-        },
-        {
-          "id": "595",
-          "label": "Taylor Swift",
-          "slug": "taylor-swift",
-          "forceShow": false,
-          "publishedAt": "2023-11-29 18:40:13.481+00",
+          "id": "1597",
+          "label": "Global Elections",
+          "slug": "global-elections",
+          "forceShow": true,
+          "publishedAt": "2024-03-07 20:44:01.258+00",
+          "createdBy": 15,
           "updatedBy": 15,
-          "createdAt": "2023-11-29T18:40:13.497Z",
-          "updatedAt": "2026-04-17T20:46:56.497536Z",
+          "createdAt": "2024-03-07T20:41:56.773Z",
+          "updatedAt": "2026-04-17T21:08:23.096987Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "144",
+          "label": "Elections",
+          "slug": "elections",
+          "forceShow": false,
+          "publishedAt": "2023-11-02 21:24:31.008+00",
+          "updatedBy": 13,
+          "createdAt": "2023-11-02T21:24:31.198Z",
+          "updatedAt": "2026-04-17T17:22:31.696566Z",
+          "forceHide": true,
+          "requiresTranslation": false
+        },
+        {
+          "id": "366",
+          "label": "world affairs",
+          "slug": "world-affairs",
+          "publishedAt": "2023-11-02 22:05:44.425+00",
+          "createdAt": "2023-11-02T22:05:44.48Z",
+          "updatedAt": "2026-04-17T20:47:56.524437Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "101970",
+          "label": "World",
+          "slug": "world",
+          "forceShow": false,
+          "createdAt": "2025-03-19T23:36:08.498099Z",
+          "updatedAt": "2026-04-17T17:18:59.135061Z",
+          "requiresTranslation": false
+        },
+        {
+          "id": "105438",
+          "label": "International Election Props",
+          "slug": "international-election-props",
+          "forceShow": false,
+          "createdAt": "2026-06-17T15:26:47.896107Z",
+          "updatedAt": "2026-06-17T15:30:02.043026Z",
+          "isCarousel": false,
           "requiresTranslation": false
         }
       ],
@@ -1035,21 +1058,21 @@
       ]
     },
     "metrics": {
-      "current_value": 0.13,
-      "volume": 36267.78045899998,
-      "liquidity": 4797.8722
+      "current_value": 0.04,
+      "volume": 3589.0694730000005,
+      "liquidity": 16488.0362
     },
     "clobTokenIds": [
-      "44827572479353518081244438746113968420401867280288091969239280589388541478697",
-      "98165997526504155072211489624964995141099749875757338865080345428663813769275"
+      "53107233019936818776932537419928255013820188991890096631827301058948809573990",
+      "103533043587935563046576444710847485034787596543228838053472803805384813876872"
     ],
-    "price_history_token": "44827572479353518081244438746113968420401867280288091969239280589388541478697",
+    "price_history_token": "53107233019936818776932537419928255013820188991890096631827301058948809573990",
     "price_history_source": "CLOB",
-    "created_at": "2025-12-28T18:05:27.904845Z",
-    "updated_at": "2026-07-08T00:47:37.812873Z",
-    "end_date": "2026-12-31T12:00:00Z",
-    "event_created_at": "2025-04-07T21:37:05.120083Z",
-    "event_updated_at": "2026-07-08T00:47:44.328256Z",
-    "event_end_date": "2026-12-31T12:00:00Z"
+    "created_at": "2026-06-24T23:10:33.820263Z",
+    "updated_at": "2026-07-08T02:41:29.117393Z",
+    "end_date": "2026-08-31T23:59:00Z",
+    "event_created_at": "2025-05-28T17:17:11.280439Z",
+    "event_updated_at": "2026-07-08T02:41:35.907392Z",
+    "event_end_date": "2026-08-31T12:00:00Z"
   }
 ]
