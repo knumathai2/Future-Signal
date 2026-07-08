@@ -219,3 +219,31 @@ _Last updated: 2026-07-08_
 **Rationale**: TASK-008/TASK-010 need a stable handoff contract, while fallback/display consumers must not accidentally render raw external source text.
 **Trade-offs**: The sample description is intentionally generic until a later, policy-reviewed description-generation path exists.
 **Consequences**: The refreshed 50-record `normalized_samples.json` has no null required fields, all top-level descriptions are strings, and invalid candidates are quarantined rather than producing partial normalized records.
+
+---
+
+### ADR-015: TASK-008 bootstraps `markets`/`market_outcomes` rows and ships a P0-only metric set
+
+- **Date**: 2026-07-08
+- **Status**: Accepted
+- **Decided by**: Data/AI Implementer
+
+**Context**: Technical Design §6 steps 3-5 (`app/core/snapshot_metrics.py`) need a stable `markets.id` UUID to write `market_snapshots`/`market_metrics` rows against, but TASK-007's normalize step (steps 1-2) never touches the database - it only produces normalized dicts/JSON, confirmed by `collector.py` having zero SQLAlchemy imports. No other task in `tasks/active.md` claims ownership of populating `markets`/`market_outcomes` from normalized data. Separately, Service Design §5's metric table marks `change_24h`, `change_7d`, the simplified "market confidence score," and the simplified "issue heat score" as P0, while `volatility_score`, `attention_score`, and a `caution_low_activity`/`caution_high_volatility` confidence split are P1 or an open design question (`known-issues.md`'s "Minimum volume/liquidity floor" item).
+**Decision**: (1) `snapshot_metrics.py` does a minimal get-or-create of `markets` (by `polymarket_condition_id`) and its one tracked `market_outcomes` row as plumbing inside steps 3-4, updating only `markets.last_seen_at`/`status` in place (the one exception to append-only per §4.10) - no new table or column. (2) `market_metrics.confidence_level` is populated with only `sufficient`/`insufficient_data` this task; `caution_low_activity`/`caution_high_volatility` are left unused pending the open volume/liquidity-floor decision. (3) `heat_score` uses a placeholder bounded formula (`|change_24h| * 500 + min(volume_24h / 50, 30)`, capped at 100); `volatility_score`/`attention_score` are always `null` (P1, not computed).
+**Rationale**: Building markets/outcomes rows here is the only place in the current step 1-8 pipeline where it can happen without inventing a new task; it satisfies the existing schema's FK contract rather than adding a feature. Withholding `caution_low_activity` avoids fabricating an un-approved policy threshold under the project's no-fabrication rule, applied to thresholds as well as data. The heat_score formula is explicitly sanctioned as a starting point by Service Design §5 ("can start as a simple weighted rank... don't need full composite v1") and by `known-issues.md`'s existing "heat_score weighting formula - start simple, tune once real data is visible" note.
+**Trade-offs**: `confidence_level` currently only distinguishes "have a 24h change" from "don't" - it does not yet flag a technically-sufficient-history market that's actually low-volume/thin or high-volatility. `heat_score` values are not yet tuned against real batch behavior.
+**Consequences**: TASK-009's `±5pp` threshold detector can rely on `change_24h` as implemented. A future task should resolve the volume/liquidity floor open question and add `volatility_score` before `caution_low_activity`/`caution_high_volatility` can be populated - tracked in `known-issues.md`.
+
+---
+
+### ADR-016: TASK-009 signal detection reads `market_metrics` by `computed_at`, decoupled from TASK-008's run function
+
+- **Date**: 2026-07-08
+- **Status**: Accepted (implementation-scope note, not a policy/threshold/schema change - no human approval gate applies)
+- **Decided by**: Data/AI Implementer
+
+**Context**: Technical Design §8 step 6 (signal detection) runs immediately after step 5 (metrics) computes each market's `change_24h` in the same batch pass. TASK-008's `run_snapshot_and_metrics()` (`app/core/snapshot_metrics.py`) already computes and inserts `market_metrics` rows for a run, but its return type (`BatchRunResult`/`MarketRunOutcome`) does not carry the inserted `MarketMetric.id` or the row objects themselves - only a summary (`change_24h`, `confidence_level`, etc.) per market.
+**Decision**: `app/core/signal_detection.py` does not modify TASK-008's return type or call signature. Instead, `detect_signals_for_run(db, run_timestamp)` re-queries `market_metrics` for rows where `computed_at == run_timestamp` (the same timestamp `run_snapshot_and_metrics` already stamps every row in a run with), then evaluates each against the ±5pp threshold.
+**Rationale**: Keeps TASK-008's already-reviewed/merged module untouched (lower regression risk) while still giving step 6 exactly the metrics computed in "this run." The two modules compose via `detect_signals_for_run(db, run_snapshot_and_metrics(...).run_timestamp)` without any shared-object coupling.
+**Trade-offs**: One extra `SELECT` per run instead of reusing in-memory objects from step 5; at hackathon scale (30-50 markets, a handful of runs/day) this is not a performance concern. `issue_signals.detail` therefore stores `metric_id`/`change_24h`/`threshold` rather than the bounding `market_snapshots` ids mentioned as an example in Technical Design §4.5, since TASK-008 doesn't expose the reference snapshot id used inside `compute_change_for_window` - the schema's `detail` field is explicitly "free-form extra context," not a fixed contract, so this is populated with what's actually available rather than fabricated.
+**Consequences**: A market's `expectation_shift` signal can be traced back to its exact `market_metrics` row via `detail.metric_id`. If a future task needs snapshot-id-level detail, `compute_change_for_window` in `snapshot_metrics.py` would need to additionally return the reference snapshot's id - not done here to avoid touching TASK-008's merged module for a need this task doesn't have.
