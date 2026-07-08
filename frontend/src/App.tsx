@@ -5,6 +5,7 @@ import {
   dummyDataAsOf,
   dummyIssues,
   staleDummyDataAsOf,
+  staleDummyIssues,
 } from "./data/dummyIssues";
 import type { DataStatus } from "./types/issue";
 
@@ -31,11 +32,13 @@ function statusFromQuery(): DataStatus | null {
 export default function App() {
   const forcedStatus = useMemo(() => statusFromQuery(), []);
   const [screen, setScreen] = useState<Screen>("dashboard");
-  const [selectedIssueId, setSelectedIssueId] = useState(dummyIssues[0]?.id ?? "");
+  const initialIssues = forcedStatus === "error" ? staleDummyIssues : dummyIssues;
+  const [selectedIssueId, setSelectedIssueId] = useState(initialIssues[0]?.id ?? "");
   const [status, setStatus] = useState<DataStatus>(forcedStatus ?? "loading");
   const [issues, setIssues] = useState(() =>
-    forcedStatus === "empty" ? [] : dummyIssues,
+    forcedStatus === "empty" ? [] : initialIssues,
   );
+  const activeDataAsOf = status === "error" ? staleDummyDataAsOf : dummyDataAsOf;
 
   useEffect(() => {
     if (forcedStatus) {
@@ -75,14 +78,20 @@ export default function App() {
   }
 
   if (screen === "detail" && selectedIssue) {
-    return <IssueDetail issue={selectedIssue} onBack={() => setScreen("dashboard")} />;
+    return (
+      <IssueDetail
+        issue={selectedIssue}
+        dataStatus={status}
+        onBack={() => setScreen("dashboard")}
+      />
+    );
   }
 
   return (
     <Dashboard
       issues={issues}
       status={status}
-      dataAsOf={dummyDataAsOf}
+      dataAsOf={activeDataAsOf}
       staleDataAsOf={staleDummyDataAsOf}
       onIssueSelect={handleIssueSelect}
       onRefresh={handleRefresh}
