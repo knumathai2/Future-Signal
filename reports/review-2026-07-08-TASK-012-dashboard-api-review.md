@@ -45,10 +45,11 @@ the review branch while preserving the latest TASK-007 mainline artifacts.
 - `npm ci` -> passed using the existing frontend lockfile
 - `npm run typecheck` -> passed
 - `npm run lint` -> passed
-- `npm run build` -> passed with the existing Recharts chunk-size warning
+- `npm run build` -> passed before and after merging `origin/main`, with the
+  existing Recharts chunk-size warning
 - Content wording scan over `frontend/src` -> no prohibited or use-carefully
   wording hits after word-boundary filtering
-- `git diff --check` -> passed before merge-conflict resolution
+- `git diff --check` -> passed after merge-conflict resolution
 
 ## Notes
 

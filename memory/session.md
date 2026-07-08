@@ -42,6 +42,8 @@ latest `origin/main`.
       as `0.0pp` instead of an insufficient-data state.
 - [x] Merged `origin/main` into the review branch and resolved the
       documentation-only conflict in `memory/session.md`.
+- [x] Re-ran frontend validation and wording scans after the merge-conflict
+      resolution.
 
 ## Completed This Session
 
@@ -66,16 +68,16 @@ latest `origin/main`.
 
 ## Next Session: To-Do
 
-1. Re-run final frontend validation after the merge-conflict resolution commit.
-2. Push the updated PR #12 branch and submit the GitHub review verdict.
-3. Continue `TASK-008`, `TASK-009`, and `TASK-010` in their owning branches.
+1. Merge PR #12 only through the approved project review flow.
+2. Continue `TASK-008`, `TASK-009`, and `TASK-010` in their owning branches.
 
 ## Verification
 
 - `npm ci` -> installed existing lockfile dependencies for the review worktree.
 - `npm run typecheck` -> passed.
 - `npm run lint` -> passed.
-- `npm run build` -> passed with the existing Recharts chunk-size warning.
+- `npm run build` -> passed before and after merging `origin/main`, with the
+  existing Recharts chunk-size warning.
 - Content wording scan over `frontend/src` -> no prohibited or use-carefully
   wording hits after word-boundary filtering.
-- `git diff --check` -> passed before merge conflict resolution.
+- `git diff --check` -> passed after merge-conflict resolution.

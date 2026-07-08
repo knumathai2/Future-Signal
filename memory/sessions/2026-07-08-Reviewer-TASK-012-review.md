@@ -31,18 +31,19 @@ summary copy so insufficient reference data remains visible to users.
   documentation-only conflict in `memory/session.md`.
 - Added a review report at
   `reports/review-2026-07-08-TASK-012-dashboard-api-review.md`.
+- Re-ran frontend validation and wording scans after the merge.
 
 ## Verification
 
 - `npm ci` -> passed
 - `npm run typecheck` -> passed
 - `npm run lint` -> passed
-- `npm run build` -> passed with the existing Recharts chunk-size warning
+- `npm run build` -> passed before and after merging `origin/main`, with the
+  existing Recharts chunk-size warning
 - Content wording scan over `frontend/src` -> no prohibited or use-carefully
   wording hits after word-boundary filtering
-- `git diff --check` -> passed before merge-conflict resolution
+- `git diff --check` -> passed after merge-conflict resolution
 
 ## Follow-Up
 
-- Re-run final validation after the merge commit.
-- Push the corrected PR #12 branch and submit the GitHub review verdict.
+- Merge PR #12 only through the approved project review flow.
