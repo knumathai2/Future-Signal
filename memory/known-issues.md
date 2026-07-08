@@ -13,7 +13,7 @@ _Last updated: 2026-07-08_
 
 | ID | Severity | Description | Found | Owner |
 |----|----------|-------------|-------|-------|
-| — | — | (none currently recorded) | — | — |
+| — | — | No active bugs currently recorded. | — | — |
 
 ## Technical Debt
 
@@ -29,6 +29,7 @@ _Last updated: 2026-07-08_
 
 | ID | Description | Resolved | Method |
 |----|-------------|----------|--------|
+| ISS-001 | Detail chart could not display a trend for 24h/7d/30d when the API history path returned only one point; this was not caused by the 5pp inflection-marker threshold. | 2026-07-08 | Frontend now renders an explicit insufficient-history state when the visible chart window has fewer than two history points. |
 | DQ-001 | API no-report-yet response shape needed PM/Frontend sign-off. | 2026-07-08 | ADR-008 accepted `200 {"status": "not_yet_generated"}` as the canonical response. |
 | TD-004 | `backend/API_CONTRACT.md` still contained stale "draft/open item" wording for the report-empty response even though ADR-008 accepted `200 {"status": "not_yet_generated"}`. | 2026-07-08 | Cleaned up during `TASK-010` - "Open item for PM sign-off" section now states the accepted behavior as final; response shape unchanged. |
 | TD-005 | PR #9's TASK-007 normalized sample artifact was not shaped for the accepted downstream schema and lacked structured skip/error details. | 2026-07-08 | Fixed by the PR #9 review-fix commit recorded in ADR-014; verified during `TASK-008` that the merged `normalized_samples.json` has all required top-level fields (0 nulls across 50 records) and `skipped_records.json` carries structured reasons. |
@@ -61,3 +62,28 @@ Not bugs, but unresolved decisions that will surface as real blockers during the
 - **Workaround**:
 - **Permanent fix direction**:
 ```
+
+### ISS-001: Detail chart blank with one-point history
+- **Severity**: High
+- **Found**: 2026-07-08
+- **Resolved**: 2026-07-08
+- **Reproduction steps**:
+  1. Run the frontend against the backend fallback/live path.
+  2. Open an issue detail screen.
+  3. Toggle the chart window between 24h, 7d, and 30d.
+  4. Observe that the chart area can look blank because the history response contains only one point.
+- **Root cause**:
+  - `frontend/src/App.tsx` fetches detail history once with `window=30d`.
+  - `frontend/src/components/IssueTrendChart.tsx` then slices that same history array to 2, 8, or 31 points for 24h/7d/30d.
+  - `backend/app/api/routes/issues.py` returns only the latest snapshot point in the static fallback path and also falls back to a single latest point when live history is empty or query loading fails.
+  - Recharts cannot draw a visible line segment from one point, and the chart line has `dot={false}`; with no inflection marker, this reads as an empty chart.
+  - The 5pp threshold only controls inflection-point markers/signals, not whether the chart line should be displayed.
+- **Workaround**:
+  - Use frontend forced error/static fallback data, which contains generated multi-point history, or seed/query enough market snapshots for the selected window.
+- **Permanent fix direction**:
+  - Completed frontend fix: `IssueTrendChart` renders an explicit
+    insufficient-history state when fewer than two visible history points
+    exist.
+  - Backend/API shape was preserved; multi-point fallback history can still be
+    considered later for richer demo data, but it is no longer required to avoid
+    a blank/misleading chart state.
