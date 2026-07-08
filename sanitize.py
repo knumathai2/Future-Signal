@@ -3,7 +3,7 @@ import json
 def sanitize_json(file_path):
     with open(file_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
-        
+
     def sanitize(node):
         if isinstance(node, dict):
             # Keys to delete
@@ -16,7 +16,7 @@ def sanitize_json(file_path):
         elif isinstance(node, list):
             for item in node:
                 sanitize(item)
-                
+
     sanitize(data)
     with open(file_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, separators=(',', ':'))

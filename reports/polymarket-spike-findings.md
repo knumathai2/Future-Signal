@@ -15,7 +15,7 @@ Based on testing the `/events` endpoint:
 - **Liquidity**: `liquidity`
 - **Dates**: `createdAt`, `updatedAt`, `endDate`
 
-## 2. CLOB Validation and Price History
+## 2. Gamma Token Discovery
 - **CLOB Tokens**: The `clobTokenIds` field in the inner market is parsed as a JSON string array.
 - **History Token**: The token for the "Yes" outcome (first token in `clobTokenIds`) is captured as `price_history_token` to be used for charting price histories.
 - **Price History Source**: Set to `CLOB` to indicate that price history will be fetched via the Polymarket CLOB API using the history token.

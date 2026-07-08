@@ -3,8 +3,10 @@
     "id": "16183",
     "market_id": "691547",
     "raw_data": {
-      "title": "Kraken IPO by ___ ?",
-      "description": "This market will resolve to \"Yes\" if Kraken (US-based cryptocurrency exchange) completes an Initial Public Offering (IPO) by December 31, 2025, 11:59 PM ET, as confirmed by official company announcements or credible news sources. The IPO refers to the first sale of stock by Kraken to the public on any recognized stock exchange.\n\nIf Kraken merges with another entity, is acquired, or ceases to exist before the market resolves, the market will also resolve to \"No\".\n\nThis market will resolve early if Kraken completes an IPO by December 31, 2025, 11:59 PM ET.\n\nThe resolution source for this market is a consensus of credible reporting.",
+      "title": "Kraken IPO by December 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if Kraken completes an Initial Public Offering (IPO) by the listed date ET, as confirmed by official company announcements and credible news sources. Otherwise, this market will resolve to \"No.\"\n\nThe IPO refers to the first sale of stock by the listed company to the public on any recognized stock exchange.\n\nIf Kraken is acquired by another company that is already public, this market will immediately resolve to \"No.\"\n\nThe resolution source for this market is a consensus of credible reporting.",
+      "event_title": "Kraken IPO by ___ ?",
+      "event_description": "This market will resolve to \"Yes\" if Kraken (US-based cryptocurrency exchange) completes an Initial Public Offering (IPO) by December 31, 2025, 11:59 PM ET, as confirmed by official company announcements or credible news sources. The IPO refers to the first sale of stock by Kraken to the public on any recognized stock exchange.\n\nIf Kraken merges with another entity, is acquired, or ceases to exist before the market resolves, the market will also resolve to \"No\".\n\nThis market will resolve early if Kraken completes an IPO by December 31, 2025, 11:59 PM ET.\n\nThe resolution source for this market is a consensus of credible reporting.",
       "category_tag": [
         {
           "id": "21",
@@ -90,12 +92,12 @@
       "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "Signal",
-          "slug": "signal"
+          "label": "Issue change",
+          "slug": "issue-change"
         },
         {
-          "label": "Forecast",
-          "slug": "forecast"
+          "label": "Public data",
+          "slug": "public-data"
         }
       ]
     },
@@ -121,8 +123,10 @@
     "id": "16263",
     "market_id": "2694508",
     "raw_data": {
-      "title": "Macron out by...?",
-      "description": "This market will resolve to \"Yes\" if Emmanuel Macron ceases to be President of France for any length of time between January 2 and December 31, 2025, 11:59 PM ET (inclusive). Otherwise, this market will resolve to \"No\".\n\nIf Macron departs from office before the expiry date, the market should resolve immediately.\n\nThe primary resolution source for this market will be information from the government of France, however a consensus of credible reporting will also be used.",
+      "title": "Macron out by July 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if Emmanuel Macron ceases to be President of France for any length of time between market creation and July 31, 2026, 11:59 PM ET (inclusive). Otherwise, this market will resolve to \"No\".\n\nIf Macron departs from office before the expiry date, the market should resolve immediately.\n\nThe primary resolution source for this market will be information from the government of France, however a consensus of credible reporting will also be used.",
+      "event_title": "Macron out by...?",
+      "event_description": "This market will resolve to \"Yes\" if Emmanuel Macron ceases to be President of France for any length of time between January 2 and December 31, 2025, 11:59 PM ET (inclusive). Otherwise, this market will resolve to \"No\".\n\nIf Macron departs from office before the expiry date, the market should resolve immediately.\n\nThe primary resolution source for this market will be information from the government of France, however a consensus of credible reporting will also be used.",
       "category_tag": [
         {
           "id": "1378",
@@ -188,12 +192,12 @@
       "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "Signal",
-          "slug": "signal"
+          "label": "Issue change",
+          "slug": "issue-change"
         },
         {
-          "label": "Forecast",
-          "slug": "forecast"
+          "label": "Public data",
+          "slug": "public-data"
         }
       ]
     },
@@ -219,8 +223,10 @@
     "id": "16423",
     "market_id": "2354064",
     "raw_data": {
-      "title": "UK election called by...?",
-      "description": "This is a market on predicting the date when the UK general election will be officially called.",
+      "title": "Will the next UK election be called by December 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if the date of the next UK general election is declared by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nFor this market to resolve to \"Yes\" it is only necessary that the election date be declared, not that the election actually occur within the market timeframe.\n\nThe primary resolution source for this market will be official information from the government of the United Kingdom, however a consensus of credible reporting will also be used.",
+      "event_title": "UK election called by...?",
+      "event_description": "This is a market on predicting the date when the UK general election will be officially called.",
       "category_tag": [
         {
           "id": "734",
@@ -274,12 +280,12 @@
       "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "Signal",
-          "slug": "signal"
+          "label": "Issue change",
+          "slug": "issue-change"
         },
         {
-          "label": "Forecast",
-          "slug": "forecast"
+          "label": "Public data",
+          "slug": "public-data"
         }
       ]
     },
@@ -305,8 +311,10 @@
     "id": "17526",
     "market_id": "677404",
     "raw_data": {
-      "title": "China x India military clash by...?",
-      "description": "This is a market on the likelihood of a military clash between China and India occurring by December 31.",
+      "title": "China x India military clash by December 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if there is a military encounter between the military forces of China (People's Republic of China) and India between January 29, 2025 and December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nA \"military encounter\" is defined as any incident involving the use of force such as missile strikes, artillery fire, exchange of gunfire, or other forms of direct military engagement between Chinese and Indian military forces. Hand-to-hand combat with the use of melee weapons between military personnel, will qualify. For example the 2020 Galwan Valley clash and the 2022 Yangtse clash would both count.\n\nNon-violent actions, such as warning shots, artillery fire into uninhabited areas, or missile launches that land in territorial waters or pass through airspace, will not qualify for a \"Yes\" resolution. Intentional ship ramming that results in significant damage to (e.g., a hole in the hull) or the sinking of a military ship by another will count toward a \"Yes\" resolution, however minor damage (scrapes, dents) will not.\n\nNote: the China Coast Guard (CCG) is part of the military, however the Indian Coast Guard (ICG) is not.\n\nThe resolution source for this market will be a consensus of credible reporting.",
+      "event_title": "China x India military clash by...?",
+      "event_description": "This is a market on the likelihood of a military clash between China and India occurring by December 31.",
       "category_tag": [
         {
           "id": "100265",
@@ -365,12 +373,12 @@
       "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "Signal",
-          "slug": "signal"
+          "label": "Issue change",
+          "slug": "issue-change"
         },
         {
-          "label": "Forecast",
-          "slug": "forecast"
+          "label": "Public data",
+          "slug": "public-data"
         }
       ]
     },
@@ -396,8 +404,10 @@
     "id": "17549",
     "market_id": "2749382",
     "raw_data": {
-      "title": "NATO/EU troops fighting in Ukraine by...?",
-      "description": "This market will resolve to \"Yes\" if active military personnel officially affiliated with any NATO or EU country enter Ukraine for combat-related military purposes directly pertaining to the ongoing conflict with Russia by December 31, 2025, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nFor military personnel to qualify toward a \"Yes\" resolution, they must be 1) officially acknowledged as active military by the NATO or EU entity or member state they are affiliated with; 2) be publicly acknowledged by NATO or an EU-affiliated entity to have entered Ukraine for a combat-related military purpose directly pertaining to the ongoing conflict with Russia.\n\nFor military personnel to qualify toward a \"Yes\" resolution they need be active duty and acknowledged as described above. Participation in a combat role is necessary for this market to resolve to \"Yes\" (e.g. military personnel providing training or intelligence support would not qualify toward a \"Yes\" resolution, however drone pilots or infantry directly attacking Russian troops, or soldiers targeting and downing missiles from Ukrainian soil would qualify toward a \"Yes\" resolution).\n\nThe primary resolution source for this market will be official information from NATO, the EU, or member states of either entity, however a consensus of credible reporting will also be used.",
+      "title": "NATO/EU troops fighting in Ukraine by December 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if active military personnel officially affiliated with any NATO or EU country enter Ukraine for combat-related military purposes directly pertaining to the ongoing conflict with Russia by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nFor military personnel to qualify toward a \"Yes\" resolution, they must be 1) officially acknowledged as active military by the NATO or EU entity or member state they are affiliated with; 2) be publicly acknowledged by NATO or an EU-affiliated entity to have entered Ukraine for a combat-related military purpose directly pertaining to the ongoing conflict with Russia.\n\nFor military personnel to qualify toward a \"Yes\" resolution they need be active duty and acknowledged as described above. Participation in a combat role is necessary for this market to resolve to \"Yes\" (e.g. military personnel providing training or intelligence support would not qualify toward a \"Yes\" resolution, however drone pilots or infantry directly attacking Russian troops, or soldiers targeting and downing missiles from Ukrainian soil would qualify toward a \"Yes\" resolution).\n\nThe primary resolution source for this market will be official information from NATO, the EU, or member states of either entity, however a consensus of credible reporting will also be used.",
+      "event_title": "NATO/EU troops fighting in Ukraine by...?",
+      "event_description": "This market will resolve to \"Yes\" if active military personnel officially affiliated with any NATO or EU country enter Ukraine for combat-related military purposes directly pertaining to the ongoing conflict with Russia by December 31, 2025, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nFor military personnel to qualify toward a \"Yes\" resolution, they must be 1) officially acknowledged as active military by the NATO or EU entity or member state they are affiliated with; 2) be publicly acknowledged by NATO or an EU-affiliated entity to have entered Ukraine for a combat-related military purpose directly pertaining to the ongoing conflict with Russia.\n\nFor military personnel to qualify toward a \"Yes\" resolution they need be active duty and acknowledged as described above. Participation in a combat role is necessary for this market to resolve to \"Yes\" (e.g. military personnel providing training or intelligence support would not qualify toward a \"Yes\" resolution, however drone pilots or infantry directly attacking Russian troops, or soldiers targeting and downing missiles from Ukrainian soil would qualify toward a \"Yes\" resolution).\n\nThe primary resolution source for this market will be official information from NATO, the EU, or member states of either entity, however a consensus of credible reporting will also be used.",
       "category_tag": [
         {
           "id": "96",
@@ -496,12 +506,12 @@
       "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "Signal",
-          "slug": "signal"
+          "label": "Issue change",
+          "slug": "issue-change"
         },
         {
-          "label": "Forecast",
-          "slug": "forecast"
+          "label": "Public data",
+          "slug": "public-data"
         }
       ]
     },
@@ -527,8 +537,10 @@
     "id": "17858",
     "market_id": "1323364",
     "raw_data": {
-      "title": "Ukraine recognizes Russian sovereignty over its territory by...?",
-      "description": "This market will resolve to \"Yes\" if a deal in which Ukraine agrees to formally recognize Russian sovereignty over any UN-recognized Ukrainian territory is reached between the Russian Federation and Ukraine by December 31, 2025, 11:59 PM ET. Otherwise, this market will resolve to \u201cNo\u201d.\n\nThe deal must be a publicly announced mutual agreement. \n\nIf such an agreement is officially reached before the resolution date, this market will resolve to \"Yes\", regardless of if/when the agreement goes into effect.\n\nAn agreement by Ukraine formally recognizing Russian sovereignty over any UN-recognized Ukrainian territory for any amount of time will count.\n\nAn agreement by Ukraine formally recognizing Russian sovereignty over any UN-recognized Ukrainian territory as a precondition of a more comprehensive peace process or deal will qualify, even if the agreement is not finalized or part of a formalized peace deal. The September 8, 1995, \u201cAgreed Basic Principles\u201d between Bosnia and Yugoslavia, which recognized the borders and sovereignty of Bosnia and Herzegovina, and was later formalized through the Dayton Peace Agreement, is an example of a qualifying agreement.\n\nAn official unilateral pledge by Ukraine formally recognizing Russian sovereignty over any UN-recognized Ukrainian territory will qualify for a \u201cYes\u201d resolution even if not part of an agreement with Russia.\n\nThe April 19, 2013, Brussels Agreement between Serbia and Kosovo, in which Serbia recognized Kosovo\u2019s de facto administration but did not formally grant de jure recognition, would not be considered a qualifying agreement under this market, as this market requires formal recognition of sovereignty rather than acknowledgment of administrative control.\n\nThe primary resolution source for this market will be an official announcement by Ukraine and/or the Russian Federation, however, an overwhelming consensus of credible reporting confirming an agreement has been reached will also qualify.\n",
+      "title": "Ukraine recognizes Russian sovereignty over its territory by December 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if a deal in which Ukraine agrees to formally recognize Russian sovereignty over any UN-recognized Ukrainian territory is reached between the Russian Federation and Ukraine by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \u201cNo\u201d.\n\nThe deal must be a publicly announced mutual agreement. \n\nIf such an agreement is officially reached before the resolution date, this market will resolve to \"Yes\", regardless of if/when the agreement goes into effect.\n\nAn agreement by Ukraine formally recognizing Russian sovereignty over any UN-recognized Ukrainian territory for any amount of time will count.\n\nAn agreement by Ukraine formally recognizing Russian sovereignty over any UN-recognized Ukrainian territory as a precondition of a more comprehensive peace process or deal will qualify, even if the agreement is not finalized or part of a formalized peace deal. The September 8, 1995, \u201cAgreed Basic Principles\u201d between Bosnia and Yugoslavia, which recognized the borders and sovereignty of Bosnia and Herzegovina, and was later formalized through the Dayton Peace Agreement, is an example of a qualifying agreement.\n\nAn official unilateral pledge by Ukraine formally recognizing Russian sovereignty over any UN-recognized Ukrainian territory will qualify for a \u201cYes\u201d resolution even if not part of an agreement with Russia.\n\nThe April 19, 2013, Brussels Agreement between Serbia and Kosovo, in which Serbia recognized Kosovo\u2019s de facto administration but did not formally grant de jure recognition, would not be considered a qualifying agreement under this market, as this market requires formal recognition of sovereignty rather than acknowledgment of administrative control.\n\nThe primary resolution source for this market will be an official announcement by Ukraine and/or the Russian Federation, however, an overwhelming consensus of credible reporting confirming an agreement has been reached will also qualify.\n",
+      "event_title": "Ukraine recognizes Russian sovereignty over its territory by...?",
+      "event_description": "This market will resolve to \"Yes\" if a deal in which Ukraine agrees to formally recognize Russian sovereignty over any UN-recognized Ukrainian territory is reached between the Russian Federation and Ukraine by December 31, 2025, 11:59 PM ET. Otherwise, this market will resolve to \u201cNo\u201d.\n\nThe deal must be a publicly announced mutual agreement. \n\nIf such an agreement is officially reached before the resolution date, this market will resolve to \"Yes\", regardless of if/when the agreement goes into effect.\n\nAn agreement by Ukraine formally recognizing Russian sovereignty over any UN-recognized Ukrainian territory for any amount of time will count.\n\nAn agreement by Ukraine formally recognizing Russian sovereignty over any UN-recognized Ukrainian territory as a precondition of a more comprehensive peace process or deal will qualify, even if the agreement is not finalized or part of a formalized peace deal. The September 8, 1995, \u201cAgreed Basic Principles\u201d between Bosnia and Yugoslavia, which recognized the borders and sovereignty of Bosnia and Herzegovina, and was later formalized through the Dayton Peace Agreement, is an example of a qualifying agreement.\n\nAn official unilateral pledge by Ukraine formally recognizing Russian sovereignty over any UN-recognized Ukrainian territory will qualify for a \u201cYes\u201d resolution even if not part of an agreement with Russia.\n\nThe April 19, 2013, Brussels Agreement between Serbia and Kosovo, in which Serbia recognized Kosovo\u2019s de facto administration but did not formally grant de jure recognition, would not be considered a qualifying agreement under this market, as this market requires formal recognition of sovereignty rather than acknowledgment of administrative control.\n\nThe primary resolution source for this market will be an official announcement by Ukraine and/or the Russian Federation, however, an overwhelming consensus of credible reporting confirming an agreement has been reached will also qualify.\n",
       "category_tag": [
         {
           "id": "2",
@@ -643,12 +655,12 @@
       "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "Signal",
-          "slug": "signal"
+          "label": "Issue change",
+          "slug": "issue-change"
         },
         {
-          "label": "Forecast",
-          "slug": "forecast"
+          "label": "Public data",
+          "slug": "public-data"
         }
       ]
     },
@@ -674,8 +686,10 @@
     "id": "18558",
     "market_id": "2261102",
     "raw_data": {
-      "title": "Ukraine election called by...?",
-      "description": "This market will resolve to \"Yes\" if the next Ukrainian presidential election is scheduled in 2025. Otherwise, this market will resolve to \"No\".\n\nThis market is about whether a date for the next Ukrainian election is announced between February 14 and December 31, 2025, 11:59 PM ET. Whether the election is supposed to take place in 2025 or later will have no effect on the resolution to this market.\n\nThe primary resolution source for this market is official information from the Government of Ukraine however a consensus of credible reporting may also be used.\n",
+      "title": "Ukraine election called by December 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if the next Ukrainian presidential election is scheduled by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nThis market is about whether a date for the next Ukrainian election is announced between market creation and December 31, 2026, 11:59 PM ET. Whether the election is supposed to take place during this timeframe or later will have no effect on the resolution of this market.\n\nThe primary resolution source for this market is official information from the Government of Ukraine; however, a consensus of credible reporting may also be used.\n",
+      "event_title": "Ukraine election called by...?",
+      "event_description": "This market will resolve to \"Yes\" if the next Ukrainian presidential election is scheduled in 2025. Otherwise, this market will resolve to \"No\".\n\nThis market is about whether a date for the next Ukrainian election is announced between February 14 and December 31, 2025, 11:59 PM ET. Whether the election is supposed to take place in 2025 or later will have no effect on the resolution to this market.\n\nThe primary resolution source for this market is official information from the Government of Ukraine however a consensus of credible reporting may also be used.\n",
       "category_tag": [
         {
           "id": "96",
@@ -742,12 +756,12 @@
       "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "Signal",
-          "slug": "signal"
+          "label": "Issue change",
+          "slug": "issue-change"
         },
         {
-          "label": "Forecast",
-          "slug": "forecast"
+          "label": "Public data",
+          "slug": "public-data"
         }
       ]
     },
@@ -773,8 +787,10 @@
     "id": "18571",
     "market_id": "1807912",
     "raw_data": {
-      "title": "Will any country leave NATO by...?",
-      "description": "This market will resolve to \"Yes\" if any member state formally withdraws from NATO or provides an official notice of denunciation to NATO by December 31, 2025, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nA notice of denunciation refers to the submission of a notice of withdrawal as per Article 13 of the North Atlantic Treaty.\n\nA country's exit from NATO\u2019s integrated military command structure will not be sufficient to resolve this market to \"Yes\". That country must either withdraw or submit a notice of denunciation to trigger a \"Yes\" resolution.\n\nThe resolution source will be official information from the relevant government and NATO, however a consensus of credible reporting may also be used.",
+      "title": "Will any country leave NATO by December 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if any member state formally withdraws from NATO or provides an official notice of denunciation to NATO by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nA notice of denunciation refers to the submission of a notice of withdrawal as per Article 13 of the North Atlantic Treaty.\n\nA country's exit from NATO\u2019s integrated military command structure will not be sufficient to resolve this market to \"Yes\". That country must either withdraw or submit a notice of denunciation to trigger a \"Yes\" resolution.\n\nThe resolution source will be official information from the relevant government and NATO, however a consensus of credible reporting may also be used.",
+      "event_title": "Will any country leave NATO by...?",
+      "event_description": "This market will resolve to \"Yes\" if any member state formally withdraws from NATO or provides an official notice of denunciation to NATO by December 31, 2025, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nA notice of denunciation refers to the submission of a notice of withdrawal as per Article 13 of the North Atlantic Treaty.\n\nA country's exit from NATO\u2019s integrated military command structure will not be sufficient to resolve this market to \"Yes\". That country must either withdraw or submit a notice of denunciation to trigger a \"Yes\" resolution.\n\nThe resolution source will be official information from the relevant government and NATO, however a consensus of credible reporting may also be used.",
       "category_tag": [
         {
           "id": "192",
@@ -824,12 +840,12 @@
       "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "Signal",
-          "slug": "signal"
+          "label": "Issue change",
+          "slug": "issue-change"
         },
         {
-          "label": "Forecast",
-          "slug": "forecast"
+          "label": "Public data",
+          "slug": "public-data"
         }
       ]
     },
@@ -855,8 +871,10 @@
     "id": "18576",
     "market_id": "677358",
     "raw_data": {
-      "title": "Ukraine election held by...?",
-      "description": "This market will resolve to \"Yes\" if national elections for the parliament and/or presidency of Ukraine are held between February 12 and December 31, 2025, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nThis market is based on whether national elections are actually held in Ukraine within the specified dates. Merely scheduling an election will not be sufficient to resolve this market to \"Yes\".\n\nIf elections are officially scheduled for a date outside of 2025, this market will immediately resolve to \"No\".\n\nThe primary resolution source for this market will be official information from the government of Ukraine, however a consensus of credible reporting will also be used.",
+      "title": "Ukraine election held by December 31, 2026?",
+      "description": "This market will resolve to \"Yes\" if national elections for the parliament and/or presidency of Ukraine are held between February 12, 2025, and December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nThis market is based on whether national elections are actually held in Ukraine within the specified dates. Merely scheduling an election will not be sufficient to resolve this market to \"Yes\".\n\nIf elections are officially scheduled for a date outside this market's timeframe, this market will immediately resolve to \"No\".\n\nThe primary resolution source for this market will be official information from the government of Ukraine, however a consensus of credible reporting will also be used.",
+      "event_title": "Ukraine election held by...?",
+      "event_description": "This market will resolve to \"Yes\" if national elections for the parliament and/or presidency of Ukraine are held between February 12 and December 31, 2025, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nThis market is based on whether national elections are actually held in Ukraine within the specified dates. Merely scheduling an election will not be sufficient to resolve this market to \"Yes\".\n\nIf elections are officially scheduled for a date outside of 2025, this market will immediately resolve to \"No\".\n\nThe primary resolution source for this market will be official information from the government of Ukraine, however a consensus of credible reporting will also be used.",
       "category_tag": [
         {
           "id": "96",
@@ -923,12 +941,12 @@
       "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "Signal",
-          "slug": "signal"
+          "label": "Issue change",
+          "slug": "issue-change"
         },
         {
-          "label": "Forecast",
-          "slug": "forecast"
+          "label": "Public data",
+          "slug": "public-data"
         }
       ]
     },
@@ -954,8 +972,10 @@
     "id": "22448",
     "market_id": "1048199",
     "raw_data": {
-      "title": "Taylor Swift pregnant by...?",
-      "description": "This market will resolve to \"Yes\" if Taylor Swift announces that she is pregnant between market creation and the listed date ET. Otherwise, this market will resolve to \"No\".\n\nOnly credible announcements will qualify. Pregnancy announcements that are not credible, for example jokes, will not suffice.    \n\nThe resolution source will be statements from Taylor Swift or her representatives; however, a definitive consensus of credible media reporting may be considered.",
+      "title": "Taylor Swift pregnant before 2027?",
+      "description": "This market will resolve to \"Yes\" if Taylor Swift announces that she is pregnant between December 28, 2025, and December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to \"No\".\n\nOnly credible announcements will qualify. Pregnancy announcements that are not credible, for example jokes, will not suffice.    \n\nThe resolution source will be statements from Taylor Swift or her representatives; however, a definitive consensus of credible media reporting may be considered.",
+      "event_title": "Taylor Swift pregnant by...?",
+      "event_description": "This market will resolve to \"Yes\" if Taylor Swift announces that she is pregnant between market creation and the listed date ET. Otherwise, this market will resolve to \"No\".\n\nOnly credible announcements will qualify. Pregnancy announcements that are not credible, for example jokes, will not suffice.    \n\nThe resolution source will be statements from Taylor Swift or her representatives; however, a definitive consensus of credible media reporting may be considered.",
       "category_tag": [
         {
           "id": "100",
@@ -1005,12 +1025,12 @@
       "neutral_title": "Outlook on this issue",
       "neutral_tags": [
         {
-          "label": "Signal",
-          "slug": "signal"
+          "label": "Issue change",
+          "slug": "issue-change"
         },
         {
-          "label": "Forecast",
-          "slug": "forecast"
+          "label": "Public data",
+          "slug": "public-data"
         }
       ]
     },
