@@ -11,61 +11,31 @@ _Last updated: 2026-07-08_
 
 ## In Progress
 
-Day 2 work is assigned as of 2026-07-08. The goal is to connect the real data path through the core dashboard flow while keeping P1/P2 items deferred.
+No active implementation tasks are currently assigned. Day 2 is closed as of
+2026-07-08; the PM should open Day 3 tasks before the next implementation
+session starts.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-007 | Batch collector: fetch + normalize (steps 1-2) | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-007-fetch-normalize` | review |
-| TASK-010 | `/api/issues`, `/api/issues/:id`, `/api/issues/:id/history` | Backend Implementer | Backend Implementer | `backend/TASK-010-core-api` | review |
+| — | — | — | — | — | — |
 
-`TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-008`, `TASK-009`, `TASK-011`, `TASK-012`, and `TASK-031` completed 2026-07-08 — see `tasks/completed.md`.
+All completed Day 1 and Day 2 tasks are archived in `tasks/completed.md`.
 
-## Day 2 Assignment Notes
+## Day 3 Handoff Notes
 
-- **PM / Planner** completed the Day 2 allocation and Q&A seed in `TASK-031`. PM now acts as scope gatekeeper while implementation proceeds. Do not promote P1/P2 features while the data/API/dashboard path is incomplete.
-- **Data/AI Implementer** starts with `TASK-007`; `TASK-008` starts only after normalized objects are validated against the accepted schema draft. Shared or production DB schema application still requires separate human approval under `AGENTS.md`.
-- **Backend Implementer** starts `TASK-010` by preserving the accepted public API shape, updating stale contract wording if needed, and preparing the read path for latest metrics/history once `TASK-008` produces data.
-- **Frontend Implementer** starts `TASK-012` with dummy/API shape reconciliation, then replaces dummy ranking data only after the backend endpoint is stable enough for local integration.
-- **Reviewer / Debugger** stay embedded unless a concrete blocker appears. Any user-facing copy changed during Day 2 must pass the project wording lint before review.
-
-## Day 2 Handoff Order
-
-1. `TASK-007` produces normalized 30-50 market records or a named blocker.
-2. `TASK-008` persists snapshots/metrics in the approved draft shape, or uses a local/dev-only fallback until a shared DB is approved.
-3. `TASK-010` serves the accepted issue list/detail/history contract from the latest available data, with honest `data_as_of` timestamps.
-4. `TASK-012` renders ranked issue cards from the API response and keeps the static dummy-data fallback available.
-5. `TASK-009` adds the MVP threshold detector after `change_24h` is available; the UI can surface it through the existing caution/marker pattern later.
-
-## Day 2 Active Task Details
-
-### TASK-007: Batch collector fetch + normalize
-- **Owner**: Data/AI Implementer
-- **Assignee**: Data/AI Implementer
-- **Branch**: `data-ai/TASK-007-fetch-normalize`
-- **Status**: review
-- **Priority**: High
-- **Day**: Day 2
-- **Description**: Implement Gamma/CLOB fetch and normalization for the curated 30-50 binary-market sample set using the Day 1 spike findings.
-- **Definition of Done**:
-  - [x] Curated market input list is documented or generated from accepted sample criteria.
-  - [x] Normalized records include required market/outcome/current-value/activity fields.
-  - [x] Invalid records are skipped with structured error details instead of failing the whole run.
-  - [x] A local run produces a normalized sample artifact suitable for `TASK-008` and `TASK-010`.
-
-### TASK-010: Core read API endpoints
-- **Owner**: Backend Implementer
-- **Assignee**: Backend Implementer
-- **Branch**: `backend/TASK-010-core-api`
-- **Status**: review
-- **Priority**: High
-- **Day**: Day 2
-- **Description**: Replace hardcoded issue responses with a read path aligned to the accepted contract and latest available metrics/history.
-- **Definition of Done**:
-  - [x] `/api/issues`, `/api/issues/{id}`, and `/api/issues/{id}/history` preserve the accepted response fields.
-  - [x] Query params remain Pydantic-validated for `window`, `sort`, `limit`, and `offset`.
-  - [x] Unknown IDs and invalid params have tested error behavior.
-  - [x] Last-known-good or static fallback behavior is documented if live data is unavailable.
-  - [x] No public path or schema field introduces prohibited market-terminal wording.
+- **PM / Planner** should open the Day 3 terminology/disclaimer task before
+  copy changes begin. Do not change the wording policy itself without human
+  approval.
+- **Frontend Implementer** should treat the existing dashboard-to-detail/chart
+  path as the baseline and focus Day 3 work on detail/chart/tooltip polish.
+- **Backend Implementer** should continue from the merged `TASK-010` read path.
+  Applying the draft schema to any shared or production database still requires
+  separate human approval under `AGENTS.md`.
+- **Data/AI Implementer** should add inflection-point markers and
+  interpretation-caution logic without expanding into P1 volatility/attention
+  metrics unless PM explicitly reassigns scope.
+- **Reviewer / Debugger** stay embedded. Any user-facing copy changed during
+  Day 3 must pass the project wording lint before review.
 
 ## Status Values
 
@@ -77,12 +47,10 @@ These rows show the required format only. Do not treat them as active assignment
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-006 | Finalize MVP scope doc + prohibited-wording policy | PM | PM / Planner | `pm/TASK-006-scope-lock` | assigned |
-| TASK-005 | Wireframe dashboard/detail screens; start UI against dummy JSON | Frontend Implementer | Frontend Implementer | `frontend/TASK-005-dashboard-skeleton` | assigned |
-| TASK-010 | Core read API endpoints | Backend Implementer | Backend Implementer | `backend/TASK-010-core-api` | assigned |
-| TASK-004 | Polymarket Gamma/CLOB live spike; confirm field structure and limits | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-004-polymarket-spike` | assigned |
-| TASK-018 | Copy/wording lint pass across all UI strings | PM | Reviewer | `review/TASK-018-copy-lint` | assigned |
-| ISS-001 | Investigate API failure path | Debugger | Debugger | `debug/ISS-001-api-failure` | assigned |
+| TASK-XXX | Example PM task | PM | PM / Planner | `pm/TASK-XXX-example-task` | assigned |
+| TASK-YYY | Example frontend task | Frontend Implementer | Frontend Implementer | `frontend/TASK-YYY-example-task` | assigned |
+| TASK-ZZZ | Example backend task | Backend Implementer | Backend Implementer | `backend/TASK-ZZZ-example-task` | assigned |
+| ISS-XXX | Example debugging task | Debugger | Debugger | `debug/ISS-XXX-example-issue` | assigned |
 
 ## Task Detail Template
 
