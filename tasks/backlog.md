@@ -7,24 +7,17 @@ Harness Version: 1.1
 
 # Backlog — Outlook Signals
 
-_Last updated: 2026-07-07_
-_Seeded directly from PRD §14 and Technical Design §12 — this is the real Day 1 task list, not a placeholder._
+_Last updated: 2026-07-08_
+_Remaining backlog after Day 1 kickoff assignment; active work lives in `tasks/active.md`._
 
 ## Must-Have (P0)
 
 | ID | Task | Owner | Day | Size | Notes |
 |----|------|-------|-----|------|-------|
-| TASK-001 | Repo scaffold: create `/frontend` (Vite+React+TS+Tailwind) and `/backend` (FastAPI) | Backend Implementer | 1 | S | tech-stack.md layout |
-| TASK-002 | DB schema creation (markets, market_outcomes, market_snapshots, market_metrics, issue_signals, ai_reports, related_events, data_collection_logs) | Backend Implementer | 1 | M | Technical Design §4 |
-| TASK-003 | API contract draft (OpenAPI via FastAPI) | Backend Implementer + PM | 1 | S | Technical Design §5 |
-| TASK-004 | Polymarket Gamma/CLOB live spike — confirm field structure, rate limits | Data/AI Implementer | 1 | M | Blocks schema finalization |
-| TASK-005 | Wireframe dashboard/detail screens; start UI against dummy JSON | Frontend Implementer | 1 | M | Do not block on real API |
-| TASK-006 | Finalize MVP scope doc + prohibited-wording policy | PM | 1 | S | Already drafted in PRD/UX Design — confirm and lock |
 | TASK-007 | Batch collector: fetch + normalize (steps 1–2) | Data/AI Implementer | 1–2 | M | Technical Design §6 |
 | TASK-008 | Batch collector: snapshot + metrics (steps 3–5) | Data/AI Implementer + Backend | 2 | M | Needs TASK-002, TASK-007 |
 | TASK-009 | Signal detection (±5pp threshold) | Data/AI Implementer | 2 | S | Technical Design §8 |
 | TASK-010 | `/api/issues`, `/api/issues/:id`, `/api/issues/:id/history` | Backend Implementer | 2 | M | Core read endpoints |
-| TASK-011 | `/api/health` | Backend Implementer | 1 | XS | Trivial, do early |
 | TASK-012 | Home dashboard UI (ranked issue cards) | Frontend Implementer | 2 | M | Depends on TASK-010 |
 | TASK-013 | Issue detail UI + Recharts line chart | Frontend Implementer | 3 | M | Depends on `/history` endpoint |
 | TASK-014 | Interpretation-caution badge component | Frontend Implementer | 3 | S | Reusable, per UX Design |
