@@ -7,18 +7,17 @@ Harness Version: 1.1
 
 # Active Tasks — Outlook Signals
 
-_Last updated: 2026-07-08 (Backend Implementer session)_
+_Last updated: 2026-07-08_
 
 ## In Progress
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
 | TASK-006 | Finalize MVP scope doc, prohibited-wording policy, and Day 1 presentation story | PM | PM / Planner | `pm/TASK-006-day-1-allocation` | in_progress |
-| TASK-005 | Wireframe dashboard/detail screens; start UI against dummy JSON | Frontend Implementer | Frontend Implementer | `frontend/TASK-005-dashboard-skeleton` | assigned |
 | TASK-003 | API contract draft and response-shape agreement | Backend Implementer + PM | Backend Implementer | `backend/TASK-003-api-contract` | review |
 | TASK-002 | DB schema draft for MVP tables | Backend Implementer | Backend Implementer | `backend/TASK-002-db-schema` | review |
 
-`TASK-001`, `TASK-004`, and `TASK-011` completed 2026-07-08 — see `tasks/completed.md`.
+`TASK-001`, `TASK-004`, `TASK-005`, and `TASK-011` completed 2026-07-08 — see `tasks/completed.md`.
 
 ## Day 1 Assignment Notes
 
@@ -42,21 +41,6 @@ _Last updated: 2026-07-08 (Backend Implementer session)_
   - [ ] Wording policy references `standards.md` and `memory/glossary.md`.
   - [ ] Draft key messages frame the product as information analysis and issue monitoring.
   - [ ] Any new wording avoids outcome prediction, causal assertion, and action-oriented framing.
-
-### TASK-005: Wireframe dashboard/detail screens; start UI against dummy JSON
-
-- **Owner**: Frontend Implementer
-- **Assignee**: Frontend Implementer
-- **Branch**: `frontend/TASK-005-dashboard-skeleton`
-- **Status**: assigned
-- **Priority**: High
-- **Day**: Day 1
-- **Description**: Create the initial dashboard/detail screen structure and dummy-data contract so frontend work can proceed before the backend is complete.
-- **Definition of Done**:
-  - [ ] Home dashboard and issue detail skeletons exist.
-  - [ ] Dummy JSON includes issue title, category, current reflected expectation value, 24h/7d changes, caution level, and data-as-of timestamp.
-  - [ ] Every data-bearing placeholder has visible data-as-of and interpretation-caution placement.
-  - [ ] UI copy passes the project wording policy.
 
 ### TASK-003: API contract draft and response-shape agreement
 
