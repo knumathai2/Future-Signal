@@ -95,6 +95,23 @@ export function IssueTrendChart({ issue, windowKey }: IssueTrendChartProps) {
 
   const firstMarker = markerPoints[0];
 
+  if (visibleHistory.length < 2) {
+    return (
+      <div className="rounded-lg border border-line bg-card p-4">
+        <div
+          className={[
+            "flex h-[260px] w-full items-center justify-center rounded-lg",
+            "border border-dashed border-line-soft px-6 text-center sm:h-[300px]",
+          ].join(" ")}
+        >
+          <p className="max-w-md text-sm leading-6 text-ink-soft">
+            이 기간의 추이를 표시할 만큼 충분한 이력이 없습니다.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-lg border border-line bg-card p-4">
       <div className="h-[260px] w-full sm:h-[300px]">
