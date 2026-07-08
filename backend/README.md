@@ -4,10 +4,13 @@ FastAPI read-only REST API + batch collector (batch collector arrives with `TASK
 
 ## Setup
 
+Use Python 3.11 for local setup on macOS arm. The pinned Postgres binary driver may not install under the system Python 3.9 runtime on this machine.
+
 ```bash
 cd backend
-python -m venv .venv
-.venv\Scripts\activate       # Windows
+python3.11 -m venv .venv
+source .venv/bin/activate     # macOS/Linux
+# .venv\Scripts\activate      # Windows
 pip install -r requirements-dev.txt
 cp .env.example .env         # fill in DATABASE_URL locally, never commit .env
 ```

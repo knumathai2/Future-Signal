@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # roadmap.md — Outlook Signals Roadmap
 
-_Last updated: 2026-07-07_
+_Last updated: 2026-07-08_
 _Source: PRD §14 (5-Day Development Schedule) — this file tracks execution against it._
 
 ## Goal
@@ -17,11 +17,12 @@ Ship a genuinely working web MVP within 5 days that lets a user check today's mo
 ## Milestones
 
 ### Day 1 — Scope + data validation + screen skeleton
-- [ ] PM: finalize MVP scope, define prohibited wording, draft presentation story
-- [ ] Frontend: wireframe dashboard/detail screens, start UI with dummy JSON
-- [ ] Backend: DB schema, API contract, server project setup
-- [ ] Data/AI: confirm Polymarket data structure (live spike against Gamma/CLOB), collect 10 sample markets
+- [x] PM: finalize MVP scope, define prohibited wording, draft presentation story
+- [x] Frontend: wireframe dashboard/detail screens, start UI with dummy JSON
+- [x] Backend: DB schema, API contract, server project setup
+- [x] Data/AI: confirm Polymarket data structure (live spike against Gamma/CLOB), collect 10 sample markets
 - **Deliverables**: screen structure, API contract doc, sample data, MVP scope doc, draft presentation key messages
+- **Status note (2026-07-08)**: Day 1 kickoff target is complete. Frontend dummy-data flow, backend mock API contract, unapplied schema draft, and Polymarket samples exist. `TASK-002` and `TASK-003` remain in review/approval before Day 2 integration should depend on them. Full checkpoint: `reports/day-1-implementation-status.md`.
 
 ### Day 2 — Data pipeline + core UI
 - [ ] PM: organize user scenarios, prep judging-panel Q&A

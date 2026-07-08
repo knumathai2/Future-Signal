@@ -69,8 +69,9 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** �
 ## Backend Implementation Status (2026-07-08)
 
 - `/backend` scaffold exists (FastAPI app, `app/api/routes`, `app/core`, `app/db`, `app/schemas`) — see `backend/README.md`. App imports and boots cleanly; smoke-tested via a local venv (`pytest` + a live `uvicorn` request).
-- `/frontend` scaffold exists (Vite + React + TS + Tailwind, npm scripts) — hand-written, **not run**: this environment has no Node/npm installed, so `npm install`/`npm run dev` are unverified. Frontend Implementer should run them first thing.
+- `/frontend` scaffold exists (Vite + React + TS + Tailwind, npm scripts). `npm run lint` and `npm run build` pass locally as of 2026-07-08; production build still reports the known Recharts chunk-size warning tracked as TD-001.
 - `GET /api/health` is live (mock/no DB dependency).
 - `GET /api/issues`, `/api/issues/:id`, `/api/issues/:id/history`, `/api/issues/:id/report`, `/api/categories` exist but return **hardcoded sample data**, not live Postgres reads — see `backend/API_CONTRACT.md` for the full contract and one open item pending PM sign-off (ADR-008).
 - DB schema is drafted (`backend/migrations/001_initial_schema.sql` + `backend/app/db/models.py`) but **not applied to any database** — human approval still required before applying, per `AGENTS.md`.
+- Backend local setup should use Python 3.11 on this machine; the default Python 3.9 runtime could not install the pinned `psycopg[binary]==3.2.3` binary package.
 - Next backend step once TASK-002 is approved and applied: wire `app/api/routes/issues.py`/`categories.py` to `app.db.session.get_db()` and remove the hardcoded sample data (this is `TASK-010`, currently in `tasks/backlog.md`).
