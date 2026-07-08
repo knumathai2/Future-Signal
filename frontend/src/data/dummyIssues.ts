@@ -77,7 +77,7 @@ function buildIssue(seed: IssueSeed, dataAsOf: string): Issue {
       return {
         timestamp: point.timestamp,
         change,
-        label: "Observed change exceeded the 5pp threshold",
+        label: "관측된 변화가 5pp 기준선을 넘었습니다",
       };
     })
     .filter((point): point is Issue["inflectionPoints"][number] => point !== null);
@@ -97,30 +97,30 @@ function buildIssue(seed: IssueSeed, dataAsOf: string): Issue {
 const issueSeeds: IssueSeed[] = [
   {
     id: "ceasefire-framework",
-    title: "Ceasefire framework discussions",
+    title: "휴전 협의 틀 논의",
     description:
-      "Tracks how public data reflects reassessment around a possible ceasefire framework in an ongoing regional conflict.",
+      "진행 중인 지역 분쟁에서 가능한 휴전 협의 틀을 둘러싼 재평가가 공개 데이터에 어떻게 반영되는지 관찰합니다.",
     category: "Global Affairs",
     cautionLevel: "caution_high_volatility",
     values: generateHistory(54, -0.45, 22, -7, 1),
     relatedEventCandidates: [
       {
-        title: "Multilateral talks resumed among involved parties",
+        title: "관련 당사자 간 다자 협의 재개",
         date: "2026-07-02T09:00:00.000Z",
-        note: "Candidate context entered manually for review alongside the observed change; not presented as a cause.",
+        note: "관측된 변화와 함께 검토할 수 있도록 수동 입력한 후보 맥락입니다. 원인으로 제시하지 않습니다.",
       },
       {
-        title: "Regional envoy issued a public statement",
+        title: "지역 특사가 공개 성명 발표",
         date: "2026-06-29T09:00:00.000Z",
-        note: "Candidate context entered manually for review alongside the observed change; not presented as a cause.",
+        note: "관측된 변화와 함께 검토할 수 있도록 수동 입력한 후보 맥락입니다. 원인으로 제시하지 않습니다.",
       },
     ],
   },
   {
     id: "policy-rate-path",
-    title: "Central bank policy-rate path this quarter",
+    title: "이번 분기 중앙은행 기준금리 경로",
     description:
-      "Tracks how public data reflects reassessment around the policy-rate path before the quarter ends.",
+      "분기 종료 전 기준금리 경로를 둘러싼 재평가가 공개 데이터에 어떻게 반영되는지 관찰합니다.",
     category: "Economy",
     cautionLevel: "sufficient",
     values: generateHistory(40, 0.6, -1, 0, 1.1),
@@ -128,41 +128,41 @@ const issueSeeds: IssueSeed[] = [
   },
   {
     id: "legislative-majority",
-    title: "Incumbent party legislative majority",
+    title: "여당의 의회 과반 유지 여부",
     description:
-      "Tracks how public data reflects reassessment around the governing party's legislative majority question.",
+      "여당의 의회 과반 유지 여부를 둘러싼 재평가가 공개 데이터에 어떻게 반영되는지 관찰합니다.",
     category: "Politics",
     cautionLevel: "caution_low_activity",
     values: generateHistory(52, -0.22, -1, 0, 0.8),
     relatedEventCandidates: [
       {
-        title: "Opposition campaign announcement received broad coverage",
+        title: "야권 캠페인 발표가 폭넓게 보도됨",
         date: "2026-06-26T09:00:00.000Z",
-        note: "Candidate context entered manually for review alongside the observed change; not presented as a cause.",
+        note: "관측된 변화와 함께 검토할 수 있도록 수동 입력한 후보 맥락입니다. 원인으로 제시하지 않습니다.",
       },
     ],
   },
   {
     id: "ai-oversight-bill",
-    title: "AI oversight bill this session",
+    title: "이번 회기 AI 감독 법안",
     description:
-      "Tracks how public data reflects reassessment around the proposed AI oversight bill during the current session.",
+      "이번 회기 AI 감독 법안 제안을 둘러싼 재평가가 공개 데이터에 어떻게 반영되는지 관찰합니다.",
     category: "Technology",
     cautionLevel: "caution_high_volatility",
     values: generateHistory(13, 0.35, 25, 9, 1),
     relatedEventCandidates: [
       {
-        title: "Committee advanced amended bill text",
+        title: "위원회가 수정 법안 문안을 다음 단계로 넘김",
         date: "2026-07-03T09:00:00.000Z",
-        note: "Candidate context entered manually for review alongside the observed change; not presented as a cause.",
+        note: "관측된 변화와 함께 검토할 수 있도록 수동 입력한 후보 맥락입니다. 원인으로 제시하지 않습니다.",
       },
     ],
   },
   {
     id: "cross-border-agreement",
-    title: "Cross-border agreement negotiations",
+    title: "국경 간 합의 협상",
     description:
-      "Tracks how public data reflects reassessment around negotiations between two governments before year-end.",
+      "연말 전 두 정부 간 협상을 둘러싼 재평가가 공개 데이터에 어떻게 반영되는지 관찰합니다.",
     category: "Economy",
     cautionLevel: "sufficient",
     values: generateHistory(56, 0.18, -1, 0, 0.6),
@@ -170,9 +170,9 @@ const issueSeeds: IssueSeed[] = [
   },
   {
     id: "launch-schedule",
-    title: "Flagship product launch schedule",
+    title: "주요 제품 출시 일정",
     description:
-      "Tracks how public data reflects reassessment around whether an announced product launch remains on schedule.",
+      "발표된 제품 출시 일정에 대한 재평가가 공개 데이터에 어떻게 반영되는지 관찰합니다.",
     category: "Technology",
     cautionLevel: "caution_low_activity",
     values: generateHistory(58, 0.4, -1, 0, 1.6),
@@ -180,9 +180,9 @@ const issueSeeds: IssueSeed[] = [
   },
   {
     id: "constitutional-reform",
-    title: "Constitutional reform referendum",
+    title: "헌법 개정 국민투표",
     description:
-      "Tracks how public data reflects reassessment around the proposed constitutional reform referendum.",
+      "제안된 헌법 개정 국민투표를 둘러싼 재평가가 공개 데이터에 어떻게 반영되는지 관찰합니다.",
     category: "Politics",
     cautionLevel: "insufficient_data",
     values: generateHistory(50, 0.05, -1, 0, 0.3, 9),
@@ -190,17 +190,17 @@ const issueSeeds: IssueSeed[] = [
   },
   {
     id: "climate-accord",
-    title: "Climate accord ratification",
+    title: "기후 협약 비준",
     description:
-      "Tracks how public data reflects reassessment around ratification of a proposed climate accord by major emitters.",
+      "주요 배출국의 기후 협약 비준을 둘러싼 재평가가 공개 데이터에 어떻게 반영되는지 관찰합니다.",
     category: "Global Affairs",
     cautionLevel: "sufficient",
     values: generateHistory(53, -0.05, 15, -4, 1),
     relatedEventCandidates: [
       {
-        title: "Preparatory ministerial session concluded",
+        title: "준비 장관급 회의 종료",
         date: "2026-06-24T09:00:00.000Z",
-        note: "Candidate context entered manually for review alongside the observed change; not presented as a cause.",
+        note: "관측된 변화와 함께 검토할 수 있도록 수동 입력한 후보 맥락입니다. 원인으로 제시하지 않습니다.",
       },
     ],
   },

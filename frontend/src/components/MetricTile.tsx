@@ -19,8 +19,8 @@ export function MetricTile({ label, value, primary = false }: MetricTileProps) {
       <div
         className={
           primary
-            ? "mt-1 text-[11px] font-semibold uppercase tracking-wide text-[#d8d2c4]"
-            : "mt-1 text-[11px] font-semibold uppercase tracking-wide text-ink-faint"
+            ? "mt-1 text-[11px] font-semibold leading-snug text-[#d8d2c4]"
+            : "mt-1 text-[11px] font-semibold leading-snug text-ink-faint"
         }
       >
         {label}

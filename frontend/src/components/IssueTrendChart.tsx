@@ -48,7 +48,7 @@ function CustomTooltip({ active, label, payload }: TooltipProps) {
     <div className="rounded-lg border border-line bg-card px-3 py-2 shadow-soft">
       <div className="text-xs font-semibold text-ink">{formatShortDate(label)}</div>
       <div className="mt-1 text-xs text-ink-soft">
-        Reflected expectation value:{" "}
+        공개 데이터에 반영된 기대값:{" "}
         <span className="font-bold text-ink">
           {formatExpectationValue(Number(payload[0].value ?? 0))}
         </span>
@@ -146,10 +146,10 @@ export function IssueTrendChart({ issue, windowKey }: IssueTrendChartProps) {
 
       <p className="mt-3 text-sm leading-6 text-ink-soft">
         {firstMarker
-          ? `${firstMarker.label} on ${formatShortDate(
-              firstMarker.timestamp,
-            )}. Markers identify observed threshold crossings, not causes.`
-          : "No observed change beyond the 5pp threshold appears in this window."}
+          ? `${formatShortDate(firstMarker.timestamp)}: ${
+              firstMarker.label
+            }. 표시는 관측된 기준선 통과를 가리키며 원인을 뜻하지 않습니다.`
+          : "이 구간에는 5pp 기준선을 넘는 관측 변화가 없습니다."}
       </p>
     </div>
   );
