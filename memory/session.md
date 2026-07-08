@@ -14,79 +14,78 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-08
-- **Agent Role**: Reviewer
-- **Session Goal**: Review PR #17 (`TASK-033`, Korean default frontend copy)
-  and publish the review result to GitHub.
-- **Branch**: `review/TASK-033-korean-default-ui-review`
+- **Agent Role**: Debugger
+- **Session Goal**: Reproduce `ISS-001` on the issue detail chart and, if
+  confirmed, implement the smallest safe fix.
+- **Branch**: `debug/ISS-001-chart-history-render`
 
 ## Previous Session Summary
 
-`TASK-033` was implemented on `frontend/TASK-033-korean-default-ui` to switch
-frontend static UI copy, fallback/demo copy, caution copy, template summary
-copy, HTML language metadata, date/time formatting, and category display labels
-to Korean. PR #17 is open against `main`.
+The prior reviewer/debugger investigation recorded `ISS-001`: the detail chart
+can appear blank or misleading when `/api/issues/{id}/history` returns only one
+point for 24h/7d/30d. That investigation found the 5pp threshold applies to
+inflection markers / `expectation_shift` rows, not to chart-line rendering.
 
 ## Current Work
 
-- [x] Read required project context: `AGENTS.md`, PRD, UX Design, project/session
-      memory, active tasks, reviewer prompt, `standards.md`, and
-      `memory/glossary.md`.
-- [x] Created reviewer branch `review/TASK-033-korean-default-ui-review` from
-      PR #17 head commit `29c74f2`.
-- [x] Inspected PR #17 metadata, changed files, diff, and existing comments.
-- [x] Reviewed the changed frontend copy paths for Korean localization,
-      data-as-of timestamp retention, interpretation-caution retention, and
-      wording-policy compliance.
-- [x] Ran frontend validation and content-safety scans.
-- [x] Verified dashboard and detail screens in a browser at desktop and mobile
-      widths using fallback data.
-- [x] Published the review result to GitHub as a `COMMENTED` review.
+- [x] Read required project context: `AGENTS.md`, PRD, Service Design,
+      Technical Design, UX Design, `memory/project.md`, `memory/session.md`,
+      `tasks/active.md`, `prompts/debug.md`, and `memory/known-issues.md`.
+- [x] Created the required role-prefixed branch:
+      `debug/ISS-001-chart-history-render`.
+- [x] Inspected `frontend/src/App.tsx`,
+      `frontend/src/components/IssueTrendChart.tsx`, and
+      `backend/app/api/routes/issues.py`.
+- [x] Confirmed fallback API history returns exactly one point for 24h, 7d,
+      and 30d.
+- [x] Confirmed the live route/test path can also return one point when only
+      one snapshot is available.
+- [x] Confirmed the 5pp threshold affects inflection markers/signals, not
+      chart-line visibility.
+- [x] Implemented a frontend insufficient-history state for chart windows with
+      fewer than two visible history points.
+- [x] Marked `ISS-001` resolved in `memory/known-issues.md`.
 
 ## Completed This Session
 
-- [x] PR #17 review completed with no blocking findings.
-- [x] GitHub review comment posted at
-      `https://github.com/knumathai2/Future-Signal/pull/17#pullrequestreview-4653816074`.
-- [x] No code, dependency, schema, public API, infrastructure, deployment, or
-      wording-policy change was made by this reviewer session.
+- [x] Fixed `ISS-001` in `frontend/src/components/IssueTrendChart.tsx`.
+- [x] No external dependencies, database schema changes, public API shape
+      changes, backend code changes, infrastructure changes, deployments, or
+      wording-policy changes were made.
+- [x] No active task was moved because `tasks/active.md` has no active
+      assignments.
 
-## Issues Found / Decisions Made
+## Root Cause
 
-- No blocking code-review findings were found.
-- Official GitHub `APPROVE` could not be submitted through the active account
-  because the active GitHub account is also the PR author; the review was
-  published as a `COMMENTED` review instead.
-- Backend-provided issue titles/descriptions remain displayed as received; if
-  dynamic issue data must be Koreanized, handle it as a separate scoped task.
-- No new persistent bug was added.
-- No ADR was added because this review made no product, architecture, schema,
-  dependency, infrastructure, public API, or wording-policy decision.
-
-## Next Session: To-Do
-
-1. If project policy requires a counted GitHub approval, request a non-author
-   reviewer for PR #17.
-2. Keep dynamic backend-provided issue title/description localization separate
-   from this static frontend copy PR unless PM explicitly assigns that scope.
+`App.tsx` fetches detail history with `window=30d`, then
+`IssueTrendChart.tsx` slices the same history array down to the selected chart
+window. Both the static fallback API and the live read path can legitimately
+return a single history point. With one visible point, Recharts cannot draw a
+line segment; before the fix, the UI still showed the normal marker text saying
+there was no 5pp threshold crossing, which made an insufficient-history state
+look like a quiet trend period.
 
 ## Verification
 
+- Fallback API probe with FastAPI `TestClient`:
+  `/api/issues/{id}/history?window=24h`, `7d`, and `30d` each returned exactly
+  one point.
+- Browser reproduction before fix: 24h/7d/30d had no Recharts line path and no
+  insufficient-history message.
+- Browser verification after fix: 24h/7d/30d all showed
+  `이 기간의 추이를 표시할 만큼 충분한 이력이 없습니다.`, with no chart SVG and no
+  misleading 5pp marker message.
+- Browser console error check after fix: no errors.
 - `npm run typecheck` -> passed.
 - `npm run lint` -> passed.
-- `npm run build` -> passed with the existing Vite/Recharts chunk-size warning.
-- `git diff --check origin/main...HEAD` -> passed.
-- Hard-block wording scan over `frontend/src` and `frontend/index.html` -> no
-  hits.
-- Use-carefully English wording scan over `frontend/src` and
-  `frontend/index.html` -> no hits.
-- Korean/causal-risk scan only found safe negating context such as
-  `원인으로 제시하지 않습니다`.
-- Browser desktop check at 1280px -> Korean headline, fallback notice, data
-  timestamp, and caution text visible; no page-level horizontal overflow.
-- Browser detail check at 1280px -> title, chart heading, summary, candidate
-  qualifier, advice disclaimer, data timestamp, and caution badge visible; no
-  page-level horizontal overflow.
-- Browser mobile check at 390px -> dashboard and detail page widths match the
-  viewport; no page-level horizontal overflow; no browser console errors.
-- GitHub PR checks -> no checks reported on
-  `frontend/TASK-033-korean-default-ui`.
+- `npm run build` -> passed with the existing Recharts/Vite chunk-size warning.
+- Hard-block wording scan on the changed chart component and `frontend/index.html`
+  -> no hits.
+- Targeted backend confirmation tests passed:
+  `pytest tests/test_issues_live.py::test_get_issue_history_live_data tests/test_issues_live.py::test_history_query_failure_returns_latest_snapshot_point`.
+
+## Next Session: To-Do
+
+1. If richer demo visuals are needed later, consider adding multiple
+   demo-safe fallback history points while preserving the current API shape.
+2. Continue Day 3 chart/tooltip polish from the resolved `ISS-001` baseline.
