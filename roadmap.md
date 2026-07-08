@@ -25,12 +25,12 @@ Ship a genuinely working web MVP within 5 days that lets a user check today's mo
 - **Status note (2026-07-08)**: Day 1 is closed. Frontend dummy-data flow, accepted backend mock API contract, accepted-unapplied schema draft, and Polymarket samples exist. Full checkpoint: `reports/day-1-implementation-status.md`; closeout record: `reports/day-1-closeout-plan.md`.
 
 ### Day 2 — Data pipeline + core UI
-- [ ] PM: organize user scenarios, prep judging-panel Q&A
-- [ ] Frontend: home dashboard, issue cards, ranking UI
-- [ ] Backend: market-list API, ranking API
-- [ ] Data/AI: calculate 24h/7d change, normalize 30–50 samples
+- [x] PM: organize user scenarios, prep judging-panel Q&A
+- [x] Frontend: home dashboard, issue cards, ranking UI
+- [x] Backend: market-list API, ranking API
+- [x] Data/AI: calculate 24h/7d change, normalize 30–50 samples
 - **Deliverables**: dashboard v1, ranking API, change-calculation data, candidate issue list for demo
-- **Status note (2026-07-08)**: Day 2 work is assigned in `tasks/active.md`. Allocation and sequencing are recorded in `reports/day-2-work-allocation.md`; P1/P2 items remain deferred until the data/API/dashboard path is usable.
+- **Status note (2026-07-08)**: Day 2 is closed. The data pipeline, core read API, and dashboard v1 path are merged and verified; closeout evidence is recorded in `reports/day-2-closeout-plan.md`. P1/P2 items remain deferred unless the PM reassigns scope.
 
 ### Day 3 — Detail screen + chart + badges
 - [ ] PM: interpretation-caution text, disclaimer text, terminology revisions
@@ -38,6 +38,7 @@ Ship a genuinely working web MVP within 5 days that lets a user check today's mo
 - [ ] Backend: issue-detail API, price-history API
 - [ ] Data/AI: inflection-point threshold logic (±5pp), interpretation-caution badge logic
 - **Deliverables**: issue detail screen, time-series chart, inflection-point markers, caution badge
+- **Status note (2026-07-08)**: Ready to start from the Day 2 baseline. Shared/dev database schema application remains approval-gated.
 
 ### Day 4 — Summary feature + demo flow complete
 - [ ] PM: draft presentation deck, write demo script
