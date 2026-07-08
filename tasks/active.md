@@ -18,7 +18,7 @@ Day 2 work is assigned as of 2026-07-08. The goal is to connect the real data pa
 | TASK-007 | Batch collector: fetch + normalize (steps 1-2) | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-007-fetch-normalize` | review |
 | TASK-008 | Batch collector: snapshot + metrics (steps 3-5) | Data/AI Implementer + Backend | Data/AI Implementer + Backend Implementer | `data-ai/TASK-008-snapshot-metrics` | assigned |
 | TASK-009 | Expectation-shift detection (±5pp threshold) | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-009-shift-detection` | assigned |
-| TASK-010 | `/api/issues`, `/api/issues/:id`, `/api/issues/:id/history` | Backend Implementer | Backend Implementer | `backend/TASK-010-core-api` | assigned |
+| TASK-010 | `/api/issues`, `/api/issues/:id`, `/api/issues/:id/history` | Backend Implementer | Backend Implementer | `backend/TASK-010-core-api` | review |
 
 `TASK-001`, `TASK-002`, `TASK-003`, `TASK-004`, `TASK-005`, `TASK-006`, `TASK-011`, `TASK-012`, and `TASK-031` completed 2026-07-08 — see `tasks/completed.md`.
 
@@ -86,16 +86,16 @@ Day 2 work is assigned as of 2026-07-08. The goal is to connect the real data pa
 - **Owner**: Backend Implementer
 - **Assignee**: Backend Implementer
 - **Branch**: `backend/TASK-010-core-api`
-- **Status**: assigned
+- **Status**: review
 - **Priority**: High
 - **Day**: Day 2
 - **Description**: Replace hardcoded issue responses with a read path aligned to the accepted contract and latest available metrics/history.
 - **Definition of Done**:
-  - [ ] `/api/issues`, `/api/issues/{id}`, and `/api/issues/{id}/history` preserve the accepted response fields.
-  - [ ] Query params remain Pydantic-validated for `window`, `sort`, `limit`, and `offset`.
-  - [ ] Unknown IDs and invalid params have tested error behavior.
-  - [ ] Last-known-good or static fallback behavior is documented if live data is unavailable.
-  - [ ] No public path or schema field introduces prohibited market-terminal wording.
+  - [x] `/api/issues`, `/api/issues/{id}`, and `/api/issues/{id}/history` preserve the accepted response fields.
+  - [x] Query params remain Pydantic-validated for `window`, `sort`, `limit`, and `offset`.
+  - [x] Unknown IDs and invalid params have tested error behavior.
+  - [x] Last-known-good or static fallback behavior is documented if live data is unavailable.
+  - [x] No public path or schema field introduces prohibited market-terminal wording.
 
 ## Status Values
 
@@ -119,7 +119,7 @@ These rows show the required format only. Do not treat them as active assignment
 ```
 ### TASK-XXX: [Title]
 - **Owner**: [PM | Frontend Implementer | Backend Implementer | Data/AI Implementer]
-- **Assignee**: [PM / Planner | Frontend Implementer | Backend Implementer | Data/AI Implementer | Reviewer | Debugger]
+- **Assignee**: [PM / Planner | Frontend Implementer | Backend Implementer | Data/AI Implementer]
 - **Branch**: [role-prefix]/[TASK-ID]-[short-kebab-slug]
 - **Status**: assigned | in_progress | blocked | review | completed
 - **Priority**: High | Medium | Low

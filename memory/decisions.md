@@ -194,6 +194,20 @@ _Last updated: 2026-07-08_
 
 ---
 
+### ADR-013: `/api/issues` degrades to `200` + static fallback, not `503`, when live data is unavailable
+
+- **Date**: 2026-07-08
+- **Status**: Accepted
+- **Decided by**: Backend Implementer; confirmed by User / PM gate on 2026-07-08
+
+**Context**: `TASK-010` wired `/api/issues`, `/api/issues/:id`, and `/api/issues/:id/history` to real Postgres reads via `app/db/session.py::get_db()`. As of this task, `TASK-007`/`TASK-008` had not produced any `market_snapshots`/`market_metrics` rows, and `DATABASE_URL` is also commonly unset in local dev. Technical Design §5 mentions `503` for a "degrade to last-known-good data" case, which is ambiguous about whether the response body is still served on a `503`.
+**Decision**: When `DATABASE_URL` is unset, a live query fails, or `market_snapshots` has zero rows, the affected endpoints return `200` with the existing static sample dataset (`_FALLBACK_ISSUES` in `app/api/routes/issues.py`) and its fixed `data_as_of`, not `503`. Every fallback is logged via `logger.warning("FALLBACK: ...")` with the specific reason, so it can never become a silent permanent substitute once real data lands.
+**Rationale**: Matches `reports/day-2-work-allocation.md`'s Judging Q&A seed ("the API and frontend keep a static/last-known-good fallback path with honest timestamps") and `TASK-012`'s DoD ("retain a static fallback for demo resilience") - a `503` would force the frontend into an error state instead of a usable demo dashboard.
+**Trade-offs**: `503` as specified in Technical Design §5 is not implemented; if a future need arises to distinguish "serving fallback data" from "serving live data" at the HTTP layer (e.g. for monitoring), that will require either a new response field (contract change, needs approval) or an out-of-band signal (e.g. a response header), not implemented here.
+**Consequences**: `backend/API_CONTRACT.md`'s Error shape section now documents this instead of the "not yet triggerable" `503` placeholder. The PR #10 `CHANGES_REQUESTED` blocker for explicit confirmation is resolved by the 2026-07-08 user/PM-gate follow-up; no response schema change is needed.
+
+---
+
 ### ADR-014: TASK-007 normalized artifacts omit raw source descriptions
 
 - **Date**: 2026-07-08

@@ -28,21 +28,23 @@ summary copy so insufficient reference data remains visible to users.
 - Ran initial frontend validation.
 - Fixed nullable change metric handling.
 - Merged latest `origin/main` into the review branch and resolved the
-  documentation-only conflict in `memory/session.md`.
+  documentation-only conflicts in project state files.
 - Added a review report at
   `reports/review-2026-07-08-TASK-012-dashboard-api-review.md`.
-- Re-ran frontend validation and wording scans after the merge.
+- Re-ran frontend validation and wording scans after both mainline merges.
 
 ## Verification
 
 - `npm ci` -> passed
 - `npm run typecheck` -> passed
 - `npm run lint` -> passed
-- `npm run build` -> passed before and after merging `origin/main`, with the
-  existing Recharts chunk-size warning
+- `npm run build` -> passed before and after both `origin/main` merges, with
+  the existing Recharts chunk-size warning
 - Content wording scan over `frontend/src` -> no prohibited or use-carefully
   wording hits after word-boundary filtering
 - `git diff --check` -> passed after merge-conflict resolution
+- Backend pytest was not run in this review worktree because `backend/.venv`
+  was not present
 
 ## Follow-Up
 
