@@ -16,9 +16,8 @@ _Last updated: 2026-07-08_
 | TASK-006 | Finalize MVP scope doc, prohibited-wording policy, and Day 1 presentation story | PM | PM / Planner | `pm/TASK-006-day-1-allocation` | in_progress |
 | TASK-003 | API contract draft and response-shape agreement | Backend Implementer + PM | Backend Implementer | `backend/TASK-003-api-contract` | review |
 | TASK-002 | DB schema draft for MVP tables | Backend Implementer | Backend Implementer | `backend/TASK-002-db-schema` | review |
-| TASK-004 | Polymarket Gamma/CLOB live spike; confirm field structure and collect 10 sample markets | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-004-polymarket-spike` | assigned |
 
-`TASK-001`, `TASK-005`, and `TASK-011` completed 2026-07-08 — see `tasks/completed.md`.
+`TASK-001`, `TASK-004`, `TASK-005`, and `TASK-011` completed 2026-07-08 — see `tasks/completed.md`.
 
 ## Day 1 Assignment Notes
 
@@ -75,20 +74,7 @@ _Last updated: 2026-07-08_
   - [ ] Human approval is obtained before applying schema changes to any shared or production database — **not yet requested; schema remains unapplied.**
 - **Notes**: Draft DDL at `backend/migrations/001_initial_schema.sql`, mirrored as SQLAlchemy models in `backend/app/db/models.py` (not wired to any route). Plain SQL used instead of Alembic since the migration-tool choice is still an open Day 1 decision (`commands.md`).
 
-### TASK-004: Polymarket Gamma/CLOB live spike
 
-- **Owner**: Data/AI Implementer
-- **Assignee**: Data/AI Implementer
-- **Branch**: `data-ai/TASK-004-polymarket-spike`
-- **Status**: assigned
-- **Priority**: High
-- **Day**: Day 1
-- **Description**: Validate the public Polymarket data shape, identify usable fields for the MVP schema/API, and collect a small representative sample set.
-- **Definition of Done**:
-  - [ ] Gamma/CLOB field names, pagination, and practical rate-limit behavior are documented.
-  - [ ] 10 active binary sample markets are captured with title, description, category/tag, current value, history token/source, volume/activity, liquidity, and timestamps where available.
-  - [ ] Any missing or unstable fields are recorded in `memory/known-issues.md`.
-  - [ ] Sample output is shared in a format the backend and frontend can consume for Day 2 work.
 
 ## Status Values
 
