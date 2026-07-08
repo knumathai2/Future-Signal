@@ -30,6 +30,7 @@ Ship a genuinely working web MVP within 5 days that lets a user check today's mo
 - [ ] Backend: market-list API, ranking API
 - [ ] Data/AI: calculate 24h/7d change, normalize 30–50 samples
 - **Deliverables**: dashboard v1, ranking API, change-calculation data, candidate issue list for demo
+- **Status note (2026-07-08)**: Day 2 work is assigned in `tasks/active.md`. Allocation and sequencing are recorded in `reports/day-2-work-allocation.md`; P1/P2 items remain deferred until the data/API/dashboard path is usable.
 
 ### Day 3 — Detail screen + chart + badges
 - [ ] PM: interpretation-caution text, disclaimer text, terminology revisions
