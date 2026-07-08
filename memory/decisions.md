@@ -127,14 +127,28 @@ _Last updated: 2026-07-08_
 ### ADR-008: `/api/issues/:id/report` not-yet-generated response uses 200, not 204
 
 - **Date**: 2026-07-08
-- **Status**: Proposed (pending PM/Frontend sign-off)
-- **Decided by**: Backend Implementer
+- **Status**: Accepted
+- **Decided by**: PM / Frontend Implementer / Backend Implementer
 
 **Context**: Technical Design §5 specifies returning HTTP `204` with a JSON body hint `{"status": "not_yet_generated"}` when no AI report exists yet for an issue. HTTP `204 No Content` cannot carry a response body per spec — most clients discard it, so the frontend would never see the hint.
 **Decision**: TASK-003's draft contract (`backend/API_CONTRACT.md`) instead returns `200 OK` with `{"status": "not_yet_generated"}`, keeping the same neutral-empty-state intent without the invalid HTTP semantics.
 **Rationale**: Preserves the product intent (no error state; frontend shows a neutral placeholder) while fixing a factual protocol error in the source spec.
-**Trade-offs**: Diverges from the literal Technical Design wording; needs PM/Frontend confirmation before other implementation depends on it.
-**Consequences**: If PM prefers a different resolution (e.g. `404` with a distinguishing error code), update `backend/API_CONTRACT.md`, `backend/app/schemas/issues.py::ReportNotYetGenerated`, and the corresponding route/tests together.
+**Trade-offs**: Diverges from the literal Technical Design wording, so Technical Design §5 should be interpreted through this ADR for the report-empty response.
+**Consequences**: Day 2 frontend/backend integration should treat `200 OK` with `{"status": "not_yet_generated"}` as the canonical no-report-yet response. If this ever changes, update `backend/API_CONTRACT.md`, `backend/app/schemas/issues.py::ReportNotYetGenerated`, and the corresponding route/tests together.
+
+---
+
+### ADR-011: Day 1 DB schema draft accepted, unapplied
+
+- **Date**: 2026-07-08
+- **Status**: Accepted
+- **Decided by**: PM / Backend Implementer
+
+**Context**: Day 1 required a database schema artifact so Day 2 data pipeline and read API work can align on table boundaries, but `AGENTS.md` requires human approval before applying schema changes to any shared or production database.
+**Decision**: Accept `backend/migrations/001_initial_schema.sql` and `backend/app/db/models.py` as the Day 1 schema draft artifact. The schema remains unapplied; applying it to any shared or production database is a separate approval-gated action.
+**Rationale**: The draft includes the required MVP tables, preserves the append-only snapshot/metric strategy, and does not introduce `users`, `watchlists`, wallet-level, or participant-level tables.
+**Trade-offs**: The schema has not yet been validated against a live hosted Postgres instance, and the migration-tool choice remains plain SQL for now rather than Alembic.
+**Consequences**: `TASK-002` can close as "draft accepted, unapplied." Day 2 implementation may align to the draft shape, but any future schema correction must respect the project rule to append new migration changes rather than editing applied migration history.
 
 ---
 

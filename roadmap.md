@@ -22,7 +22,7 @@ Ship a genuinely working web MVP within 5 days that lets a user check today's mo
 - [x] Backend: DB schema, API contract, server project setup
 - [x] Data/AI: confirm Polymarket data structure (live spike against Gamma/CLOB), collect 10 sample markets
 - **Deliverables**: screen structure, API contract doc, sample data, MVP scope doc, draft presentation key messages
-- **Status note (2026-07-08)**: Day 1 kickoff target is complete. Frontend dummy-data flow, backend mock API contract, unapplied schema draft, and Polymarket samples exist. `TASK-002` and `TASK-003` remain in review/approval before Day 2 integration should depend on them. Full checkpoint: `reports/day-1-implementation-status.md`.
+- **Status note (2026-07-08)**: Day 1 is closed. Frontend dummy-data flow, accepted backend mock API contract, accepted-unapplied schema draft, and Polymarket samples exist. Full checkpoint: `reports/day-1-implementation-status.md`; closeout record: `reports/day-1-closeout-plan.md`.
 
 ### Day 2 — Data pipeline + core UI
 - [ ] PM: organize user scenarios, prep judging-panel Q&A
