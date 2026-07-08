@@ -56,8 +56,8 @@ def process_samples():
                 "resolution_source": item.get("resolutionSource") or market.get("resolutionSource"),
             },
             "ui_display": {
-                "neutral_title": "Will this event occur?",  # Placeholder for AI-generated neutral title
-                "neutral_tags": [{"label": t.get("label"), "slug": t.get("slug")} for t in raw_tags] if isinstance(raw_tags, list) and all(isinstance(t, dict) for t in raw_tags) else [],
+                "neutral_title": "Outlook on this issue",  # Placeholder for AI-generated neutral title
+                "neutral_tags": [{"label": "Signal", "slug": "signal"}, {"label": "Forecast", "slug": "forecast"}],
             },
             "metrics": {
                 "current_value": current_value,
@@ -67,9 +67,12 @@ def process_samples():
             "clobTokenIds": clob_token_ids,
             "price_history_token": history_token,
             "price_history_source": "CLOB" if history_token else None,
-            "created_at": item.get("createdAt"),
-            "updated_at": item.get("updatedAt"),
-            "end_date": item.get("endDate")
+            "created_at": market.get("createdAt"),
+            "updated_at": market.get("updatedAt"),
+            "end_date": market.get("endDate"),
+            "event_created_at": item.get("createdAt"),
+            "event_updated_at": item.get("updatedAt"),
+            "event_end_date": item.get("endDate")
         }
         
         # Check for missing/unstable fields
