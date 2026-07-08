@@ -21,9 +21,8 @@ Harness Version: 1.1
 ## Previous Session Summary
 
 PR #12 integrated the home dashboard and detail view with backend API routes
-for `TASK-012`. The PR was open against `main` and GitHub reported
-`mergeStateStatus: DIRTY` because `memory/session.md` conflicted with the
-latest `origin/main`.
+for `TASK-012`. During review, PR #10 was also merged into `main`, so PR #12
+needed to be refreshed twice against the latest mainline state.
 
 ## Current Work
 
@@ -40,10 +39,14 @@ latest `origin/main`.
 - [x] Ran initial frontend `typecheck`, `lint`, and `build`.
 - [x] Fixed the review blocker where API `null` change metrics were rendered
       as `0.0pp` instead of an insufficient-data state.
-- [x] Merged `origin/main` into the review branch and resolved the
-      documentation-only conflict in `memory/session.md`.
-- [x] Re-ran frontend validation and wording scans after the merge-conflict
-      resolution.
+- [x] Merged `origin/main` after PR #9 and resolved the documentation-only
+      conflict in `memory/session.md`.
+- [x] Pushed the first PR #12 branch update.
+- [x] Fetched the newer `origin/main` after PR #10 merged and resolved
+      documentation conflicts in `memory/project.md`, `memory/session.md`, and
+      `tasks/active.md`.
+- [x] Re-ran frontend validation and wording scans after the PR #10 mainline
+      merge.
 
 ## Completed This Session
 
@@ -54,13 +57,16 @@ latest `origin/main`.
       treating them as zero movement.
 - [x] Detail summaries now explain when a selected window lacks enough
       reference data instead of implying no observed change.
-- [x] PR #12's main-merge conflict has been resolved on the review branch.
+- [x] PR #12 has been refreshed against the latest `main` state through PR #10.
 
 ## Issues Found / Decisions Made
 
 - Found one blocking review issue: nullable API metrics were collapsed to
   `0.0pp`, which conflicts with PRD §8.5 and TASK-008's rule that missing
   references must remain visible as insufficient data.
+- Mainline moved during review when PR #10 merged; all resulting conflicts were
+  documentation/state-tracking conflicts, not frontend or backend code
+  conflicts.
 - No dependency, schema, public API, infrastructure, deployment, production DB,
   or paid external API change was made.
 - No new AGENTS.md absolute restriction violation was found in the reviewed
@@ -69,15 +75,18 @@ latest `origin/main`.
 ## Next Session: To-Do
 
 1. Merge PR #12 only through the approved project review flow.
-2. Continue `TASK-008`, `TASK-009`, and `TASK-010` in their owning branches.
+2. Continue `TASK-008`, `TASK-009`, and any remaining `TASK-010` handoff work in
+   their owning branches.
 
 ## Verification
 
 - `npm ci` -> installed existing lockfile dependencies for the review worktree.
 - `npm run typecheck` -> passed.
 - `npm run lint` -> passed.
-- `npm run build` -> passed before and after merging `origin/main`, with the
-  existing Recharts chunk-size warning.
+- `npm run build` -> passed before and after both `origin/main` merges, with
+  the existing Recharts chunk-size warning.
 - Content wording scan over `frontend/src` -> no prohibited or use-carefully
   wording hits after word-boundary filtering.
-- `git diff --check` -> passed after merge-conflict resolution.
+- `git diff --check` -> passed after conflict resolution.
+- Backend pytest was not run in this review worktree because `backend/.venv`
+  was not present.
