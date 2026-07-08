@@ -14,3 +14,4 @@ _Last updated: 2026-07-08_
 | — | AI Development Harness v1.1 initial setup | 2026-07-07 | PM | Standard tier, monorepo, npm+pip, GitHub Actions |
 | TASK-001 | Repo scaffold: `/frontend` + `/backend` project shells | 2026-07-08 | Backend Implementer | `backend/TASK-001-repo-scaffold`. FastAPI app import-smoke-tested; frontend hand-scaffolded (npm/node unavailable in this environment, not run). |
 | TASK-011 | Add `GET /api/health` endpoint | 2026-07-08 | Backend Implementer | `backend/TASK-011-health-endpoint`. Verified via pytest + a live uvicorn request; appears in `/openapi.json`. |
+| TASK-004 | Polymarket Gamma/CLOB live spike | 2026-07-08 | Data/AI Implementer | API fields, pagination, rate-limits documented in reports; samples saved |
