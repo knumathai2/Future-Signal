@@ -1,0 +1,61 @@
+[
+  {
+    "event_id": "22448",
+    "reason": "Excluded tag or title term",
+    "tags": [
+      "pop-culture",
+      "music",
+      "taylor-swift",
+      "celebrities"
+    ],
+    "title_text": "taylor swift pregnant by...? this market will resolve to \"yes\" if taylor swift announces that she is pregnant between market creation and the listed date et. otherwise, this market will resolve to \"no\".\n\nonly credible announcements will qualify. pregnancy announcements that are not credible, for example jokes, will not suffice.    \n\nthe resolution source will be statements from taylor swift or her representatives; however, a definitive consensus of credible media reporting may be considered."
+  },
+  {
+    "event_id": "23784",
+    "reason": "Excluded tag or title term",
+    "tags": [
+      "politics",
+      "all",
+      "pop-culture",
+      "gta-vi"
+    ],
+    "title_text": "what will happen before gta vi? this is a market on predicting events that will occur before the release of grand theft auto vi."
+  },
+  {
+    "event_id": "24383",
+    "reason": "Excluded tag or title term",
+    "tags": [
+      "courts",
+      "pop-culture",
+      "movies"
+    ],
+    "title_text": "harvey weinstein prison time? this market will resolve according to the prison sentence, if any, imposed on harvey weinstein as part of his ongoing new york retrial (people of the state of new york v. harvey weinstein) by july 31, 2026, 11:59 pm et.\n\nthis market will resolve immediately based on the first sentence rendered in this case, regardless of any appeals. if weinstein is found not guilty, there is a mistrial, or if the first sentencing does not include any jail or prison time, this market will resolve to \"no prison time.\"\n\nif no sentencing takes place by july 31, 2026, 11:59 pm et, this market will also resolve to \"no prison time.\"\n\nfor the purposes of this market, it does not matter whether the sentence is concurrent or consecutive to any existing sentence weinstein is already serving. the market will resolve based on the total prison sentence imposed in this case.\n\nthe primary resolution source for this market will be official information from the new york court system or other involved u.s. government sources; however, a consensus of credible reporting may also be used.\n"
+  },
+  {
+    "event_id": "25413",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 548083: Closed or inactive",
+      "Market 2749367: End date 2025-12-31T12:00:00Z is in the past",
+      "Market 610256: Closed or inactive"
+    ]
+  },
+  {
+    "event_id": "25815",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 549333: Closed or inactive",
+      "Market 677273: End date 2025-12-31T00:00:00Z is in the past",
+      "Market 677274: Closed or inactive"
+    ]
+  },
+  {
+    "event_id": "32226",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 562811: Closed or inactive",
+      "Market 1057348: Closed or inactive",
+      "Market 1057349: End date 2025-12-31T00:00:00Z is in the past"
+    ]
+  }
+]
