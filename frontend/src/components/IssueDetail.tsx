@@ -10,10 +10,11 @@ import {
   formatShortDate,
   windowLabel,
 } from "../utils/format";
-import type { ChartWindow, Issue } from "../types/issue";
+import type { ChartWindow, DataStatus, Issue } from "../types/issue";
 
 type IssueDetailProps = {
   issue: Issue;
+  dataStatus?: DataStatus;
   onBack: () => void;
 };
 
@@ -54,7 +55,7 @@ function buildSummary(issue: Issue, chartWindow: ChartWindow): string {
   }`;
 }
 
-export function IssueDetail({ issue, onBack }: IssueDetailProps) {
+export function IssueDetail({ issue, dataStatus = "ready", onBack }: IssueDetailProps) {
   const [chartWindow, setChartWindow] = useState<ChartWindow>("7d");
 
   const summary = useMemo(
@@ -73,6 +74,16 @@ export function IssueDetail({ issue, onBack }: IssueDetailProps) {
       </button>
 
       <header className="mt-5">
+        {dataStatus === "error" ? (
+          <div className="mb-4 rounded-lg border border-line bg-card px-4 py-3">
+            <h2 className="text-sm font-bold text-ink">Showing last available data</h2>
+            <p className="mt-1 text-sm leading-6 text-ink-soft">
+              The latest refresh did not complete. This detail view uses the same
+              fallback issue set shown on the dashboard.
+            </p>
+          </div>
+        ) : null}
+
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-[11px] font-bold uppercase tracking-wider text-ink-faint">
             {issue.category}

@@ -4,7 +4,6 @@ export const dummyDataAsOf = "2026-07-08T09:00:00.000Z";
 export const staleDummyDataAsOf = "2026-07-07T23:00:00.000Z";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-const DATA_AS_OF_TIME = new Date(dummyDataAsOf).getTime();
 
 type IssueSeed = Omit<
   Issue,
@@ -45,8 +44,9 @@ function generateHistory(
   return values;
 }
 
-function historyFromValues(values: number[]): IssueHistoryPoint[] {
-  const startTime = DATA_AS_OF_TIME - (values.length - 1) * DAY_MS;
+function historyFromValues(values: number[], dataAsOf: string): IssueHistoryPoint[] {
+  const dataAsOfTime = new Date(dataAsOf).getTime();
+  const startTime = dataAsOfTime - (values.length - 1) * DAY_MS;
 
   return values.map((value, index) => ({
     timestamp: new Date(startTime + index * DAY_MS).toISOString(),
@@ -54,8 +54,8 @@ function historyFromValues(values: number[]): IssueHistoryPoint[] {
   }));
 }
 
-function buildIssue(seed: IssueSeed): Issue {
-  const history = historyFromValues(seed.values);
+function buildIssue(seed: IssueSeed, dataAsOf: string): Issue {
+  const history = historyFromValues(seed.values, dataAsOf);
   const currentIndex = seed.values.length - 1;
   const currentExpectationValue = seed.values[currentIndex];
   const value24hAgo = seed.values[Math.max(0, currentIndex - 1)];
@@ -88,14 +88,14 @@ function buildIssue(seed: IssueSeed): Issue {
     change24h: Number((currentExpectationValue - value24hAgo).toFixed(1)),
     change7d: Number((currentExpectationValue - value7dAgo).toFixed(1)),
     change30d: Number((currentExpectationValue - value30dAgo).toFixed(1)),
-    dataAsOf: dummyDataAsOf,
+    dataAsOf,
     history,
     inflectionPoints,
   };
 }
 
-export const dummyIssues: Issue[] = [
-  buildIssue({
+const issueSeeds: IssueSeed[] = [
+  {
     id: "ceasefire-framework",
     title: "Ceasefire framework discussions",
     description:
@@ -115,8 +115,8 @@ export const dummyIssues: Issue[] = [
         note: "Candidate context entered manually for review alongside the observed change; not presented as a cause.",
       },
     ],
-  }),
-  buildIssue({
+  },
+  {
     id: "policy-rate-path",
     title: "Central bank policy-rate path this quarter",
     description:
@@ -125,8 +125,8 @@ export const dummyIssues: Issue[] = [
     cautionLevel: "sufficient",
     values: generateHistory(40, 0.6, -1, 0, 1.1),
     relatedEventCandidates: [],
-  }),
-  buildIssue({
+  },
+  {
     id: "legislative-majority",
     title: "Incumbent party legislative majority",
     description:
@@ -141,8 +141,8 @@ export const dummyIssues: Issue[] = [
         note: "Candidate context entered manually for review alongside the observed change; not presented as a cause.",
       },
     ],
-  }),
-  buildIssue({
+  },
+  {
     id: "ai-oversight-bill",
     title: "AI oversight bill this session",
     description:
@@ -157,8 +157,8 @@ export const dummyIssues: Issue[] = [
         note: "Candidate context entered manually for review alongside the observed change; not presented as a cause.",
       },
     ],
-  }),
-  buildIssue({
+  },
+  {
     id: "cross-border-agreement",
     title: "Cross-border agreement negotiations",
     description:
@@ -167,8 +167,8 @@ export const dummyIssues: Issue[] = [
     cautionLevel: "sufficient",
     values: generateHistory(56, 0.18, -1, 0, 0.6),
     relatedEventCandidates: [],
-  }),
-  buildIssue({
+  },
+  {
     id: "launch-schedule",
     title: "Flagship product launch schedule",
     description:
@@ -177,8 +177,8 @@ export const dummyIssues: Issue[] = [
     cautionLevel: "caution_low_activity",
     values: generateHistory(58, 0.4, -1, 0, 1.6),
     relatedEventCandidates: [],
-  }),
-  buildIssue({
+  },
+  {
     id: "constitutional-reform",
     title: "Constitutional reform referendum",
     description:
@@ -187,8 +187,8 @@ export const dummyIssues: Issue[] = [
     cautionLevel: "insufficient_data",
     values: generateHistory(50, 0.05, -1, 0, 0.3, 9),
     relatedEventCandidates: [],
-  }),
-  buildIssue({
+  },
+  {
     id: "climate-accord",
     title: "Climate accord ratification",
     description:
@@ -203,5 +203,12 @@ export const dummyIssues: Issue[] = [
         note: "Candidate context entered manually for review alongside the observed change; not presented as a cause.",
       },
     ],
-  }),
+  },
 ];
+
+function buildIssues(dataAsOf: string): Issue[] {
+  return issueSeeds.map((seed) => buildIssue(seed, dataAsOf));
+}
+
+export const dummyIssues: Issue[] = buildIssues(dummyDataAsOf);
+export const staleDummyIssues: Issue[] = buildIssues(staleDummyDataAsOf);
