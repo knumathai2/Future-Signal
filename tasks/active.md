@@ -13,12 +13,11 @@ _Last updated: 2026-07-09_
 
 Day 3 work is assigned. Start from `reports/day-3-work-allocation.md` and the
 Day 2 baseline; keep all work inside PRD §14's detail/chart/badge scope.
-`TASK-013`, `TASK-035`, and `TASK-036` completed 2026-07-09 - see
+`TASK-013`, `TASK-014`, `TASK-035`, and `TASK-036` completed 2026-07-09 - see
 `tasks/completed.md`.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-014 | Interpretation-caution badge alignment | Frontend Implementer | Frontend Implementer | `frontend/TASK-014-caution-badges` | assigned |
 | TASK-017 | Disclaimer copy, footer, and dedicated notice surface | Frontend Implementer + PM | Frontend Implementer + PM / Planner | `frontend/TASK-017-disclaimer-copy` | assigned |
 
 Completed Day 1, Day 2, and PM allocation tasks are archived in
@@ -30,8 +29,9 @@ Completed Day 1, Day 2, and PM allocation tasks are archived in
   `reports/day-3-work-allocation.md`. Continue as the scope gate for
   `TASK-017`; do not change the wording policy itself without human approval.
 - **Frontend Implementer** completed `TASK-013` on
-  `frontend/TASK-013-detail-chart`; continue with `TASK-014` and `TASK-017`
-  from the hardened detail/chart baseline.
+  `frontend/TASK-013-detail-chart` and `TASK-014` on
+  `frontend/TASK-014-caution-badges`; continue with `TASK-017` from the
+  hardened detail/chart/badge baseline.
 - **Backend Implementer** completed `TASK-035`: the merged `TASK-010` read
   path already supports the Day 3 chart/marker experience, so no contract
   change was made. Applying the draft schema to any shared or production
@@ -43,25 +43,6 @@ Completed Day 1, Day 2, and PM allocation tasks are archived in
   Day 3 must pass the project wording lint before review.
 
 ## Active Task Details
-
-### TASK-014: Interpretation-caution badge alignment
-- **Owner**: Frontend Implementer
-- **Assignee**: Frontend Implementer
-- **Branch**: `frontend/TASK-014-caution-badges`
-- **Status**: assigned
-- **Priority**: High
-- **Day**: Day 3
-- **Description**: Audit and align the reusable caution badge across dashboard
-  cards, detail header, chart area, and summary area so each supported caution
-  level is visible and consistently worded.
-- **Definition of Done**:
-  - [ ] `sufficient`, `caution_low_activity`, `caution_high_volatility`, and
-        `insufficient_data` all have safe labels and detail copy.
-  - [ ] Badge placement stays near the metric it qualifies on every major
-        data-bearing screen.
-  - [ ] Visual treatment stays neutral and does not mimic transactional UI
-        patterns.
-  - [ ] Changed user-facing strings pass the project wording scan.
 
 ### TASK-017: Disclaimer copy, footer, and dedicated notice surface
 - **Owner**: Frontend Implementer + PM

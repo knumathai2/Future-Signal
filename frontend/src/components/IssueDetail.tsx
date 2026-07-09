@@ -137,7 +137,12 @@ export function IssueDetail({ issue, dataStatus = "ready", onBack }: IssueDetail
       </section>
 
       <section className="mt-4 rounded-lg border border-line bg-card px-4 py-3">
-        <CautionBadge level={issue.cautionLevel} withDetail />
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <CautionBadge level={issue.cautionLevel} withDetail />
+          <span className="text-xs font-semibold text-ink-faint">
+            데이터 기준 시각: {formatDataTimestamp(issue.dataAsOf)}
+          </span>
+        </div>
         <p className="mt-2 text-sm leading-6 text-ink-soft">
           이 값은 공개 데이터에 반영된 기대값이며 실제 사건에 대한 확정 사실이
           아닙니다. 데이터가 불완전하거나 변동성이 클 수 있습니다.
@@ -220,10 +225,18 @@ export function IssueDetail({ issue, dataStatus = "ready", onBack }: IssueDetail
 
       <section className="mt-10 rounded-lg border border-line bg-card p-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-lg font-bold text-ink">이슈 요약</h2>
-          <span className="text-[11px] font-semibold text-ink-faint">
-            템플릿 기반 데이터 요약
-          </span>
+          <div>
+            <h2 className="text-lg font-bold text-ink">이슈 요약</h2>
+            <p className="mt-1 text-[11px] font-semibold text-ink-faint">
+              템플릿 기반 데이터 요약
+            </p>
+          </div>
+          <div className="flex flex-col items-start gap-2 sm:items-end">
+            <CautionBadge level={issue.cautionLevel} />
+            <span className="text-xs font-semibold text-ink-faint">
+              데이터 기준 시각: {formatDataTimestamp(issue.dataAsOf)}
+            </span>
+          </div>
         </div>
         <p className="mt-4 max-w-4xl text-sm leading-7 text-ink">{summary}</p>
         <p className="mt-4 border-t border-line-soft pt-3 text-xs leading-6 text-ink-faint">
