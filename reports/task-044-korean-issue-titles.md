@@ -1,7 +1,7 @@
 # TASK-044: Korean Issue Display Titles
 
-Date: 2026-07-09  
-Branch: `frontend/TASK-044-korean-issue-titles`  
+Date: 2026-07-09
+Branch: `frontend/TASK-044-korean-issue-titles`
 Owner: Frontend Implementer
 
 ## Scope
