@@ -45,7 +45,7 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 5. Evaluates the Â±5pp threshold for `issue_signals` (cooldown-gated to avoid duplicate firing)
 6. Day 4 active: qualifying markets (new expectation-shift row, no report yet, or stale >24h) get a new `ai_reports` row via template-constrained generation plus a safety filter
 7. FastAPI serves the available read-only data; `TASK-039` wires the report endpoint to latest successful stored summaries while preserving the accepted empty state
-8. React renders Home -> Detail -> Chart -> Summary, with `TASK-016` consuming the report endpoint and keeping caution context visible
+8. React renders Home -> Detail -> Chart -> Summary; `TASK-016` now consumes the report endpoint and keeps caution context visible for success, loading, empty, and report-fetch failure states
 
 ## Design Decision Summary
 
@@ -86,5 +86,6 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 - `TASK-038` assigned Day 4 active work: `TASK-015` template report generation and safety filter, `TASK-039` report API/fallback readiness, `TASK-016` report display UI, `TASK-019` manual event candidates, `TASK-040` demo/deck draft, and `TASK-018` final wording lint.
 - `TASK-015` implemented `backend/app/core/ai_report.py` (fixed Â§10.1/Â§10.2 prompt templates, `OpenAIReportClient`, strict 5-field schema parse, banned-phrase/pattern safety filter) and `backend/app/core/ai_report_batch.py` (regeneration eligibility, top-10-by-heat_score cap, retry-once-then-fail, filter-failure discard-without-retry - previous successful `ai_reports` row always stays served on any failure). Per ADR-022, OpenAI is the real provider (no key configured in this environment, so no live call has executed yet).
 - `TASK-039` is now complete via PR #29 follow-up: the report endpoint serves latest successful stored `ai_reports` rows in live mode and keeps the accepted empty state for absent/failed reads.
+- `TASK-016` is complete: the frontend detail flow fetches `/api/issues/{id}/report` alongside issue detail and 30d history, renders the five fixed report sections when a stored report is available, and keeps neutral loading, `not_yet_generated`, and report-failure states isolated to the summary card with nearby data-as-of timing and caution context.
 - Backend local setup should use Python 3.11 on this machine; the default Python 3.9 runtime could not install the pinned `psycopg[binary]==3.2.3` binary package.
 - Day 4 is active from this baseline. Any shared or production schema application, paid external AI call, public API shape change, deployment, or infrastructure change remains separately approval-gated.
