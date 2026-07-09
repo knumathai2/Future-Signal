@@ -12,13 +12,13 @@ paths use `issues` / `signals` / `reports` / `categories` — never `markets`,
 `bets`, `trades`, `positions`, or `profits` (enforced by
 `tests/test_issues_contract.py::test_public_paths_never_use_market_terminal_vocabulary`).
 
-**Current implementation state** (TASK-010): routes read from Postgres via
-`app/db/session.py::get_db()` when `DATABASE_URL` is set and live
-`market_snapshots` data exists. TASK-002's schema is still unapplied to any
-shared/production database, and TASK-007/TASK-008 (the batch collector)
-have not produced data yet as of this writing, so in practice every
-environment currently serves the static fallback described below. Response
-shapes did not change from the earlier mock-only draft.
+**Current implementation state** (TASK-010/TASK-039): issue and history routes
+read from Postgres via `app/db/session.py::get_db()` when `DATABASE_URL` is
+set and live `market_snapshots` data exists. The report route reads the latest
+successful stored `ai_reports` row in live mode and otherwise preserves the
+accepted empty state. TASK-002's schema is still unapplied to any
+shared/production database. Response shapes did not change from the earlier
+mock-only draft.
 
 ## `GET /api/health`
 
@@ -105,6 +105,9 @@ separate calls — done here).
 
 Latest AI report. Content is fixed template slots only — never free-form
 (ADR-003) — and must pass the banned-phrase filter before storage.
+When live data is available, the API serves the latest `status="success"`
+`ai_reports` row for the issue. Failed rows are retained in storage but are
+not returned from this endpoint.
 
 ```json
 {

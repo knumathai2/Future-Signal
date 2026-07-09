@@ -21,6 +21,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.api.routes import issues as issues_routes
 from app.db.models import (
+    AiReport,
     Base,
     IssueSignal,
     Market,
@@ -34,6 +35,9 @@ from app.main import app
 NOW = datetime(2026, 7, 8, 9, 0, 0, tzinfo=UTC)
 MARKET_ID = uuid.UUID("11111111-1111-4111-8111-111111111111")
 MARKET_ID_NO_METRIC = uuid.UUID("22222222-2222-4222-8222-222222222222")
+REPORT_ID_OLD = uuid.UUID("33333333-3333-4333-8333-333333333333")
+REPORT_ID_LATEST = uuid.UUID("44444444-4444-4444-8444-444444444444")
+REPORT_ID_FAILED = uuid.UUID("55555555-5555-4555-8555-555555555555")
 
 
 @compiles(JSONB, "sqlite")
@@ -70,6 +74,7 @@ def db_session():
             MarketSnapshot.__table__,
             MarketMetric.__table__,
             IssueSignal.__table__,
+            AiReport.__table__,
             RelatedEvent.__table__,
         ],
     )
@@ -207,6 +212,50 @@ def seed_market_without_metric(db_session) -> None:
             liquidity=None,
             best_bid=None,
             best_ask=None,
+        )
+    )
+    db_session.commit()
+
+
+def report_content(label: str) -> dict[str, str]:
+    return {
+        "issue_summary": f"{label} issue summary from stored data.",
+        "movement_explanation": (
+            f"{label} reflected expectation movement is described from stored metrics."
+        ),
+        "key_change_context": (
+            f"{label} related event candidate is context, not a cause."
+        ),
+        "uncertainty_summary": (
+            f"{label} data reliability is sufficient; interpretation still "
+            "requires caution."
+        ),
+        "neutral_conclusion": (
+            f"{label} summary supports issue monitoring without an outcome claim."
+        ),
+    }
+
+
+def seed_ai_report(
+    db_session,
+    *,
+    report_id: uuid.UUID = REPORT_ID_LATEST,
+    market_id: uuid.UUID = MARKET_ID,
+    generated_at: datetime = NOW,
+    input_metrics_id: int | None = 1,
+    status: str = "success",
+    label: str = "latest",
+) -> None:
+    db_session.add(
+        AiReport(
+            id=report_id,
+            market_id=market_id,
+            generated_at=generated_at,
+            input_metrics_id=input_metrics_id,
+            content=report_content(label),
+            model_used="template-v1",
+            prompt_version="template-v1",
+            status=status,
         )
     )
     db_session.commit()
