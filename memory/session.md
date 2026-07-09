@@ -15,93 +15,81 @@ Harness Version: 1.1
 
 - **Date**: 2026-07-09
 - **Agent Role**: Debugger
-- **Session Goal**: Populate the configured development Supabase DB with live
-  collector data so the backend serves DB-backed issue payloads instead of the
-  documented static fallback.
+- **Session Goal**: Add an approved local/dev historical seed path so demo
+  charts can use live DB-backed history without fabricating points or changing
+  schema/API contracts.
 - **Branch**: `debug/ISS-004-live-data-seed`
 
 ## Previous Session Summary
 
-Day 4 is active. The development Supabase DB was reachable through the pooler,
-and `backend/migrations/001_initial_schema.sql` had already been applied after
-human approval. All app tables were empty, so `/api/issues` still fell back to
-static sample data. `ISS-004` tracked this state.
+The configured development Supabase DB had already been seeded once through the
+approved collector/snapshot path. `/api/issues` and the Vite proxy returned
+DB-backed issue payloads, but each issue had only one snapshot point, so detail
+charts still needed either more collector cycles or an explicitly approved
+historical seed path.
 
 ## Current Work
 
-- [x] Read the required project context: `AGENTS.md`, PRD index, service/tech
-      design indexes and relevant sections, `memory/project.md`,
-      `memory/session.md`, `tasks/active.md`, and Backend/Data-AI role prompts.
-- [x] Created and switched to `debug/ISS-004-live-data-seed` from a clean
-      worktree to satisfy the project branch policy for debugging work.
-- [x] Confirmed `DATABASE_URL` is present without printing secrets; target was
-      `ENV=local`, Supabase pooler, database `postgres`.
-- [x] Confirmed expected app tables were present and initially empty.
-- [x] Ran the existing collector into a temporary directory so tracked repo
-      JSON artifacts were not modified.
-- [x] Scanned collector output user-facing fields against the project
-      hard-block wording list before DB insertion; all 50 normalized samples
-      passed.
-- [x] Ran the approved `run_snapshot_and_metrics` path against the configured
-      development DB.
-- [x] Ran expectation-shift detection for the same run; no signals fired
-      because this was the first snapshot run and history is insufficient.
-- [x] Verified backend `/api/issues` and Vite proxy `/api/issues` now return
-      DB-backed payloads with the new `data_as_of` timestamp and no static
-      fallback ID in the first page.
-- [x] Updated `ISS-004` as resolved for the configured development DB.
+- [x] Read required project context: `AGENTS.md`, PRD, Service Design, Tech
+      Design, UX index, `memory/project.md`, `memory/session.md`,
+      `tasks/active.md`, and Debugger/Backend/Data-AI prompts.
+- [x] Confirmed current branch is `debug/ISS-004-live-data-seed`; no branch
+      switch was needed.
+- [x] Added `backend/app/core/historical_seed.py`:
+      local/dev-only CLI guard, CLOB price-history parsing/fetching, duplicate
+      snapshot timestamp skipping, append-only snapshot insertion, fresh metric
+      insertion, existing expectation-shift detection, and collection-log audit
+      row creation.
+- [x] Added `backend/tests/test_historical_seed.py` covering guard behavior,
+      CLOB history parsing, existing-current-snapshot recomputation, new-market
+      seeding, signal handoff, collection logging, and idempotent reruns.
+- [x] Documented the command and safety boundaries in `backend/README.md`.
+- [x] Recorded ADR-025 and updated architecture/project/known-issue memory.
 
 ## Files Changed
 
+- `backend/app/core/historical_seed.py`
+- `backend/tests/test_historical_seed.py`
+- `backend/README.md`
+- `memory/decisions.md`
+- `memory/architecture.md`
+- `memory/project.md`
 - `memory/known-issues.md`
 - `memory/session.md`
-- `memory/sessions/2026-07-09-Debugger-iss-004-live-data-seed.md`
+- `memory/sessions/2026-07-09-Debugger-iss-004-historical-seed-path.md`
 
 ## Issues Found / Decisions Made
 
-- `ISS-004` resolved for the configured development DB.
-- No schema changes, dependency changes, deployment, `.env` edits, or paid API
-  calls were performed.
-- `ai_reports`, `related_events`, and `data_collection_logs` remain empty.
-  Report generation was not run because it would require an external AI key and
-  explicit approval.
-- The DB now has only one snapshot per issue. This is enough to make the API use
-  live DB rows, but chart history remains sparse until additional collector runs
-  or a separate approved historical seed path inserts more points.
+- ADR-025 records the approved local/dev historical seed path.
+- No schema changes, dependency changes, infrastructure changes, deployment,
+  `.env` edits, paid API calls, or production DB writes were performed.
+- The historical seed command was not run against the configured DB in this
+  session. It now exists as a guarded path for demo prep:
+  `ENV=local ./.venv/bin/python -m app.core.historical_seed --confirm-local-dev-write`.
+- Full backend tests fail if the local shell allows `.env`'s real
+  `DATABASE_URL` to load during fallback contract tests; with
+  `DATABASE_URL=` and `ENV=test`, the suite passes.
 
 ## Verification
 
-- Initial DB count check: all app tables existed and had 0 rows.
-- Collector run: 50 normalized samples extracted, 20 source records skipped by
-  collector rules, 0 normalized samples skipped by the hard-block wording scan.
-- Snapshot/metrics run timestamp:
-  `2026-07-09T06:02:53.521477+00:00`.
-- DB row counts after insertion:
-  - `markets=50`
-  - `market_outcomes=50`
-  - `market_snapshots=50`
-  - `market_metrics=50`
-  - `issue_signals=0`
-  - `ai_reports=0`
-  - `related_events=0`
-  - `data_collection_logs=0`
-- Backend health check: `GET http://127.0.0.1:8000/api/health` returned
-  `status=ok`.
-- Backend live issue check:
-  `/api/issues?limit=5&sort=recent` returned 5 issues,
-  `data_as_of=2026-07-09T06:02:53.521477Z`, and the static fallback ID was not
-  present.
-- Vite proxy check:
-  `http://127.0.0.1:5173/api/issues?limit=5&sort=recent` returned the same
-  DB-backed `data_as_of` and no static fallback ID.
+- `./.venv/bin/python -m ruff check app/core/historical_seed.py tests/test_historical_seed.py`
+  -> passed.
+- `./.venv/bin/python -m pytest tests/test_historical_seed.py tests/test_snapshot_metrics.py tests/test_signal_detection.py -q`
+  -> 40 passed.
+- `DATABASE_URL= ENV=test ./.venv/bin/python -m pytest -q`
+  -> 110 passed.
+- `./.venv/bin/python -m ruff check .`
+  -> passed.
+- Narrow content-safety scan of changed files found no new hard-block terms
+  from the seed path itself; existing ADR/template wording still contains
+  legacy internal instances such as `Trade-offs`.
 
 ## Next Session: To-Do
 
-1. For richer live charts, run another collector cycle after enough real time
-   has passed, or create an explicitly approved historical seed path that
-   inserts additional snapshot points without changing existing rows.
-2. Generate reports only after confirming the approved AI-provider/key path and
-   cost/approval gate; keep the template-constrained safety filter in place.
-3. If Day 4 demo needs curated related-event candidates, continue `TASK-019` on
-   `data-ai/TASK-019-curated-events` and insert only manually reviewed context
-   candidates.
+1. If the Day 4/Day 5 demo needs live DB-backed charts, run the guarded
+   historical seed command only after confirming `DATABASE_URL` targets the
+   approved local/development DB.
+2. After running it, verify `/api/issues/{id}/history?window=7d` returns
+   multiple points and that `/api/issues` surfaces fresh metric rows.
+3. Continue `TASK-019` separately for manually reviewed related-event
+   candidates; this historical seed path does not add event context.
