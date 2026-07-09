@@ -163,7 +163,10 @@ them before Day 5 lock if they become relevant to the active path:
     and `market_metrics`.
   - Verified backend `/api/issues` and Vite proxy `/api/issues` return the new
     DB-backed `data_as_of` timestamp instead of the static fallback ID.
-  - Remaining limitation: this was a single snapshot run, so history endpoints
-    currently have one point per issue until additional collector runs or
-    `backend/app/core/historical_seed.py` is run against an approved local/dev
-    DB to append CLOB price-history points.
+  - Follow-up completed: `backend/app/core/historical_seed.py` was run against
+    the configured development DB with `1w` and `1m` CLOB history intervals.
+    The 50 seeded issues now have live DB-backed 24h/7d metric coverage and
+    multi-point chart history.
+  - Remaining limitation: 30d full-baseline readiness is still unavailable
+    (`0` markets in the latest verification), so the demo should use the `7d`
+    chart window unless later source history proves otherwise.
