@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Completed Tasks — Outlook Signals
 
-_Last updated: 2026-07-09_
+_Last updated: 2026-07-10_
 
 | ID | Task | Completed | Owner | Notes |
 |----|------|-----------|-------|-------|
@@ -44,3 +44,4 @@ _Last updated: 2026-07-09_
 | TASK-040 | Day 4 demo script and deck draft | 2026-07-09 | PM | `pm/TASK-040-demo-script-deck-draft`. Created `reports/task-040-demo-script-deck-draft.md` with a 10-slide deck outline, 3-5 minute demo script following Home -> Detail -> Chart -> Summary -> caution notice -> manual context candidate, fallback narration for live/local data, report, chart-history, and context-candidate gaps, Day 5 screenshot/rehearsal checklist, and judge Q&A draft. Also created `reports/task-040-demo-script-deck-draft-prompt.md` as the reusable task-start prompt. Basic hard-block and use-carefully wording scans passed for the new TASK-040 materials and session note; comprehensive cross-surface lint remains `TASK-018`. |
 | TASK-044 | Korean issue display titles for dashboard/detail | 2026-07-09 | Frontend Implementer | `frontend/TASK-044-korean-issue-titles`. Added frontend display fields and a deterministic `issueDisplay` mapper so raw English Polymarket titles render as Korean topic labels, issue display names, and one-line 기준 조건 on dashboard cards and detail headers. Raw source titles are preserved only as detail-screen provenance. Static fallback/dummy issues now also populate display subtitles. Verified frontend `typecheck`, `lint`, `build`, browser smoke for dashboard and detail text, changed-string safety scans, and `git diff --check`. No API, schema, dependency, infrastructure, deployment, or DB change was made. |
 | TASK-018 | Copy/wording lint pass across user-facing surfaces | 2026-07-09 | PM | `pm/TASK-018-copy-lint`. Ran final Day 4 content-safety lint across frontend UI/fallback data, backend API/report strings, AI report templates and safety filter, related-event candidates, targeted tests, and Day 4 demo/report docs. Resolved prompt-template wording, added a data-as-of timestamp to dashboard weekly rows, cleaned a TASK-044 report wording hit, and recorded the pass in `reports/task-018-copy-lint.md`. Verified frontend `typecheck`, `lint`, `build`, backend `ruff check app tests`, and targeted backend tests (68 passed). Verdict: Pass with notes; no Day 4 closeout blockers remain. |
+| TASK-045 | Day 4 closeout verification and Day 5 handoff | 2026-07-10 | PM | `pm/TASK-045-day-4-closeout`. Verified latest `origin/main` includes PR #42 (`TASK-018`), no active Day 4 tasks remain, Day 4 acceptance criteria are satisfied, and closeout evidence is recorded in `reports/day-4-closeout-plan.md`. |

@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Project: Outlook Signals
 
-_Last updated: 2026-07-09_
+_Last updated: 2026-07-10_
 
 ## Summary
 
@@ -17,7 +17,7 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.6.1-day4-demo-draft
+- **Version**: v0.6.2-day4-closed
 - **Phase**: Day 4 closeout complete
 - **Next milestone**: Day 5 final demo rehearsal, screenshot capture, and presentation polish
 - **Overall health**: 🟢 Good — Day 4 core UI/API/event-candidate work, report-generation code readiness, broad Korean live category filtering, the 24h combined batch path, demo/deck draft, and final copy/wording lint are complete; OpenRouter-backed v2 summaries have been generated and verified for the default top-20 heat-sorted issues
@@ -54,7 +54,7 @@ Future Signal/
 | Frontend | Dashboard v1 is integrated with backend routes and static fallback, including ranked issue cards, category/window/sort controls, detail view, Recharts line chart, error fallback states, data-as-of timestamps, caution badges, Day 3-hardened window-specific insufficient-history handling, shared footer copy, a dedicated in-app information notice surface, `TASK-043` report-card states/labels for the v2 issue-explainer summary, and `TASK-044` Korean issue display copy for raw English market titles. |
 | Backend | FastAPI app, `/api/health`, accepted `/api/issues`/detail/history/report/category contract, Pydantic schemas, and contract tests exist. `TASK-010` merged live issue list/detail/history read paths with documented static fallback behavior, `TASK-039` wires `/api/issues/{id}/report` to stored report rows in live mode while preserving the accepted empty state, `TASK-043` updates report `content` to the v2 issue-explainer schema, and `ISS-007` makes the report endpoint serve current-prompt-version rows only. `/api/categories` now returns broad Korean filter labels derived from live servable issues, such as `정치`, `경제`, `기술`, `세계`, and `스포츠`; `/api/issues` category filtering accepts those Korean labels plus raw stored category values, while detailed issue-topic labels remain in the frontend card display layer. `001_initial_schema.sql` has been applied to the currently configured development Supabase DB after human approval; the DB has one live collector snapshot/metric row per normalized issue, ADR-025 adds a guarded historical seed path for richer live chart history, and PR #36 adds a guarded related-event seed path for four normalized/live-reachable demo issues. |
 | Data/AI | `TASK-007` produced 50 normalized records and structured skip details; `TASK-008` computes 24h/7d metrics through a local/dev-safe path; `TASK-009` inserts MVP expectation-shift detector rows from the ±5pp threshold; `TASK-036` adds MVP caution thresholds and marker handoff guidance; `TASK-015` implements fixed-template report generation and safety filtering; `TASK-019` adds curated related-event candidates; `TASK-041` fixes report prompt-input lookup for historical-seed metric timestamps while preserving the no-fabrication skip path; `TASK-042` adds the combined data/metric/signal/report batch runner, dev-only reports-only command, and 24h scheduled workflow; `TASK-043` advances report generation to `PROMPT_VERSION=v2` with issue explainer and conditional scenario slots; `ISS-007` verified `success|v2|30` in the configured development DB and current v2 content for the default top-20 heat-sorted issues. |
-| PM / Safety | P0 scope remains locked; wording policy references `standards.md` and `memory/glossary.md`; `TASK-040` demo/deck draft is complete in `reports/task-040-demo-script-deck-draft.md`; `TASK-018` final copy/wording lint passed with notes in `reports/task-018-copy-lint.md`. |
+| PM / Safety | P0 scope remains locked; wording policy references `standards.md` and `memory/glossary.md`; `TASK-040` demo/deck draft is complete in `reports/task-040-demo-script-deck-draft.md`; `TASK-018` final copy/wording lint passed with notes in `reports/task-018-copy-lint.md`; Day 4 closeout evidence is recorded in `reports/day-4-closeout-plan.md`. |
 
 ## Recent Changes
 
@@ -99,6 +99,7 @@ Future Signal/
 | 2026-07-09 | Category filters were localized through ADR-031 and then simplified per user clarification: `/api/categories` now returns broad Korean groups such as `정치`, `경제`, `기술`, `세계`, and `스포츠`, while detailed labels such as `우크라이나 전쟁` and future `이란 전쟁` remain card-level display labels. |
 | 2026-07-09 | `TASK-040` completed: Day 4 deck outline, demo script, fallback narration, Day 5 screenshot/rehearsal checklist, and judge Q&A draft are recorded in `reports/task-040-demo-script-deck-draft.md`; final cross-surface wording lint remains `TASK-018`. |
 | 2026-07-09 | `TASK-018` completed: final Day 4 copy/wording lint passed with notes in `reports/task-018-copy-lint.md`; prompt-template wording, dashboard weekly-row data-as-of timing, and one TASK-044 report wording hit were resolved, with no policy/API/schema/dependency/infrastructure/deployment changes. |
+| 2026-07-10 | Day 4 closed: latest `origin/main` includes PR #42 (`TASK-018`), no active Day 4 tasks remain, and `reports/day-4-closeout-plan.md` records the closeout evidence and Day 5 handoff. |
 
 ## Constraints
 

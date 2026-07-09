@@ -4,11 +4,9 @@ _Date: 2026-07-09_
 _Owner: PM / Planner_
 _Branch: `pm/TASK-038-day-4-allocation`_
 _Git baseline: `origin/main` at `af83f7e` after fetching latest refs_
-_Status update (2026-07-09): current `origin/main` tip is now `6d0eb44`
-after PR #36 (`TASK-019`) merged. `TASK-041` is added from that baseline to
-close the remaining stored-summary generation readiness gap. Follow-up:
-`TASK-041` is complete from `origin/main` at `01df91b`; saved summaries still
-require a separately approved database-write generation run._
+_Status update (2026-07-10): current `origin/main` tip is now `056fe7a`
+after PR #42 (`TASK-018`) merged. Day 4 is closed; final closeout evidence is
+recorded in `reports/day-4-closeout-plan.md`._
 
 ## Summary
 
@@ -24,7 +22,7 @@ implementation sequence from `TASK-015`, `TASK-016`, `TASK-018`, and
 `TASK-019`, plus two missing Day 4 execution tasks that come directly from PRD
 section 14: backend report/fallback readiness and PM deck/demo draft.
 
-## Progress Update (as of `6d0eb44`)
+## Progress Update (as of `056fe7a`)
 
 Most implementation work for the Day 4 demo path is merged.
 
@@ -49,6 +47,9 @@ Most implementation work for the Day 4 demo path is merged.
 - `TASK-040` (PM) is **completed**: the deck outline, 3-5 minute demo script,
   fallback narration, Day 5 screenshot/rehearsal checklist, and judge Q&A draft
   are recorded in `reports/task-040-demo-script-deck-draft.md`.
+- `TASK-018` (PM) is **completed**: final wording-safety lint passed with notes
+  across UI strings, report templates, backend/API/report strings, related-event
+  candidates, targeted tests, and Day 4 demo/report docs.
 
 ## Day 4 Assignments
 
@@ -61,7 +62,7 @@ Most implementation work for the Day 4 demo path is merged.
 | TASK-019 | PM + Data/AI | `data-ai/TASK-019-curated-events` | completed | 3-5 manually curated event candidates for representative demo issues | Feeds `TASK-018` and `TASK-040` |
 | TASK-041 | Data/AI Implementer | `data-ai/TASK-041-report-generation-readiness` | completed | Report batch prompt input construction is compatible with historical-seed metric timestamps; approved-only demo-generation notes are documented | Feeds `TASK-018`, `TASK-040`, and Day 4 closeout |
 | TASK-040 | PM / Planner | `pm/TASK-040-demo-script-deck-draft` | completed | Presentation deck outline and demo script draft to roughly 70 percent completeness | Feeds Day 5 final presentation and backup rehearsal |
-| TASK-018 | PM / Planner | `pm/TASK-018-copy-lint` | assigned | Content-safety lint report across UI strings, templates, report text, event candidates, and deck/demo copy | Final Day 4 safety gate before closeout |
+| TASK-018 | PM / Planner | `pm/TASK-018-copy-lint` | completed | Content-safety lint report across UI strings, templates, report text, event candidates, and deck/demo copy | Final Day 4 safety gate passed; no Day 4 closeout blockers remain |
 
 ## Recommended Work Order
 
@@ -86,16 +87,15 @@ Most implementation work for the Day 4 demo path is merged.
   generation per ADR-022. Any write to the configured development DB still
   requires explicit user approval for that run.
 
-### Final block
+### Final block — done
 
 - PM completed `TASK-040` with a compact demo spine: dashboard -> detail ->
   chart -> summary -> caution/notice -> manual context candidate.
-- PM runs `TASK-018` after the report template, UI strings, event candidates,
-  demo script draft, and `TASK-041` readiness notes are available.
-- Reviewer pass stays embedded. Any user-facing string changed during Day 4
-  must pass the project wording lint before review.
-- Day 4 closes only if the Home -> Detail -> Chart -> Summary path can be
-  demonstrated with either live/local data or honest fallback data.
+- PM completed `TASK-018` after the report template, UI strings, event
+  candidates, demo script draft, and report-readiness notes were available.
+- Reviewer pass stayed embedded through the final wording-safety review.
+- Day 4 is now closed because the Home -> Detail -> Chart -> Summary path can
+  be demonstrated with either live/local data or honest fallback data.
 
 ## Day 4 Guardrails
 
@@ -115,24 +115,29 @@ Most implementation work for the Day 4 demo path is merged.
 
 ## Acceptance Checklist
 
-Day 4 is ready to close only when:
+Day 4 is closed because:
 
-- Stored template summaries exist or can be generated locally after explicit
-  database-write approval for the representative issues without open-ended
-  analysis.
-- The report endpoint serves the latest successful stored summary when present
-  and the accepted neutral empty state when absent.
+- Stored v2 summaries are available for the default top-20 heat-sorted issues
+  in the configured development DB, and absent/lower-ranked summaries keep the
+  accepted neutral empty state.
+- The report endpoint serves the latest successful current-prompt-version
+  stored summary when present and the accepted neutral empty state when absent.
 - The detail summary card renders success, not-yet-generated, and error states
   without losing data-as-of timing or interpretation-caution context.
-- 3-5 representative issues have manually curated event candidates, or the
-  demo script explicitly avoids event-candidate sections for issues without
-  them.
+- Four representative issues have manually curated event candidates, and the
+  demo script includes candidate-unavailable narration for issues without them.
 - The presentation/demo draft tells the product story clearly and keeps the
   scope framed as issue monitoring.
-- A content-safety lint pass is recorded for changed user-facing strings,
-  templates, event candidates, and demo copy.
-- No P1/P2 feature has entered active scope without explicit PM assignment and
-  the required human approval where applicable.
+- `TASK-018` records a content-safety lint pass for changed user-facing strings,
+  templates, event candidates, tests with surfaced text, and demo copy.
+- No P1/P2 feature entered active scope without explicit PM assignment and the
+  required human approval where applicable.
+
+## Closeout Record
+
+Day 4 closeout is recorded in `reports/day-4-closeout-plan.md`. Day 5 can start
+from the closed Day 4 baseline with final screenshots, rehearsal, deployment
+approval handling, and presentation polish.
 
 ## Stretch Work
 
