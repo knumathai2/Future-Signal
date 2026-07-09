@@ -30,8 +30,8 @@ override this task required and recorded), `TASK-039` (report API fallback
 readiness), `TASK-016` (template report display UI), `TASK-019`
 (curated related-event candidates), `TASK-041` (report-generation
 readiness for historical-seed metric timestamps), `TASK-042` (combined
-scheduled/manual report batch), and `TASK-043` (v2 issue-explainer report
-output structure).
+scheduled/manual report batch), `TASK-043` (v2 issue-explainer report
+output structure), and `TASK-044` (Korean issue display titles).
 
 ## Day 4 Handoff Notes
 
@@ -66,6 +66,9 @@ output structure).
   now the v2 issue-explainer schema with neutral conditional scenario sections.
   Existing v1 stored report content is treated as `not_yet_generated` until a
   separately approved reports-only run writes v2 summaries.
+- **Frontend Implementer** completed `TASK-044`. Dashboard and detail headings
+  now show Korean issue display names and 기준 조건 first, with raw Polymarket
+  titles preserved only as detail-screen provenance.
 - **Reviewer / Debugger** stay embedded. Any user-facing string changed during
   Day 4 must pass the project wording lint before review.
 

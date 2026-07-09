@@ -14,9 +14,9 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-09
-- **Agent Role**: Debugger
-- **Session Goal**: Resolve `ISS-007` follow-up: keep top category filters broad Korean while preserving detailed issue-card labels.
-- **Branch**: `debug/ISS-007-v2-report-category-filter`
+- **Agent Role**: Data/AI Implementer
+- **Session Goal**: Complete `TASK-043` AI report output structure update to issue-explainer scenarios.
+- **Branch**: `data-ai/TASK-043-issue-explainer-report`
 
 ## Previous Session Summary
 
@@ -319,43 +319,6 @@ timestamp equality.
   - New unseen live market titles may need additional display-copy mapping
     polish later.
 
-## Follow-up Implementation: Broad Korean Category Filters
-
-- **Date**: 2026-07-09
-- **Agent Role**: Debugger
-- **Branch**: `debug/ISS-007-v2-report-category-filter`
-- **User request**: Keep the main filter categories broad like `정치` and
-  `경제`, while leaving the issue-card category/topic labels as they are now.
-- **Work Completed**:
-  - Updated `backend/app/core/category_taxonomy.py` so `/api/categories`
-    derives broad Korean filter groups such as `정치`, `경제`, `환경`, `기술`,
-    `세계`, and `스포츠` from live issue titles/categories.
-  - Kept `/api/issues?category=...` compatible with both those Korean filter
-    labels and raw stored source categories.
-  - Kept detailed card labels in the frontend display layer; future Iran
-    conflict fallback copy can show `이란 전쟁` on cards while filtering under
-    `세계`.
-  - Updated `backend/API_CONTRACT.md`, ADR-031, `memory/project.md`,
-    `memory/architecture.md`, and `memory/known-issues.md`.
-- **Verification**:
-  - `cd backend && .venv/bin/ruff check app tests` — passed.
-  - `cd backend && DATABASE_URL= .venv/bin/pytest tests/test_issues_contract.py tests/test_issues_live.py` — 34 passed.
-  - `cd backend && DATABASE_URL= .venv/bin/pytest` — 137 passed.
-  - `cd frontend && npm run typecheck` — passed.
-  - `cd frontend && npm run lint` — passed.
-  - `cd frontend && npm run build` — passed with the existing Recharts
-    chunk-size warning.
-  - `git diff --check` — passed.
-  - Local backend check: `/api/categories` returned `['정치', '경제', '기술',
-    '세계', '스포츠']`, and each returned non-empty `/api/issues` results.
-  - Vite proxy check: `http://127.0.0.1:5173/api/categories` returned the same
-    broad category list.
-- **Notes / Remaining Risks**:
-  - No schema, dependency, infrastructure, deployment, public issue response
-    shape, or database write was performed.
-  - `환경` remains in the fallback/order list and will appear in live mode when
-    a servable environment issue exists.
-
 ## Follow-up Review Fixes: PR #38 REQUEST_CHANGES
 
 - **Date**: 2026-07-09
@@ -384,102 +347,3 @@ timestamp equality.
   - No `.env` contents were printed or modified.
   - No schema, dependency, public API shape, deployment, real provider call, or
     database write was performed.
-
-## Follow-up Debug Fix: ISS-007 v2 Reports and Category Filters
-
-- **Date**: 2026-07-09
-- **Agent Role**: Debugger
-- **Branch**: `debug/ISS-007-v2-report-category-filter`
-- **User request**: Fix the observed issues where v2 AI summaries were not
-  visible after the report-structure change, and dashboard category filters
-  returned no issues except `전체`.
-- **Root Cause**:
-  - The configured development DB had legacy `success|v1` report rows and no
-    v2 report rows after `TASK-043`.
-  - Reports-only generation writes rows using the metric timestamp, so v1 and
-    v2 rows can share `generated_at`; the report read path and regeneration
-    eligibility previously did not prefer the current prompt version.
-  - `/api/categories` returned a fixed sample list while live issue categories
-    came from source labels such as `Politics`, `Crypto`, and `Ukraine`.
-  - `/api/issues` category filtering used exact case-sensitive equality.
-- **Work Completed**:
-  - Created branch `debug/ISS-007-v2-report-category-filter`.
-  - Updated `/api/categories` to return distinct categories from currently
-    servable live issues when DB data exists, with static sample fallback for
-    DB-free/failure mode.
-  - Made `/api/issues?category=...` filtering case-insensitive.
-  - Updated report reads so `/api/issues/{id}/report` requests only current
-    `PROMPT_VERSION` rows; legacy prompt-version rows remain stored but are not
-    served.
-  - Updated report regeneration eligibility to prefer current-version success
-    rows when v1/v2 generated timestamps tie, preventing repeated generation
-    for already-current reports.
-  - Added backend tests for live categories, case-insensitive category filters,
-    current-prompt report selection, and same-timestamp regeneration handling.
-  - Updated `backend/API_CONTRACT.md`, ADR-030 in `memory/decisions.md`,
-    `memory/known-issues.md`, `memory/architecture.md`, and
-    `memory/project.md`.
-- **Current DB Report Generation**:
-  - Ran the guarded local/dev reports-only command three times:
-    `ENV=local ./.venv/bin/python -m app.core.scheduled_batch --reports-only --confirm-local-dev-write`.
-  - The command used the configured OpenRouter-compatible provider settings
-    without printing secrets.
-  - Final read-only DB verification:
-    `failed|v1|20`, `success|v1|29`, `success|v2|30`.
-  - Verified the default top-20 heat-sorted issues all have current v2 report
-    content.
-  - Verified `category=politics`, `category=Politics`, and `category=Crypto`
-    return matching live issue rows; `/api/categories` now returns live
-    category labels such as `Airdrops`, `Crypto`, `Gaza`, and `Politics`.
-- **Verification**:
-  - `cd backend && .venv/bin/ruff check app tests` — passed.
-  - `cd backend && DATABASE_URL= .venv/bin/pytest tests/test_issues_contract.py tests/test_issues_live.py tests/test_ai_report_batch.py` — 51 passed.
-  - `cd backend && DATABASE_URL= .venv/bin/pytest` — 135 passed.
-  - `cd frontend && npm run typecheck && npm run lint && npm run build` —
-    passed; build still shows the known Recharts chunk-size warning.
-- **Notes**:
-  - No `.env` contents were printed or modified.
-  - No schema, dependency, public response-shape, deployment, or
-    infrastructure change was made.
-  - The configured DB write was limited to the guarded local/dev reports-only
-    path requested for fixing visible v2 summaries.
-
-## Follow-up Category Localization: Korean Topic Filters
-
-- **Date**: 2026-07-09
-- **Agent Role**: Debugger
-- **Branch**: `debug/ISS-007-v2-report-category-filter`
-- **User request**: Change category filters from English source labels to
-  Korean labels, and include recognizable topic groups such as Iran-related
-  conflict and Ukraine conflict categories.
-- **Work Completed**:
-  - Added `backend/app/core/category_taxonomy.py` to derive Korean display
-    filter labels from each issue's stored source category and title.
-  - Updated `/api/categories` to return Korean display groups from live
-    servable issues, with a Korean static fallback (`환경`, `경제`).
-  - Updated `/api/issues?category=...` so Korean display labels filter issues,
-    while raw stored category values still work for backward compatibility.
-  - Added category rules for `우크라이나 전쟁`, future `이란 전쟁`,
-    `이스라엘·가자`, `국제 안보`, country-specific politics groups,
-    `가상자산`, `AI·기술`, `기업·산업`, `미국 사법`, and `스포츠`.
-  - Added live-route tests proving `우크라이나 전쟁` filtering and future
-    `이란 전쟁` matching.
-  - Updated `backend/API_CONTRACT.md`, ADR-031, `memory/project.md`, and
-    `memory/architecture.md`.
-- **Live DB Check**:
-  - `/api/categories` now returns Korean categories including
-    `우크라이나 전쟁`, `이스라엘·가자`, `국제 안보`, `미국 정치`, `가상자산`,
-    and `AI·기술`.
-  - The current configured DB has no Iran-related live issue, so `이란 전쟁`
-    is supported by taxonomy/tests but does not appear in the live category
-    list until matching data exists.
-- **Verification**:
-  - `cd backend && .venv/bin/ruff check app tests` — passed.
-  - `cd backend && DATABASE_URL= .venv/bin/pytest tests/test_issues_contract.py tests/test_issues_live.py` — 34 passed.
-  - `cd backend && DATABASE_URL= .venv/bin/pytest` — 137 passed.
-  - `cd frontend && npm run typecheck && npm run lint && npm run build` —
-    passed; build still shows the known Recharts chunk-size warning.
-  - `git diff --check` — passed.
-- **Notes**:
-  - No schema, dependency, public response-shape, deployment, infrastructure,
-    or database write change was made for this category localization.

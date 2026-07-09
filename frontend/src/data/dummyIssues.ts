@@ -84,6 +84,10 @@ function buildIssue(seed: IssueSeed, dataAsOf: string): Issue {
 
   return {
     ...seed,
+    sourceTitle: seed.sourceTitle ?? seed.title,
+    displaySubtitle: seed.displaySubtitle ?? seed.description,
+    topicLabel: seed.topicLabel ?? seed.category,
+    resolutionCondition: seed.resolutionCondition ?? seed.description,
     currentExpectationValue,
     change24h: Number((currentExpectationValue - value24hAgo).toFixed(1)),
     change7d: Number((currentExpectationValue - value7dAgo).toFixed(1)),

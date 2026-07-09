@@ -82,6 +82,84 @@ _Last updated: 2026-07-09_
 
 ---
 
+### ADR-029: Dashboard uses Korean issue display copy instead of raw market titles
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: User / Frontend Implementer
+
+**Context**: The dashboard's raw Polymarket titles were English question strings, making it hard to understand the issue at a glance.
+**Decision**: Keep the API and stored source title unchanged, but map frontend issue cards/detail headers to Korean display copy: topic label, short issue title, one-line 기준 조건, and a detail-only original market question.
+**Rationale**: This improves scanability without adding a schema migration or changing the public API. The original title remains available for provenance on the detail screen.
+**Trade-offs**: The first pass uses deterministic frontend mappings for the current live/demo issue set plus conservative fallbacks. New unseen market titles may need additional mapping polish later.
+**Consequences**: Main dashboard cards show Korean issue names first; English source titles are no longer the primary card headline.
+
+---
+
+### ADR-030: Live categories and current-version report rows drive demo reads
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: User / Debugger
+
+**Context**: After `TASK-043`, the configured development DB still had legacy
+v1 report rows and no v2 rows, so the detail report card showed the accepted
+`not_yet_generated` state. After v2 rows were generated, v1/v2 rows could share
+the same metric timestamp, making `generated_at DESC` alone unstable. The
+dashboard category buttons also came from a fixed sample list while live DB
+categories used source tag labels such as `Politics` and `Crypto`.
+**Decision**: `/api/issues/{id}/report` now requests only the current
+`PROMPT_VERSION` row from the report read helper. Legacy prompt-version rows
+remain stored for traceability and regeneration eligibility but are not served.
+The report batch also prefers current-version rows when deciding whether an
+issue already has a fresh report. `/api/categories` now derives categories from
+currently servable live issues when DB data exists, while `/api/issues`
+category filtering is case-insensitive.
+**Rationale**: This keeps the v2 issue-explainer UI deterministic, avoids
+serving old report shapes, prevents repeated generation for rows that already
+have current-version reports, and makes filter buttons point at categories that
+can actually return issues.
+**Trade-offs**: Categories now reflect raw stored source labels rather than a
+manually curated taxonomy. A later taxonomy task can group labels into broader
+Korean categories if needed.
+**Consequences**: The configured development DB was regenerated through the
+guarded reports-only path and now has v2 stored summaries for the default
+top-20 heat-sorted issues. No schema, dependency, deployment, infrastructure,
+or public response-shape change was made.
+
+---
+
+### ADR-031: Category filters use broad Korean taxonomy
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: User / Debugger
+
+**Context**: Live source categories such as `Politics`, `Crypto`, and
+`Ukraine` were technically accurate but not scan-friendly for a Korean demo.
+The user first requested Korean category labels and recognizable conflict
+groups, then clarified that the top filter should remain broad like `정치` and
+`경제` while card-level labels should stay detailed.
+**Decision**: Add a backend taxonomy that derives broad Korean filter labels
+from each issue's stored category and title. `/api/categories` returns broad
+labels such as `정치`, `경제`, `환경`, `기술`, `세계`, and `스포츠` when
+matching issues are servable. `/api/issues?category=...` accepts those Korean
+labels while still accepting raw stored category values for backward
+compatibility. More specific labels such as `우크라이나 전쟁` and `이란 전쟁`
+remain frontend card-display labels, not top-level filter buttons.
+**Rationale**: The filter buttons stay simple and scan-friendly while the cards
+still communicate recognizable topics at a glance. This also avoids a schema
+migration or public issue response shape change.
+**Trade-offs**: This is a deterministic heuristic taxonomy, not a full
+editorial classification workflow. Specific conflict labels are no longer
+top-level filters, so users browse them through the broader `세계` category and
+the card label.
+**Consequences**: Category buttons are broad Korean groups on the live
+dashboard; cards keep detailed topic labels via the frontend display layer.
+Synthetic tests cover Ukraine/Iran-style conflict issues mapping to `세계`.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07
