@@ -261,3 +261,17 @@ _Last updated: 2026-07-09_
 **Rationale**: The highest current demo risk is a detail view that shows a chart or caution badge in a confusing way. Stabilizing that path first protects the core Home -> Detail -> Chart flow before adding the template summary generator.
 **Trade-offs**: Data/AI report work may start later than the original `TASK-015` Day 3-4 range suggests. This keeps the team from splitting attention before the core detail path is trustworthy.
 **Consequences**: `tasks/active.md` is the Day 3 source of execution truth; `reports/day-3-work-allocation.md` records the sequence and guardrails. Shared/dev database schema application, public API response-shape changes, new dependencies, deployment work, and wording-policy changes remain approval-gated by `AGENTS.md`.
+
+---
+
+### ADR-018: Detail chart windows require baseline-covered history
+
+- **Date**: 2026-07-09
+- **Status**: Accepted (TASK-013 implementation decision)
+- **Decided by**: Frontend Implementer
+
+**Context**: The Day 3 detail chart must support 24h, 7d, and 30d selection with honest insufficient-history states. The existing frontend sliced the last 2/8/31 points and displayed `change30d ?? change7d`, which could make a short history look like a valid longer-window chart.
+**Decision**: For each selected chart window, the frontend now requires at least one history point at or before that window's baseline plus a later point before rendering a line chart. If that baseline is unavailable, the chart shows an insufficient-history state. The 30d metric displays only an actual 30d history-derived change, not a 7d fallback.
+**Rationale**: This matches the no-fabrication rule used by backend metrics and avoids overstating sparse API/fallback history during the demo.
+**Trade-offs**: A window may show an insufficient-history state even when it has several recent points, if those points do not reach the requested baseline. This is preferable to stretching a shorter span into a longer-window interpretation.
+**Consequences**: `frontend/src/utils/history.ts` is the shared frontend helper for window coverage. The detail chart still preserves the accepted API response shape and uses API-provided `signals` when present, with local adjacent 5pp detection only as a fallback marker source.

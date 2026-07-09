@@ -16,7 +16,6 @@ Day 2 baseline; keep all work inside PRD §14's detail/chart/badge scope.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-013 | Issue detail UI + Recharts line chart | Frontend Implementer | Frontend Implementer | `frontend/TASK-013-detail-chart` | assigned |
 | TASK-014 | Interpretation-caution badge alignment | Frontend Implementer | Frontend Implementer | `frontend/TASK-014-caution-badges` | assigned |
 | TASK-017 | Disclaimer copy, footer, and dedicated notice surface | Frontend Implementer + PM | Frontend Implementer + PM / Planner | `frontend/TASK-017-disclaimer-copy` | assigned |
 | TASK-035 | Issue detail/history API readiness pass | Backend Implementer | Backend Implementer | `backend/TASK-035-detail-history-readiness` | assigned |
@@ -30,9 +29,9 @@ Completed Day 1, Day 2, and PM allocation tasks are archived in
 - **PM / Planner** completed `TASK-034` in
   `reports/day-3-work-allocation.md`. Continue as the scope gate for
   `TASK-017`; do not change the wording policy itself without human approval.
-- **Frontend Implementer** should treat the existing dashboard-to-detail/chart
-  path as the baseline and focus Day 3 work on detail/chart/tooltip polish,
-  marker rendering, and badge placement.
+- **Frontend Implementer** completed `TASK-013` on
+  `frontend/TASK-013-detail-chart`; continue with `TASK-014` and `TASK-017`
+  from the hardened detail/chart baseline.
 - **Backend Implementer** should continue from the merged `TASK-010` read path.
   Applying the draft schema to any shared or production database still requires
   separate human approval under `AGENTS.md`.
@@ -43,26 +42,6 @@ Completed Day 1, Day 2, and PM allocation tasks are archived in
   Day 3 must pass the project wording lint before review.
 
 ## Active Task Details
-
-### TASK-013: Issue detail UI + Recharts line chart
-- **Owner**: Frontend Implementer
-- **Assignee**: Frontend Implementer
-- **Branch**: `frontend/TASK-013-detail-chart`
-- **Status**: assigned
-- **Priority**: High
-- **Day**: Day 3
-- **Description**: Finish the issue detail chart experience against the current
-  `/api/issues/{id}` and `/api/issues/{id}/history` contract, including window
-  selection, tooltip values, marker rendering, and insufficient-history states.
-- **Definition of Done**:
-  - [ ] Dashboard -> detail -> chart works with API data and static fallback.
-  - [ ] 24h, 7d, and 30d windows render either a usable line or a clear
-        insufficient-history state.
-  - [ ] Tooltip text shows timestamp and reflected expectation value without
-        outcome or cause claims.
-  - [ ] Expectation-shift markers match the accepted 5pp threshold logic or
-        the API-provided signal rows.
-  - [ ] Frontend `typecheck`, `lint`, and `build` pass.
 
 ### TASK-014: Interpretation-caution badge alignment
 - **Owner**: Frontend Implementer
