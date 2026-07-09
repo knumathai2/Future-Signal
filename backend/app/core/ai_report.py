@@ -38,7 +38,7 @@ PROMPT_VERSION = "v2"
 # 10.1 System prompt (fixed, never modified per-request)
 # --------------------------------------------------------------------------
 SYSTEM_PROMPT = """\
-You are generating a short, neutral issue explainer for a public
+You are generating a concise, neutral issue explainer for a public
 issue-monitoring dashboard. Write in clear Korean for non-specialist readers.
 You are explaining the market question and the public data context, not
 predicting real-world outcomes and not giving advice of any kind.
@@ -55,7 +55,7 @@ Rules you must always follow:
 - Never use causal connectors such as "because", "due to", or "caused by".
 - If a related event candidate is provided, describe it only as a "candidate
   for context," never as a cause.
-- If data is limited (low volume, short history, high volatility), say so
+- If data is limited (low volume, limited history, high volatility), say so
   plainly instead of writing around it.
 - Keep every section to 1-3 sentences."""
 
@@ -70,7 +70,7 @@ Category: {category}
 Current expectation value: {current_value}
 24h change: {change_24h}
 7d change: {change_7d}
-Confidence level: {confidence_level}
+Data reliability/caution level: {confidence_level}
 Recent inflection point (if any): {inflection_point_summary}
 Related event candidate (if any): {related_event_or_none}
 
