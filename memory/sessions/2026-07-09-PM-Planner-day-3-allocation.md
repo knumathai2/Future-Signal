@@ -7,7 +7,8 @@ Harness Version: 1.1
 
 # Current Session — Outlook Signals
 
-> After this session, copy this file to `memory/sessions/YYYY-MM-DD-[ROLE].md`.
+> Archived copy of `memory/session.md` after the 2026-07-09 PM / Planner
+> Day 3 allocation session.
 
 ---
 
