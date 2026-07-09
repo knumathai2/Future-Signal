@@ -334,3 +334,48 @@ guarded summary/demo path over broader scope.
 **Rationale**: Empty history is more honest than plotting a fabricated latest point, and serving only successful stored reports keeps the API read-only and decoupled from report generation. The response shapes stay unchanged, so frontend integration can keep the existing success/empty-state contract.
 **Trade-offs**: Static fallback history may show no chart line until richer fallback history is deliberately added. Static fallback report content remains a curated sample, so `TD-009` still needs a Day 5 language/demo fallback note if backend fallback data is used in presentation.
 **Consequences**: `TASK-039` is complete for the backend read path. Backend tests now cover latest successful report selection, failed-report exclusion, report-query failure fallback, report unknown-id behavior, and empty history fallback behavior without any schema, dependency, infrastructure, deployment, or public API shape change.
+
+---
+
+### ADR-022: AI provider selection - OpenAI, live call approved for TASK-015 ⚠️ HUMAN APPROVAL
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: User (human), implementing Data/AI Implementer
+
+**Context**: Technical Design §9 leaves the LLM provider as "Claude or OpenAI."
+`reports/day-4-work-allocation.md` (ADR-020) had defaulted `TASK-015`'s
+execution to deterministic template generation with any real provider hook
+"disabled or stubbed until approved," since calling a paid external AI API is
+an `AGENTS.md` Absolute Restriction requiring explicit human approval, and AI
+Provider Selection is itself a Human Approval Gate. Before implementation,
+the user was asked (1) which provider to select and (2) whether to follow
+the Day-4 deterministic default or wire a real live call now. The user chose
+OpenAI, then explicitly chose to override the Day-4 default and wire the real
+call rather than stub it.
+**Decision**: OpenAI is the selected AI provider. `app/core/ai_report.py`
+implements `OpenAIReportClient` (real OpenAI Chat Completions call, JSON-mode
+response, `response_format={"type": "json_object"}`) behind the `LLMClient`
+protocol, constructed explicitly via `build_openai_client()` - never
+constructed or called implicitly at import time. `openai==2.44.0` was added
+to `backend/requirements.txt` (new dependency, covered by the same user
+approval). Settings gained `OPENAI_API_KEY`/`OPENAI_MODEL`
+(`app/core/config.py`, `.env.example`) - no key is committed, and no key is
+present in this development environment, so no real network call to OpenAI
+has actually been made or billed in this session; all tests exercise the
+pipeline against a fake `LLMClient`.
+**Rationale**: Explicit, repeated human approval was obtained in-session for
+both the provider choice and the decision to wire a live call rather than the
+deterministic-template default, satisfying both the paid-API and
+AI-Provider-Selection approval gates in `AGENTS.md`.
+**Trade-offs**: This departs from `reports/day-4-work-allocation.md`'s stated
+Day 4 default (deterministic template, no live provider) - that allocation
+doc is not being edited to match, since it is PM's dated allocation record;
+this ADR is the override of record. Real API cost is now possible the first
+time someone runs the batch job with `OPENAI_API_KEY` set, unlike the
+deterministic-default path.
+**Consequences**: Before any live/demo run of `app/core/ai_report_batch.py`
+with a real key, confirm the key is scoped/budgeted appropriately - this ADR
+approves the architecture and provider, not an unbounded number of live calls.
+`memory/architecture.md` and `tasks/completed.md` should reference this ADR
+for TASK-015's provider choice.

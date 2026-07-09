@@ -19,15 +19,17 @@ readiness, and final wording safety.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-015 | Template report generation function and safety filter | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-015-template-report-generation` | assigned |
 | TASK-016 | Template report display UI | Frontend Implementer | Frontend Implementer | `frontend/TASK-016-report-display-ui` | assigned |
 | TASK-019 | Curated related-event candidates for representative issues | PM + Data/AI | Data/AI Implementer + PM / Planner | `data-ai/TASK-019-curated-events` | assigned |
 | TASK-040 | Day 4 demo script and deck draft | PM | PM / Planner | `pm/TASK-040-demo-script-deck-draft` | assigned |
 | TASK-018 | Copy/wording lint pass across user-facing surfaces | PM | PM / Planner | `pm/TASK-018-copy-lint` | assigned |
 
 Completed Day 1, Day 2, Day 3, and PM allocation tasks are archived in
-`tasks/completed.md`, including `TASK-038` for this Day 4 allocation and
-`TASK-039` for report API fallback readiness.
+`tasks/completed.md`, including `TASK-038` for this Day 4 allocation,
+`TASK-015` (template report generation + safety filter, moved to
+`tasks/completed.md` - see that file and ADR-022 for the OpenAI provider
+override this task required and recorded), and `TASK-039` (report API
+fallback readiness).
 
 ## Day 4 Handoff Notes
 
@@ -35,9 +37,13 @@ Completed Day 1, Day 2, Day 3, and PM allocation tasks are archived in
   `reports/day-4-work-allocation.md`. PM owns the demo/deck draft (`TASK-040`)
   and final copy lint (`TASK-018`), and co-reviews manual event candidate copy
   in `TASK-019`.
-- **Data/AI Implementer** starts `TASK-015` first. The default implementation
-  is deterministic template generation plus a mechanical safety filter. Do not
-  call paid external AI APIs without human approval.
+- **Data/AI Implementer** completed `TASK-015` on
+  `data-ai/TASK-015-template-report-generation` (see `tasks/completed.md`).
+  Note for `TASK-016`/`TASK-018`: contrary to this file's original Day 4
+  default, the user explicitly approved wiring a real OpenAI call (ADR-022)
+  rather than stubbing it - `openai` is now a real dependency and
+  `OPENAI_API_KEY`/`OPENAI_MODEL` are real settings, though no key is present
+  in this environment so no live call has actually executed yet.
 - **Backend Implementer** completed `TASK-039` in the PR #29 follow-up.
   `/api/issues/{id}/report` now preserves the accepted response shape, reads
   latest successful `ai_reports` rows in live mode, and keeps the neutral empty
@@ -49,27 +55,6 @@ Completed Day 1, Day 2, Day 3, and PM allocation tasks are archived in
   Day 4 must pass the project wording lint before review.
 
 ## Active Task Details
-
-### TASK-015: Template report generation function and safety filter
-- **Owner**: Data/AI Implementer
-- **Assignee**: Data/AI Implementer
-- **Branch**: `data-ai/TASK-015-template-report-generation`
-- **Status**: assigned
-- **Priority**: High
-- **Day**: Day 4
-- **Description**: Implement the template-constrained report generator and
-  safety filter for existing `ai_reports` storage, using structured metrics,
-  signals, caution level, and manual event candidates only.
-- **Definition of Done**:
-  - [ ] Generates the fixed report content slots from structured inputs:
-        issue summary, movement explanation, key context, uncertainty summary,
-        and neutral conclusion.
-  - [ ] Runs a mechanical banned-phrase and causal-language filter before any
-        report is considered storable.
-  - [ ] Uses existing schema/model boundaries only; no schema migration or new
-        dependency is introduced.
-  - [ ] Does not call any paid external AI API without explicit human approval.
-  - [ ] Covers success and blocked-output cases with focused tests.
 
 ### TASK-016: Template report display UI
 - **Owner**: Frontend Implementer
