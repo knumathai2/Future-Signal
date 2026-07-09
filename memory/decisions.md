@@ -292,3 +292,31 @@ _Last updated: 2026-07-09_
 **Rationale**: Uses the existing schema and Enum values for `confidence_level` without adding new schema fields, keeping the MVP lightweight. Documenting the marker contract ensures frontend/backend alignment without extending P1 metrics.
 **Trade-offs**: Hardcoded thresholds may need adjustment as real-world Polymarket volume changes, and using absolute 24h change as a volatility proxy is less precise than a full `volatility_score`.
 **Consequences**: Closes MVP path for TD-008. Backend and frontend implementers can proceed with API/UI integration for caution badges and expectation-shift markers.
+
+---
+
+### ADR-020: Day 4 active work limited to summary and demo-flow completion
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: PM / Planner
+
+**Context**: Day 3 closed the detail/chart/caution path, and latest
+`origin/main` at `af83f7e` includes the Day 3 closeout merge. PRD section 14
+defines Day 4 as template summaries, demo-flow completion, fallback readiness,
+manual event candidates, and a deck/script draft.
+**Decision**: Open Day 4 active work for `TASK-015`, `TASK-039`, `TASK-016`,
+`TASK-019`, `TASK-040`, and `TASK-018`. Keep P1 category/feed/extra-metric
+work deferred until the Day 4 P0 path is complete. Treat any paid external AI
+provider call, schema change, deployment, infrastructure change, public API
+shape change, or shared/production database write as approval-gated.
+**Rationale**: The remaining demo risk is not feature breadth; it is whether
+the Home -> Detail -> Chart -> Summary path is coherent, safe, and rehearsable.
+This sequence lets Data/AI and Backend unblock Frontend report display while PM
+prepares the demo story and final wording pass.
+**Trade-offs**: General UI polish and P1 metrics remain deferred even though
+they could improve perceived quality. The allocation prefers a complete and
+guarded summary/demo path over broader scope.
+**Consequences**: `tasks/active.md` is the Day 4 execution source of truth, and
+`reports/day-4-work-allocation.md` records the sequencing and guardrails.
+`TASK-025` remains stretch-only unless the Day 4 checklist is already satisfied.

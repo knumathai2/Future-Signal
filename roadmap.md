@@ -50,6 +50,10 @@ Ship a genuinely working web MVP within 5 days that lets a user check today's mo
 - [ ] Backend: stabilize API, fallback data handling
 - [ ] Data/AI: generate template summaries, link manual event candidates (3–5 curated issues)
 - **Deliverables**: template summaries, 3 representative demo issues, stabilized demo flow, deck 70% complete
+- **Status note (2026-07-09)**: Day 4 work is assigned from latest
+  `origin/main` at `af83f7e`. Active work is `TASK-015`, `TASK-039`,
+  `TASK-016`, `TASK-019`, `TASK-040`, and `TASK-018`; sequencing and guardrails
+  are recorded in `reports/day-4-work-allocation.md`.
 
 ### Day 5 — Integration QA + presentation finalized
 - [ ] PM: finalize deck, prepare risk-response explanations, finalize demo script

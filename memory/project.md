@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.5.0-day3-closed
-- **Phase**: Day 3 closed; Day 4 ready to start
-- **Next milestone**: Day 4 start — template summary generation/display and manually curated related-event candidates
-- **Overall health**: 🟢 Good — the Day 2 data/API/dashboard path and Day 3 detail/chart/badge/notice path are merged inside the narrowed MVP path
+- **Version**: v0.6.0-day4-assigned
+- **Phase**: Day 4 active
+- **Next milestone**: Day 4 closeout — template summaries, report display, curated event candidates, fallback readiness, and demo/deck draft
+- **Overall health**: 🟢 Good — Day 3 is merged and Day 4 work is assigned on latest `origin/main` without expanding beyond the narrowed MVP path
 
 ## Tech Summary
 
@@ -54,7 +54,7 @@ Future Signal/
 | Frontend | Dashboard v1 is integrated with backend routes and static fallback, including ranked issue cards, category/window/sort controls, detail view, Recharts line chart, error fallback states, data-as-of timestamps, caution badges, Day 3-hardened window-specific insufficient-history handling, shared footer copy, and a dedicated in-app information notice surface. |
 | Backend | FastAPI app, `/api/health`, accepted `/api/issues`/detail/history/report/category contract, Pydantic schemas, and contract tests exist. `TASK-010` merged live issue list/detail/history read paths with documented static fallback behavior. Schema draft is accepted but unapplied. |
 | Data/AI | `TASK-007` produced 50 normalized records and structured skip details; `TASK-008` computes 24h/7d metrics through a local/dev-safe path; `TASK-009` inserts MVP expectation-shift detector rows from the ±5pp threshold; `TASK-036` adds MVP caution thresholds and marker handoff guidance. |
-| PM / Safety | P0 scope remains locked; wording policy references `standards.md` and `memory/glossary.md`; Day 3 is closed with no active Day 3 tasks remaining. |
+| PM / Safety | P0 scope remains locked; wording policy references `standards.md` and `memory/glossary.md`; Day 4 active work is sequenced in `reports/day-4-work-allocation.md` with final copy lint assigned to `TASK-018`. |
 
 ## Recent Changes
 
@@ -82,6 +82,7 @@ Future Signal/
 | 2026-07-09 | `TASK-014` completed: caution badge placement and copy aligned across dashboard/detail surfaces. |
 | 2026-07-09 | `TASK-017` completed: brief caution copy, shared footer copy, and a dedicated in-app information notice surface were added without policy, route dependency, API, schema, or infrastructure changes. |
 | 2026-07-09 | Day 3 closed: all Day 3 P0 tasks are merged and closeout evidence is recorded in `reports/day-3-closeout-plan.md`. |
+| 2026-07-09 | Day 4 work assigned from latest `origin/main` at `af83f7e`: `TASK-015`, `TASK-039`, `TASK-016`, `TASK-019`, `TASK-040`, and `TASK-018` are active; `TASK-038` records allocation and guardrails in `reports/day-4-work-allocation.md`. |
 
 ## Constraints
 
