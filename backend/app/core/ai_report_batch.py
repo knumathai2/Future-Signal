@@ -132,13 +132,17 @@ def _describe_related_event(db: Session, market_id: uuid.UUID) -> str | None:
 def build_prompt_inputs_for_market(
     db: Session, market: Market, metric: MarketMetric, run_timestamp: datetime
 ) -> ReportPromptInputs | None:
-    """Returns `None` (never a fabricated value) if this run has no matching
-    `market_snapshots` row for `market` - current_value has no other source."""
+    """Returns `None` (never a fabricated value) if this metric has no usable
+    snapshot at or before its timestamp - current_value has no other source."""
+    metric_timestamp = metric.computed_at or run_timestamp
     snapshot = db.execute(
-        select(MarketSnapshot).where(
+        select(MarketSnapshot)
+        .where(
             MarketSnapshot.market_id == market.id,
-            MarketSnapshot.captured_at == run_timestamp,
+            MarketSnapshot.captured_at <= metric_timestamp,
         )
+        .order_by(MarketSnapshot.captured_at.desc(), MarketSnapshot.id.desc())
+        .limit(1)
     ).scalar_one_or_none()
     if snapshot is None:
         return None
@@ -283,11 +287,16 @@ def run_ai_report_batch(
         inputs = build_prompt_inputs_for_market(db, market, metric, run_timestamp)
         if inputs is None:
             logger.error(
-                "Skipping AI report for market %s: no market_snapshots row for this run.",
+                "Skipping AI report for market %s: no market_snapshots row at or "
+                "before this metric timestamp.",
                 market.id,
             )
             outcomes.append(
-                ReportOutcome(market_id=market.id, status="skipped", reason="no_snapshot_for_run")
+                ReportOutcome(
+                    market_id=market.id,
+                    status="skipped",
+                    reason="no_snapshot_at_or_before_metric",
+                )
             )
             continue
 

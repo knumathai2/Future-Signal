@@ -28,6 +28,7 @@ from app.core.ai_report_batch import (
     run_ai_report_batch,
     select_markets_for_regeneration,
 )
+from app.core.historical_seed import metric_timestamp_for_seed
 from app.db.models import (
     AiReport,
     Base,
@@ -416,9 +417,37 @@ def test_filter_failure_discards_output_and_does_not_touch_ai_reports(db):
     assert rows[0].id == previous.id
 
 
-def test_no_snapshot_for_this_run_is_skipped_without_fabricating(db):
+def test_prompt_inputs_use_latest_snapshot_at_or_before_metric_timestamp(db):
     _seed_market(db)
-    db.add(_metric(MARKET_ID, NOW))  # no matching MarketSnapshot for NOW
+    latest_snapshot_at = NOW
+    metric_at = metric_timestamp_for_seed(latest_snapshot_at)
+    db.add(_snapshot(MARKET_ID, NOW - timedelta(hours=1), price=0.42))
+    db.add(_snapshot(MARKET_ID, latest_snapshot_at, price=0.67))
+    db.add(_metric(MARKET_ID, metric_at))
+    db.commit()
+    market = db.get(Market, MARKET_ID)
+    metric = db.execute(select(MarketMetric)).scalar_one()
+
+    inputs = build_prompt_inputs_for_market(db, market, metric, metric_at)
+
+    assert inputs is not None
+    assert inputs.current_value == pytest.approx(0.67)
+
+
+def test_no_snapshot_at_or_before_metric_timestamp_is_skipped_without_fabricating(db):
+    _seed_market(db)
+    db.add(_metric(MARKET_ID, NOW))
+    db.commit()
+    market = db.get(Market, MARKET_ID)
+    metric = db.execute(select(MarketMetric)).scalar_one()
+
+    assert build_prompt_inputs_for_market(db, market, metric, NOW) is None
+
+
+def test_future_only_snapshot_is_not_used_for_prompt_inputs(db):
+    _seed_market(db)
+    db.add(_snapshot(MARKET_ID, NOW + timedelta(microseconds=1), price=0.91))
+    db.add(_metric(MARKET_ID, NOW))
     db.commit()
     market = db.get(Market, MARKET_ID)
     metric = db.execute(select(MarketMetric)).scalar_one()
@@ -458,3 +487,25 @@ def test_batch_run_generates_for_qualifying_markets_only(db):
     assert len(outcomes) == 1
     assert outcomes[0].market_id == MARKET_ID
     assert outcomes[0].status == "success"
+
+
+def test_batch_run_stores_success_when_metric_is_after_latest_snapshot(db):
+    _seed_market(db)
+    latest_snapshot_at = NOW
+    metric_at = metric_timestamp_for_seed(latest_snapshot_at)
+    db.add(_snapshot(MARKET_ID, latest_snapshot_at, price=0.64))
+    db.add(_metric(MARKET_ID, metric_at, heat_score=90.0))
+    db.commit()
+    metric = db.execute(select(MarketMetric)).scalar_one()
+
+    client = FakeLLMClient([json.dumps(VALID_CONTENT)])
+    outcomes = run_ai_report_batch(db, metric_at, client, "gpt-4o-mini")
+
+    assert len(outcomes) == 1
+    assert outcomes[0].market_id == MARKET_ID
+    assert outcomes[0].status == "success"
+    assert client.calls == 1
+    stored = db.execute(select(AiReport)).scalars().all()
+    assert len(stored) == 1
+    assert stored[0].status == "success"
+    assert stored[0].input_metrics_id == metric.id
