@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # roadmap.md — Outlook Signals Roadmap
 
-_Last updated: 2026-07-08_
+_Last updated: 2026-07-09_
 _Source: PRD §14 (5-Day Development Schedule) — this file tracks execution against it._
 
 ## Goal
@@ -38,7 +38,10 @@ Ship a genuinely working web MVP within 5 days that lets a user check today's mo
 - [ ] Backend: issue-detail API, price-history API
 - [ ] Data/AI: inflection-point threshold logic (±5pp), interpretation-caution badge logic
 - **Deliverables**: issue detail screen, time-series chart, inflection-point markers, caution badge
-- **Status note (2026-07-08)**: Ready to start from the Day 2 baseline. Shared/dev database schema application remains approval-gated.
+- **Status note (2026-07-09)**: Day 3 work is assigned in `tasks/active.md`
+  and sequenced in `reports/day-3-work-allocation.md`. Shared/dev database
+  schema application remains approval-gated; template summary generation stays
+  deferred until the detail/chart/badge path is stable.
 
 ### Day 4 — Summary feature + demo flow complete
 - [ ] PM: draft presentation deck, write demo script

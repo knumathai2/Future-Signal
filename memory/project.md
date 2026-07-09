@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Project: Outlook Signals
 
-_Last updated: 2026-07-08_
+_Last updated: 2026-07-09_
 
 ## Summary
 
@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.3.0-day2-closed
-- **Phase**: Day 2 closed; Day 3 ready
-- **Next milestone**: Day 3 — detail screen, chart/tooltip refinement, inflection-point markers, and interpretation-caution text
-- **Overall health**: 🟢 Good — the Day 2 data/API/dashboard path is merged, verified, and still within the narrowed MVP scope
+- **Version**: v0.4.0-day3-open
+- **Phase**: Day 3 assigned; detail/chart/badge work ready to start
+- **Next milestone**: Day 3 closeout — issue detail screen, chart/tooltip refinement, inflection-point markers, and interpretation-caution badge logic
+- **Overall health**: 🟢 Good — the Day 2 data/API/dashboard path is merged, verified, and Day 3 active work is scoped to the narrowed MVP path
 
 ## Tech Summary
 
@@ -54,7 +54,7 @@ Future Signal/
 | Frontend | Dashboard v1 is integrated with backend routes and static fallback, including ranked issue cards, category/window/sort controls, detail view, Recharts line chart, error fallback states, data-as-of timestamps, caution badges, and review-hardened insufficient-data display for missing change references. |
 | Backend | FastAPI app, `/api/health`, accepted `/api/issues`/detail/history/report/category contract, Pydantic schemas, and contract tests exist. `TASK-010` merged live issue list/detail/history read paths with documented static fallback behavior. Schema draft is accepted but unapplied. |
 | Data/AI | `TASK-007` produced 50 normalized records and structured skip details; `TASK-008` computes 24h/7d metrics through a local/dev-safe path; `TASK-009` inserts MVP expectation-shift detector rows from the ±5pp threshold. |
-| PM / Safety | P0 scope remains locked; wording policy references `standards.md` and `memory/glossary.md`; Day 2 closeout is recorded in `reports/day-2-closeout-plan.md`, and Day 3 can begin from the verified data/API/dashboard baseline. |
+| PM / Safety | P0 scope remains locked; wording policy references `standards.md` and `memory/glossary.md`; Day 3 work is assigned in `tasks/active.md` and sequenced in `reports/day-3-work-allocation.md`. |
 
 ## Recent Changes
 
@@ -75,6 +75,7 @@ Future Signal/
 | 2026-07-08 | PR #14 (`TASK-009`) merged the MVP expectation-shift detector |
 | 2026-07-08 | PR #15 recorded local stack startup verification notes |
 | 2026-07-08 | Day 2 closed; `tasks/active.md` has no remaining Day 2 tasks and Day 3 is ready to start |
+| 2026-07-09 | Day 3 work assigned: `TASK-013`, `TASK-014`, `TASK-017`, `TASK-035`, and `TASK-036` opened in `tasks/active.md`; `TASK-034` records the PM allocation in `reports/day-3-work-allocation.md` |
 
 ## Constraints
 

@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Decision Log — Outlook Signals
 
-_Last updated: 2026-07-08_
+_Last updated: 2026-07-09_
 
 ## Template
 
@@ -247,3 +247,17 @@ _Last updated: 2026-07-08_
 **Rationale**: Keeps TASK-008's already-reviewed/merged module untouched (lower regression risk) while still giving step 6 exactly the metrics computed in "this run." The two modules compose via `detect_signals_for_run(db, run_snapshot_and_metrics(...).run_timestamp)` without any shared-object coupling.
 **Trade-offs**: One extra `SELECT` per run instead of reusing in-memory objects from step 5; at hackathon scale (30-50 markets, a handful of runs/day) this is not a performance concern. `issue_signals.detail` therefore stores `metric_id`/`change_24h`/`threshold` rather than the bounding `market_snapshots` ids mentioned as an example in Technical Design §4.5, since TASK-008 doesn't expose the reference snapshot id used inside `compute_change_for_window` - the schema's `detail` field is explicitly "free-form extra context," not a fixed contract, so this is populated with what's actually available rather than fabricated.
 **Consequences**: A market's `expectation_shift` signal can be traced back to its exact `market_metrics` row via `detail.metric_id`. If a future task needs snapshot-id-level detail, `compute_change_for_window` in `snapshot_metrics.py` would need to additionally return the reference snapshot's id - not done here to avoid touching TASK-008's merged module for a need this task doesn't have.
+
+---
+
+### ADR-017: Day 3 active work limited to detail, chart, and caution-badge readiness
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: PM / Planner
+
+**Context**: Day 2 closed with a usable data/API/dashboard baseline. PRD §14 defines Day 3 as the detail screen, chart, tooltip, inflection-point markers, and interpretation-caution badge day, while template summary generation belongs to the Day 4 demo-flow milestone.
+**Decision**: Open Day 3 active work for `TASK-013`, `TASK-014`, `TASK-017`, `TASK-035`, and `TASK-036`. Treat `TASK-015` as deferred until the detail/chart/badge path is stable, unless PM explicitly reassigns it late in Day 3.
+**Rationale**: The highest current demo risk is a detail view that shows a chart or caution badge in a confusing way. Stabilizing that path first protects the core Home -> Detail -> Chart flow before adding the template summary generator.
+**Trade-offs**: Data/AI report work may start later than the original `TASK-015` Day 3-4 range suggests. This keeps the team from splitting attention before the core detail path is trustworthy.
+**Consequences**: `tasks/active.md` is the Day 3 source of execution truth; `reports/day-3-work-allocation.md` records the sequence and guardrails. Shared/dev database schema application, public API response-shape changes, new dependencies, deployment work, and wording-policy changes remain approval-gated by `AGENTS.md`.
