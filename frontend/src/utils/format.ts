@@ -6,6 +6,7 @@ import type {
   IssueInflectionPoint,
   RelatedEventCandidate,
 } from "../types/issue";
+import { calculateHistoryChangeForWindow } from "./history";
 
 const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
   year: "numeric",
@@ -154,6 +155,36 @@ function toPercentagePoint(value: number | null | undefined): number | null {
   return Number((value * 100).toFixed(1));
 }
 
+function signalWindowLabel(window: string): string {
+  if (window === "24h" || window === "7d" || window === "30d") {
+    return windowLabel(window);
+  }
+
+  return window;
+}
+
+function buildLocalInflectionPoints(
+  history: IssueHistoryPoint[],
+): IssueInflectionPoint[] {
+  const inflectionPoints: IssueInflectionPoint[] = [];
+
+  for (let index = 1; index < history.length; index += 1) {
+    const change = Number(
+      (history[index].value - history[index - 1].value).toFixed(1),
+    );
+
+    if (Math.abs(change) >= 5) {
+      inflectionPoints.push({
+        timestamp: history[index].timestamp,
+        change,
+        label: "관측된 변화가 5pp 기준선을 넘었습니다",
+      });
+    }
+  }
+
+  return inflectionPoints;
+}
+
 export function mapApiIssueToFrontendIssue(
   apiIssue: ApiIssueSummary,
   dataAsOf: string,
@@ -180,22 +211,25 @@ export function mapApiIssueDetailToFrontendIssue(
   apiDetail: ApiIssueDetail,
   apiHistory: ApiIssueHistoryResponse,
 ): Issue {
-  const history: IssueHistoryPoint[] = apiHistory.points.map((p) => ({
-    timestamp: p.captured_at,
-    value: Number((p.value * 100).toFixed(1)),
+  const history: IssueHistoryPoint[] = apiHistory.points
+    .map((p) => ({
+      timestamp: p.captured_at,
+      value: Number((p.value * 100).toFixed(1)),
+    }))
+    .sort(
+      (left, right) =>
+        new Date(left.timestamp).getTime() - new Date(right.timestamp).getTime(),
+    );
+
+  const apiSignalPoints = apiDetail.signals.map((signal) => ({
+    timestamp: signal.triggered_at,
+    change: toPercentagePoint(signal.magnitude) ?? 0,
+    label: `${signalWindowLabel(signal.window)} 관측 변화가 5pp 기준선을 넘었습니다`,
   }));
 
-  const inflectionPoints: IssueInflectionPoint[] = [];
-  for (let i = 1; i < history.length; i++) {
-    const change = Number((history[i].value - history[i - 1].value).toFixed(1));
-    if (Math.abs(change) >= 5) {
-      inflectionPoints.push({
-        timestamp: history[i].timestamp,
-        change,
-        label: "관측된 변화가 5pp 기준선을 넘었습니다",
-      });
-    }
-  }
+  const inflectionPoints = apiSignalPoints.length
+    ? apiSignalPoints
+    : buildLocalInflectionPoints(history);
 
   const relatedEventCandidates: RelatedEventCandidate[] = apiDetail.related_events.map((e) => ({
     title: e.event_title,
@@ -206,18 +240,19 @@ export function mapApiIssueDetailToFrontendIssue(
   const currentExpectationValue = apiDetail.current_value * 100;
   const change24h = toPercentagePoint(apiDetail.change_24h);
   const change7d = toPercentagePoint(apiDetail.change_7d);
-
-  let change30d: number | null = null;
-  if (history.length > 0) {
-    change30d = Number((currentExpectationValue - history[0].value).toFixed(1));
-  }
+  const roundedCurrentExpectationValue = Number(currentExpectationValue.toFixed(1));
+  const change30d = calculateHistoryChangeForWindow(
+    history,
+    roundedCurrentExpectationValue,
+    "30d",
+  );
 
   return {
     id: apiDetail.id,
     title: apiDetail.title,
     description: apiDetail.description,
     category: apiDetail.category,
-    currentExpectationValue: Number(currentExpectationValue.toFixed(1)),
+    currentExpectationValue: roundedCurrentExpectationValue,
     change24h,
     change7d,
     change30d,
