@@ -1,6 +1,7 @@
 """Unit tests for the related events seeding script."""
 
-import uuid
+import re
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.dialects.postgresql import JSONB
@@ -11,16 +12,30 @@ from sqlalchemy.pool import StaticPool
 
 from app.db.models import Base, Market, MarketOutcome, RelatedEvent
 from app.db.seed_related_events import (
+    CONTEXT_NOTE_SUFFIX,
     CURATED_SEED_DATA,
     ensure_local_dev_write_allowed,
     seed_related_events,
 )
-from app.core.config import settings
+
 BANNED_WORDS = [
-    "bet", "buy", "sell", "trade", "position", "long", "short", "profit",
-    "win rate", "odds", "expert trader", "best pick", "recommended outcome",
-    "high-return opportunity", "guaranteed prediction", "signal to act",
-    "recommendation"
+    "bet",
+    "buy",
+    "sell",
+    "trade",
+    "position",
+    "long",
+    "short",
+    "profit",
+    "win rate",
+    "odds",
+    "expert trader",
+    "best pick",
+    "recommended outcome",
+    "high-return opportunity",
+    "guaranteed prediction",
+    "signal to act",
+    "recommendation",
 ]
 
 @compiles(JSONB, "sqlite")
@@ -71,6 +86,13 @@ def test_ensure_local_dev_write_allowed():
         ensure_local_dev_write_allowed("production", True)
 
 
+def test_curated_seed_data_uses_normalized_live_reachable_ids():
+    assert len(CURATED_SEED_DATA) == 4
+    for data in CURATED_SEED_DATA:
+        assert not data["polymarket_condition_id"].startswith("static-fallback-")
+        assert data["token_id"]
+
+
 def test_seed_related_events_success(db_session):
     # Execute the seed script
     inserted_count = seed_related_events(db_session)
@@ -96,17 +118,18 @@ def test_seed_related_events_success(db_session):
         # Check content safety for each event
         for event in events:
             # Note disclaimer check
-            assert "Candidate context entered manually for review alongside the observed change; not presented as a cause." in event.note
+            assert CONTEXT_NOTE_SUFFIX in event.note
 
             # Causal verbs check
             for causal_verb in ["because", "due to", "caused by", "triggered by"]:
                 assert causal_verb not in event.note.lower()
 
             # Prohibited vocabulary check using word boundaries
-            import re
             for word in BANNED_WORDS:
                 pattern = r'\b' + re.escape(word).replace(r'\ ', r'\s+') + r'\b'
-                assert not re.search(pattern, event.note.lower()), f"Found banned word '{word}' in note: {event.note}"
+                assert not re.search(pattern, event.note.lower()), (
+                    f"Found banned word '{word}' in note: {event.note}"
+                )
 
 
 def test_seed_related_events_idempotency(db_session):

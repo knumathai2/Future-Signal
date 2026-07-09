@@ -9,11 +9,7 @@ gate on shared/prod DB writes.
 
 import json
 import uuid
-from datetime import datetime, timedelta, timezone
-try:
-    from datetime import UTC
-except ImportError:
-    UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest

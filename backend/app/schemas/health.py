@@ -1,9 +1,5 @@
 """Response schema for GET /api/health."""
-from datetime import datetime, timezone
-try:
-    from datetime import UTC
-except ImportError:
-    UTC = timezone.utc
+from datetime import UTC, datetime
 
 from pydantic import BaseModel, Field
 

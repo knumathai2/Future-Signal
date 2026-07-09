@@ -23,11 +23,7 @@ path keeps one demo-safe sample report when no live data is available.
 """
 import logging
 from collections.abc import Generator
-from datetime import datetime, timedelta, timezone
-try:
-    from datetime import UTC
-except ImportError:
-    UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.exc import SQLAlchemyError
