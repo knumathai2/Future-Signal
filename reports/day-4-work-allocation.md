@@ -46,6 +46,9 @@ Most implementation work for the Day 4 demo path is merged.
   historical-seed runs without fabricating values. The configured development
   DB may still have `ai_reports=0` until the separately approved database-write
   generation run is performed.
+- `TASK-040` (PM) is **completed**: the deck outline, 3-5 minute demo script,
+  fallback narration, Day 5 screenshot/rehearsal checklist, and judge Q&A draft
+  are recorded in `reports/task-040-demo-script-deck-draft.md`.
 
 ## Day 4 Assignments
 
@@ -57,7 +60,7 @@ Most implementation work for the Day 4 demo path is merged.
 | TASK-016 | Frontend Implementer | `frontend/TASK-016-report-display-ui` | completed | Detail summary card consumes the report endpoint and handles not-yet-generated/error states | Ready to display successful stored reports once `TASK-041` closes the generation gap |
 | TASK-019 | PM + Data/AI | `data-ai/TASK-019-curated-events` | completed | 3-5 manually curated event candidates for representative demo issues | Feeds `TASK-018` and `TASK-040` |
 | TASK-041 | Data/AI Implementer | `data-ai/TASK-041-report-generation-readiness` | completed | Report batch prompt input construction is compatible with historical-seed metric timestamps; approved-only demo-generation notes are documented | Feeds `TASK-018`, `TASK-040`, and Day 4 closeout |
-| TASK-040 | PM / Planner | `pm/TASK-040-demo-script-deck-draft` | assigned | Presentation deck outline and demo script draft to roughly 70 percent completeness | Feeds Day 5 final presentation and backup rehearsal |
+| TASK-040 | PM / Planner | `pm/TASK-040-demo-script-deck-draft` | completed | Presentation deck outline and demo script draft to roughly 70 percent completeness | Feeds Day 5 final presentation and backup rehearsal |
 | TASK-018 | PM / Planner | `pm/TASK-018-copy-lint` | assigned | Content-safety lint report across UI strings, templates, report text, event candidates, and deck/demo copy | Final Day 4 safety gate before closeout |
 
 ## Recommended Work Order
@@ -85,7 +88,7 @@ Most implementation work for the Day 4 demo path is merged.
 
 ### Final block
 
-- PM continues `TASK-040` with a compact demo spine: dashboard -> detail ->
+- PM completed `TASK-040` with a compact demo spine: dashboard -> detail ->
   chart -> summary -> caution/notice -> manual context candidate.
 - PM runs `TASK-018` after the report template, UI strings, event candidates,
   demo script draft, and `TASK-041` readiness notes are available.
