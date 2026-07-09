@@ -162,6 +162,8 @@ def run_scheduled_batch(
             if normalized_markets is None:
                 raise ValueError("normalized_markets is required unless reports_only=True.")
             result.normalized_count = len(normalized_markets)
+            if not normalized_markets:
+                raise RuntimeError("No normalized markets available for this batch run.")
             metric_result: BatchRunResult = run_snapshot_and_metrics(normalized_markets, db)
             result.skipped_duplicate_run = metric_result.skipped_duplicate_run
             result.run_timestamp = metric_result.run_timestamp
