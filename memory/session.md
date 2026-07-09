@@ -15,117 +15,81 @@ Harness Version: 1.1
 
 - **Date**: 2026-07-09
 - **Agent Role**: Debugger
-- **Session Goal**: Verify local env, add the needed Postgres compatibility
-  dependency, update docs, and restart the backend.
-- **Branch**: `review/TASK-016-report-display-ui-review`
+- **Session Goal**: Add an approved local/dev historical seed path so demo
+  charts can use live DB-backed history without fabricating points or changing
+  schema/API contracts.
+- **Branch**: `debug/ISS-004-live-data-seed`
 
 ## Previous Session Summary
 
-Day 4 is active. `TASK-016` completed the frontend report display UI, and
-the current branch is the review branch for that work. The local stack was
-already running on `127.0.0.1:5173` and `127.0.0.1:8000` with backend static
-fallback data.
+The configured development Supabase DB had already been seeded once through the
+approved collector/snapshot path. `/api/issues` and the Vite proxy returned
+DB-backed issue payloads, but each issue had only one snapshot point, so detail
+charts still needed either more collector cycles or an explicitly approved
+historical seed path.
 
 ## Current Work
 
-- [x] Rechecked `backend/.env` without printing secrets.
-- [x] Confirmed the corrected Supabase direct URL now parses as
-      `postgresql://...`, has user/password/host/port/database, and DNS
-      resolves.
-- [x] Found that SQLAlchemy attempted to load `psycopg2` for plain
-      `postgresql://...` URLs.
-- [x] Installed `psycopg2-binary==2.9.10` into `backend/.venv`.
-- [x] Added `psycopg2-binary==2.9.10` to `backend/requirements.txt`.
-- [x] Updated dependency and setup docs for provider-copied Supabase
-      `postgresql://...` URLs and the existing `postgresql+psycopg://...`
-      path.
-- [x] Rechecked connectivity: driver issue is resolved, but the direct
-      Supabase host currently fails locally with IPv6 `No route to host`.
-- [x] Updated `ISS-002` to reflect the current direct Supabase IPv6 routing
-      issue rather than the earlier placeholder/DNS failure.
-- [x] Recorded ADR-023 for the new compatibility dependency.
-- [x] Restarted the backend. Current FastAPI PID: `65641`.
-- [x] Rechecked `backend/.env` after the pooler edit attempt without printing
-      secrets. The file currently does not parse `DATABASE_URL` because the
-      pooler URL is not assigned to a `DATABASE_URL=` key and is joined to the
-      `CORS_ORIGINS` text on the same line.
-- [x] Restarted the backend again with the current env state. Current FastAPI
-      PID: `78058`; API is healthy but serving static fallback data because
-      `DATABASE_URL` is not loaded.
-- [x] With user confirmation, fixed the malformed `backend/.env` line by adding
-      the missing `DATABASE_URL=` key to the bare pooler URL without printing
-      the secret value.
-- [x] Confirmed `DATABASE_URL` now parses correctly and read-only
-      `select 1` connectivity succeeds through the Supabase pooler.
-- [x] Restarted the backend again. Current FastAPI PID: `87346`.
-- [x] Confirmed `/api/issues` still serves static fallback data because the
-      Supabase database is reachable but required app tables such as
-      `market_snapshots` are not present yet.
-- [x] With explicit user approval, applied
-      `backend/migrations/001_initial_schema.sql` to the configured
-      development Supabase DB.
-- [x] Confirmed expected app tables and `pgcrypto` are present.
-- [x] Confirmed all app tables are currently empty, so `/api/issues` still
-      serves static fallback data with the backend now logging no live snapshot
-      data rather than missing tables.
+- [x] Read required project context: `AGENTS.md`, PRD, Service Design, Tech
+      Design, UX index, `memory/project.md`, `memory/session.md`,
+      `tasks/active.md`, and Debugger/Backend/Data-AI prompts.
+- [x] Confirmed current branch is `debug/ISS-004-live-data-seed`; no branch
+      switch was needed.
+- [x] Added `backend/app/core/historical_seed.py`:
+      local/dev-only CLI guard, CLOB price-history parsing/fetching, duplicate
+      snapshot timestamp skipping, append-only snapshot insertion, fresh metric
+      insertion, existing expectation-shift detection, and collection-log audit
+      row creation.
+- [x] Added `backend/tests/test_historical_seed.py` covering guard behavior,
+      CLOB history parsing, existing-current-snapshot recomputation, new-market
+      seeding, signal handoff, collection logging, and idempotent reruns.
+- [x] Documented the command and safety boundaries in `backend/README.md`.
+- [x] Recorded ADR-025 and updated architecture/project/known-issue memory.
 
 ## Files Changed
 
-- `backend/requirements.txt`
+- `backend/app/core/historical_seed.py`
+- `backend/tests/test_historical_seed.py`
 - `backend/README.md`
-- `backend/migrations/README.md`
-- `commands.md`
-- `dependencies.md`
 - `memory/decisions.md`
+- `memory/architecture.md`
+- `memory/project.md`
 - `memory/known-issues.md`
 - `memory/session.md`
-- `memory/sessions/2026-07-09-Debugger-local-stack-startup.md`
+- `memory/sessions/2026-07-09-Debugger-iss-004-historical-seed-path.md`
 
 ## Issues Found / Decisions Made
 
-- ADR-023 accepted adding `psycopg2-binary==2.9.10` so Supabase dashboard
-  connection strings copied as `postgresql://...` work without rewriting the
-  scheme.
-- `ISS-002` is resolved by using the Supabase pooler URL and adding the missing
-  `DATABASE_URL=` key.
-- `ISS-003` resolved: initial schema is applied to the configured development
-  Supabase DB.
-- New active issue recorded: `ISS-004`. The DB schema exists but live data
-  tables are empty, so API live reads fall back.
-- ADR-024 records the human-approved initial schema application.
-- No database writes, migrations, deployment, schema change, or paid API call
-  were performed.
+- ADR-025 records the approved local/dev historical seed path.
+- No schema changes, dependency changes, infrastructure changes, deployment,
+  `.env` edits, paid API calls, or production DB writes were performed.
+- The historical seed command was not run against the configured DB in this
+  session. It now exists as a guarded path for demo prep:
+  `ENV=local ./.venv/bin/python -m app.core.historical_seed --confirm-local-dev-write`.
+- Full backend tests fail if the local shell allows `.env`'s real
+  `DATABASE_URL` to load during fallback contract tests; with
+  `DATABASE_URL=` and `ENV=test`, the suite passes.
 
 ## Verification
 
-- `pip install psycopg2-binary==2.9.10` -> succeeded.
-- `pip check` -> `No broken requirements found.`
-- Import check -> `psycopg`, `psycopg2`, and `sqlalchemy` installed.
-- Read-only DB connectivity check -> driver loads, then fails on direct
-  Supabase IPv6 route with `No route to host`.
-- Backend restarted at `http://127.0.0.1:8000` with PID `65641`.
-- Backend restarted again at `http://127.0.0.1:8000` with PID `78058`.
-- `DATABASE_URL` parse/connectivity check -> host/user/password/port/database
-  present, DNS OK, read-only `select 1` OK.
-- Backend restarted again at `http://127.0.0.1:8000` with PID `87346`.
-- Backend health check: `GET http://127.0.0.1:8000/api/health` returned
-  `status: ok`.
-- Schema verification -> `pgcrypto` present; tables present:
-  `markets`, `market_outcomes`, `market_snapshots`, `market_metrics`,
-  `issue_signals`, `ai_reports`, `related_events`, `data_collection_logs`.
-- Row-count verification -> all app tables currently have 0 rows.
-- Backend issue list and Vite proxy issue list returned HTTP `200` with the
-  documented static fallback issues.
-- `backend/.venv/bin/pytest backend/tests/test_health.py` -> 2 passed.
-- `git diff --check` -> passed.
+- `./.venv/bin/python -m ruff check app/core/historical_seed.py tests/test_historical_seed.py`
+  -> passed.
+- `./.venv/bin/python -m pytest tests/test_historical_seed.py tests/test_snapshot_metrics.py tests/test_signal_detection.py -q`
+  -> 40 passed.
+- `DATABASE_URL= ENV=test ./.venv/bin/python -m pytest -q`
+  -> 110 passed.
+- `./.venv/bin/python -m ruff check .`
+  -> passed.
+- Narrow content-safety scan of changed files found no new hard-block terms
+  from the seed path itself; existing ADR/template wording still contains
+  legacy internal instances such as `Trade-offs`.
 
 ## Next Session: To-Do
 
-1. To use live Supabase data locally, run the approved seed/collector path
-   against the development DB so `market_snapshots` and related rows exist.
-2. Do not apply additional migrations or write to a shared database without the existing
-   human approval gate.
-3. Keep using the running local URLs for inspection while the Codex terminal
-   sessions remain active:
-   - Frontend: `http://127.0.0.1:5173/`
-   - Backend: `http://127.0.0.1:8000`
+1. If the Day 4/Day 5 demo needs live DB-backed charts, run the guarded
+   historical seed command only after confirming `DATABASE_URL` targets the
+   approved local/development DB.
+2. After running it, verify `/api/issues/{id}/history?window=7d` returns
+   multiple points and that `/api/issues` surfaces fresh metric rows.
+3. Continue `TASK-019` separately for manually reviewed related-event
+   candidates; this historical seed path does not add event context.

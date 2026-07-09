@@ -13,7 +13,6 @@ _Last updated: 2026-07-09_
 
 | ID | Severity | Description | Found | Owner |
 |----|----------|-------------|-------|-------|
-| ISS-004 | Medium | Development Supabase schema is applied, but live data tables are empty, so the API serves the documented static fallback data. | 2026-07-09 | Data/AI + Backend |
 
 ## Technical Debt
 
@@ -41,6 +40,7 @@ _Last updated: 2026-07-09_
 | TD-010 | `GET /api/issues/{id}/report` was not wired to latest successful `ai_reports` rows. | 2026-07-09 | Fixed in `TASK-039`: live mode now returns the latest successful stored report, excludes failed rows, and preserves `not_yet_generated` for absent or failed reads without changing the response shape. |
 | ISS-002 | Direct Supabase database route was not reachable locally over IPv6. | 2026-07-09 | Resolved by switching to the Supabase pooler URL and adding the missing `DATABASE_URL=` key in `backend/.env`; read-only `select 1` now succeeds. |
 | ISS-003 | Supabase DB was reachable but app schema was not applied. | 2026-07-09 | Resolved by applying `backend/migrations/001_initial_schema.sql` to the configured development Supabase DB after explicit human approval; expected tables and `pgcrypto` are present. |
+| ISS-004 | Development Supabase schema was applied, but live data tables were empty, so the API served the documented static fallback data. | 2026-07-09 | Resolved for the configured development DB by running the existing collector into a temporary artifact directory, filtering the normalized rows against the project hard-block wording list, and running the approved snapshot/metrics path. Inserted 50 `markets`, 50 `market_outcomes`, 50 `market_snapshots`, and 50 `market_metrics`; verified `/api/issues` and the Vite proxy now return DB-backed payloads. |
 
 ## Open Design Questions Carried From Planning Docs
 
@@ -142,6 +142,7 @@ them before Day 5 lock if they become relevant to the active path:
 ### ISS-004: Supabase app tables are present but empty
 - **Severity**: Medium
 - **Found**: 2026-07-09
+- **Resolved**: 2026-07-09
 - **Reproduction steps**:
   1. Configure `backend/.env` with the Supabase pooler `DATABASE_URL`.
   2. Confirm a read-only SQLAlchemy `select 1` succeeds.
@@ -155,5 +156,14 @@ them before Day 5 lock if they become relevant to the active path:
 - **Workaround**:
   - Keep using the documented static fallback data for local UI inspection.
 - **Permanent fix direction**:
-  - Run the approved data seed/collector path against the development DB only
-    after confirming the intended data-writing scope.
+  - Completed for the configured development DB: collector produced 50
+    normalized samples in a temporary directory, all 50 passed the hard-block
+    wording scan for user-facing fields, and `run_snapshot_and_metrics`
+    inserted live rows into `markets`, `market_outcomes`, `market_snapshots`,
+    and `market_metrics`.
+  - Verified backend `/api/issues` and Vite proxy `/api/issues` return the new
+    DB-backed `data_as_of` timestamp instead of the static fallback ID.
+  - Remaining limitation: this was a single snapshot run, so history endpoints
+    currently have one point per issue until additional collector runs or
+    `backend/app/core/historical_seed.py` is run against an approved local/dev
+    DB to append CLOB price-history points.
