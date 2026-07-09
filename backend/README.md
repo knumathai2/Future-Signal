@@ -74,6 +74,31 @@ ENV=local ./.venv/bin/python -m app.core.historical_seed \
   --confirm-local-dev-write
 ```
 
+## Scheduled data + AI report batch
+
+The combined batch links data collection, metric calculation, signal detection,
+and stored AI report generation in one write path:
+
+```bash
+ENV=local ./.venv/bin/python -m app.core.scheduled_batch \
+  --use-live-fetch \
+  --max-samples 50 \
+  --confirm-local-dev-write
+```
+
+For development/demo work against the current DB state, generate reports from
+the latest existing metric run without collecting new market data:
+
+```bash
+ENV=local ./.venv/bin/python -m app.core.scheduled_batch \
+  --reports-only \
+  --confirm-local-dev-write
+```
+
+The GitHub Actions workflow `.github/workflows/daily-batch.yml` runs the
+combined batch once every 24 hours and can also be started manually from
+Actions. It expects `DATABASE_URL` and `OPENAI_API_KEY` secrets.
+
 ## Lint / Test
 
 ```bash

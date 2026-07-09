@@ -8,7 +8,7 @@ _Status update (2026-07-09): current `origin/main` tip is now `6d0eb44`
 after PR #36 (`TASK-019`) merged. `TASK-041` is added from that baseline to
 close the remaining stored-summary generation readiness gap. Follow-up:
 `TASK-041` is complete from `origin/main` at `01df91b`; saved summaries still
-require a separately approved generation run._
+require a separately approved database-write generation run._
 
 ## Summary
 
@@ -44,8 +44,8 @@ Most implementation work for the Day 4 demo path is merged.
 - `TASK-041` is **completed**: report prompt inputs now use the latest
   `market_snapshots` row at or before the selected metric timestamp, matching
   historical-seed runs without fabricating values. The configured development
-  DB may still have `ai_reports=0` until the separately approved generation run
-  is performed.
+  DB may still have `ai_reports=0` until the separately approved database-write
+  generation run is performed.
 
 ## Day 4 Assignments
 
@@ -79,7 +79,8 @@ Most implementation work for the Day 4 demo path is merged.
 - Tests cover the historical-seed `+1 microsecond` metric timestamp case,
   future-only snapshot rejection, and `run_ai_report_batch` successful report
   insertion with a fake `LLMClient`.
-- Any actual OpenAI call or write to the configured development DB still
+- The provided `OPENAI_API_KEY` may be used for project-scoped report
+  generation per ADR-022. Any write to the configured development DB still
   requires explicit user approval for that run.
 
 ### Final block
@@ -98,9 +99,10 @@ Most implementation work for the Day 4 demo path is merged.
 - Do not deploy, modify infrastructure, apply the schema to a shared or
   production database, add dependencies, or change public API shapes without
   human approval.
-- Do not call paid external AI APIs without human approval. The Day 4 default
-  is template generation plus a safety filter, with any provider hook disabled
-  or stubbed until approved.
+- Do not call paid external AI APIs without human approval. ADR-022 records the
+  OpenAI provider approval, and the 2026-07-09 follow-up clarifies that the
+  provided `OPENAI_API_KEY` may be used for project-scoped report generation
+  without separate per-run approval.
 - Do not add accounts, saved lists, notifications, scheduled reports, team
   sharing, wallet-level features, or automated event matching.
 - Do not expand into P1 `/api/signals` feed, full volatility/attention scoring,
@@ -113,7 +115,8 @@ Most implementation work for the Day 4 demo path is merged.
 Day 4 is ready to close only when:
 
 - Stored template summaries exist or can be generated locally after explicit
-  approval for the representative issues without open-ended analysis.
+  database-write approval for the representative issues without open-ended
+  analysis.
 - The report endpoint serves the latest successful stored summary when present
   and the accepted neutral empty state when absent.
 - The detail summary card renders success, not-yet-generated, and error states

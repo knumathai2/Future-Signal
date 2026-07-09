@@ -42,6 +42,7 @@ _Last updated: 2026-07-09_
 | ISS-003 | Supabase DB was reachable but app schema was not applied. | 2026-07-09 | Resolved by applying `backend/migrations/001_initial_schema.sql` to the configured development Supabase DB after explicit human approval; expected tables and `pgcrypto` are present. |
 | ISS-004 | Development Supabase schema was applied, but live data tables were empty, so the API served the documented static fallback data. | 2026-07-09 | Resolved for the configured development DB by running the existing collector into a temporary artifact directory, filtering the normalized rows against the project hard-block wording list, and running the approved snapshot/metrics path. Inserted 50 `markets`, 50 `market_outcomes`, 50 `market_snapshots`, and 50 `market_metrics`; verified `/api/issues` and the Vite proxy now return DB-backed payloads. |
 | ISS-005 | AI report batch could not use latest historical-seed metric rows because metric timestamps were one microsecond after their source snapshots. | 2026-07-09 | Fixed in `TASK-041`: prompt input lookup now selects the latest snapshot with `captured_at <= market_metrics.computed_at`, tests cover the historical-seed offset and fake-LLM success-row insertion, and approved-only run notes document how to create stored summaries later. |
+| ISS-006 | Current configured OpenAI key returns `401 Unauthorized` during report generation. | 2026-07-09 | Open. `TASK-042` reports-only run wrote 10 failed `ai_reports` rows and one `scheduled_batch_partial` log; no successful stored summaries exist yet, so `/api/issues/{id}/report` still returns `not_yet_generated`. Replace/fix the configured key, then rerun `ENV=local ./.venv/bin/python -m app.core.scheduled_batch --reports-only --confirm-local-dev-write`. |
 
 ## Open Design Questions Carried From Planning Docs
 
@@ -176,7 +177,7 @@ them before Day 5 lock if they become relevant to the active path:
 - **Severity**: High
 - **Found**: 2026-07-09
 - **Status**: Resolved — fixed in `TASK-041`; creating stored dev/demo report
-  rows still requires a separately approved generation run
+  rows still requires a separately approved database-write generation run
 - **Reproduction steps**:
   1. Use the configured development DB after the approved historical seed runs.
   2. Confirm `ai_reports=0` through a read-only DB count or observe
@@ -195,8 +196,8 @@ them before Day 5 lock if they become relevant to the active path:
     microsecond earlier.
 - **Impact**:
   - Code readiness is fixed. The configured development DB may still have
-    `ai_reports=0` until an explicitly approved generation run writes stored
-    summaries.
+    `ai_reports=0` until an explicitly approved database-write generation run
+    writes stored summaries.
 - **Fix completed**:
   - `build_prompt_inputs_for_market()` now uses the latest snapshot at or
     before `market_metrics.computed_at`, without fabricating values.
@@ -206,5 +207,24 @@ them before Day 5 lock if they become relevant to the active path:
   - `reports/task-041-report-generation-readiness.md` documents the normal
     no-report empty state before approval and the approved-only saved-summary
     procedure.
-  - Any actual OpenAI call or shared/dev DB write remains separately
-    approval-gated.
+  - OpenAI report calls are covered by ADR-022 and the provided-key
+    clarification; any shared/dev DB write remains separately approval-gated.
+
+### ISS-006: Current OpenAI key is rejected during report generation
+- **Severity**: High
+- **Found**: 2026-07-09
+- **Status**: Open
+- **Evidence**:
+  - The configured environment has both `DATABASE_URL` and `OPENAI_API_KEY`.
+  - Running `ENV=local ./.venv/bin/python -m app.core.scheduled_batch
+    --reports-only --confirm-local-dev-write` reached OpenAI but received
+    `401 Unauthorized` for every attempt.
+  - Read-only DB counts after the run: `ai_reports_total=10`,
+    `ai_reports_success=0`, `ai_reports_failed=10`.
+- **Impact**:
+  - Data/detail/history graph paths work, but the report endpoint returns
+    `{"status":"not_yet_generated"}` because failed rows are never served.
+- **Fix direction**:
+  - Replace or correct the configured `OPENAI_API_KEY` without printing it.
+  - Rerun the reports-only command above; failed rows do not block regeneration
+    because report selection only considers latest successful rows.

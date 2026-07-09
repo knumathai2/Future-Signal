@@ -57,8 +57,9 @@ readiness for historical-seed metric timestamps).
   boundaries.
 - **Data/AI Implementer** completed `TASK-041`. Report prompt inputs now use the
   latest snapshot at or before the metric timestamp, preserving the no-fabrication
-  skip path when no usable prior snapshot exists. Actual LLM calls and any write
-  to the configured development DB remain separately approval-gated.
+  skip path when no usable prior snapshot exists. OpenAI report calls are covered
+  by ADR-022 and the provided-key clarification; any write to the configured
+  development DB remains separately approval-gated.
 - **Reviewer / Debugger** stay embedded. Any user-facing string changed during
   Day 4 must pass the project wording lint before review.
 
