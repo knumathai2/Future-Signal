@@ -208,3 +208,52 @@ timestamp equality.
     tests/test_snapshot_metrics.py` — 54 passed.
   - `cd backend && DATABASE_URL= .venv/bin/pytest` — 124 passed.
   - `git diff --check` — passed.
+
+## Follow-up Local Server Restart
+
+- **Date**: 2026-07-09
+- **Agent Role**: Debugger
+- **Scope**: Restart local development servers so implementation status can be
+  checked in the browser.
+- **Result**:
+  - No existing listener was found on `127.0.0.1:8000` or `127.0.0.1:5173`.
+  - Started backend with
+    `ENV=local ./.venv/bin/uvicorn app.main:app --reload --host 127.0.0.1 --port 8000`.
+  - Started frontend with `npm run dev -- --host 127.0.0.1 --port 5173`.
+  - Verified `GET /api/health` returns `200 OK`.
+  - Verified backend and Vite proxy `/api/issues?window=24h&sort=heat&limit=1`
+    return DB-backed data with `data_as_of=2026-07-09T06:26:04Z`.
+- **Follow-up**:
+  - No code, schema, dependency, infrastructure, deployment, or user-facing copy
+    changes were made.
+  - No task movement, new decision, new issue, or architecture update was
+    required.
+
+## Follow-up Review Fixes: PR #38 REQUEST_CHANGES
+
+- **Date**: 2026-07-09
+- **Agent Role**: Data/AI Implementer
+- **Scope**: Resolve the two PR #38 review findings from the reviewer comment.
+- **Work Completed**:
+  - Updated `backend/app/core/scheduled_batch.py` so non-`reports_only` batch
+    runs fail when no normalized markets are available. This prevents a live
+    fetch returning zero records from being recorded as
+    `scheduled_batch_success`.
+  - Added `backend/tests/test_scheduled_batch.py` coverage proving empty
+    normalized input records `scheduled_batch_failed`, performs no snapshot,
+    metric, or report writes, and makes no LLM call.
+  - Updated `.github/workflows/daily-batch.yml` to pass
+    `OPENROUTER_API_KEY` from GitHub Actions secrets, matching ADR-027 and
+    `backend/README.md`.
+- **Verification**:
+  - `cd backend && ./.venv/bin/ruff check app tests` — passed.
+  - `cd backend && DATABASE_URL= ./.venv/bin/pytest tests/test_scheduled_batch.py`
+    — 5 passed.
+  - `cd backend && DATABASE_URL= ./.venv/bin/pytest tests/test_ai_report.py
+    tests/test_ai_report_batch.py tests/test_scheduled_batch.py` — 49 passed.
+  - `cd backend && DATABASE_URL= ./.venv/bin/pytest` — 125 passed.
+  - `git diff --check` — passed.
+- **Notes**:
+  - No `.env` contents were printed or modified.
+  - No schema, dependency, public API shape, deployment, real provider call, or
+    database write was performed.

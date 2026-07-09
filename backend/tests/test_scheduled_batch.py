@@ -136,6 +136,29 @@ def test_full_batch_writes_metrics_signals_logs_and_ai_report(db):
     assert log.markets_processed == 1
 
 
+def test_full_batch_marks_empty_normalized_input_as_failed(db):
+    client = FakeLLMClient([json.dumps(VALID_CONTENT)])
+
+    result = run_scheduled_batch(
+        db,
+        normalized_markets=[],
+        llm_client=client,
+        model_name="gpt-4o-mini",
+    )
+
+    assert result.error == "RuntimeError: No normalized markets available for this batch run."
+    assert result.normalized_count == 0
+    assert result.markets_processed == 0
+    assert result.reports_success == 0
+    assert client.calls == 0
+    assert db.query(MarketSnapshot).count() == 0
+    assert db.query(MarketMetric).count() == 0
+    assert db.query(AiReport).count() == 0
+    log = db.query(DataCollectionLog).one()
+    assert log.status == "scheduled_batch_failed"
+    assert log.error_detail["error"] == result.error
+
+
 def test_full_batch_detects_signal_before_ai_report_generation(db, monkeypatch):
     # Make the second collection run occur after 7d/24h baselines are usable.
     times = iter(
