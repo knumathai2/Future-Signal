@@ -5,7 +5,7 @@ Update Trigger: Read at session start; must update before session ends
 Harness Version: 1.1
 -->
 
-# Current Session — Outlook Signals
+# Current Session - Outlook Signals
 
 > After this session, copy this file to `memory/sessions/YYYY-MM-DD-[ROLE].md`.
 
@@ -14,76 +14,69 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-09
-- **Agent Role**: Frontend Implementer + PM / Planner
-- **Session Goal**: Complete `TASK-017` by adding short caution copy, retaining
-  footer reminders, and providing one dedicated information notice surface
-  without changing the approved wording policy.
-- **Branch**: `frontend/TASK-017-disclaimer-copy`
+- **Agent Role**: PM / Planner
+- **Session Goal**: Verify that all Day 3 work is complete on the latest git
+  state and close the Day 3 ledger.
+- **Branch**: `pm/TASK-037-day-3-closeout`
 
 ## Previous Session Summary
 
-`TASK-017` preparation completed on the latest `main` baseline (`afbb2da`).
-`TASK-014` had already merged the caution-badge copy and detail data-as-of
-placement, leaving `TASK-017` as the final active Day 3 task.
+PR #27 for `TASK-017` merged into `origin/main` at `89dc3e5`, completing the
+last active Day 3 implementation task. The prior reviewer session is preserved
+in `memory/sessions/2026-07-09-Reviewer-pr27-disclaimer-copy-review.md`.
 
 ## Current Work
 
-- [x] Confirmed branch and task context from `AGENTS.md`, PRD/UX policy,
-      `tasks/active.md`, `reports/day-3-work-allocation.md`, `standards.md`,
-      and prior frontend handoff notes.
-- [x] Added `frontend/src/components/InformationNotice.tsx` with shared short
-      caution copy, a reusable global footer, and a dedicated in-app information
-      notice screen.
-- [x] Wired `Dashboard` header/footer to open the dedicated notice surface and
-      replaced duplicated dashboard notice copy with the reusable short notice.
-- [x] Wired `IssueDetail` metric/summary/footer areas to the reusable notice
-      components while preserving issue-specific caution levels and data-as-of
-      timing near the data-heavy content.
-- [x] Added the `notice` screen state in `App.tsx` without a routing dependency.
-- [x] Moved `TASK-017` from `tasks/active.md` to `tasks/completed.md`.
-- [x] Updated `memory/project.md` with Day 3 closeout readiness.
+- [x] Read `AGENTS.md`, PRD schedule, `memory/project.md`,
+      `memory/session.md`, `tasks/active.md`, `tasks/completed.md`,
+      `roadmap.md`, and `prompts/planning.md`.
+- [x] Fetched latest git state with `git fetch --all --prune`; `origin/main`
+      advanced to `89dc3e5`.
+- [x] Confirmed `HEAD..origin/main` had no file-content delta before closeout
+      edits, so the local implementation content matched latest mainline.
+- [x] Created PM closeout branch `pm/TASK-037-day-3-closeout` from
+      `origin/main`.
+- [x] Verified Day 3 P0 completion against PRD §14, `tasks/active.md`,
+      `tasks/completed.md`, and `reports/day-3-work-allocation.md`.
+- [x] Created `reports/day-3-closeout-plan.md`.
+- [x] Updated `roadmap.md`, `memory/project.md`, `tasks/active.md`,
+      `tasks/completed.md`, `memory/architecture.md`, and
+      `memory/known-issues.md` for Day 3 closure and Day 4 readiness.
 
 ## Completed This Session
 
-- [x] PM-safe short caution copy appears on dashboard and near detail metric /
-      summary content.
-- [x] Footer reminder copy appears on dashboard, issue detail, and the dedicated
-      notice surface through the shared `GlobalFooter`.
-- [x] A dedicated information notice surface exists inside the app with no
-      accounts, route-library dependency, notifications, public API change,
-      schema change, infrastructure change, deployment, production database
-      write, or wording-policy change.
-- [x] `TASK-017` is completed and archived in `tasks/completed.md`.
+- [x] Day 3 verified complete on latest `origin/main`.
+- [x] Roadmap Day 3 checklist marked closed.
+- [x] `TASK-037` added to `tasks/completed.md` as the PM closeout record.
+- [x] No active Day 3 tasks remain.
+- [x] Day 4 handoff order recorded: `TASK-015`, `TASK-016`, `TASK-018`,
+      `TASK-019`.
 
 ## Issues Found / Decisions Made
 
 - No new product, architecture, schema, dependency, infrastructure, public API,
-  or wording-policy decision was made.
-- No new persistent issue was added to `memory/known-issues.md`.
-- Existing `TD-001` Vite/Recharts chunk-size warning remains non-blocking.
-- Existing `TD-009` backend/static fallback title-language note remains open
-  and was not changed by this task.
+  deployment, production database, or wording-policy decision was made.
+- No new persistent bug was added to `memory/known-issues.md`.
+- `DQ-002` and `DQ-003` were moved to resolved status because Day 3 already
+  resolved them through ADR-019 and TASK-014/TASK-036.
+- `TD-009` remains open for Day 4 demo-flow consistency if backend fallback
+  data is used.
 
 ## Verification
 
-- `npm run typecheck` in `frontend` -> passed.
-- `npm run lint` in `frontend` -> passed.
-- `npm run build` in `frontend` -> passed, with the existing non-blocking
-  Vite/Recharts chunk-size warning tracked as `TD-001`.
-- Frontend hard-block wording scan over `frontend/src` -> no hits.
-- Frontend English causal-phrase scan over `frontend/src` -> no hits.
+- `git fetch --all --prune` -> passed.
+- `git diff --name-status HEAD..origin/main` before edits -> no output.
+- Day 3 first-parent merge review -> PR #24, #23, #25, #22, #26, and #27 are
+  included after the Day 3 allocation merge.
+- `tasks/active.md` -> no active Day 3 tasks.
+- `tasks/completed.md` -> Day 3 tasks and `TASK-037` closeout are recorded.
 - `git diff --check` -> passed.
-- Browser QA at `http://127.0.0.1:5175/?state=error`:
-  - dashboard short notice, footer, and dedicated notice button present;
-  - dedicated notice screen opens from dashboard and detail;
-  - detail screen keeps short notice, summary notice, footer, and 7 data-as-of
-    references visible in the static fallback path;
-  - mobile 390px notice path has no horizontal overflow;
-  - browser console error log is empty.
+- Closeout wording scan over added lines -> no English or Korean hard-block
+  hits.
 
 ## Next Session: To-Do
 
-1. Request review for `TASK-017`.
-2. Start Day 4 only after PM confirms Day 3 closeout, likely with `TASK-015`
-   template summary generation/display and manually curated related-event
-   candidates.
+1. Start Day 4 active allocation from `TASK-015`, `TASK-016`, `TASK-018`, and
+   `TASK-019` in that order.
+2. Resolve `TD-009` during Day 4 demo-flow cleanup if backend fallback data is
+   part of the presentation.

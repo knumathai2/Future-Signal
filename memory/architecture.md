@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Architecture — Outlook Signals
 
-_Last updated: 2026-07-08_
+_Last updated: 2026-07-09_
 _Full detail: [Technical Design](../docs/tech-design/README.md) — this file is the working summary agents update as the build progresses._
 
 ## System Overview
@@ -43,8 +43,8 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** �
 3. Diffs against the most recent snapshot, inserts a new `market_snapshots` row (append-only)
 4. Computes `change_24h`/`change_7d`/`heat_score`/`confidence_level` into `market_metrics`
 5. Evaluates the ±5pp threshold for `issue_signals` (cooldown-gated to avoid duplicate firing)
-6. Day 4+ planned: qualifying markets (new signal, no report yet, or stale >24h) get a new `ai_reports` row via template-constrained LLM call + banned-phrase filter
-7. FastAPI serves the available read-only data; frontend renders Home → Detail → Chart, with report output still pending later work
+6. Day 4 planned: qualifying markets (new signal, no report yet, or stale >24h) get a new `ai_reports` row via template-constrained LLM call + banned-phrase filter
+7. FastAPI serves the available read-only data; frontend renders Home → Detail → Chart, with report output still pending Day 4 work
 
 ## Design Decision Summary
 
@@ -66,16 +66,20 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** �
 - API surface uses `issues`/`signals`/`reports`/`categories` naming — never `markets`/`bets`/`trades`/`positions`/`profits` in any public path, including internal code (Technical Design §5)
 - No `users`/`watchlists`/wallet-level tables exist even in dormant form — schema itself is a policy signal (Technical Design §4.12)
 
-## Implementation Status (2026-07-08 Day 2 Closeout)
+## Implementation Status (2026-07-09 Day 3 Closeout)
 
 - `/backend` scaffold exists (FastAPI app, `app/api/routes`, `app/core`, `app/db`, `app/schemas`) — see `backend/README.md`. App imports and boots cleanly; smoke-tested via a local venv (`pytest` + a live `uvicorn` request).
-- `/frontend` scaffold exists (Vite + React + TS + Tailwind, npm scripts). `npm run lint` and `npm run build` pass locally as of 2026-07-08; production build still reports the known Recharts chunk-size warning tracked as TD-001.
+- `/frontend` scaffold exists (Vite + React + TS + Tailwind, npm scripts). `npm run lint` and `npm run build` pass locally in the Day 3 task sessions; production build still reports the known Recharts chunk-size warning tracked as TD-001.
 - `GET /api/health` is live (mock/no DB dependency).
 - `GET /api/issues`, `/api/issues/:id`, and `/api/issues/:id/history` read latest available snapshot/metric/history rows when a database is configured, and otherwise serve the documented static fallback with honest `data_as_of` timestamps (ADR-013). `/api/issues/:id/report` still returns the accepted no-report-yet response until template reports are implemented.
 - DB schema draft is accepted (`backend/migrations/001_initial_schema.sql` + `backend/app/db/models.py`) but **not applied to any database** — human approval still required before applying, per `AGENTS.md` and ADR-011.
 - `TASK-007` collector now fetches active Gamma events, validates binary market candidates, writes 50 normalized sample records, and quarantines skipped candidates with structured reasons. Per ADR-014, the artifact emits a display-safe `description: str` and omits raw source descriptions.
-- `TASK-008` snapshot/metrics logic computes `change_24h`, `change_7d`, placeholder `heat_score`, and `sufficient`/`insufficient_data` confidence levels through a local/dev-safe path. Low-activity/high-volatility caution levels remain deferred under TD-008.
+- `TASK-008` snapshot/metrics logic computes `change_24h`, `change_7d`, placeholder `heat_score`, and confidence levels through a local/dev-safe path. `TASK-036` adds MVP `caution_low_activity` and `caution_high_volatility` thresholds documented in ADR-019.
 - `TASK-009` expectation-shift detector inserts `expectation_shift` rows for the MVP ±5pp threshold with a 24h cooldown and no evaluation for insufficient data.
 - `TASK-012` dashboard v1 reads the backend API, keeps a static fallback path, and displays data-as-of timestamps plus caution badges on data-bearing views.
+- `TASK-035` verified the existing detail/history read paths for the Day 3 chart/marker flow without changing accepted response shapes.
+- `TASK-013` hardened the issue detail chart: 24h/7d/30d windows require baseline-covered history, tooltip values include timestamp/value/previous-point pp change, and markers consume API-provided rows when present.
+- `TASK-014` aligned caution badge labels, visual treatment, accessibility labels, and placement across dashboard and detail surfaces.
+- `TASK-017` added shared brief caution copy, reusable footer copy, and a dedicated in-app information notice surface without adding a routing dependency.
 - Backend local setup should use Python 3.11 on this machine; the default Python 3.9 runtime could not install the pinned `psycopg[binary]==3.2.3` binary package.
-- Day 3 starts from this baseline: detail/chart/tooltip polish, inflection-point markers, and stronger interpretation-caution copy. Any shared or production schema application remains separately approval-gated.
+- Day 4 starts from this baseline: template-constrained summary generation/display, copy lint, and manually curated related-event candidates. Any shared or production schema application remains separately approval-gated.

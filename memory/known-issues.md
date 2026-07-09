@@ -23,7 +23,7 @@ _Last updated: 2026-07-09_
 | TD-002 | `npm audit` reports Vite/esbuild dev-server vulnerabilities when frontend dependencies stay within the approved Vite 5.x major range. | Dev-server security warning; clearing it requires a Vite major upgrade that needs human approval. | Temporarily accepted for PR #6 by ADR-010; revisit in a dependency-maintenance task with explicit Vite major-upgrade approval and manual demo-flow retest. |
 | TD-003 | Backend dependency install fails on this machine's default Python 3.9 because the pinned `psycopg[binary]==3.2.3` binary package is not available for that local runtime/platform combination. | A new contributor using default `python3` may be blocked before running backend tests. | Use Python 3.11 for local setup, as documented in `backend/README.md`; later decide whether to formalize a minimum Python version in backend tooling. |
 | TD-007 | `backend/API_CONTRACT.md`'s Error shape section documents invalid `window`/`sort` as FastAPI's current `422` behavior rather than forcing the original `400` plan. | Low; frontend should code against `422`. Changing it to `400` would be a public behavior change beyond the TASK-010 conflict-resolution scope. | Leave documented as actual behavior unless PM/Frontend request a separate API-error normalization task. |
-| TD-009 | The live API/static backend fallback path can still return English sample issue titles while the frontend dummy fallback is Korean. | Demo language consistency risk if the backend fallback is used during presentation. | Decide during `TASK-017` copy polish whether to localize the backend fallback titles or create a separate fallback-data cleanup task. |
+| TD-009 | The live API/static backend fallback path can still return English sample issue titles while the frontend dummy fallback is Korean. | Demo language consistency risk if the backend fallback is used during presentation. | Resolve during Day 4 demo-flow cleanup if the backend fallback path is part of the presentation. |
 
 
 ## Resolved
@@ -36,15 +36,15 @@ _Last updated: 2026-07-09_
 | TD-005 | PR #9's TASK-007 normalized sample artifact was not shaped for the accepted downstream schema and lacked structured skip/error details. | 2026-07-08 | Fixed by the PR #9 review-fix commit recorded in ADR-014; verified during `TASK-008` that the merged `normalized_samples.json` has all required top-level fields (0 nulls across 50 records) and `skipped_records.json` carries structured reasons. |
 | TD-006 | PR #9's committed sample artifact stored raw external descriptions that could trip the project wording lint if used as fallback/display data. | 2026-07-08 | Fixed by ADR-014 (`description_policy: raw_source_descriptions_omitted`); verified during `TASK-008`'s dependency check that no raw source text remains in the committed artifact. |
 | TD-008 | `TASK-008`'s `market_metrics.confidence_level` lacked `caution_low_activity` and `caution_high_volatility`. | 2026-07-09 | Fixed in TASK-036 by ADR-019. Implemented conservative thresholds based on sample data. |
+| DQ-002 | Inflection-point threshold needed fixed-threshold vs. volatility-adjusted resolution. | 2026-07-09 | Resolved for MVP by ADR-019: use the existing ±5pp `expectation_shift` threshold and defer richer volatility-adjusted logic. |
+| DQ-003 | Confidence/caution badge approach needed composite vs. qualitative-state resolution. | 2026-07-09 | Resolved for MVP by ADR-019 and TASK-014: keep qualitative caution states and render supported levels consistently. |
 
 ## Open Design Questions Carried From Planning Docs
 
-Not bugs, but unresolved decisions that will surface as real blockers during the build — resolve these on Day 1-2, don't let them idle:
+Not bugs, but unresolved decisions that can still affect demo readiness - resolve
+them before Day 5 lock if they become relevant to the active path:
 
 - Category taxonomy: Polymarket's own tags vs. manual mapping (PRD §20.4, Service Design §12.1)
-
-- Inflection-point threshold: fixed ±5pp vs. volatility-adjusted (PRD §20.6)
-- Confidence/caution badge: single composite score vs. separate qualitative badges (Service Design §12.4, UX Design §14.2)
 - Static-JSON fallback path finalization for full demo operations: API/frontend fallback behavior is implemented and documented by ADR-013; Day 4-5 still need backup captures or demo-script handling.
 - `heat_score` weighting formula — start simple, tune once real data is visible (Technical Design §16.2)
 
