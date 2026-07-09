@@ -28,6 +28,7 @@ _Last updated: 2026-07-09_
 | pydantic | Request/response models, data validation |
 | sqlalchemy (or equivalent) | Postgres ORM/query layer |
 | psycopg[binary] | Postgres driver paired with SQLAlchemy — approved 2026-07-08 (TASK-001, human approval) |
+| psycopg2-binary | Compatibility Postgres driver for provider-copied `postgresql://...` URLs, including Supabase connection strings — approved by user request on 2026-07-09 |
 | python-dotenv | Local-dev `.env` loading only, not used in deployed environments — approved 2026-07-08 (TASK-001, human approval) |
 | httpx or requests | Polymarket Gamma/CLOB API calls |
 | openai==2.44.0 | Template-constrained AI report generation client — approved 2026-07-09 for TASK-015 in ADR-022 (human approval; no live calls unless `OPENAI_API_KEY` is configured) |

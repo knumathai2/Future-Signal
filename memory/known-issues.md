@@ -13,7 +13,7 @@ _Last updated: 2026-07-09_
 
 | ID | Severity | Description | Found | Owner |
 |----|----------|-------------|-------|-------|
-| — | — | No active bugs currently recorded. | — | — |
+| ISS-004 | Medium | Development Supabase schema is applied, but live data tables are empty, so the API serves the documented static fallback data. | 2026-07-09 | Data/AI + Backend |
 
 ## Technical Debt
 
@@ -39,6 +39,8 @@ _Last updated: 2026-07-09_
 | DQ-002 | Inflection-point threshold needed fixed-threshold vs. volatility-adjusted resolution. | 2026-07-09 | Resolved for MVP by ADR-019: use the existing ±5pp `expectation_shift` threshold and defer richer volatility-adjusted logic. |
 | DQ-003 | Confidence/caution badge approach needed composite vs. qualitative-state resolution. | 2026-07-09 | Resolved for MVP by ADR-019 and TASK-014: keep qualitative caution states and render supported levels consistently. |
 | TD-010 | `GET /api/issues/{id}/report` was not wired to latest successful `ai_reports` rows. | 2026-07-09 | Fixed in `TASK-039`: live mode now returns the latest successful stored report, excludes failed rows, and preserves `not_yet_generated` for absent or failed reads without changing the response shape. |
+| ISS-002 | Direct Supabase database route was not reachable locally over IPv6. | 2026-07-09 | Resolved by switching to the Supabase pooler URL and adding the missing `DATABASE_URL=` key in `backend/.env`; read-only `select 1` now succeeds. |
+| ISS-003 | Supabase DB was reachable but app schema was not applied. | 2026-07-09 | Resolved by applying `backend/migrations/001_initial_schema.sql` to the configured development Supabase DB after explicit human approval; expected tables and `pgcrypto` are present. |
 
 ## Open Design Questions Carried From Planning Docs
 
@@ -90,3 +92,68 @@ them before Day 5 lock if they become relevant to the active path:
   - Backend/API shape was preserved; multi-point fallback history can still be
     considered later for richer demo data, but it is no longer required to avoid
     a blank/misleading chart state.
+
+### ISS-002: Direct Supabase database route is not reachable locally
+- **Severity**: Medium
+- **Found**: 2026-07-09
+- **Reproduction steps**:
+  1. Ensure `backend/.env` contains a `DATABASE_URL`.
+  2. From the repo root, load `backend/.env` and attempt a read-only
+     `select 1` through SQLAlchemy.
+  3. Observe an `OperationalError` after DNS resolution succeeds but the
+     direct host connection cannot be routed from this machine.
+- **Root cause**:
+  - The configured direct Supabase DB URL has the expected shape, including
+    host, port, user, password, and database name.
+  - `psycopg2-binary==2.9.10` was added on 2026-07-09 so provider-copied
+    `postgresql://...` URLs can be used without rewriting the driver scheme.
+  - DNS now resolves, but the direct Supabase host resolves to an IPv6 address
+    that this local network cannot route (`No route to host`).
+  - The exact URL and secret values were not printed.
+- **Workaround**:
+  - Keep the FastAPI server running; the implemented `/api/issues` fallback path
+    serves static sample data with an honest `data_as_of` timestamp.
+- **Permanent fix direction**:
+  - Replace the direct Supabase connection string with the Supabase pooler
+    connection string from the dashboard, then restart the backend.
+  - Do not apply migrations or write to any shared database without the
+    existing human approval gate.
+
+### ISS-003: Supabase DB is reachable but app schema is not applied
+- **Severity**: Medium
+- **Found**: 2026-07-09
+- **Resolved**: 2026-07-09
+- **Reproduction steps**:
+  1. Configure `backend/.env` with the Supabase pooler `DATABASE_URL`.
+  2. Confirm a read-only SQLAlchemy `select 1` succeeds.
+  3. Start the backend and request `/api/issues?limit=2`.
+  4. Observe the API returns static fallback data while the backend logs
+     `relation "market_snapshots" does not exist`.
+- **Root cause**:
+  - The database connection is now valid, but the draft application schema has
+    not been applied to this Supabase database.
+- **Workaround**:
+  - Keep using the documented static fallback data for local UI inspection.
+- **Permanent fix direction**:
+  - Completed: applied `backend/migrations/001_initial_schema.sql` to the
+    configured development Supabase DB after explicit human approval.
+  - Seed or collect data before expecting live issue rows.
+
+### ISS-004: Supabase app tables are present but empty
+- **Severity**: Medium
+- **Found**: 2026-07-09
+- **Reproduction steps**:
+  1. Configure `backend/.env` with the Supabase pooler `DATABASE_URL`.
+  2. Confirm a read-only SQLAlchemy `select 1` succeeds.
+  3. Confirm `backend/migrations/001_initial_schema.sql` has been applied.
+  4. Request `/api/issues?limit=2`.
+  5. Observe static fallback data while the backend logs no live snapshot data.
+- **Root cause**:
+  - The app tables exist but have zero rows. In particular, `market_snapshots`
+    is empty, so the live read path correctly falls back instead of fabricating
+    issue data.
+- **Workaround**:
+  - Keep using the documented static fallback data for local UI inspection.
+- **Permanent fix direction**:
+  - Run the approved data seed/collector path against the development DB only
+    after confirming the intended data-writing scope.
