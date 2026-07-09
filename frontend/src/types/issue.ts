@@ -40,3 +40,32 @@ export type Issue = {
 export type DataStatus = "loading" | "ready" | "empty" | "error";
 
 export type ChartWindow = "24h" | "7d" | "30d";
+
+export type IssueReportContent = {
+  issue_summary: string;
+  movement_explanation: string;
+  key_change_context: string;
+  uncertainty_summary: string;
+  neutral_conclusion: string;
+};
+
+export type IssueReportSuccessResponse = {
+  id: string;
+  generated_at: string;
+  data_as_of: string;
+  status: "success";
+  content: IssueReportContent;
+};
+
+export type IssueReportNotYetGeneratedResponse = {
+  status: "not_yet_generated";
+};
+
+export type IssueReportResponse =
+  IssueReportSuccessResponse | IssueReportNotYetGeneratedResponse;
+
+export type IssueReportLoadState =
+  | { status: "loading" }
+  | { status: "success"; report: IssueReportSuccessResponse }
+  | { status: "not_yet_generated" }
+  | { status: "error" };
