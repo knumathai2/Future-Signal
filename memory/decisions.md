@@ -323,7 +323,21 @@ guarded summary/demo path over broader scope.
 
 ---
 
-### ADR-021: AI provider selection - OpenAI, live call approved for TASK-015 ⚠️ HUMAN APPROVAL
+### ADR-021: Report API reads latest successful stored reports while history empty states stay honest
+
+- **Date**: 2026-07-09
+- **Status**: Accepted (TASK-039 implementation decision)
+- **Decided by**: Backend Implementer
+
+**Context**: PR #29 originally changed `/api/issues/{id}/history` to return an empty `points` array when history was missing or the query failed, but it predated the Day 4 `TASK-039` ledger on `main`. Day 4 `TASK-039` requires `/api/issues/{id}/report` to read latest successful `ai_reports` rows while preserving the accepted `not_yet_generated` empty state.
+**Decision**: Preserve the history no-fabrication behavior: live and static fallback history responses return `points: []` when no history is available or the history query fails. Also wire the live report endpoint to the latest successful `ai_reports` row for the issue. Failed report rows are never served; absent reports or report-read failures return the accepted `{"status": "not_yet_generated"}` shape. Static fallback mode keeps its demo-safe sample report.
+**Rationale**: Empty history is more honest than plotting a fabricated latest point, and serving only successful stored reports keeps the API read-only and decoupled from report generation. The response shapes stay unchanged, so frontend integration can keep the existing success/empty-state contract.
+**Trade-offs**: Static fallback history may show no chart line until richer fallback history is deliberately added. Static fallback report content remains a curated sample, so `TD-009` still needs a Day 5 language/demo fallback note if backend fallback data is used in presentation.
+**Consequences**: `TASK-039` is complete for the backend read path. Backend tests now cover latest successful report selection, failed-report exclusion, report-query failure fallback, report unknown-id behavior, and empty history fallback behavior without any schema, dependency, infrastructure, deployment, or public API shape change.
+
+---
+
+### ADR-022: AI provider selection - OpenAI, live call approved for TASK-015 ⚠️ HUMAN APPROVAL
 
 - **Date**: 2026-07-09
 - **Status**: Accepted
