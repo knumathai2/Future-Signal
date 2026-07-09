@@ -12,18 +12,17 @@ The Debugger role created a local/dev historical seed path (`historical_seed.py`
 ## Current Work
 
 - [x] Switched to branch `data-ai/TASK-019-curated-events`.
-- [x] Setup local Python 3.10 virtual environment and installed all dependencies.
-- [x] Patched datetime UTC imports in all backend python files to support python 3.10 compatibility.
+- [x] Kept datetime UTC imports aligned with the backend Python 3.11 lint target.
 - [x] Curated related event candidates for exactly 4 representative issues:
-  - Climate Accord Ratification (fallback)
-  - Central Bank Policy Rate (fallback)
   - Kraken IPO (normalized samples)
   - UK Election (normalized samples)
+  - NATO membership (normalized samples)
+  - OpenAI hardware (normalized samples)
 - [x] Formulated event notes that fully comply with content-safety guidelines (mandatory context disclaimer, no causal verbs, no banned terms).
 - [x] Added `backend/app/db/seed_related_events.py` for idempotent seeding of markets and curated related events in local databases.
-- [x] Created `backend/tests/test_seed_related_events.py` to cover schema boundaries, content safety constraints, and script idempotency.
-- [x] Ran all 113 backend unit tests successfully.
-- [x] Verified seeding successfully against a local SQLite database (`local_dev.db`).
+- [x] Created `backend/tests/test_seed_related_events.py` to cover normalized/live-reachable IDs, schema boundaries, content safety constraints, and script idempotency.
+- [x] Re-ran backend lint and all 114 backend unit tests after CHANGES_REQUESTED follow-up fixes.
+- [x] Verified seeding behavior through SQLite-backed unit tests.
 - [x] Updated `tasks/active.md` and `tasks/completed.md` to archive TASK-019 as completed.
 
 ## Files Changed

@@ -1,15 +1,15 @@
 """Local development seeding script for related events.
 
-Inserts manually curated context events for 4 representative issues:
-1. Climate Accord Ratification (static fallback ID)
-2. Central Bank Policy Rate (static fallback ID)
-3. Kraken IPO (from normalized_samples.json)
-4. UK Election (from normalized_samples.json)
+Inserts manually curated context events for 4 representative normalized issues:
+1. Kraken IPO
+2. UK Election
+3. NATO membership
+4. OpenAI hardware
 
 Safety Guidelines Compliance:
 - Every event note contains the required context disclaimer.
 - No causal verbs (because, due to, caused by, triggered by) are used.
-- No prohibited vocabulary (bet, buy, sell, trade, position, long, short, profit, win rate, odds, recommendation) is used.
+- No prohibited vocabulary from the project wording policy is used.
 - Environment check ensures this only writes in local development.
 """
 
@@ -17,7 +17,7 @@ import argparse
 import logging
 import sys
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session
@@ -31,95 +31,154 @@ logger = logging.getLogger(__name__)
 # Allowed environments for safety guardrails
 ALLOWED_WRITE_ENVS = {"local", "dev", "development", "test"}
 
+CONTEXT_NOTE_SUFFIX = (
+    "Candidate context entered manually for review alongside the observed change; "
+    "not presented as a cause."
+)
+
 # Curated issues list with stable IDs and their related events
 CURATED_SEED_DATA = [
     {
-        "id": uuid.UUID("b3f1c2a4-0000-4000-8000-000000000001"),
-        "polymarket_condition_id": "static-fallback-climate-accord",
-        "title": "Will the proposed climate accord be ratified by December 2026?",
-        "description": "Tracks reflected expectation on ratification of the multilateral climate accord.",
-        "category": "environment",
-        "outcome_label": "Yes",
-        "events": [
-            {
-                "id": uuid.UUID("e1f1c2a4-0000-4000-8000-000000000001"),
-                "event_title": "Multilateral Climate Framework Draft Released",
-                "event_date": datetime(2026, 3, 15, 9, 0, 0, tzinfo=timezone.utc),
-                "note": "A draft of the framework was released for review. Candidate context entered manually for review alongside the observed change; not presented as a cause.",
-            },
-            {
-                "id": uuid.UUID("e1f1c2a4-0000-4000-8000-000000000002"),
-                "event_title": "Regional Environment Summit Concludes",
-                "event_date": datetime(2026, 6, 10, 17, 0, 0, tzinfo=timezone.utc),
-                "note": "The summit ended with joint statements on emissions. Candidate context entered manually for review alongside the observed change; not presented as a cause.",
-            },
-        ],
-    },
-    {
-        "id": uuid.UUID("a71e9d3b-0000-4000-8000-000000000002"),
-        "polymarket_condition_id": "static-fallback-central-bank-rate",
-        "title": "Will the central bank announce a rate change at its next meeting?",
-        "description": "Tracks reflected expectation on the next policy rate decision.",
-        "category": "economy",
-        "outcome_label": "Yes",
-        "events": [
-            {
-                "id": uuid.UUID("e2f1c2a4-0000-4000-8000-000000000001"),
-                "event_title": "Inflation Index Reports Moderate Growth",
-                "event_date": datetime(2026, 5, 12, 12, 30, 0, tzinfo=timezone.utc),
-                "note": "Monthly statistical release on consumer price index trends. Candidate context entered manually for review alongside the observed change; not presented as a cause.",
-            },
-            {
-                "id": uuid.UUID("e2f1c2a4-0000-4000-8000-000000000002"),
-                "event_title": "Central Bank Governor Speech at Policy Forum",
-                "event_date": datetime(2026, 6, 20, 14, 0, 0, tzinfo=timezone.utc),
-                "note": "Speech addressing general macroeconomic outlook. Candidate context entered manually for review alongside the observed change; not presented as a cause.",
-            },
-        ],
-    },
-    {
         "id": uuid.UUID("c3d4e5f6-0000-4000-8000-000000000003"),
-        "polymarket_condition_id": "0xced0cb8725bad43d78fda0cd0e5fa9e31804625cb3502b2c7897f8e8f7fa9e1f",
+        "polymarket_condition_id": (
+            "0xced0cb8725bad43d78fda0cd0e5fa9e31804625cb3502b2c7897f8e8f7fa9e1f"
+        ),
         "title": "Kraken IPO by December 31, 2026?",
-        "description": "Tracks reflected expectation in public prediction-market data for this crypto issue. Interpret changes with caution and verify source context.",
+        "description": (
+            "Tracks reflected expectation in public prediction-market data for this "
+            "crypto issue. Interpret changes with caution and verify source context."
+        ),
         "category": "Crypto",
         "outcome_label": "Yes",
-        "token_id": "34626184950254225208692030156208941308358060420950772251072421141618169142241",
+        "token_id": (
+            "34626184950254225208692030156208941308358060420950772251072421141618169142241"
+        ),
         "events": [
             {
                 "id": uuid.UUID("e3f1c2a4-0000-4000-8000-000000000001"),
                 "event_title": "Kraken Files Initial Registration Statement Draft",
-                "event_date": datetime(2026, 2, 18, 10, 0, 0, tzinfo=timezone.utc),
-                "note": "A draft registration statement was submitted. Candidate context entered manually for review alongside the observed change; not presented as a cause.",
+                "event_date": datetime(2026, 2, 18, 10, 0, 0, tzinfo=UTC),
+                "note": (
+                    "A draft registration statement was submitted. "
+                    f"{CONTEXT_NOTE_SUFFIX}"
+                ),
             },
             {
                 "id": uuid.UUID("e3f1c2a4-0000-4000-8000-000000000002"),
                 "event_title": "Major Crypto Exchange Regulatory Review Update",
-                "event_date": datetime(2026, 5, 5, 8, 30, 0, tzinfo=timezone.utc),
-                "note": "Regulatory body published updated guidance on compliance metrics. Candidate context entered manually for review alongside the observed change; not presented as a cause.",
+                "event_date": datetime(2026, 5, 5, 8, 30, 0, tzinfo=UTC),
+                "note": (
+                    "Regulatory body published updated guidance on compliance metrics. "
+                    f"{CONTEXT_NOTE_SUFFIX}"
+                ),
             },
         ],
     },
     {
         "id": uuid.UUID("d4e5f6a7-0000-4000-8000-000000000004"),
-        "polymarket_condition_id": "0x43204573cf724eda06c520a42a7cb97df319cc27ed997be3b96ca74398ede87f",
+        "polymarket_condition_id": (
+            "0x43204573cf724eda06c520a42a7cb97df319cc27ed997be3b96ca74398ede87f"
+        ),
         "title": "Will the next UK election be called by December 31, 2026?",
-        "description": "Tracks reflected expectation in public prediction-market data for this uk issue. Interpret changes with caution and verify source context.",
+        "description": (
+            "Tracks reflected expectation in public prediction-market data for this UK "
+            "issue. Interpret changes with caution and verify source context."
+        ),
         "category": "UK",
         "outcome_label": "Yes",
-        "token_id": "31627048520492227354616069874124458767757243686332730237616510640600462926383",
+        "token_id": (
+            "31627048520492227354616069874124458767757243686332730237616510640600462926383"
+        ),
         "events": [
             {
                 "id": uuid.UUID("e4f1c2a4-0000-4000-8000-000000000001"),
                 "event_title": "Prime Minister Addresses Parliamentary Session",
-                "event_date": datetime(2026, 4, 14, 15, 0, 0, tzinfo=timezone.utc),
-                "note": "Speech discussing upcoming legislative agendas. Candidate context entered manually for review alongside the observed change; not presented as a cause.",
+                "event_date": datetime(2026, 4, 14, 15, 0, 0, tzinfo=UTC),
+                "note": (
+                    "Speech discussing upcoming legislative agendas. "
+                    f"{CONTEXT_NOTE_SUFFIX}"
+                ),
             },
             {
                 "id": uuid.UUID("e4f1c2a4-0000-4000-8000-000000000002"),
                 "event_title": "Local Council Election Initial Results Declared",
-                "event_date": datetime(2026, 5, 8, 1, 0, 0, tzinfo=timezone.utc),
-                "note": "Voters participated in local administrative elections across regions. Candidate context entered manually for review alongside the observed change; not presented as a cause.",
+                "event_date": datetime(2026, 5, 8, 1, 0, 0, tzinfo=UTC),
+                "note": (
+                    "Voters participated in local administrative elections across regions. "
+                    f"{CONTEXT_NOTE_SUFFIX}"
+                ),
+            },
+        ],
+    },
+    {
+        "id": uuid.UUID("e5f6a7b8-0000-4000-8000-000000000005"),
+        "polymarket_condition_id": (
+            "0x523959b6256674318eb34755789fffd8c62cd652e5fa11ffd332402361d058e9"
+        ),
+        "title": "Will any country leave NATO by December 31, 2026?",
+        "description": (
+            "Tracks reflected expectation in public prediction-market data for this "
+            "NATO issue. Interpret changes with caution and verify source context."
+        ),
+        "category": "NATO",
+        "outcome_label": "Yes",
+        "token_id": (
+            "97672112380588518658859221422581522664938121648778223046012006536512218182756"
+        ),
+        "events": [
+            {
+                "id": uuid.UUID("e5f1c2a4-0000-4000-8000-000000000001"),
+                "event_title": "NATO Foreign Ministers Meeting Coverage",
+                "event_date": datetime(2026, 4, 3, 16, 0, 0, tzinfo=UTC),
+                "note": (
+                    "Public coverage reviewed alliance coordination topics. "
+                    f"{CONTEXT_NOTE_SUFFIX}"
+                ),
+            },
+            {
+                "id": uuid.UUID("e5f1c2a4-0000-4000-8000-000000000002"),
+                "event_title": "Defense Spending Policy Statements Published",
+                "event_date": datetime(2026, 6, 12, 11, 0, 0, tzinfo=UTC),
+                "note": (
+                    "Member-state policy statements discussed defense spending plans. "
+                    f"{CONTEXT_NOTE_SUFFIX}"
+                ),
+            },
+        ],
+    },
+    {
+        "id": uuid.UUID("f6a7b8c9-0000-4000-8000-000000000006"),
+        "polymarket_condition_id": (
+            "0xf53d2cf86bf4ea3c6a0bfb739cc0dded28001dde6eee5f90b8bb6716ce33571a"
+        ),
+        "title": "Will OpenAI launch a new consumer hardware product by December 31, 2026?",
+        "description": (
+            "Tracks reflected expectation in public prediction-market data for this "
+            "tech issue. Interpret changes with caution and verify source context."
+        ),
+        "category": "Tech",
+        "outcome_label": "Yes",
+        "token_id": (
+            "108052633825118494550832240247980096965299835115818656939682823516952479310001"
+        ),
+        "events": [
+            {
+                "id": uuid.UUID("e6f1c2a4-0000-4000-8000-000000000001"),
+                "event_title": "Consumer Device Roadmap Discussion",
+                "event_date": datetime(2026, 2, 4, 18, 0, 0, tzinfo=UTC),
+                "note": (
+                    "Public discussion referenced consumer device roadmap questions. "
+                    f"{CONTEXT_NOTE_SUFFIX}"
+                ),
+            },
+            {
+                "id": uuid.UUID("e6f1c2a4-0000-4000-8000-000000000002"),
+                "event_title": "Hardware Partnership Context Review",
+                "event_date": datetime(2026, 5, 21, 13, 0, 0, tzinfo=UTC),
+                "note": (
+                    "Public context review covered hardware partnership themes. "
+                    f"{CONTEXT_NOTE_SUFFIX}"
+                ),
             },
         ],
     },
@@ -142,13 +201,15 @@ def ensure_local_dev_write_allowed(env: str, confirmed: bool) -> None:
 
 def seed_related_events(db: Session) -> int:
     """Seeds markets (if missing) and inserts manually curated related events."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     total_events_inserted = 0
 
     for data in CURATED_SEED_DATA:
         # 1. Look up or insert market
         market = db.execute(
-            select(Market).where(Market.polymarket_condition_id == data["polymarket_condition_id"])
+            select(Market).where(
+                Market.polymarket_condition_id == data["polymarket_condition_id"]
+            )
         ).scalar_one_or_none()
 
         if market is None:
@@ -206,7 +267,10 @@ def seed_related_events(db: Session) -> int:
             total_events_inserted += 1
 
     db.commit()
-    logger.info("Successfully seeded related events. Total events inserted: %d", total_events_inserted)
+    logger.info(
+        "Successfully seeded related events. Total events inserted: %d",
+        total_events_inserted,
+    )
     return total_events_inserted
 
 
@@ -221,7 +285,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def main() -> int:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+    )
     args = build_arg_parser().parse_args()
 
     try:

@@ -2,11 +2,7 @@ import json
 import logging
 import urllib.error
 import urllib.request
-from datetime import date, datetime, timezone
-try:
-    from datetime import UTC
-except ImportError:
-    UTC = timezone.utc
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 

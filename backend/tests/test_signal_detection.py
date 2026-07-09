@@ -7,11 +7,7 @@ prod DB writes.
 """
 
 import uuid
-from datetime import datetime, timedelta, timezone
-try:
-    from datetime import UTC
-except ImportError:
-    UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy import BigInteger, create_engine, select
