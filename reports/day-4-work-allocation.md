@@ -4,6 +4,9 @@ _Date: 2026-07-09_
 _Owner: PM / Planner_
 _Branch: `pm/TASK-038-day-4-allocation`_
 _Git baseline: `origin/main` at `af83f7e` after fetching latest refs_
+_Status update (2026-07-09): current `upstream/main`/`origin/main` tip is now
+`aaf3f69` after PR #29 (`TASK-039`) and PR #30 (`TASK-015`) merged. See
+"Progress Update" below._
 
 ## Summary
 
@@ -19,33 +22,51 @@ implementation sequence from `TASK-015`, `TASK-016`, `TASK-018`, and
 `TASK-019`, plus two missing Day 4 execution tasks that come directly from PRD
 section 14: backend report/fallback readiness and PM deck/demo draft.
 
+## Progress Update (as of `aaf3f69`)
+
+First block of Day 4 is done; middle block is next.
+
+- `TASK-039` (Backend) is **completed** — PR #29 merged
+  (`backend/TASK-039-stabilize-api-fallback`, follow-up fix `89963cd`).
+  `/api/issues/{id}/report` now reads the latest successful `ai_reports` row
+  in live mode and keeps the accepted `not_yet_generated` fallback shape.
+- `TASK-015` (Data/AI) is **completed** — PR #30 merged
+  (`data-ai/TASK-015-template-report-generation`, commits `63ef38b`/`5f75ac1`/
+  `e6fe674`). Per ADR-022 the user explicitly approved a real OpenAI provider
+  override instead of the deterministic-template default recorded below; no
+  API key is present in this environment so no live/billed call has run yet.
+- Remaining Day 4 work — `TASK-016`, `TASK-019`, `TASK-040`, `TASK-018` — is
+  still `assigned` and unblocked: both of its dependencies (`TASK-015`,
+  `TASK-039`) are now merged into mainline.
+
 ## Day 4 Assignments
 
 | ID | Owner | Branch | Status | First output needed | Handoff |
 |---|---|---|---|---|---|
 | TASK-038 | PM / Planner | `pm/TASK-038-day-4-allocation` | completed | Day 4 allocation, sequencing, and scope guardrails | All roles use this for Day 4 priorities |
-| TASK-015 | Data/AI Implementer | `data-ai/TASK-015-template-report-generation` | assigned | Template-constrained report generator and safety filter | Feeds `TASK-039`, `TASK-016`, and `TASK-018` |
-| TASK-039 | Backend Implementer | `backend/TASK-039-report-fallback-readiness` | assigned | Existing `/api/issues/{id}/report` reads latest stored successful report while preserving the accepted response shape | Feeds `TASK-016`; also addresses `TD-009`/`TD-010` demo fallback consistency |
-| TASK-016 | Frontend Implementer | `frontend/TASK-016-report-display-ui` | assigned | Detail summary card consumes the report endpoint and handles not-yet-generated/error states | Needs `TASK-015`/`TASK-039` for final integration |
+| TASK-015 | Data/AI Implementer | `data-ai/TASK-015-template-report-generation` | completed (PR #30) | Template-constrained report generator and safety filter | Fed `TASK-039`; now feeds `TASK-016` and `TASK-018` |
+| TASK-039 | Backend Implementer | `backend/TASK-039-stabilize-api-fallback` | completed (PR #29) | Existing `/api/issues/{id}/report` reads latest stored successful report while preserving the accepted response shape | Now feeds `TASK-016`; also addresses `TD-009`/`TD-010` demo fallback consistency |
+| TASK-016 | Frontend Implementer | `frontend/TASK-016-report-display-ui` | assigned | Detail summary card consumes the report endpoint and handles not-yet-generated/error states | `TASK-015`/`TASK-039` dependencies are merged; ready to start |
 | TASK-019 | PM + Data/AI | `data-ai/TASK-019-curated-events` | assigned | 3-5 manually curated event candidates for representative demo issues | Feeds `TASK-016`, `TASK-018`, and `TASK-040` |
 | TASK-040 | PM / Planner | `pm/TASK-040-demo-script-deck-draft` | assigned | Presentation deck outline and demo script draft to roughly 70 percent completeness | Feeds Day 5 final presentation and backup rehearsal |
 | TASK-018 | PM / Planner | `pm/TASK-018-copy-lint` | assigned | Content-safety lint report across UI strings, templates, report text, event candidates, and deck/demo copy | Final Day 4 safety gate before closeout |
 
 ## Recommended Work Order
 
-### First block
+### First block — done
 
-- Data/AI starts `TASK-015` with a deterministic template path and mechanical
-  safety filter. No paid external provider call is allowed without separate
-  human approval.
-- Backend starts `TASK-039` in parallel as the report response contract is
-  already accepted: preserve `IssueReportResponse | ReportNotYetGenerated`,
-  replace the hardcoded sample path with latest stored successful rows when a
-  database is available, and keep the neutral no-report state.
-- PM starts `TASK-040` with a compact demo spine: dashboard -> detail -> chart ->
-  summary -> caution/notice -> manual context candidate.
+- Data/AI completed `TASK-015` (PR #30). Note: the deterministic-template-only
+  default below was overridden by explicit human approval (ADR-022) to wire a
+  real OpenAI provider; no key is present in this environment so no live call
+  has executed yet.
+- Backend completed `TASK-039` (PR #29): `IssueReportResponse |
+  ReportNotYetGenerated` is preserved, the hardcoded sample path now reads
+  latest stored successful rows when a database is available, and the neutral
+  no-report state is kept.
+- PM still needs to start `TASK-040` with a compact demo spine: dashboard ->
+  detail -> chart -> summary -> caution/notice -> manual context candidate.
 
-### Middle block
+### Middle block — next
 
 - Frontend starts `TASK-016` against the existing report response shape:
   success, not-yet-generated, and fetch-failure states should all keep
