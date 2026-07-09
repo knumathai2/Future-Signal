@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { CautionBadge } from "./CautionBadge";
 import { CAUTION_COPY } from "./cautionCopy";
+import { GlobalFooter, ShortCautionNotice } from "./InformationNotice";
 import { IssueTrendChart } from "./IssueTrendChart";
 import { MetricTile } from "./MetricTile";
 import {
@@ -17,6 +18,7 @@ type IssueDetailProps = {
   issue: Issue;
   dataStatus?: DataStatus;
   onBack: () => void;
+  onOpenNotice: () => void;
 };
 
 const CHART_WINDOWS: ChartWindow[] = ["24h", "7d", "30d"];
@@ -67,7 +69,12 @@ function buildSummary(issue: Issue, chartWindow: ChartWindow): string {
   }`;
 }
 
-export function IssueDetail({ issue, dataStatus = "ready", onBack }: IssueDetailProps) {
+export function IssueDetail({
+  issue,
+  dataStatus = "ready",
+  onBack,
+  onOpenNotice,
+}: IssueDetailProps) {
   const [chartWindow, setChartWindow] = useState<ChartWindow>("7d");
 
   const summary = useMemo(
@@ -136,17 +143,24 @@ export function IssueDetail({ issue, dataStatus = "ready", onBack }: IssueDetail
         />
       </section>
 
+      <ShortCautionNotice
+        context="detail"
+        cautionLevel={issue.cautionLevel}
+        dataAsOf={issue.dataAsOf}
+        className="mt-4"
+      />
+
       <section className="mt-4 rounded-lg border border-line bg-card px-4 py-3">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <CautionBadge level={issue.cautionLevel} withDetail />
-          <span className="text-xs font-semibold text-ink-faint">
-            데이터 기준 시각: {formatDataTimestamp(issue.dataAsOf)}
-          </span>
+          <button
+            type="button"
+            onClick={onOpenNotice}
+            className="text-xs font-bold text-ink-soft transition hover:text-accent"
+          >
+            전체 정보 안내 보기
+          </button>
         </div>
-        <p className="mt-2 text-sm leading-6 text-ink-soft">
-          이 값은 공개 데이터에 반영된 기대값이며 실제 사건에 대한 확정 사실이
-          아닙니다. 데이터가 불완전하거나 변동성이 클 수 있습니다.
-        </p>
       </section>
 
       <section className="mt-8">
@@ -239,23 +253,16 @@ export function IssueDetail({ issue, dataStatus = "ready", onBack }: IssueDetail
           </div>
         </div>
         <p className="mt-4 max-w-4xl text-sm leading-7 text-ink">{summary}</p>
-        <p className="mt-4 border-t border-line-soft pt-3 text-xs leading-6 text-ink-faint">
-          이 요약은 현재 데이터 계약에 맞춘 템플릿으로 생성되며, 맥락이
-          불완전할 수 있습니다. 어떤 종류의 조언도 아닙니다.
-        </p>
+        <ShortCautionNotice
+          context="summary"
+          cautionLevel={issue.cautionLevel}
+          dataAsOf={issue.dataAsOf}
+          className="mt-4"
+          surface="plain"
+        />
       </section>
 
-      <footer className="mt-10 border-t border-line pt-5 text-xs leading-6 text-ink-faint">
-        <p className="max-w-3xl">
-          Outlook Signals는 공개 데이터 기반의 정보 분석 및 이슈 관찰 서비스입니다.
-          금융, 법률, 정치 또는 그 밖의 전문적 조언을 제공하지 않습니다.
-        </p>
-        <p className="mt-2 max-w-3xl">
-          이 지표는 Polymarket 공개 데이터에 반영된 기대값의 변화를 보여줍니다.
-          전체 대중의 판단을 대표하지 않으며, 데이터 활동 수준과 변동성에 따라
-          해석에 주의가 필요합니다.
-        </p>
-      </footer>
+      <GlobalFooter onOpenNotice={onOpenNotice} className="mt-10" />
     </div>
   );
 }

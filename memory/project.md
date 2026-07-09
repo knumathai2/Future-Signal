@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.4.0-day3-open
-- **Phase**: Day 3 in progress; detail/chart path hardened
-- **Next milestone**: Day 3 closeout — issue detail screen, chart/tooltip refinement, inflection-point markers, and interpretation-caution badge logic
-- **Overall health**: 🟢 Good — the Day 2 data/API/dashboard path is merged, verified, and Day 3 active work is scoped to the narrowed MVP path
+- **Version**: v0.4.1-day3-closeout
+- **Phase**: Day 3 closeout ready; detail/chart/badge/notice path hardened
+- **Next milestone**: Day 4 start — template summary generation/display and manually curated related-event candidates
+- **Overall health**: 🟢 Good — the Day 2 data/API/dashboard path and Day 3 detail/chart/badge/notice path are merged or ready for review inside the narrowed MVP path
 
 ## Tech Summary
 
@@ -51,7 +51,7 @@ Future Signal/
 
 | Area | Current state |
 |---|---|
-| Frontend | Dashboard v1 is integrated with backend routes and static fallback, including ranked issue cards, category/window/sort controls, detail view, Recharts line chart, error fallback states, data-as-of timestamps, caution badges, and Day 3-hardened window-specific insufficient-history handling. |
+| Frontend | Dashboard v1 is integrated with backend routes and static fallback, including ranked issue cards, category/window/sort controls, detail view, Recharts line chart, error fallback states, data-as-of timestamps, caution badges, Day 3-hardened window-specific insufficient-history handling, shared footer copy, and a dedicated in-app information notice surface. |
 | Backend | FastAPI app, `/api/health`, accepted `/api/issues`/detail/history/report/category contract, Pydantic schemas, and contract tests exist. `TASK-010` merged live issue list/detail/history read paths with documented static fallback behavior. Schema draft is accepted but unapplied. |
 | Data/AI | `TASK-007` produced 50 normalized records and structured skip details; `TASK-008` computes 24h/7d metrics through a local/dev-safe path; `TASK-009` inserts MVP expectation-shift detector rows from the ±5pp threshold. |
 | PM / Safety | P0 scope remains locked; wording policy references `standards.md` and `memory/glossary.md`; Day 3 work is assigned in `tasks/active.md` and sequenced in `reports/day-3-work-allocation.md`. |
@@ -78,6 +78,7 @@ Future Signal/
 | 2026-07-09 | Day 3 work assigned: `TASK-013`, `TASK-014`, `TASK-017`, `TASK-035`, and `TASK-036` opened in `tasks/active.md`; `TASK-034` records the PM allocation in `reports/day-3-work-allocation.md` |
 | 2026-07-09 | `TASK-035` closed: detail/history API contract confirmed sufficient for the Day 3 chart/marker path with no response-shape change; live-read/fallback/unknown-id/history-window test coverage strengthened (62 backend tests passing) |
 | 2026-07-09 | `TASK-013` completed: detail chart windows now require baseline-covered history, 30d no longer falls back to 7d, tooltips include timestamp/value/previous-point pp change, and chart markers consume API `signals` when present while preserving local 5pp fallback detection. |
+| 2026-07-09 | `TASK-017` completed: short caution copy, shared footer copy, and a dedicated in-app information notice surface were added without policy, route dependency, API, schema, or infrastructure changes. |
 
 ## Constraints
 

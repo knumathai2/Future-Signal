@@ -1,4 +1,5 @@
 import { CautionBadge } from "./CautionBadge";
+import { GlobalFooter, ShortCautionNotice } from "./InformationNotice";
 import { IssueCard } from "./IssueCard";
 import {
   formatCategoryLabel,
@@ -15,6 +16,7 @@ type DashboardProps = {
   staleDataAsOf: string;
   onIssueSelect: (issueId: string) => void;
   onRefresh: () => void;
+  onOpenNotice: () => void;
   categories: string[];
   activeCategory: string | null;
   onCategoryChange: (category: string | null) => void;
@@ -91,6 +93,7 @@ export function Dashboard({
   staleDataAsOf,
   onIssueSelect,
   onRefresh,
+  onOpenNotice,
   categories,
   activeCategory,
   onCategoryChange,
@@ -124,9 +127,13 @@ export function Dashboard({
         </div>
 
         <div className="flex flex-wrap items-center gap-4 text-sm">
-          <a className="text-ink-soft hover:text-accent" href="#information-note">
+          <button
+            type="button"
+            onClick={onOpenNotice}
+            className="text-ink-soft transition hover:text-accent"
+          >
             정보 안내
-          </a>
+          </button>
           <span className="text-xs text-ink-faint">
             데이터 기준 시각: {formatDataTimestamp(dataAsOf)}
           </span>
@@ -150,20 +157,11 @@ export function Dashboard({
         </p>
       </section>
 
-      <section className="mt-5 rounded-lg border border-line bg-card px-4 py-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-accent text-xs font-bold text-accent">
-            i
-          </div>
-          <div>
-            <CautionBadge level="sufficient" />
-            <p className="mt-2 text-sm leading-6 text-ink-soft">
-              수치는 Polymarket 공개 데이터에 반영된 기대값이며 실제 사건에 대한
-              확정 사실이 아닙니다. 해석에 주의가 필요합니다.
-            </p>
-          </div>
-        </div>
-      </section>
+      <ShortCautionNotice
+        context="dashboard"
+        dataAsOf={dataAsOf}
+        className="mt-5"
+      />
 
       {/* Filters */}
       <section className="mt-8 flex flex-col gap-4 border-b border-line-soft pb-5">
@@ -293,20 +291,7 @@ export function Dashboard({
         </section>
       ) : null}
 
-      <footer
-        id="information-note"
-        className="mt-10 border-t border-line pt-5 text-xs leading-6 text-ink-faint"
-      >
-        <p className="max-w-3xl">
-          Outlook Signals는 공개 데이터 기반의 정보 분석 및 이슈 관찰 서비스입니다.
-          금융, 법률, 정치 또는 그 밖의 전문적 조언을 제공하지 않습니다.
-        </p>
-        <p className="mt-2 max-w-3xl">
-          이 지표는 Polymarket 공개 데이터에 반영된 기대값의 변화를 보여줍니다.
-          전체 대중의 판단을 대표하지 않으며, 데이터 활동 수준과 변동성에 따라
-          해석에 주의가 필요합니다.
-        </p>
-      </footer>
+      <GlobalFooter onOpenNotice={onOpenNotice} className="mt-10" />
     </div>
   );
 }

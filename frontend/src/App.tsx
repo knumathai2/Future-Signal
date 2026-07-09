@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Dashboard } from "./components/Dashboard";
+import { InformationNoticeScreen } from "./components/InformationNotice";
 import { IssueDetail } from "./components/IssueDetail";
 import {
   staleDummyDataAsOf,
@@ -14,7 +15,7 @@ import {
   ApiIssueHistoryResponse,
 } from "./utils/format";
 
-type Screen = "dashboard" | "detail";
+type Screen = "dashboard" | "detail" | "notice";
 
 function statusFromQuery(): DataStatus | null {
   if (typeof window === "undefined") {
@@ -37,6 +38,7 @@ function statusFromQuery(): DataStatus | null {
 export default function App() {
   const forcedStatus = useMemo(() => statusFromQuery(), []);
   const [screen, setScreen] = useState<Screen>("dashboard");
+  const [previousScreen, setPreviousScreen] = useState<Screen>("dashboard");
   const [selectedIssueId, setSelectedIssueId] = useState("");
   
   // Dashboard states
@@ -187,8 +189,33 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
+  function handleOpenNotice() {
+    setPreviousScreen(screen === "notice" ? "dashboard" : screen);
+    setScreen("notice");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleCloseNotice() {
+    setScreen(previousScreen === "notice" ? "dashboard" : previousScreen);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  function handleOpenDashboard() {
+    setScreen("dashboard");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
   function handleRefresh() {
     setRefreshTrigger((prev) => prev + 1);
+  }
+
+  if (screen === "notice") {
+    return (
+      <InformationNoticeScreen
+        onBack={handleCloseNotice}
+        onOpenDashboard={handleOpenDashboard}
+      />
+    );
   }
 
   if (screen === "detail") {
@@ -231,6 +258,7 @@ export default function App() {
         issue={detailIssue}
         dataStatus={detailStatus}
         onBack={() => setScreen("dashboard")}
+        onOpenNotice={handleOpenNotice}
       />
     );
   }
@@ -243,6 +271,7 @@ export default function App() {
       staleDataAsOf={staleDummyDataAsOf}
       onIssueSelect={handleIssueSelect}
       onRefresh={handleRefresh}
+      onOpenNotice={handleOpenNotice}
       categories={categories}
       activeCategory={activeCategory}
       onCategoryChange={setActiveCategory}

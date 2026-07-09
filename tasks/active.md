@@ -13,12 +13,12 @@ _Last updated: 2026-07-09_
 
 Day 3 work is assigned. Start from `reports/day-3-work-allocation.md` and the
 Day 2 baseline; keep all work inside PRD §14's detail/chart/badge scope.
-`TASK-013`, `TASK-014`, `TASK-035`, and `TASK-036` completed 2026-07-09 - see
-`tasks/completed.md`.
+`TASK-013`, `TASK-014`, `TASK-017`, `TASK-035`, and `TASK-036` completed
+2026-07-09 - see `tasks/completed.md`.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-017 | Disclaimer copy, footer, and dedicated notice surface | Frontend Implementer + PM | Frontend Implementer + PM / Planner | `frontend/TASK-017-disclaimer-copy` | assigned |
+| — | No active Day 3 tasks remain. | — | — | — | — |
 
 Completed Day 1, Day 2, and PM allocation tasks are archived in
 `tasks/completed.md`.
@@ -26,12 +26,12 @@ Completed Day 1, Day 2, and PM allocation tasks are archived in
 ## Day 3 Handoff Notes
 
 - **PM / Planner** completed `TASK-034` in
-  `reports/day-3-work-allocation.md`. Continue as the scope gate for
-  `TASK-017`; do not change the wording policy itself without human approval.
+  `reports/day-3-work-allocation.md`. `TASK-017` completed without changing
+  the wording policy itself.
 - **Frontend Implementer** completed `TASK-013` on
-  `frontend/TASK-013-detail-chart` and `TASK-014` on
-  `frontend/TASK-014-caution-badges`; continue with `TASK-017` from the
-  hardened detail/chart/badge baseline.
+  `frontend/TASK-013-detail-chart`, `TASK-014` on
+  `frontend/TASK-014-caution-badges`, and `TASK-017` on
+  `frontend/TASK-017-disclaimer-copy`.
 - **Backend Implementer** completed `TASK-035`: the merged `TASK-010` read
   path already supports the Day 3 chart/marker experience, so no contract
   change was made. Applying the draft schema to any shared or production
@@ -44,23 +44,8 @@ Completed Day 1, Day 2, and PM allocation tasks are archived in
 
 ## Active Task Details
 
-### TASK-017: Disclaimer copy, footer, and dedicated notice surface
-- **Owner**: Frontend Implementer + PM
-- **Assignee**: Frontend Implementer + PM / Planner
-- **Branch**: `frontend/TASK-017-disclaimer-copy`
-- **Status**: assigned
-- **Priority**: High
-- **Day**: Day 3
-- **Description**: Place short caution/disclaimer copy on the dashboard and
-  detail flow, retain the footer reminder, and provide one dedicated notice
-  surface without changing the approved wording policy.
-- **Definition of Done**:
-  - [ ] PM-approved short caution copy appears near data-heavy detail content.
-  - [ ] Footer copy appears on all major screens.
-  - [ ] Dedicated notice surface exists without adding accounts, routing
-        dependencies, notifications, or other excluded features.
-  - [ ] No wording-policy changes are made without human approval.
-  - [ ] Changed user-facing strings pass the project wording scan.
+No active task details remain. Use the template below when PM opens the next
+assigned task.
 
 ## Status Values
 
