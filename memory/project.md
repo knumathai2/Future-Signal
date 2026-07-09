@@ -20,7 +20,7 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 - **Version**: v0.6.0-day4-assigned
 - **Phase**: Day 4 active
 - **Next milestone**: Day 4 closeout — demo/deck draft and final wording-safety pass
-- **Overall health**: 🟡 Watch — Day 4 core UI/API/event-candidate work, report-generation code readiness, and the 24h combined batch path are complete; stored live/dev summaries are still absent because the current OpenAI key returns authentication failures
+- **Overall health**: 🟢 Good — Day 4 core UI/API/event-candidate work, report-generation code readiness, and the 24h combined batch path are complete; OpenRouter-backed current-DB summaries have been generated for the top checked issues
 
 ## Tech Summary
 
@@ -92,7 +92,7 @@ Future Signal/
 | 2026-07-09 | `TASK-019` completed and merged in PR #36 at `6d0eb44`: related-event candidates are curated for exactly four normalized/live-reachable issue IDs with a guarded local/dev seed script and tests. |
 | 2026-07-09 | `TASK-041` created: AI report generation readiness must close the remaining live/dev gap where `ai_reports=0` and latest historical-seed metric timestamps do not exactly match snapshot timestamps required by the current prompt-input lookup. |
 | 2026-07-09 | `TASK-041` completed from `origin/main` at `01df91b`: report prompt inputs now use the latest snapshot at or before the metric timestamp, tests prove fake-LLM success-row insertion, and approved-only run notes document how to create stored summaries later. |
-| 2026-07-09 | `TASK-042` completed: `app/core/scheduled_batch.py` links data collection, snapshot/metric generation, signal detection, and AI report generation in one command; `.github/workflows/daily-batch.yml` runs it every 24h; the dev `--reports-only` command was attempted against the configured DB but OpenAI returned `401 Unauthorized`, leaving `ai_reports_success=0`. |
+| 2026-07-09 | `TASK-042` completed: `app/core/scheduled_batch.py` links data collection, snapshot/metric generation, signal detection, and AI report generation in one command; `.github/workflows/daily-batch.yml` runs it every 24h; ADR-027 updates the provider path so the configured OpenRouter-style key is used through the OpenAI-compatible endpoint, and the current DB now has successful stored summaries for the top checked issues. |
 
 ## Constraints
 

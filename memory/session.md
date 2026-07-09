@@ -144,10 +144,67 @@ timestamp equality.
   - Read-only counts after the run: `ai_reports_total=10`,
     `ai_reports_success=0`, `ai_reports_failed=10`.
   - The report endpoint still returns `not_yet_generated` for live issues.
+- **Follow-up Current DB Report Generation Attempt**:
+  - Reran `ENV=local ./.venv/bin/python -m app.core.scheduled_batch
+    --reports-only --confirm-local-dev-write` after the user requested current
+    DB summary generation again.
+  - No process remained running afterward.
+  - Read-only counts after the rerun: `ai_reports_total=20`,
+    `ai_reports_success=0`, `ai_reports_failed=20`, `scheduled_batch_logs=2`.
+  - Latest scheduled log: `scheduled_batch_partial` with
+    `reports_success=0`, `reports_failed_or_filtered=10`,
+    `reports_skipped=0`.
+  - `GET /api/issues/{id}/report` for the first issue still returns
+    `not_yet_generated`.
+  - A same-client minimal OpenAI probe confirmed `OPENAI_API_KEY` is present,
+    model is `gpt-4o-mini`, and the call fails with
+    `OpenAI call failed: AuthenticationError`.
+- **OpenAI Authentication Root Cause Check**:
+  - A direct OpenAI SDK probe returned `status_code=401`,
+    `code=invalid_api_key`.
+  - The provider error message identifies the configured value as an incorrect
+    API key for OpenAI. The masked key shape in the provider response appears
+    to be an OpenRouter-style key, so the current OpenAI SDK default endpoint
+    rejects it before any model call or quota check.
+- **OpenRouter Support Implementation**:
+  - Updated `backend/app/core/config.py` to select OpenRouter when
+    `OPENROUTER_API_KEY` is present or `OPENAI_API_KEY` has the `sk-or-`
+    prefix.
+  - Kept the existing `openai` dependency and SDK call shape, but added
+    `base_url`/provider/header support in `backend/app/core/ai_report.py`.
+  - Updated `backend/app/core/scheduled_batch.py` and
+    `backend/app/core/ai_report_batch.py` to use the resolved AI key, provider,
+    endpoint, and model.
+  - Added tests for provider detection, model slug conversion, and OpenRouter
+    `base_url`/header propagation.
+  - Recorded ADR-027 and updated architecture/project/known-issue notes.
+- **Current DB AI Summary Generation via OpenRouter**:
+  - Verified resolved provider settings without printing secrets:
+    `provider=openrouter`, `base_url=https://openrouter.ai/api/v1`,
+    `model=openai/gpt-4o-mini`; a minimal JSON probe succeeded.
+  - First OpenRouter reports-only run stored 9 successful summaries and had one
+    safety-filter rejection for `due to`.
+  - Clarified the fixed system prompt to explicitly disallow causal connectors
+    already enforced by the safety filter.
+  - Found and fixed a reports-only selection gap: it previously used a single
+    global latest metric timestamp, which skipped markets whose latest metric
+    was a few seconds earlier. Reports-only now selects each market's latest
+    metric row before applying the same no-report/stale-report cap.
+  - Reran reports-only after the fix. Final read-only DB counts:
+    `ai_reports_total=49`, `ai_reports_success=29`,
+    `ai_reports_failed=20`, `scheduled_batch_logs=5`.
+  - Latest scheduled log: `scheduled_batch_success`,
+    `reports_success=10`, `reports_failed_or_filtered=0`,
+    `reports_skipped=0`.
+  - Verified `/api/issues?window=24h&sort=heat&limit=10` then
+    `/api/issues/{id}/report`: all 10 checked issues returned
+    `status=success` with content.
 - **Verification**:
-  - `cd backend && .venv/bin/ruff check app/core tests/test_scheduled_batch.py
-    tests/test_ai_report_batch.py` — passed.
+  - `cd backend && .venv/bin/ruff check app tests` — passed.
+  - `cd backend && .venv/bin/pytest tests/test_ai_report.py
+    tests/test_scheduled_batch.py tests/test_ai_report_batch.py` — 48 passed.
   - `cd backend && .venv/bin/pytest tests/test_scheduled_batch.py
     tests/test_ai_report_batch.py tests/test_signal_detection.py
     tests/test_snapshot_metrics.py` — 54 passed.
-  - `cd backend && DATABASE_URL= .venv/bin/pytest` — 120 passed.
+  - `cd backend && DATABASE_URL= .venv/bin/pytest` — 124 passed.
+  - `git diff --check` — passed.
