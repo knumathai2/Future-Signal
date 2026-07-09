@@ -59,3 +59,47 @@ The Debugger role created a local/dev historical seed path (`historical_seed.py`
 ## Next Session: To-Do
 
 1. Proceed with TASK-040 (Day 4 demo script and deck draft) and TASK-018 (Copy/wording lint pass).
+
+---
+
+## Follow-up: TASK-041 Documentation Update
+
+- **Date**: 2026-07-09
+- **Agent Role**: PM / Planner
+- **Branch**: `pm/TASK-041-report-readiness-docs`
+- **Goal**: Create `TASK-041` from latest `origin/main` context and update
+  project docs so Data/AI can implement the report-generation readiness fix.
+
+### Work Completed
+
+- [x] Fetched latest refs and confirmed `origin/main` is `6d0eb44`, including
+      merged PR #36 (`TASK-019`).
+- [x] Rebased branch `pm/TASK-041-report-readiness-docs` onto latest
+      `origin/main` so the task docs sit on top of current implementation.
+- [x] Added `TASK-041` to `tasks/active.md` with owner, assignee, branch,
+      problem statement, implementation direction, acceptance criteria, and
+      approval gates.
+- [x] Moved latest implementation status into docs: `TASK-016`, `TASK-019`, and
+      the remaining `ai_reports=0` readiness gap are now reflected in
+      `memory/project.md`, `memory/architecture.md`, and
+      `reports/day-4-work-allocation.md`.
+- [x] Recorded the underlying issue as `ISS-005` in `memory/known-issues.md`.
+
+### Files Changed
+
+- `tasks/active.md`
+- `tasks/completed.md`
+- `reports/day-4-work-allocation.md`
+- `memory/project.md`
+- `memory/architecture.md`
+- `memory/known-issues.md`
+- `memory/session.md`
+
+### Notes
+
+- No source code was changed.
+- No `.env` contents were printed or modified.
+- No schema changes, dependency changes, infrastructure changes, deployment,
+  paid API calls, or database writes were performed.
+- `TASK-041` implementer should start from latest `origin/main` at `6d0eb44` or
+  newer on branch `data-ai/TASK-041-report-generation-readiness`.

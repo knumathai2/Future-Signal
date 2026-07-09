@@ -19,8 +19,8 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 - **Version**: v0.6.0-day4-assigned
 - **Phase**: Day 4 active
-- **Next milestone**: Day 4 closeout — template summaries, report display, curated event candidates, fallback readiness, and demo/deck draft
-- **Overall health**: 🟢 Good — Day 3 is merged and Day 4 work is assigned on latest `origin/main` without expanding beyond the narrowed MVP path
+- **Next milestone**: Day 4 closeout — report generation readiness, demo/deck draft, and final wording-safety pass
+- **Overall health**: 🟡 Watch — Day 4 core UI/API/event-candidate work is merged on latest `origin/main`, but stored report generation still needs `TASK-041` before the live DB-backed summary path is demo-ready
 
 ## Tech Summary
 
@@ -51,10 +51,10 @@ Future Signal/
 
 | Area | Current state |
 |---|---|
-| Frontend | Dashboard v1 is integrated with backend routes and static fallback, including ranked issue cards, category/window/sort controls, detail view, Recharts line chart, error fallback states, data-as-of timestamps, caution badges, Day 3-hardened window-specific insufficient-history handling, shared footer copy, and a dedicated in-app information notice surface. |
-| Backend | FastAPI app, `/api/health`, accepted `/api/issues`/detail/history/report/category contract, Pydantic schemas, and contract tests exist. `TASK-010` merged live issue list/detail/history read paths with documented static fallback behavior, and `TASK-039` now wires `/api/issues/{id}/report` to latest successful stored report rows in live mode while preserving the accepted empty state. `001_initial_schema.sql` has been applied to the currently configured development Supabase DB after human approval; the DB has one live collector snapshot/metric row per normalized issue, and ADR-025 adds a guarded historical seed path for richer live chart history. |
-| Data/AI | `TASK-007` produced 50 normalized records and structured skip details; `TASK-008` computes 24h/7d metrics through a local/dev-safe path; `TASK-009` inserts MVP expectation-shift detector rows from the ±5pp threshold; `TASK-036` adds MVP caution thresholds and marker handoff guidance. |
-| PM / Safety | P0 scope remains locked; wording policy references `standards.md` and `memory/glossary.md`; Day 4 active work is sequenced in `reports/day-4-work-allocation.md` with final copy lint assigned to `TASK-018`. |
+| Frontend | Dashboard v1 is integrated with backend routes and static fallback, including ranked issue cards, category/window/sort controls, detail view, Recharts line chart, error fallback states, data-as-of timestamps, caution badges, Day 3-hardened window-specific insufficient-history handling, shared footer copy, a dedicated in-app information notice surface, and `TASK-016` report-card states for success/loading/not-yet-generated/fetch-failure. |
+| Backend | FastAPI app, `/api/health`, accepted `/api/issues`/detail/history/report/category contract, Pydantic schemas, and contract tests exist. `TASK-010` merged live issue list/detail/history read paths with documented static fallback behavior, and `TASK-039` wires `/api/issues/{id}/report` to latest successful stored report rows in live mode while preserving the accepted empty state. `001_initial_schema.sql` has been applied to the currently configured development Supabase DB after human approval; the DB has one live collector snapshot/metric row per normalized issue, ADR-025 adds a guarded historical seed path for richer live chart history, and PR #36 adds a guarded related-event seed path for four normalized/live-reachable demo issues. |
+| Data/AI | `TASK-007` produced 50 normalized records and structured skip details; `TASK-008` computes 24h/7d metrics through a local/dev-safe path; `TASK-009` inserts MVP expectation-shift detector rows from the ±5pp threshold; `TASK-036` adds MVP caution thresholds and marker handoff guidance; `TASK-015` implements fixed-template report generation and safety filtering; `TASK-019` adds curated related-event candidates. `TASK-041` is now active because the configured development DB has `ai_reports=0`, and latest historical-seed metric timestamps are slightly after their source snapshot timestamps while the current report input builder requires exact equality. |
+| PM / Safety | P0 scope remains locked; wording policy references `standards.md` and `memory/glossary.md`; Day 4 active work is sequenced in `reports/day-4-work-allocation.md` with `TASK-041`, `TASK-040`, and final copy lint `TASK-018` assigned. |
 
 ## Recent Changes
 
@@ -85,9 +85,12 @@ Future Signal/
 | 2026-07-09 | Day 4 work assigned from latest `origin/main` at `af83f7e`: `TASK-015`, `TASK-039`, `TASK-016`, `TASK-019`, `TASK-040`, and `TASK-018` are active; `TASK-038` records allocation and guardrails in `reports/day-4-work-allocation.md`. |
 | 2026-07-09 | `TASK-015` completed: fixed-template AI report generator, strict schema parse, and banned-phrase/pattern safety filter implemented (`app/core/ai_report.py`, `app/core/ai_report_batch.py`, 38 new tests). ADR-022 records the human-approved AI provider decision (OpenAI, real `OpenAIReportClient`) overriding Day 4's deterministic-template default - no key configured in this environment, so no live call has executed yet. |
 | 2026-07-09 | `TASK-039` completed in PR #29 follow-up: report endpoint live read-path now serves latest successful `ai_reports` rows, keeps `not_yet_generated` for absent/failed reads, and history fallback returns empty points rather than fabricated chart data. |
+| 2026-07-09 | `TASK-016` completed: the frontend detail flow consumes `/api/issues/{id}/report` and renders stored report sections plus loading, not-yet-generated, and fetch-failure states with nearby data-as-of timing and caution context. |
 | 2026-07-09 | Development Supabase connectivity was restored through the pooler URL, `psycopg2-binary==2.9.10` was added for provider-copied `postgresql://...` URLs, and `backend/migrations/001_initial_schema.sql` was applied after explicit human approval. |
 | 2026-07-09 | `ISS-004` seeded the configured development DB with one collector snapshot/metric row per normalized issue, and ADR-025 added the approved local/dev historical seed path for live DB-backed demo charts. |
 | 2026-07-09 | The guarded historical seed path was run against the configured development DB: 33,238 total snapshot rows, 150 metric rows, 2 expectation-shift signal rows, and 7d live chart/metric coverage for the 50 seeded issues. |
+| 2026-07-09 | `TASK-019` completed and merged in PR #36 at `6d0eb44`: related-event candidates are curated for exactly four normalized/live-reachable issue IDs with a guarded local/dev seed script and tests. |
+| 2026-07-09 | `TASK-041` created: AI report generation readiness must close the remaining live/dev gap where `ai_reports=0` and latest historical-seed metric timestamps do not exactly match snapshot timestamps required by the current prompt-input lookup. |
 
 ## Constraints
 

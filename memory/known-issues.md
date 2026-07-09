@@ -170,3 +170,34 @@ them before Day 5 lock if they become relevant to the active path:
   - Remaining limitation: 30d full-baseline readiness is still unavailable
     (`0` markets in the latest verification), so the demo should use the `7d`
     chart window unless later source history proves otherwise.
+
+### ISS-005: AI report batch cannot use latest historical-seed metric run
+- **Severity**: High
+- **Found**: 2026-07-09
+- **Status**: Open — assigned as `TASK-041`
+- **Reproduction steps**:
+  1. Use the configured development DB after the approved historical seed runs.
+  2. Confirm `ai_reports=0` through a read-only DB count or observe
+     `/api/issues/{id}/report` returning `{"status":"not_yet_generated"}`.
+  3. Inspect the latest `market_metrics.computed_at` values from
+     `historical_seed`.
+  4. Attempt to build report prompt inputs for the latest run.
+- **Root cause**:
+  - `historical_seed.metric_timestamp_for_seed()` intentionally writes seeded
+    metric timestamps as `latest_snapshot_at + 1 microsecond` so seeded metrics
+    are newer than first-run metrics.
+  - `build_prompt_inputs_for_market()` currently requires an exact
+    `MarketSnapshot.captured_at == MarketMetric.computed_at` match.
+  - As a result, the latest seeded metrics can qualify for report generation
+    but fail prompt-input construction because their source snapshots are one
+    microsecond earlier.
+- **Impact**:
+  - The frontend report card and report read API are implemented, but the live
+    DB-backed demo still has no successful stored report rows to display.
+- **Fix direction**:
+  - `TASK-041` should update report input lookup to use the latest snapshot at
+    or before the metric run timestamp, without fabricating values.
+  - Add tests covering the `+1 microsecond` historical-seed timestamp case and
+    `run_ai_report_batch` success-row insertion with a fake `LLMClient`.
+  - Any actual OpenAI call or shared/dev DB write remains separately
+    approval-gated.
