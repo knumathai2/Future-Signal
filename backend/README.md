@@ -44,6 +44,36 @@ uvicorn app.main:app --reload
 # http://127.0.0.1:8000/docs for OpenAPI docs
 ```
 
+## Local/dev historical chart seed
+
+After the first approved collector run, `/api/issues` can serve DB-backed rows
+but `/api/issues/{id}/history` may still have only one point per issue. For a
+demo that needs live DB-backed charts, use the local/dev historical seed path:
+
+```bash
+ENV=local ./.venv/bin/python -m app.core.historical_seed --confirm-local-dev-write
+```
+
+Safety boundaries:
+
+- `DATABASE_URL` must point to an approved local/development database.
+- The command refuses to write unless `ENV` is `local`, `dev`, `development`,
+  or `test`, and `--confirm-local-dev-write` is present.
+- It appends CLOB price-history points to `market_snapshots`; it does not alter
+  existing snapshot rows or change the schema.
+- It inserts fresh `market_metrics`, runs the existing expectation-shift
+  detector for those metric rows, and records one `data_collection_logs` row.
+
+Optional controls:
+
+```bash
+ENV=local ./.venv/bin/python -m app.core.historical_seed \
+  --interval 1w \
+  --fidelity 60 \
+  --max-markets 10 \
+  --confirm-local-dev-write
+```
+
 ## Lint / Test
 
 ```bash
@@ -55,4 +85,4 @@ pytest
 
 - The API layer only reads from Postgres — it never calls Polymarket or an AI provider directly (see `../docs/tech-design/01-architecture-stack-overview.md` §3).
 - Public route names use `issues` / `signals` / `reports` / `categories`, never `markets`/`bets`/`trades`/`positions`.
-- DB schema is currently a draft (`migrations/`) — see `TASK-002`. It has not been applied to any database; human approval is required before doing so.
+- DB schema was applied to the configured development Supabase DB on 2026-07-09 after human approval. Applying it or future schema changes to another shared/prod database still requires human approval.

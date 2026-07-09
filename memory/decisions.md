@@ -435,3 +435,39 @@ documented static fallback until snapshot/metric data is inserted.
 the development DB. Applying this migration or future schema changes to any
 other shared or production database remains approval-gated. The next live-data
 step is an approved seed/collector write path, not another schema change.
+
+---
+
+### ADR-025: Local/dev historical seed path for DB-backed charts
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: User request, implementing Debugger
+
+**Context**: `ISS-004` was resolved by inserting one live snapshot and metric
+row per normalized issue into the configured development DB, which made
+`/api/issues` DB-backed. The detail chart still needed older snapshot points:
+with only one point per issue, the frontend correctly shows an
+insufficient-history state rather than fabricating a trend.
+**Decision**: Add `backend/app/core/historical_seed.py` as the approved
+local/dev path for demo chart history. It fetches CLOB price-history points for
+normalized `price_history_token`s, appends missing timestamps to
+`market_snapshots`, inserts a fresh latest `market_metrics` row, runs the
+existing expectation-shift detector for those metric rows, and records a
+`data_collection_logs` audit row. The CLI refuses to write unless `ENV` is
+`local`, `dev`, `development`, or `test`, and
+`--confirm-local-dev-write` is present.
+**Rationale**: This keeps the chart path live and DB-backed without changing
+schema, public API shapes, frontend behavior, or safety policy. It also
+preserves the append-only model: existing snapshots/metrics remain untouched,
+and repeated runs skip already-present history timestamps.
+**Limitations**: Historical CLOB price history supplies chart values, but not
+historical volume/liquidity at each point. The seed stores volume/liquidity only
+when an inserted point is also the newest known snapshot, and otherwise keeps
+those auxiliary fields null; the latest metric still uses the latest available
+snapshot plus normalized current activity/liquidity values where needed for the
+existing caution calculation.
+**Consequences**: Demo prep can now choose between waiting for additional
+collector cycles or running the guarded historical seed command documented in
+`backend/README.md`. Writing to any shared/prod database remains outside this
+approval and must be confirmed separately under `AGENTS.md`.
