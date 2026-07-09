@@ -21,6 +21,7 @@ Day 2 baseline; keep all work inside PRD §14's detail/chart/badge scope.
 | TASK-017 | Disclaimer copy, footer, and dedicated notice surface | Frontend Implementer + PM | Frontend Implementer + PM / Planner | `frontend/TASK-017-disclaimer-copy` | assigned |
 | TASK-035 | Issue detail/history API readiness pass | Backend Implementer | Backend Implementer | `backend/TASK-035-detail-history-readiness` | assigned |
 | TASK-036 | Caution-badge logic and expectation-shift marker handoff | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-036-caution-signal-handoff` | assigned |
+| TASK-039 | Stabilize API and implement fallback data handling | Backend Implementer | Backend Implementer | `backend/TASK-039-stabilize-api-fallback` | completed |
 
 Completed Day 1, Day 2, and PM allocation tasks are archived in
 `tasks/completed.md`.
@@ -141,6 +142,19 @@ Completed Day 1, Day 2, and PM allocation tasks are archived in
         `issue_signals` payload and the frontend marker behavior.
   - [ ] Backend metric/signal tests are added or updated for the new caution
         logic.
+
+### TASK-039: Stabilize API and implement fallback data handling
+- **Owner**: Backend Implementer
+- **Assignee**: Backend Implementer
+- **Branch**: `backend/TASK-039-stabilize-api-fallback`
+- **Status**: completed
+- **Priority**: High
+- **Day**: Day 4
+- **Description**: Stabilize the core API and ensure robust fallback data handling so the application does not crash during the demo if data is missing or systems fail.
+- **Definition of Done**:
+  - [x] Fallback logic is implemented for missing history, timeouts, and unknown IDs.
+  - [x] Backend tests are added or updated to cover these failure and fallback scenarios.
+  - [x] The API contract remains unchanged, and the frontend demo flow is fully supported.
 
 ## Status Values
 
