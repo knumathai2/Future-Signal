@@ -379,3 +379,59 @@ with a real key, confirm the key is scoped/budgeted appropriately - this ADR
 approves the architecture and provider, not an unbounded number of live calls.
 `memory/architecture.md` and `tasks/completed.md` should reference this ADR
 for TASK-015's provider choice.
+
+---
+
+### ADR-023: Add psycopg2-binary for provider-copied Postgres URLs
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: User (human), implementing Debugger
+
+**Context**: The backend already depended on `psycopg[binary]` and documented
+`postgresql+psycopg://...` as the preferred SQLAlchemy URL form. Supabase
+dashboard connection strings are commonly copied as plain `postgresql://...`.
+With that form, SQLAlchemy defaults to the `psycopg2` driver. Local DB
+connectivity checks therefore failed with `ModuleNotFoundError: No module named
+'psycopg2'` even after the Supabase host and URL parsing were corrected.
+**Decision**: Add `psycopg2-binary==2.9.10` to the backend runtime
+dependencies while keeping `psycopg[binary]==3.2.3` in place.
+**Rationale**: This lets the backend accept provider-copied Supabase
+`postgresql://...` URLs without requiring every developer to rewrite the URL
+scheme to `postgresql+psycopg://...`. It also keeps the existing psycopg3 path
+available for environments that prefer explicit driver selection.
+**Trade-offs**: The backend now carries two Postgres drivers. That is a small
+dependency increase, but it reduces setup friction during the hackathon.
+**Consequences**: `backend/requirements.txt`, `dependencies.md`,
+`backend/README.md`, `commands.md`, and `backend/migrations/README.md` document
+the supported URL forms and the Supabase direct-host IPv6 fallback path. Live DB
+connectivity may still fail on local networks that cannot route Supabase's
+direct IPv6 host; use the Supabase pooler connection string in that case.
+
+---
+
+### ADR-024: Apply initial schema to development Supabase DB
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: User (human), implementing Debugger
+
+**Context**: After switching `DATABASE_URL` to the Supabase pooler URL,
+read-only connectivity succeeded, but live API reads fell back because the
+database did not contain application tables such as `market_snapshots`.
+`backend/migrations/001_initial_schema.sql` had previously been accepted as
+the schema draft but remained unapplied under ADR-011.
+**Decision**: With explicit user approval, apply
+`backend/migrations/001_initial_schema.sql` to the currently configured
+development Supabase database.
+**Rationale**: The backend live read path requires the accepted app tables
+before it can distinguish "no live rows yet" from "schema missing." Applying
+the initial schema unblocks the data seed/collector path while keeping public
+API shapes unchanged.
+**Trade-offs**: This creates tables in the configured Supabase database. The
+tables are currently empty, so user-facing issue routes still serve the
+documented static fallback until snapshot/metric data is inserted.
+**Consequences**: Expected tables and the `pgcrypto` extension are present in
+the development DB. Applying this migration or future schema changes to any
+other shared or production database remains approval-gated. The next live-data
+step is an approved seed/collector write path, not another schema change.

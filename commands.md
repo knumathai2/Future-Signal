@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # commands.md — Outlook Signals Quick Reference
 
-_Last updated: 2026-07-07_
+_Last updated: 2026-07-09_
 
 Monorepo layout assumed: `/frontend` (React + Vite + TS + Tailwind + Recharts), `/backend` (FastAPI + batch collector, Python).
 
@@ -23,6 +23,10 @@ cd backend && pip install -r requirements.txt
 # Both
 cp .env.example .env     # Configure Polymarket/DB/LLM API keys
 ```
+
+Supabase dashboard connection strings usually start with `postgresql://` and
+are accepted by the backend. `postgresql+psycopg://` is also supported for the
+explicit psycopg3 driver path.
 
 ## Development
 

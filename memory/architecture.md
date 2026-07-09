@@ -60,6 +60,7 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 | AI provider | OpenAI (`openai==2.44.0`, real `OpenAIReportClient`) | 2026-07-09 (ADR-022, human-approved) |
 | Data update strategy | Append-only inserts, no upserts | 2026-07-07 (Technical Design Â§4.10) |
 | Postgres driver | `psycopg[binary]` (psycopg3) | 2026-07-08 (ADR-007, human-approved) |
+| Postgres URL compatibility | `psycopg2-binary==2.9.10` for provider-copied `postgresql://...` URLs | 2026-07-09 (ADR-023, human-approved) |
 | Migration format (interim) | Plain SQL (`backend/migrations/*.sql`), not Alembic | 2026-07-08 (ADR-007) |
 
 ## Architecture Constraints
@@ -74,7 +75,7 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 - `/frontend` scaffold exists (Vite + React + TS + Tailwind, npm scripts). `npm run lint` and `npm run build` pass locally in the Day 3 task sessions; production build still reports the known Recharts chunk-size warning tracked as TD-001.
 - `GET /api/health` is live (mock/no DB dependency).
 - `GET /api/issues`, `/api/issues/:id`, and `/api/issues/:id/history` read latest available snapshot/metric/history rows when a database is configured, and otherwise serve the documented static fallback with honest `data_as_of` timestamps (ADR-013). `/api/issues/:id/history` returns empty `points` when history is unavailable rather than fabricating a latest-point chart. `/api/issues/:id/report` reads the latest successful stored `ai_reports` row in live mode and preserves the accepted no-report-yet response when no successful report exists or the report read fails.
-- DB schema draft is accepted (`backend/migrations/001_initial_schema.sql` + `backend/app/db/models.py`) but **not applied to any database** â€” human approval still required before applying, per `AGENTS.md` and ADR-011.
+- DB schema draft is accepted (`backend/migrations/001_initial_schema.sql` + `backend/app/db/models.py`) and was applied to the currently configured development Supabase DB on 2026-07-09 after explicit human approval. Tables are present but empty, so live issue reads still fall back until snapshot/metric rows are inserted. Applying schema changes to any other shared or production DB remains approval-gated.
 - `TASK-007` collector now fetches active Gamma events, validates binary market candidates, writes 50 normalized sample records, and quarantines skipped candidates with structured reasons. Per ADR-014, the artifact emits a display-safe `description: str` and omits raw source descriptions.
 - `TASK-008` snapshot/metrics logic computes `change_24h`, `change_7d`, placeholder `heat_score`, and confidence levels through a local/dev-safe path. `TASK-036` adds MVP `caution_low_activity` and `caution_high_volatility` thresholds documented in ADR-019.
 - `TASK-009` expectation-shift detector inserts `expectation_shift` rows for the MVP Â±5pp threshold with a 24h cooldown and no evaluation for insufficient data.
