@@ -13,12 +13,13 @@ _Last updated: 2026-07-09_
 
 Day 3 work is assigned. Start from `reports/day-3-work-allocation.md` and the
 Day 2 baseline; keep all work inside PRD §14's detail/chart/badge scope.
+`TASK-013` and `TASK-035` completed 2026-07-09 - see
+`tasks/completed.md`.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
 | TASK-014 | Interpretation-caution badge alignment | Frontend Implementer | Frontend Implementer | `frontend/TASK-014-caution-badges` | assigned |
 | TASK-017 | Disclaimer copy, footer, and dedicated notice surface | Frontend Implementer + PM | Frontend Implementer + PM / Planner | `frontend/TASK-017-disclaimer-copy` | assigned |
-| TASK-035 | Issue detail/history API readiness pass | Backend Implementer | Backend Implementer | `backend/TASK-035-detail-history-readiness` | assigned |
 | TASK-036 | Caution-badge logic and expectation-shift marker handoff | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-036-caution-signal-handoff` | assigned |
 
 Completed Day 1, Day 2, and PM allocation tasks are archived in
@@ -32,9 +33,12 @@ Completed Day 1, Day 2, and PM allocation tasks are archived in
 - **Frontend Implementer** completed `TASK-013` on
   `frontend/TASK-013-detail-chart`; continue with `TASK-014` and `TASK-017`
   from the hardened detail/chart baseline.
-- **Backend Implementer** should continue from the merged `TASK-010` read path.
-  Applying the draft schema to any shared or production database still requires
-  separate human approval under `AGENTS.md`.
+- **Backend Implementer** completed `TASK-035`: the merged `TASK-010` read
+  path already supports the Day 3 chart/marker experience, so no contract
+  change was made. `TASK-013`/`TASK-036` should read the remaining-risk notes
+  in `memory/session.md` (marker-logic reconciliation, `confidence_level`
+  enum risk). Applying the draft schema to any shared or production database
+  still requires separate human approval under `AGENTS.md`.
 - **Data/AI Implementer** should improve caution-level logic using the existing
   schema/API fields and avoid expanding into P1 metric families unless PM
   explicitly reassigns scope.
@@ -79,26 +83,6 @@ Completed Day 1, Day 2, and PM allocation tasks are archived in
         dependencies, notifications, or other excluded features.
   - [ ] No wording-policy changes are made without human approval.
   - [ ] Changed user-facing strings pass the project wording scan.
-
-### TASK-035: Issue detail/history API readiness pass
-- **Owner**: Backend Implementer
-- **Assignee**: Backend Implementer
-- **Branch**: `backend/TASK-035-detail-history-readiness`
-- **Status**: assigned
-- **Priority**: High
-- **Day**: Day 3
-- **Description**: Verify that the accepted detail and history endpoints
-  provide the frontend with enough data for the Day 3 chart, tooltip, and
-  expectation-shift marker experience while preserving accepted response
-  shapes.
-- **Definition of Done**:
-  - [ ] `/api/issues/{id}` returns detail fields, related-event candidates,
-        and expectation-shift rows when available.
-  - [ ] `/api/issues/{id}/history` returns ordered points for the requested
-        window and keeps the honest fallback behavior for missing history.
-  - [ ] Backend tests cover live-read, fallback, unknown-id, and history-query
-        failure cases relevant to the chart path.
-  - [ ] No public API response-shape change is made without human approval.
 
 ### TASK-036: Caution-badge logic and expectation-shift marker handoff
 - **Owner**: Data/AI Implementer
