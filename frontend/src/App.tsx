@@ -2,11 +2,13 @@ import { useEffect, useMemo, useState } from "react";
 import { Dashboard } from "./components/Dashboard";
 import { InformationNoticeScreen } from "./components/InformationNotice";
 import { IssueDetail } from "./components/IssueDetail";
-import {
-  staleDummyDataAsOf,
-  staleDummyIssues,
-} from "./data/dummyIssues";
-import type { DataStatus, Issue } from "./types/issue";
+import { staleDummyDataAsOf, staleDummyIssues } from "./data/dummyIssues";
+import type {
+  DataStatus,
+  Issue,
+  IssueReportLoadState,
+  IssueReportResponse,
+} from "./types/issue";
 import {
   mapApiIssueToFrontendIssue,
   mapApiIssueDetailToFrontendIssue,
@@ -16,6 +18,37 @@ import {
 } from "./utils/format";
 
 type Screen = "dashboard" | "detail" | "notice";
+
+async function fetchJson<T>(url: string, message: string): Promise<T> {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(message);
+  }
+
+  return (await res.json()) as T;
+}
+
+async function loadIssueReport(issueId: string): Promise<IssueReportLoadState> {
+  try {
+    const apiReport = await fetchJson<IssueReportResponse>(
+      `/api/issues/${issueId}/report`,
+      "Failed to load issue report",
+    );
+
+    if (apiReport.status === "success") {
+      return { status: "success", report: apiReport };
+    }
+
+    if (apiReport.status === "not_yet_generated") {
+      return { status: "not_yet_generated" };
+    }
+
+    throw new Error("Unexpected issue report status");
+  } catch (err) {
+    console.error(err);
+    return { status: "error" };
+  }
+}
 
 function statusFromQuery(): DataStatus | null {
   if (typeof window === "undefined") {
@@ -40,23 +73,27 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>("dashboard");
   const [previousScreen, setPreviousScreen] = useState<Screen>("dashboard");
   const [selectedIssueId, setSelectedIssueId] = useState("");
-  
+
   // Dashboard states
   const [status, setStatus] = useState<DataStatus>(forcedStatus ?? "loading");
   const [issues, setIssues] = useState<Issue[]>([]);
   const [apiDataAsOf, setApiDataAsOf] = useState(staleDummyDataAsOf);
   const [categories, setCategories] = useState<string[]>([]);
-  
+
   // Filter/Query states
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [activeWindow, setActiveWindow] = useState<"24h" | "7d">("24h");
-  const [activeSort, setActiveSort] = useState<"heat" | "change" | "recent">("heat");
-  
+  const [activeSort, setActiveSort] = useState<"heat" | "change" | "recent">(
+    "heat",
+  );
+
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Detail states
   const [detailIssue, setDetailIssue] = useState<Issue | null>(null);
   const [detailStatus, setDetailStatus] = useState<DataStatus>("loading");
+  const [detailReportState, setDetailReportState] =
+    useState<IssueReportLoadState>({ status: "loading" });
 
   // Load categories list
   useEffect(() => {
@@ -137,42 +174,66 @@ export default function App() {
 
     if (forcedStatus) {
       if (forcedStatus === "error") {
-        const fallback = staleDummyIssues.find((i) => i.id === selectedIssueId) || staleDummyIssues[0];
+        const fallback =
+          staleDummyIssues.find((i) => i.id === selectedIssueId) ||
+          staleDummyIssues[0];
         setDetailIssue(fallback);
         setDetailStatus("error");
+        setDetailReportState({ status: "error" });
       } else if (forcedStatus === "empty") {
         setDetailIssue(null);
         setDetailStatus("empty");
+        setDetailReportState({ status: "not_yet_generated" });
       } else {
         setDetailIssue(null);
         setDetailStatus("loading");
+        setDetailReportState({ status: "loading" });
       }
       return;
     }
 
     let isMounted = true;
+    let shouldAcceptReport = true;
     async function loadDetail() {
       setDetailStatus("loading");
-      try {
-        const detailRes = await fetch(`/api/issues/${selectedIssueId}`);
-        if (!detailRes.ok) throw new Error("Failed to load details");
-        const apiDetail = (await detailRes.json()) as ApiIssueDetail;
+      setDetailReportState({ status: "loading" });
 
-        const historyRes = await fetch(`/api/issues/${selectedIssueId}/history?window=30d`);
-        if (!historyRes.ok) throw new Error("Failed to load history");
-        const apiHistory = (await historyRes.json()) as ApiIssueHistoryResponse;
+      loadIssueReport(selectedIssueId).then((reportState) => {
+        if (isMounted && shouldAcceptReport) {
+          setDetailReportState(reportState);
+        }
+      });
+
+      try {
+        const [apiDetail, apiHistory] = await Promise.all([
+          fetchJson<ApiIssueDetail>(
+            `/api/issues/${selectedIssueId}`,
+            "Failed to load details",
+          ),
+          fetchJson<ApiIssueHistoryResponse>(
+            `/api/issues/${selectedIssueId}/history?window=30d`,
+            "Failed to load history",
+          ),
+        ]);
 
         if (isMounted) {
-          const mapped = mapApiIssueDetailToFrontendIssue(apiDetail, apiHistory);
+          const mapped = mapApiIssueDetailToFrontendIssue(
+            apiDetail,
+            apiHistory,
+          );
           setDetailIssue(mapped);
           setDetailStatus("ready");
         }
       } catch (err) {
         console.error(err);
+        shouldAcceptReport = false;
         if (isMounted) {
-          const fallback = staleDummyIssues.find((i) => i.id === selectedIssueId) || staleDummyIssues[0];
+          const fallback =
+            staleDummyIssues.find((i) => i.id === selectedIssueId) ||
+            staleDummyIssues[0];
           setDetailIssue(fallback);
           setDetailStatus("error");
+          setDetailReportState({ status: "error" });
         }
       }
     }
@@ -257,6 +318,7 @@ export default function App() {
       <IssueDetail
         issue={detailIssue}
         dataStatus={detailStatus}
+        reportState={detailReportState}
         onBack={() => setScreen("dashboard")}
         onOpenNotice={handleOpenNotice}
       />
