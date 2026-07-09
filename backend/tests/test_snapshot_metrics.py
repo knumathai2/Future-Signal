@@ -156,10 +156,15 @@ def test_compute_change_for_window_picks_closest_snapshot_at_or_before_boundary(
 
 
 def test_compute_confidence_level():
-    assert compute_confidence_level(None, None) == "insufficient_data"
-    assert compute_confidence_level(0.05, None) == "insufficient_data"
-    assert compute_confidence_level(None, 0.12) == "insufficient_data"
-    assert compute_confidence_level(0.05, 0.12) == "sufficient"
+    assert compute_confidence_level(None, None, 1000.0, 2000.0) == "insufficient_data"
+    assert compute_confidence_level(0.05, None, 1000.0, 2000.0) == "insufficient_data"
+    assert compute_confidence_level(None, 0.12, 1000.0, 2000.0) == "insufficient_data"
+    assert compute_confidence_level(0.05, 0.12, 1000.0, 2000.0) == "sufficient"
+
+    # Test caution conditions
+    assert compute_confidence_level(0.05, 0.12, 400.0, 2000.0) == "caution_low_activity"
+    assert compute_confidence_level(0.05, 0.12, 1000.0, 500.0) == "caution_low_activity"
+    assert compute_confidence_level(0.16, 0.12, 1000.0, 2000.0) == "caution_high_volatility"
 
 
 def test_compute_heat_score_none_without_change():

@@ -16,10 +16,10 @@ never become a silent, permanent substitute for live data - once TASK-008
 produces real rows the live path takes over automatically, no code change
 needed here. See reports/task-010-core-api-notes.md for detail.
 
-`/api/issues/{id}/report` keeps its existing hardcoded sample content;
-wiring it to `ai_reports` is TASK-015, out of scope here. In live mode (no
-`ai_reports` rows exist yet either) it correctly degrades to
-`not_yet_generated` for every issue.
+`/api/issues/{id}/report` reads the latest successful `ai_reports` row in
+live mode. When no successful report exists, or when the report query fails,
+it preserves the accepted `not_yet_generated` empty state. The static fallback
+path keeps one demo-safe sample report when no live data is available.
 """
 import logging
 from collections.abc import Generator
@@ -31,8 +31,10 @@ from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.db.queries import (
+    LiveAiReport,
     LiveIssue,
     load_history_points,
+    load_latest_successful_report,
     load_live_issues,
     load_related_events_for_market,
     load_signals_for_market,
@@ -222,6 +224,16 @@ def _find_live(live_issues: list[LiveIssue], issue_id: str) -> LiveIssue | None:
     return next((li for li in live_issues if str(li.market.id) == issue_id), None)
 
 
+def _issue_report_from_live(live_report: LiveAiReport) -> IssueReportResponse:
+    return IssueReportResponse(
+        id=str(live_report.report.id),
+        generated_at=live_report.report.generated_at,
+        data_as_of=live_report.data_as_of,
+        status="success",
+        content=ReportContent(**live_report.report.content),
+    )
+
+
 @router.get("/api/issues", response_model=IssueListResponse)
 def list_issues(
     category: str | None = Query(default=None),
@@ -344,11 +356,27 @@ def _issue_exists(issue_id: str, db: Session | None) -> bool:
 def get_issue_report(
     issue_id: str, db: Session | None = Depends(_get_optional_db)
 ) -> IssueReportResponse | ReportNotYetGenerated:
-    if not _issue_exists(issue_id, db):
+    live = _resolve_live(db)
+    if live is not None and db is not None:
+        live_issues, _ = live
+        match = _find_live(live_issues, issue_id)
+        if match is None:
+            raise HTTPException(status_code=404, detail="Unknown issue id.")
+        try:
+            live_report = load_latest_successful_report(db, match.market.id)
+        except SQLAlchemyError:
+            logger.warning(
+                "FALLBACK: live report query failed, returning report empty state.",
+                exc_info=True,
+            )
+            return ReportNotYetGenerated(status="not_yet_generated")
+        if live_report is None:
+            return ReportNotYetGenerated(status="not_yet_generated")
+        return _issue_report_from_live(live_report)
+
+    if issue_id not in _FALLBACK_ISSUES:
         raise HTTPException(status_code=404, detail="Unknown issue id.")
     if issue_id != "b3f1c2a4-0000-4000-8000-000000000001":
-        # ai_reports is out of scope for TASK-010 (see TASK-015). This also
-        # correctly covers live mode, where ai_reports has no rows yet either.
         return ReportNotYetGenerated(status="not_yet_generated")
     return IssueReportResponse(
         id="7c2e1a90-0000-4000-8000-0000000000aa",

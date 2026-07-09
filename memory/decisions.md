@@ -264,14 +264,73 @@ _Last updated: 2026-07-09_
 
 ---
 
-### ADR-018: API history endpoints return empty arrays instead of fabricated data on missing history
+### ADR-018: Detail chart windows require baseline-covered history
+
+- **Date**: 2026-07-09
+- **Status**: Accepted (TASK-013 implementation decision)
+- **Decided by**: Frontend Implementer
+
+**Context**: The Day 3 detail chart must support 24h, 7d, and 30d selection with honest insufficient-history states. The existing frontend sliced the last 2/8/31 points and displayed `change30d ?? change7d`, which could make a short history look like a valid longer-window chart.
+**Decision**: For each selected chart window, the frontend now requires at least one history point at or before that window's baseline plus a later point before rendering a line chart. If that baseline is unavailable, the chart shows an insufficient-history state. The 30d metric displays only an actual 30d history-derived change, not a 7d fallback.
+**Rationale**: This matches the no-fabrication rule used by backend metrics and avoids overstating sparse API/fallback history during the demo.
+**Trade-offs**: A window may show an insufficient-history state even when it has several recent points, if those points do not reach the requested baseline. This is preferable to stretching a shorter span into a longer-window interpretation.
+**Consequences**: `frontend/src/utils/history.ts` is the shared frontend helper for window coverage. The detail chart still preserves the accepted API response shape and uses API-provided `signals` when present, with local adjacent 5pp detection only as a fallback marker source.
+
+---
+
+### ADR-019: Caution-badge thresholds and expectation-shift marker handoff (TASK-036)
 
 - **Date**: 2026-07-09
 - **Status**: Accepted
+- **Decided by**: Data/AI Implementer
+
+**Context**: MVP interpretation caution logic needs to handle `caution_low_activity` and `caution_high_volatility` without waiting for a complex volume/liquidity floor calculation, and `expectation_shift` markers need a clear consumption contract.
+**Decision**:
+1. **Caution Thresholds**: Implemented conservative hardcoded thresholds in `compute_confidence_level` based on sample data: 500 USDC for `volume_24h`, 1000 USDC for `liquidity`, and >15pp absolute change for `change_24h`.
+2. **Precedence**: `insufficient_data` continues to take precedence over any activity or volatility caution state if history is lacking.
+3. **Marker Consumption Contract**: The backend `/api/issues/:id` endpoint will query `issue_signals` for any `expectation_shift` (±5pp threshold, medium severity) rows related to the market. The frontend will consume these rows to render "Expectation Shift" visual markers on the detail chart at the `triggered_at` timestamps, enabling users to visually align shifts with their own context without implying causation.
+**Rationale**: Uses the existing schema and Enum values for `confidence_level` without adding new schema fields, keeping the MVP lightweight. Documenting the marker contract ensures frontend/backend alignment without extending P1 metrics.
+**Trade-offs**: Hardcoded thresholds may need adjustment as real-world Polymarket volume changes, and using absolute 24h change as a volatility proxy is less precise than a full `volatility_score`.
+**Consequences**: Closes MVP path for TD-008. Backend and frontend implementers can proceed with API/UI integration for caution badges and expectation-shift markers.
+
+---
+
+### ADR-020: Day 4 active work limited to summary and demo-flow completion
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: PM / Planner
+
+**Context**: Day 3 closed the detail/chart/caution path, and latest
+`origin/main` at `af83f7e` includes the Day 3 closeout merge. PRD section 14
+defines Day 4 as template summaries, demo-flow completion, fallback readiness,
+manual event candidates, and a deck/script draft.
+**Decision**: Open Day 4 active work for `TASK-015`, `TASK-039`, `TASK-016`,
+`TASK-019`, `TASK-040`, and `TASK-018`. Keep P1 category/feed/extra-metric
+work deferred until the Day 4 P0 path is complete. Treat any paid external AI
+provider call, schema change, deployment, infrastructure change, public API
+shape change, or shared/production database write as approval-gated.
+**Rationale**: The remaining demo risk is not feature breadth; it is whether
+the Home -> Detail -> Chart -> Summary path is coherent, safe, and rehearsable.
+This sequence lets Data/AI and Backend unblock Frontend report display while PM
+prepares the demo story and final wording pass.
+**Trade-offs**: General UI polish and P1 metrics remain deferred even though
+they could improve perceived quality. The allocation prefers a complete and
+guarded summary/demo path over broader scope.
+**Consequences**: `tasks/active.md` is the Day 4 execution source of truth, and
+`reports/day-4-work-allocation.md` records the sequencing and guardrails.
+`TASK-025` remains stretch-only unless the Day 4 checklist is already satisfied.
+
+---
+
+### ADR-021: Report API reads latest successful stored reports while history empty states stay honest
+
+- **Date**: 2026-07-09
+- **Status**: Accepted (TASK-039 implementation decision)
 - **Decided by**: Backend Implementer
 
-**Context**: When `load_history_points` failed or found no history, the API previously returned a single fabricated `HistoryPoint` using the market's current value to ensure the chart had at least one point to draw. This violated the strict honesty / no-fabrication policy.
-**Decision**: The `/api/issues/{id}/history` endpoint now returns an empty `points` array (`[]`) when history is missing or when the database query times out.
-**Rationale**: Returning an empty array is an honest "safe empty state" that accurately represents missing history, allowing the frontend to render an appropriate "insufficient data" view rather than plotting a fabricated point.
-**Trade-offs**: The frontend chart component must gracefully handle an empty points array instead of assuming at least one data point is always present.
-**Consequences**: Backend history-fallback tests were updated to assert `len(points) == 0`. The API contract shape is preserved since `[]` is a valid `list[HistoryPoint]`.
+**Context**: PR #29 originally changed `/api/issues/{id}/history` to return an empty `points` array when history was missing or the query failed, but it predated the Day 4 `TASK-039` ledger on `main`. Day 4 `TASK-039` requires `/api/issues/{id}/report` to read latest successful `ai_reports` rows while preserving the accepted `not_yet_generated` empty state.
+**Decision**: Preserve the history no-fabrication behavior: live and static fallback history responses return `points: []` when no history is available or the history query fails. Also wire the live report endpoint to the latest successful `ai_reports` row for the issue. Failed report rows are never served; absent reports or report-read failures return the accepted `{"status": "not_yet_generated"}` shape. Static fallback mode keeps its demo-safe sample report.
+**Rationale**: Empty history is more honest than plotting a fabricated latest point, and serving only successful stored reports keeps the API read-only and decoupled from report generation. The response shapes stay unchanged, so frontend integration can keep the existing success/empty-state contract.
+**Trade-offs**: Static fallback history may show no chart line until richer fallback history is deliberately added. Static fallback report content remains a curated sample, so `TD-009` still needs a Day 5 language/demo fallback note if backend fallback data is used in presentation.
+**Consequences**: `TASK-039` is complete for the backend read path. Backend tests now cover latest successful report selection, failed-report exclusion, report-query failure fallback, report unknown-id behavior, and empty history fallback behavior without any schema, dependency, infrastructure, deployment, or public API shape change.
