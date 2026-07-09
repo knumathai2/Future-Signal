@@ -88,6 +88,10 @@ Merging that work into this branch produced an ADR-021 numbering collision
       follow-up), including an ADR-021 number collision - both sessions
       independently used ADR-021; renumbered this session's entry to ADR-022
       and kept Backend Implementer's ADR-021 as-is.
+- [x] Resolved PR #30 `CHANGES_REQUESTED` feedback by updating
+      `dependencies.md` so the concrete `openai==2.44.0` package, OpenAI API
+      provider choice, and ADR-022 human-approval/cost gate are recorded in
+      the dependency ledger.
 
 ## Issues Found / Decisions Made
 
@@ -108,11 +112,20 @@ Merging that work into this branch produced an ADR-021 numbering collision
 - No schema migration, no shared/production database write, no deployment,
   and no public API interface change was made. The `ai_reports` table/model
   already existed (from `TASK-002`, still unapplied to any real database).
+- PR #30 review feedback found that `backend/requirements.txt` selected
+  `openai==2.44.0` while `dependencies.md` still listed only the generic
+  provider candidate. The dependency ledger now names the concrete package,
+  selected API provider, approval date, and ADR-022 reference.
 
 ## Verification
 
-- `pytest tests/` → 100/100 passed (62 pre-existing + 38 new).
-- `ruff check .` → all checks passed, whole backend.
+- `pytest tests/` → 100/100 passed (62 pre-existing + 38 new) during the
+  initial TASK-015 implementation.
+- PR #30 review-follow-up verification: `.venv/bin/python -m pytest` →
+  104/104 passed after installing `openai==2.44.0`.
+- PR #30 review-follow-up verification: `.venv/bin/python -m ruff check .` →
+  all checks passed, whole backend.
+- PR #30 review-follow-up verification: `git diff --check` → passed.
 - Manual smoke: Technical Design §10.3's exact reference JSON parses via
   `parse_report_content()` and passes `run_safety_filter()` clean.
 - Manual smoke: `OpenAIReportClient.complete()` correctly wraps a real
