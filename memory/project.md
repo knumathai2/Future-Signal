@@ -83,6 +83,7 @@ Future Signal/
 | 2026-07-09 | `TASK-017` completed: brief caution copy, shared footer copy, and a dedicated in-app information notice surface were added without policy, route dependency, API, schema, or infrastructure changes. |
 | 2026-07-09 | Day 3 closed: all Day 3 P0 tasks are merged and closeout evidence is recorded in `reports/day-3-closeout-plan.md`. |
 | 2026-07-09 | Day 4 work assigned from latest `origin/main` at `af83f7e`: `TASK-015`, `TASK-039`, `TASK-016`, `TASK-019`, `TASK-040`, and `TASK-018` are active; `TASK-038` records allocation and guardrails in `reports/day-4-work-allocation.md`. |
+| 2026-07-09 | `TASK-015` completed: fixed-template AI report generator, strict schema parse, and banned-phrase/pattern safety filter implemented (`app/core/ai_report.py`, `app/core/ai_report_batch.py`, 38 new tests). ADR-021 records the human-approved AI provider decision (OpenAI, real `OpenAIReportClient`) overriding Day 4's deterministic-template default - no key configured in this environment, so no live call has executed yet. |
 
 ## Constraints
 

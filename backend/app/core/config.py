@@ -17,6 +17,12 @@ class Settings:
         ).split(",")
         if origin.strip()
     ]
+    # TASK-015 (data-ai/TASK-015-template-report-generation): AI provider selection
+    # is OpenAI per ADR (memory/decisions.md), human-approved. No key = no live
+    # calls; app/core/ai_report.py callers must check this before constructing
+    # OpenAIReportClient.
+    openai_api_key: str | None = os.getenv("OPENAI_API_KEY")
+    openai_model: str = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
 
 
 settings = Settings()
