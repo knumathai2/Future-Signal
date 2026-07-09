@@ -89,7 +89,7 @@ def test_get_issue_history_live_data(live_client, db_session):
     assert body["points"][0]["value"] == 0.63
 
 
-def test_history_query_failure_returns_latest_snapshot_point(
+def test_history_query_failure_returns_empty_points(
     live_client, db_session, monkeypatch
 ):
     seed_basic_market(db_session)
@@ -104,9 +104,7 @@ def test_history_query_failure_returns_latest_snapshot_point(
     assert response.status_code == 200
     body = response.json()
     assert body["window"] == "7d"
-    assert len(body["points"]) == 1
-    assert body["points"][0]["captured_at"].startswith("2026-07-08T09:00:00")
-    assert body["points"][0]["value"] == 0.63
+    assert len(body["points"]) == 0
 
 
 def test_missing_metric_yields_null_fields_and_insufficient_data(live_client, db_session):

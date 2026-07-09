@@ -307,17 +307,13 @@ def get_issue_history(
             points = load_history_points(db, match.market.id, since)
         except SQLAlchemyError:
             logger.warning(
-                "FALLBACK: live history query failed, serving latest snapshot only.",
+                "FALLBACK: live history query failed, returning empty history.",
                 exc_info=True,
             )
             points = []
         history_points = [
             HistoryPoint(captured_at=p.captured_at, value=float(p.price)) for p in points
         ]
-        if not history_points:
-            history_points = [
-                HistoryPoint(captured_at=match.captured_at, value=match.current_value)
-            ]
         return IssueHistoryResponse(
             data_as_of=data_as_of,
             window=window,
@@ -329,7 +325,7 @@ def get_issue_history(
     return IssueHistoryResponse(
         data_as_of=_NOW,
         window=window,
-        points=[HistoryPoint(captured_at=_NOW, value=_FALLBACK_ISSUES[issue_id].current_value)],
+        points=[],
     )
 
 

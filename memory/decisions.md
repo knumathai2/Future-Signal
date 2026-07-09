@@ -261,3 +261,17 @@ _Last updated: 2026-07-09_
 **Rationale**: The highest current demo risk is a detail view that shows a chart or caution badge in a confusing way. Stabilizing that path first protects the core Home -> Detail -> Chart flow before adding the template summary generator.
 **Trade-offs**: Data/AI report work may start later than the original `TASK-015` Day 3-4 range suggests. This keeps the team from splitting attention before the core detail path is trustworthy.
 **Consequences**: `tasks/active.md` is the Day 3 source of execution truth; `reports/day-3-work-allocation.md` records the sequence and guardrails. Shared/dev database schema application, public API response-shape changes, new dependencies, deployment work, and wording-policy changes remain approval-gated by `AGENTS.md`.
+
+---
+
+### ADR-018: API history endpoints return empty arrays instead of fabricated data on missing history
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: Backend Implementer
+
+**Context**: When `load_history_points` failed or found no history, the API previously returned a single fabricated `HistoryPoint` using the market's current value to ensure the chart had at least one point to draw. This violated the strict honesty / no-fabrication policy.
+**Decision**: The `/api/issues/{id}/history` endpoint now returns an empty `points` array (`[]`) when history is missing or when the database query times out.
+**Rationale**: Returning an empty array is an honest "safe empty state" that accurately represents missing history, allowing the frontend to render an appropriate "insufficient data" view rather than plotting a fabricated point.
+**Trade-offs**: The frontend chart component must gracefully handle an empty points array instead of assuming at least one data point is always present.
+**Consequences**: Backend history-fallback tests were updated to assert `len(points) == 0`. The API contract shape is preserved since `[]` is a valid `list[HistoryPoint]`.
