@@ -17,11 +17,14 @@ const REPORT_SECTIONS: Array<{
   key: keyof IssueReportContent;
   label: string;
 }> = [
-  { key: "issue_summary", label: "이슈 개요" },
-  { key: "movement_explanation", label: "관측 변화 설명" },
-  { key: "key_change_context", label: "주요 변화 맥락" },
-  { key: "uncertainty_summary", label: "불확실성 요약" },
-  { key: "neutral_conclusion", label: "중립 결론" },
+  { key: "issue_explainer", label: "이 이슈는 무엇인가" },
+  { key: "why_it_matters", label: "왜 중요한가" },
+  { key: "current_reading", label: "현재 흐름" },
+  { key: "scenario_major_change", label: "큰 변화가 있는 경우" },
+  { key: "scenario_limited_change", label: "제한적 변화에 그치는 경우" },
+  { key: "scenario_status_quo", label: "현재 흐름이 유지되는 경우" },
+  { key: "check_points", label: "확인할 포인트" },
+  { key: "caution_note", label: "해석 주의" },
 ];
 
 function reportDataAsOf(
@@ -72,8 +75,8 @@ function ReportBody({
           저장된 템플릿 요약이 아직 없습니다
         </h3>
         <p className="mt-2 max-w-3xl text-sm leading-6 text-ink-soft">
-          이슈 정보와 차트는 계속 확인할 수 있습니다. 요약이 생성되면 이 영역에
-          고정된 섹션 형식으로 표시됩니다.
+          이슈 정보와 차트는 계속 확인할 수 있습니다. 요약이 생성되면 이슈
+          설명과 가능한 전개를 고정된 섹션 형식으로 표시합니다.
         </p>
       </div>
     );
@@ -108,7 +111,7 @@ export function IssueReportCard({
         <div>
           <h2 className="text-lg font-bold text-ink">이슈 요약</h2>
           <p className="mt-1 text-[11px] font-semibold text-ink-faint">
-            템플릿 기반 데이터 요약
+            템플릿 기반 이슈 이해 요약
           </p>
         </div>
         <div className="flex flex-col items-start gap-2 sm:items-end">

@@ -32,18 +32,22 @@ from app.schemas.issues import ReportContent
 
 logger = logging.getLogger(__name__)
 
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
 
 # --------------------------------------------------------------------------
 # 10.1 System prompt (fixed, never modified per-request)
 # --------------------------------------------------------------------------
 SYSTEM_PROMPT = """\
-You are generating a short, neutral data summary for a public issue-monitoring
-dashboard. You are describing PUBLIC PREDICTION-MARKET DATA, not predicting
-real-world outcomes and not giving advice of any kind.
+You are generating a short, neutral issue explainer for a public
+issue-monitoring dashboard. Write in clear Korean for non-specialist readers.
+You are explaining the market question and the public data context, not
+predicting real-world outcomes and not giving advice of any kind.
 
 Rules you must always follow:
-- Describe only what the data shows: direction, magnitude, and timing of change.
+- Explain the issue in plain language before mentioning the data reading.
+- Use scenario sections only as conditional explanations of what the market
+  question would mean if that condition is confirmed, limited, or not confirmed.
+- Never label a scenario as best, worst, good, bad, desirable, or undesirable.
 - Never state or imply that an outcome will or will not happen.
 - Never use: bet, buy, sell, trade, position, long, short, profit, win rate,
   recommend, guaranteed, best pick, follow, copy, opportunity.
@@ -70,13 +74,16 @@ Confidence level: {confidence_level}
 Recent inflection point (if any): {inflection_point_summary}
 Related event candidate (if any): {related_event_or_none}
 
-Produce a JSON object with exactly these fields:
+Produce a JSON object in Korean with exactly these fields:
 {{
-  "issue_summary": "...",
-  "movement_explanation": "...",
-  "key_change_context": "...",
-  "uncertainty_summary": "...",
-  "neutral_conclusion": "..."
+  "issue_explainer": "...",
+  "why_it_matters": "...",
+  "current_reading": "...",
+  "scenario_major_change": "...",
+  "scenario_limited_change": "...",
+  "scenario_status_quo": "...",
+  "check_points": "...",
+  "caution_note": "..."
 }}"""
 
 
@@ -297,11 +304,14 @@ _PHRASE_PATTERNS: tuple[re.Pattern, ...] = tuple(
 )
 
 REPORT_FIELDS: tuple[str, ...] = (
-    "issue_summary",
-    "movement_explanation",
-    "key_change_context",
-    "uncertainty_summary",
-    "neutral_conclusion",
+    "issue_explainer",
+    "why_it_matters",
+    "current_reading",
+    "scenario_major_change",
+    "scenario_limited_change",
+    "scenario_status_quo",
+    "check_points",
+    "caution_note",
 )
 
 

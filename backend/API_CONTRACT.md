@@ -104,10 +104,13 @@ separate calls — done here).
 ## `GET /api/issues/{id}/report`
 
 Latest AI report. Content is fixed template slots only — never free-form
-(ADR-003) — and must pass the banned-phrase filter before storage.
+(ADR-003, updated by ADR-028) — and must pass the banned-phrase filter before
+storage.
 When live data is available, the API serves the latest `status="success"`
 `ai_reports` row for the issue. Failed rows are retained in storage but are
-not returned from this endpoint.
+not returned from this endpoint. Legacy stored report content that does not
+match the current schema is treated as not yet generated rather than partially
+served.
 
 ```json
 {
@@ -116,11 +119,14 @@ not returned from this endpoint.
   "data_as_of": "2026-07-08T09:00:00Z",
   "status": "success",
   "content": {
-    "issue_summary": "...",
-    "movement_explanation": "...",
-    "key_change_context": "...",
-    "uncertainty_summary": "...",
-    "neutral_conclusion": "..."
+    "issue_explainer": "...",
+    "why_it_matters": "...",
+    "current_reading": "...",
+    "scenario_major_change": "...",
+    "scenario_limited_change": "...",
+    "scenario_status_quo": "...",
+    "check_points": "...",
+    "caution_note": "..."
   }
 }
 ```

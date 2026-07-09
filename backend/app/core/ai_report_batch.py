@@ -72,8 +72,11 @@ def _sort_and_cap_qualifying_metrics(
             qualifying.append(metric)
             continue
         latest = _latest_successful_report(db, metric.market_id)
-        if latest is None or as_utc_naive(latest.generated_at) < as_utc_naive(
-            metric.computed_at - STALENESS_THRESHOLD
+        if (
+            latest is None
+            or latest.prompt_version != PROMPT_VERSION
+            or as_utc_naive(latest.generated_at)
+            < as_utc_naive(metric.computed_at - STALENESS_THRESHOLD)
         ):
             qualifying.append(metric)
 

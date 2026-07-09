@@ -70,16 +70,21 @@ And is capped at a **maximum reports per batch run** (e.g., top 10 by `heat_scor
 
 ### 10.1 System prompt (fixed, never modified per-request)
 ```
-You are generating a short, neutral data summary for a public issue-monitoring
-dashboard. You are describing PUBLIC PREDICTION-MARKET DATA, not predicting
-real-world outcomes and not giving advice of any kind.
+You are generating a short, neutral issue explainer for a public
+issue-monitoring dashboard. Write in clear Korean for non-specialist readers.
+You are explaining the market question and the public data context, not
+predicting real-world outcomes and not giving advice of any kind.
 
 Rules you must always follow:
-- Describe only what the data shows: direction, magnitude, and timing of change.
+- Explain the issue in plain language before mentioning the data reading.
+- Use scenario sections only as conditional explanations of what the market
+  question would mean if that condition is confirmed, limited, or not confirmed.
+- Never label a scenario as best, worst, good, bad, desirable, or undesirable.
 - Never state or imply that an outcome will or will not happen.
 - Never use: bet, buy, sell, trade, position, long, short, profit, win rate,
   recommend, guaranteed, best pick, follow, copy, opportunity.
 - Never suggest any action the reader should take.
+- Never use causal connectors such as "because", "due to", or "caused by".
 - If a related event candidate is provided, describe it only as a "candidate
   for context," never as a cause.
 - If data is limited (low volume, short history, high volatility), say so
@@ -99,24 +104,30 @@ Confidence level: {{confidence_level}}
 Recent inflection point (if any): {{inflection_point_summary}}
 Related event candidate (if any): {{related_event_or_none}}
 
-Produce a JSON object with exactly these fields:
+Produce a JSON object in Korean with exactly these fields:
 {
-  "issue_summary": "...",
-  "movement_explanation": "...",
-  "key_change_context": "...",
-  "uncertainty_summary": "...",
-  "neutral_conclusion": "..."
+  "issue_explainer": "...",
+  "why_it_matters": "...",
+  "current_reading": "...",
+  "scenario_major_change": "...",
+  "scenario_limited_change": "...",
+  "scenario_status_quo": "...",
+  "check_points": "...",
+  "caution_note": "..."
 }
 ```
 
 ### 10.3 Example output (stored in `ai_reports.content` as jsonb)
 ```json
 {
-  "issue_summary": "This market tracks whether [event] will be resolved as 'Yes' by [date], based on public trading activity on Polymarket.",
-  "movement_explanation": "Over the past 7 days, the expectation reflected in this market rose by 11 percentage points, with the largest single shift occurring around [date].",
-  "key_change_context": "A related event candidate around this time: [event]. This is offered as context, not as a confirmed cause.",
-  "uncertainty_summary": "Trading activity on this market has been moderate over this period; interpret short-term swings with some caution.",
-  "neutral_conclusion": "Public expectation on this issue has shifted upward over the past week, though the underlying data reflects market activity rather than a factual forecast."
+  "issue_explainer": "이 이슈는 기준일까지 특정 조건이 확인되는지를 공개 데이터 맥락에서 살펴보는 항목입니다.",
+  "why_it_matters": "해당 조건은 관련 기관의 일정, 정책 논의, 후속 절차를 이해하는 데 참고 맥락이 될 수 있습니다.",
+  "current_reading": "현재 공개 데이터에서는 이 이슈가 일부 재평가되고 있으나, 실제 결과를 뜻하지는 않습니다.",
+  "scenario_major_change": "조건이 명확히 성립하는 경우, 관련 절차가 확인되며 후속 논의가 더 중요해질 수 있습니다.",
+  "scenario_limited_change": "관련 논의는 이어지지만 조건이 일부만 충족되는 경우, 실제 변화는 제한적일 수 있습니다.",
+  "scenario_status_quo": "조건이 성립하지 않는 경우, 기존 일정이나 제도가 대체로 유지되는 상황으로 해석할 수 있습니다.",
+  "check_points": "확인할 지점은 공식 발표, 기준일, 후속 절차의 진행 여부입니다.",
+  "caution_note": "이 요약은 공개 데이터와 등록된 맥락을 정리한 것이며, 실제 결과에 대한 전망이나 행동 제안이 아닙니다."
 }
 ```
 

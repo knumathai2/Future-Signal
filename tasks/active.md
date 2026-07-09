@@ -13,7 +13,7 @@ _Last updated: 2026-07-09_
 
 Day 4 is now active from latest `origin/main` at `6d0eb44`, which includes
 the merged `TASK-019` related-event candidate work. Allocation evidence is
-recorded in `reports/day-4-work-allocation.md`. With `TASK-041` complete, the
+recorded in `reports/day-4-work-allocation.md`. With `TASK-043` complete, the
 remaining active Day 4 work focuses on demo-story preparation and final wording
 safety.
 
@@ -27,9 +27,11 @@ Completed Day 1, Day 2, Day 3, and PM allocation tasks are archived in
 `TASK-015` (template report generation + safety filter, moved to
 `tasks/completed.md` - see that file and ADR-022 for the OpenAI provider
 override this task required and recorded), `TASK-039` (report API fallback
-readiness), `TASK-016` (template report display UI), and `TASK-019`
-(curated related-event candidates), and `TASK-041` (report-generation
-readiness for historical-seed metric timestamps).
+readiness), `TASK-016` (template report display UI), `TASK-019`
+(curated related-event candidates), `TASK-041` (report-generation
+readiness for historical-seed metric timestamps), `TASK-042` (combined
+scheduled/manual report batch), and `TASK-043` (v2 issue-explainer report
+output structure).
 
 ## Day 4 Handoff Notes
 
@@ -60,6 +62,10 @@ readiness for historical-seed metric timestamps).
   skip path when no usable prior snapshot exists. OpenAI report calls are covered
   by ADR-022 and the provided-key clarification; any write to the configured
   development DB remains separately approval-gated.
+- **Data/AI Implementer** completed `TASK-043`. The AI report content shape is
+  now the v2 issue-explainer schema with neutral conditional scenario sections.
+  Existing v1 stored report content is treated as `not_yet_generated` until a
+  separately approved reports-only run writes v2 summaries.
 - **Reviewer / Debugger** stay embedded. Any user-facing string changed during
   Day 4 must pass the project wording lint before review.
 
