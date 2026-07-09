@@ -24,7 +24,11 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.ai_report import LLMClient, build_openai_client
-from app.core.ai_report_batch import ReportOutcome, run_ai_report_batch
+from app.core.ai_report_batch import (
+    ReportOutcome,
+    run_ai_report_batch,
+    run_ai_report_batch_for_latest_metrics,
+)
 from app.core.collector import fetch_events
 from app.core.config import settings
 from app.core.historical_seed import ensure_local_dev_write_allowed
@@ -126,6 +130,17 @@ def run_reports_for_timestamp(
     return run_ai_report_batch(db, run_timestamp, llm_client, model_name)
 
 
+def run_reports_for_current_db(
+    db: Session,
+    llm_client: LLMClient | None,
+    model_name: str,
+) -> list[ReportOutcome]:
+    if llm_client is None:
+        logger.info("Skipping AI reports: no LLM client configured.")
+        return []
+    return run_ai_report_batch_for_latest_metrics(db, llm_client, model_name)
+
+
 def run_scheduled_batch(
     db: Session,
     *,
@@ -156,7 +171,13 @@ def run_scheduled_batch(
                 signals = detect_signals_for_run(db, metric_result.run_timestamp)
                 result.signals_inserted = len(signals)
 
-        if not result.skipped_duplicate_run and result.run_timestamp is not None:
+        if reports_only:
+            result.report_outcomes = run_reports_for_current_db(
+                db,
+                llm_client,
+                model_name,
+            )
+        elif not result.skipped_duplicate_run and result.run_timestamp is not None:
             result.report_outcomes = run_reports_for_timestamp(
                 db,
                 result.run_timestamp,
@@ -232,6 +253,16 @@ def normalized_markets_from_args(args: argparse.Namespace) -> list[dict[str, Any
     return load_normalized_markets(args.normalized_path or DEFAULT_NORMALIZED_PATH)
 
 
+def ai_extra_headers_from_settings() -> dict[str, str]:
+    headers: dict[str, str] = {}
+    if settings.ai_provider == "openrouter":
+        if settings.openrouter_http_referer:
+            headers["HTTP-Referer"] = settings.openrouter_http_referer
+        if settings.openrouter_app_title:
+            headers["X-OpenRouter-Title"] = settings.openrouter_app_title
+    return headers
+
+
 def main() -> int:
     from app.db.session import get_session_factory
 
@@ -245,9 +276,15 @@ def main() -> int:
     normalized_markets = normalized_markets_from_args(args)
     llm_client = None
     if not args.skip_ai_reports:
-        if not settings.openai_api_key:
-            raise SystemExit("OPENAI_API_KEY is not set.")
-        llm_client = build_openai_client(settings.openai_api_key, settings.openai_model)
+        if not settings.ai_api_key:
+            raise SystemExit("OPENAI_API_KEY or OPENROUTER_API_KEY is not set.")
+        llm_client = build_openai_client(
+            settings.ai_api_key,
+            settings.openai_model,
+            base_url=settings.ai_base_url,
+            provider_name=settings.ai_provider,
+            extra_headers=ai_extra_headers_from_settings(),
+        )
 
     session = get_session_factory()()
     try:

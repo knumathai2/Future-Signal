@@ -511,3 +511,34 @@ during the first reports-only run. That run inserted failed `ai_reports` audit
 rows but no successful summaries; the report endpoint still returns the
 accepted `not_yet_generated` state until the key is corrected and the
 reports-only command is rerun.
+2026-07-09 follow-up: ADR-027 resolved this by selecting OpenRouter for the
+configured key shape; a later reports-only run created successful stored
+summaries.
+
+---
+
+### ADR-027: Use OpenRouter key through the OpenAI-compatible SDK path
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: User request, implementing Data/AI Implementer
+
+**Context**: The current configured AI key is present but OpenAI's default
+endpoint rejects it with `401 invalid_api_key`; the provider response indicates
+the key shape is OpenRouter-style. The user requested changing the
+implementation to use the OpenRouter key.
+**Decision**: Keep the existing `openai` Python dependency and
+Chat Completions request shape, but support OpenRouter by pointing the OpenAI
+SDK at `https://openrouter.ai/api/v1`. `OPENROUTER_API_KEY` is preferred when
+present; otherwise an `OPENAI_API_KEY` value with the `sk-or-` prefix selects
+OpenRouter automatically. For OpenRouter, unqualified OpenAI model names such
+as `gpt-4o-mini` are converted to OpenRouter's `openai/gpt-4o-mini` slug.
+**Rationale**: OpenRouter documents OpenAI SDK compatibility through `base_url`,
+so this fixes the provider/key mismatch without adding a dependency, changing
+schema, or changing the public API. Existing tests can continue using fake
+`LLMClient` instances, and the API layer remains read-only.
+**Consequences**: Batch report generation can use the existing configured
+OpenRouter key without modifying `.env` or printing secrets. Live provider
+calls remain explicit batch-side side effects and still pass every generated
+summary through the strict schema parser and banned-phrase filter before
+storage.

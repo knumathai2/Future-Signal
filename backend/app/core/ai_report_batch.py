@@ -19,7 +19,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from sqlalchemy import select
+from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
 from app.core.ai_report import (
@@ -61,6 +61,29 @@ def _latest_successful_report(db: Session, market_id: uuid.UUID) -> AiReport | N
     ).scalar_one_or_none()
 
 
+def _sort_and_cap_qualifying_metrics(
+    db: Session,
+    metrics: list[MarketMetric],
+    new_signal_market_ids: set[uuid.UUID],
+) -> list[MarketMetric]:
+    qualifying: list[MarketMetric] = []
+    for metric in metrics:
+        if metric.market_id in new_signal_market_ids:
+            qualifying.append(metric)
+            continue
+        latest = _latest_successful_report(db, metric.market_id)
+        if latest is None or as_utc_naive(latest.generated_at) < as_utc_naive(
+            metric.computed_at - STALENESS_THRESHOLD
+        ):
+            qualifying.append(metric)
+
+    def _heat_score(metric: MarketMetric) -> float:
+        return float(metric.heat_score) if metric.heat_score is not None else 0.0
+
+    qualifying.sort(key=_heat_score, reverse=True)
+    return qualifying[:MAX_REPORTS_PER_BATCH_RUN]
+
+
 def select_markets_for_regeneration(db: Session, run_timestamp: datetime) -> list[MarketMetric]:
     """A market qualifies iff any of (Technical Design §9):
     - a new `issue_signals` row fired for it in *this* run (`triggered_at ==
@@ -85,22 +108,50 @@ def select_markets_for_regeneration(db: Session, run_timestamp: datetime) -> lis
         )
     }
 
-    qualifying: list[MarketMetric] = []
-    for metric in metrics:
-        if metric.market_id in new_signal_market_ids:
-            qualifying.append(metric)
-            continue
-        latest = _latest_successful_report(db, metric.market_id)
-        if latest is None or as_utc_naive(latest.generated_at) < as_utc_naive(
-            run_timestamp - STALENESS_THRESHOLD
-        ):
-            qualifying.append(metric)
+    return _sort_and_cap_qualifying_metrics(db, metrics, new_signal_market_ids)
 
-    def _heat_score(metric: MarketMetric) -> float:
-        return float(metric.heat_score) if metric.heat_score is not None else 0.0
 
-    qualifying.sort(key=_heat_score, reverse=True)
-    return qualifying[:MAX_REPORTS_PER_BATCH_RUN]
+def select_latest_metrics_for_regeneration(db: Session) -> list[MarketMetric]:
+    """Reports-only mode for the current DB state.
+
+    Historical/demo seeding can leave each market's latest metric a few seconds
+    apart, so a single global `max(computed_at)` timestamp is not a complete
+    "current DB" view. This selector uses each market's own latest metric, then
+    applies the same no-report/stale-report cap logic.
+    """
+    latest_metric_times = (
+        select(
+            MarketMetric.market_id.label("market_id"),
+            func.max(MarketMetric.computed_at).label("computed_at"),
+        )
+        .group_by(MarketMetric.market_id)
+        .subquery()
+    )
+    metrics = (
+        db.execute(
+            select(MarketMetric).join(
+                latest_metric_times,
+                and_(
+                    MarketMetric.market_id == latest_metric_times.c.market_id,
+                    MarketMetric.computed_at == latest_metric_times.c.computed_at,
+                ),
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+    latest_metric_by_market = {metric.market_id: metric.computed_at for metric in metrics}
+    latest_market_ids = list(latest_metric_by_market)
+    new_signal_market_ids = {
+        market_id
+        for market_id, triggered_at in db.execute(
+            select(IssueSignal.market_id, IssueSignal.triggered_at)
+            .where(IssueSignal.market_id.in_(latest_market_ids))
+        )
+        if latest_metric_by_market.get(market_id) == triggered_at
+    }
+    return _sort_and_cap_qualifying_metrics(db, metrics, new_signal_market_ids)
 
 
 def _describe_inflection_point(db: Session, market_id: uuid.UUID) -> str | None:
@@ -316,6 +367,66 @@ def run_ai_report_batch(
     return outcomes
 
 
+def run_ai_report_batch_for_latest_metrics(
+    db: Session,
+    llm_client: LLMClient,
+    model_name: str,
+) -> list[ReportOutcome]:
+    """Generate reports from each market's latest metric row.
+
+    Used by development/manual reports-only runs where "current DB state" means
+    the latest available metric per market rather than one global batch
+    timestamp.
+    """
+    outcomes: list[ReportOutcome] = []
+    for metric in select_latest_metrics_for_regeneration(db):
+        market = db.get(Market, metric.market_id)
+        if market is None:
+            outcomes.append(
+                ReportOutcome(
+                    market_id=metric.market_id, status="skipped", reason="market_not_found"
+                )
+            )
+            continue
+
+        inputs = build_prompt_inputs_for_market(db, market, metric, metric.computed_at)
+        if inputs is None:
+            logger.error(
+                "Skipping AI report for market %s: no market_snapshots row at or "
+                "before this metric timestamp.",
+                market.id,
+            )
+            outcomes.append(
+                ReportOutcome(
+                    market_id=market.id,
+                    status="skipped",
+                    reason="no_snapshot_at_or_before_metric",
+                )
+            )
+            continue
+
+        try:
+            outcome = generate_report_for_market(
+                db,
+                market,
+                metric,
+                inputs,
+                llm_client,
+                metric.computed_at,
+                model_name,
+            )
+        except Exception:
+            db.rollback()
+            logger.exception("Unhandled error generating AI report for market %s.", market.id)
+            outcomes.append(
+                ReportOutcome(market_id=market.id, status="skipped", reason="unhandled_error")
+            )
+            continue
+        outcomes.append(outcome)
+
+    return outcomes
+
+
 if __name__ == "__main__":
     from app.core.ai_report import build_openai_client
     from app.core.config import settings
@@ -329,10 +440,10 @@ if __name__ == "__main__":
             "backend/tests/test_ai_report_batch.py, which exercises the same "
             "pipeline against an in-memory SQLite database with a fake LLM client."
         )
-    if not settings.openai_api_key:
+    if not settings.ai_api_key:
         raise SystemExit(
-            "OPENAI_API_KEY is not set. This script calls a paid external AI API "
-            "using the project-approved OpenAI provider - set OPENAI_API_KEY "
+            "OPENAI_API_KEY or OPENROUTER_API_KEY is not set. This script calls a "
+            "paid external AI API using the project-approved provider - set a key "
             "before running."
         )
 
@@ -348,7 +459,19 @@ if __name__ == "__main__":
                 "No market_metrics rows found - run TASK-008's "
                 "snapshot_metrics.py collector first."
             )
-        client = build_openai_client(settings.openai_api_key, settings.openai_model)
+        extra_headers = {}
+        if settings.ai_provider == "openrouter":
+            if settings.openrouter_http_referer:
+                extra_headers["HTTP-Referer"] = settings.openrouter_http_referer
+            if settings.openrouter_app_title:
+                extra_headers["X-OpenRouter-Title"] = settings.openrouter_app_title
+        client = build_openai_client(
+            settings.ai_api_key,
+            settings.openai_model,
+            base_url=settings.ai_base_url,
+            provider_name=settings.ai_provider,
+            extra_headers=extra_headers,
+        )
         results = run_ai_report_batch(session, latest_run, client, settings.openai_model)
     finally:
         session.close()

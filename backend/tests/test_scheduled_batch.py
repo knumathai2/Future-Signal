@@ -236,3 +236,62 @@ def test_reports_only_uses_latest_existing_metric_run(db):
     assert result.markets_processed == 0
     assert result.reports_success == 1
     assert db.query(AiReport).count() == 1
+
+
+def test_reports_only_uses_each_markets_latest_metric_not_only_global_max(db):
+    for index, computed_at in enumerate([NOW, NOW + timedelta(seconds=1)], start=1):
+        market_id = uuid.uuid4()
+        db.add(
+            Market(
+                id=market_id,
+                polymarket_condition_id=f"0xcond-{index}",
+                title=f"Will test issue {index} resolve Yes?",
+                description="A seeded issue.",
+                category="politics",
+                outcome_type="binary",
+                status="active",
+                market_created_at=NOW - timedelta(days=30),
+                end_date=NOW + timedelta(days=30),
+                first_seen_at=NOW - timedelta(days=30),
+                last_seen_at=computed_at,
+            )
+        )
+        db.add(
+            MarketSnapshot(
+                market_id=market_id,
+                captured_at=computed_at,
+                price=0.6,
+                volume_24h=1000,
+                volume_total=10000,
+                liquidity=2000,
+                best_bid=None,
+                best_ask=None,
+            )
+        )
+        db.add(
+            MarketMetric(
+                market_id=market_id,
+                computed_at=computed_at,
+                change_24h=0.08,
+                change_7d=0.1,
+                volatility_score=None,
+                attention_score=None,
+                heat_score=100 - index,
+                confidence_level="sufficient",
+            )
+        )
+    db.commit()
+
+    client = FakeLLMClient([json.dumps(VALID_CONTENT), json.dumps(VALID_CONTENT)])
+    result = run_scheduled_batch(
+        db,
+        llm_client=client,
+        model_name="openai/gpt-4o-mini",
+        reports_only=True,
+    )
+
+    assert result.error is None
+    assert result.reports_only is True
+    assert result.reports_success == 2
+    assert client.calls == 2
+    assert db.query(AiReport).count() == 2
