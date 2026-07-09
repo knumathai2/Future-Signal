@@ -16,6 +16,14 @@ def test_list_issues_has_data_as_of_and_confidence_level():
     assert all("confidence_level" in issue for issue in body["issues"])
 
 
+def test_list_issues_category_filter_is_case_insensitive_in_fallback():
+    response = client.get("/api/issues?category=Environment")
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body["issues"]) == 1
+    assert body["issues"][0]["category"] == "environment"
+
+
 def test_get_issue_detail():
     response = client.get(f"/api/issues/{ISSUE_ID}")
     assert response.status_code == 200

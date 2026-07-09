@@ -96,6 +96,68 @@ _Last updated: 2026-07-09_
 
 ---
 
+### ADR-030: Live categories and current-version report rows drive demo reads
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: User / Debugger
+
+**Context**: After `TASK-043`, the configured development DB still had legacy
+v1 report rows and no v2 rows, so the detail report card showed the accepted
+`not_yet_generated` state. After v2 rows were generated, v1/v2 rows could share
+the same metric timestamp, making `generated_at DESC` alone unstable. The
+dashboard category buttons also came from a fixed sample list while live DB
+categories used source tag labels such as `Politics` and `Crypto`.
+**Decision**: `/api/issues/{id}/report` now requests only the current
+`PROMPT_VERSION` row from the report read helper. Legacy prompt-version rows
+remain stored for traceability and regeneration eligibility but are not served.
+The report batch also prefers current-version rows when deciding whether an
+issue already has a fresh report. `/api/categories` now derives categories from
+currently servable live issues when DB data exists, while `/api/issues`
+category filtering is case-insensitive.
+**Rationale**: This keeps the v2 issue-explainer UI deterministic, avoids
+serving old report shapes, prevents repeated generation for rows that already
+have current-version reports, and makes filter buttons point at categories that
+can actually return issues.
+**Trade-offs**: Categories now reflect raw stored source labels rather than a
+manually curated taxonomy. A later taxonomy task can group labels into broader
+Korean categories if needed.
+**Consequences**: The configured development DB was regenerated through the
+guarded reports-only path and now has v2 stored summaries for the default
+top-20 heat-sorted issues. No schema, dependency, deployment, infrastructure,
+or public response-shape change was made.
+
+---
+
+### ADR-031: Category filters use Korean topic taxonomy
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: User / Debugger
+
+**Context**: Live source categories such as `Politics`, `Crypto`, and
+`Ukraine` were technically accurate but not scan-friendly for a Korean demo.
+The user requested Korean category labels and more recognizable groups such as
+`이란 전쟁` and `우크라이나 전쟁`.
+**Decision**: Add a backend display taxonomy that derives Korean filter labels
+from each issue's stored category and title. `/api/categories` now returns
+Korean display labels such as `우크라이나 전쟁`, `이스라엘·가자`,
+`국제 안보`, `미국 정치`, `가상자산`, and `AI·기술` when matching issues are
+servable. `/api/issues?category=...` accepts those Korean labels while still
+accepting raw stored category values for backward compatibility.
+**Rationale**: The filter buttons become meaningful without changing the
+database schema or issue response shape, and the same taxonomy powers both the
+category list and filtering.
+**Trade-offs**: This is a deterministic heuristic taxonomy, not a full
+editorial classification workflow. Current live data has no Iran-related issue,
+so `이란 전쟁` is supported and tested but does not appear until a matching
+issue is present.
+**Consequences**: Category buttons are Korean and topic-specific on the live
+dashboard. Synthetic tests cover both `우크라이나 전쟁` and future
+`이란 전쟁` matching.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07

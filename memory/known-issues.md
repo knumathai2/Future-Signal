@@ -23,7 +23,7 @@ _Last updated: 2026-07-09_
 | TD-003 | Backend dependency install fails on this machine's default Python 3.9 because the pinned `psycopg[binary]==3.2.3` binary package is not available for that local runtime/platform combination. | A new contributor using default `python3` may be blocked before running backend tests. | Use Python 3.11 for local setup, as documented in `backend/README.md`; later decide whether to formalize a minimum Python version in backend tooling. |
 | TD-007 | `backend/API_CONTRACT.md`'s Error shape section documents invalid `window`/`sort` as FastAPI's current `422` behavior rather than forcing the original `400` plan. | Low; frontend should code against `422`. Changing it to `400` would be a public behavior change beyond the TASK-010 conflict-resolution scope. | Leave documented as actual behavior unless PM/Frontend request a separate API-error normalization task. |
 | TD-009 | The live API/static backend fallback path can still return English sample issue titles while the frontend dummy fallback is Korean. | Demo language consistency risk if the backend fallback is used during presentation. | Add a precise Day 5 fallback/demo note if backend fallback data is used in presentation, or localize the backend sample in a separate copy task. |
-| TD-011 | Existing successful `ai_reports` rows in the configured development DB may still use the v1 5-section content shape after `TASK-043`. | The report endpoint now returns `not_yet_generated` for those legacy rows, so the detail summary can appear empty until v2 reports are generated. | Run the reports-only batch after PM/user approval for a dev DB write; AI-provider key use remains covered by ADR-022/ADR-027. Then verify top demo issues return `status=success` with v2 content. |
+| TD-011 | Existing successful `ai_reports` rows in the configured development DB may still use the v1 5-section content shape after `TASK-043`. | Non-default or lower-ranked issue detail pages can still show `not_yet_generated` until v2 reports are generated for those issues. The default top-20 heat-sorted issues are now verified with v2 content. | Continue guarded scheduled/manual report generation as needed; AI-provider key use remains covered by ADR-022/ADR-027. |
 
 
 ## Resolved
@@ -44,6 +44,7 @@ _Last updated: 2026-07-09_
 | ISS-004 | Development Supabase schema was applied, but live data tables were empty, so the API served the documented static fallback data. | 2026-07-09 | Resolved for the configured development DB by running the existing collector into a temporary artifact directory, filtering the normalized rows against the project hard-block wording list, and running the approved snapshot/metrics path. Inserted 50 `markets`, 50 `market_outcomes`, 50 `market_snapshots`, and 50 `market_metrics`; verified `/api/issues` and the Vite proxy now return DB-backed payloads. |
 | ISS-005 | AI report batch could not use latest historical-seed metric rows because metric timestamps were one microsecond after their source snapshots. | 2026-07-09 | Fixed in `TASK-041`: prompt input lookup now selects the latest snapshot with `captured_at <= market_metrics.computed_at`, tests cover the historical-seed offset and fake-LLM success-row insertion, and approved-only run notes document how to create stored summaries later. |
 | ISS-006 | Current configured AI key was rejected by OpenAI's default endpoint because it is OpenRouter-style. | 2026-07-09 | Resolved by ADR-027 and rerun: the batch now selects OpenRouter automatically for `OPENROUTER_API_KEY` or `OPENAI_API_KEY` values with the `sk-or-` prefix. Final checked DB state has `ai_reports_success=29`, latest scheduled log is `scheduled_batch_success`, and the top 10 checked heat-sorted issues return report `success`. |
+| ISS-007 | v2 issue-explainer reports were generated but could be hidden behind same-timestamp v1 rows, and category filters used sample values that did not match live DB categories. | 2026-07-09 | Fixed on `debug/ISS-007-v2-report-category-filter`: report reads now require current `PROMPT_VERSION`, report regeneration prefers current-version rows when timestamps tie, `/api/categories` returns live servable categories, `/api/issues` category filtering is case-insensitive, and the configured DB now has v2 summaries for the default top-20 heat-sorted issues. |
 
 ## Open Design Questions Carried From Planning Docs
 
@@ -246,3 +247,37 @@ them before Day 5 lock if they become relevant to the active path:
   - Verified the top 10 checked heat-sorted issues return report `success` with
     content. Failed rows from earlier attempts remain for traceability but are
     never served by the API.
+
+### ISS-007: v2 reports hidden by legacy rows and live category filters empty
+- **Severity**: High
+- **Found**: 2026-07-09
+- **Status**: Resolved on `debug/ISS-007-v2-report-category-filter`
+- **Reproduction steps**:
+  1. Use the configured development DB after `TASK-043`.
+  2. Observe `ai_reports` has only `success|v1` rows and
+     `/api/issues/{id}/report` returns `not_yet_generated`.
+  3. Generate v2 reports and observe rows can share the same metric timestamp
+     as v1 rows, so a `generated_at DESC` read can still select legacy content.
+  4. Open the dashboard and choose `정치`; the frontend sends
+     `category=politics`, while live DB rows store categories such as
+     `Politics`, so the list is empty.
+- **Root cause**:
+  - Report reads and report-regeneration eligibility did not prefer the current
+    prompt version when v1/v2 rows tied on timestamp.
+  - `/api/categories` returned a static sample list instead of categories from
+    live servable issues.
+  - `/api/issues` category filtering used exact case-sensitive string equality.
+- **Impact**:
+  - The detail report card could remain empty after v2 rows were generated.
+  - Category buttons could point at values that did not match live rows.
+- **Fix completed**:
+  - `/api/issues/{id}/report` now requests only current `PROMPT_VERSION`
+    report rows; legacy rows are preserved but not served.
+  - `ai_report_batch` prefers current-version successful rows when determining
+    freshness, preventing repeated regeneration for same-timestamp v1/v2 rows.
+  - `/api/categories` now returns distinct categories from currently servable
+    live issues, falling back to the sample list only in DB-free/failure mode.
+  - `/api/issues` category filtering is case-insensitive.
+  - Ran guarded reports-only generation three times against the configured
+    local/dev DB. Final checked state: `success|v2|30`, and the default
+    top-20 heat-sorted issues all have current v2 report content.
