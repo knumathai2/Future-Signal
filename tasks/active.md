@@ -11,14 +11,14 @@ _Last updated: 2026-07-09_
 
 ## In Progress
 
-Day 4 is now active from latest `origin/main` at `6d0eb44`, which includes
-the merged `TASK-019` related-event candidate work. Allocation evidence is
-recorded in `reports/day-4-work-allocation.md`. With `TASK-040` complete, the
-remaining active Day 4 work focuses on final wording safety.
+Day 4 active work has passed the final wording-safety gate. Allocation evidence
+is recorded in `reports/day-4-work-allocation.md`, and the final copy lint is
+recorded in `reports/task-018-copy-lint.md`.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-018 | Copy/wording lint pass across user-facing surfaces | PM | PM / Planner | `pm/TASK-018-copy-lint` | assigned |
+
+No active implementation tasks remain after `TASK-018`.
 
 Completed Day 1, Day 2, Day 3, and PM allocation tasks are archived in
 `tasks/completed.md`, including `TASK-038` for this Day 4 allocation,
@@ -29,14 +29,15 @@ readiness), `TASK-016` (template report display UI), `TASK-019`
 (curated related-event candidates), `TASK-041` (report-generation
 readiness for historical-seed metric timestamps), `TASK-042` (combined
 scheduled/manual report batch), `TASK-043` (v2 issue-explainer report
-output structure), `TASK-044` (Korean issue display titles), and `ISS-007`
-(v2 report/category-filter readiness).
+output structure), `TASK-044` (Korean issue display titles), `ISS-007`
+(v2 report/category-filter readiness), and `TASK-018` (final copy/wording
+lint).
 
 ## Day 4 Handoff Notes
 
 - **PM / Planner** completed `TASK-038` in
   `reports/day-4-work-allocation.md`. PM completed the demo/deck draft
-  (`TASK-040`) and still owns final copy lint (`TASK-018`).
+  (`TASK-040`) and final copy lint (`TASK-018`).
 - **Data/AI Implementer** completed `TASK-015` on
   `data-ai/TASK-015-template-report-generation` (see `tasks/completed.md`).
   Note for `TASK-016`/`TASK-018`: contrary to this file's original Day 4
@@ -82,25 +83,7 @@ output structure), `TASK-044` (Korean issue display titles), and `ISS-007`
 
 ## Active Task Details
 
-### TASK-018: Copy/wording lint pass across user-facing surfaces
-- **Owner**: PM
-- **Assignee**: PM / Planner
-- **Branch**: `pm/TASK-018-copy-lint`
-- **Status**: assigned
-- **Priority**: High
-- **Day**: Day 4
-- **Description**: Run the project content-safety lint across all changed
-  Day 4 user-facing strings, templates, report content, event candidates, and
-  demo/deck copy.
-- **Definition of Done**:
-  - [ ] Checks frontend UI strings, backend fallback/report strings, report
-        templates, event candidates, and demo/deck copy against `standards.md`
-        and `memory/glossary.md`.
-  - [ ] Records the lint result in a report or session note.
-  - [ ] Confirms every data-bearing surface has nearby data-as-of timing and
-        interpretation-caution context.
-  - [ ] Does not change the wording policy itself without human approval.
-  - [ ] Any hard-block finding is fixed or explicitly blocks Day 4 closeout.
+No active task details remain.
 
 ## Status Values
 
