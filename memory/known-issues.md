@@ -164,5 +164,6 @@ them before Day 5 lock if they become relevant to the active path:
   - Verified backend `/api/issues` and Vite proxy `/api/issues` return the new
     DB-backed `data_as_of` timestamp instead of the static fallback ID.
   - Remaining limitation: this was a single snapshot run, so history endpoints
-    currently have one point per issue until additional collector runs or a
-    separate approved historical seed path add more points.
+    currently have one point per issue until additional collector runs or
+    `backend/app/core/historical_seed.py` is run against an approved local/dev
+    DB to append CLOB price-history points.
