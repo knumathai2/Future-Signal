@@ -34,7 +34,7 @@ Ranked/browsable issue list.
 
 | Param | Type | Default | Notes |
 |---|---|---|---|
-| `category` | string | none | exact match against `/api/categories` values |
+| `category` | string | none | match against `/api/categories` broad Korean filter values; raw stored category values are also accepted for backward compatibility |
 | `window` | enum `24h`\|`7d` | `24h` | which change field ranking/`sort=change` uses |
 | `sort` | enum `heat`\|`change`\|`recent` | `heat` | |
 | `limit` | int 1-100 | 20 | |
@@ -107,10 +107,10 @@ Latest AI report. Content is fixed template slots only — never free-form
 (ADR-003, updated by ADR-028) — and must pass the banned-phrase filter before
 storage.
 When live data is available, the API serves the latest `status="success"`
-`ai_reports` row for the issue. Failed rows are retained in storage but are
-not returned from this endpoint. Legacy stored report content that does not
-match the current schema is treated as not yet generated rather than partially
-served.
+`ai_reports` row for the issue using the current prompt version. Failed rows
+and legacy prompt-version rows are retained in storage but are not returned
+from this endpoint. Stored current-version content that does not match the
+current schema is treated as not yet generated rather than partially served.
 
 ```json
 {
@@ -146,8 +146,14 @@ hint). This is accepted as final, not an open item.
 
 ## `GET /api/categories`
 
+When live issue data is available, this returns broad Korean filter categories
+for currently servable issues, such as `정치`, `경제`, `기술`, `세계`, and
+`스포츠`. More specific labels such as `우크라이나 전쟁` or `이란 전쟁` belong
+to the issue-card display layer, not this top-level filter list. In
+DB-free/static fallback mode, it returns the sample category list below.
+
 ```json
-{ "categories": ["politics", "economy", "environment", "technology", "world"] }
+{ "categories": ["정치", "경제", "환경", "기술", "세계"] }
 ```
 
 ## Error shape (all endpoints)

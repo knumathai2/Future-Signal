@@ -273,13 +273,20 @@ export function Dashboard({
                 onClick={() => onIssueSelect(issue.id)}
                 className="flex w-full flex-col gap-3 border-b border-line-soft bg-card px-4 py-4 text-left last:border-b-0 transition hover:bg-line-soft sm:flex-row sm:items-center sm:justify-between"
               >
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                <div className="flex min-w-0 flex-col gap-1">
                   <span className="text-[11px] font-bold text-ink-faint">
-                    {formatCategoryLabel(issue.category)}
+                    {issue.topicLabel ?? formatCategoryLabel(issue.category)}
                   </span>
-                  <span className="text-sm font-semibold text-ink">{issue.title}</span>
+                  <span className="text-sm font-semibold leading-5 text-ink">
+                    {issue.title}
+                  </span>
+                  {issue.displaySubtitle ? (
+                    <span className="text-xs leading-5 text-ink-faint">
+                      {issue.displaySubtitle}
+                    </span>
+                  ) : null}
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex shrink-0 items-center gap-4">
                   <CautionBadge level={issue.cautionLevel} />
                   <span className="text-sm font-bold text-ink">
                     {formatPercentagePointChange(issue.change7d)}

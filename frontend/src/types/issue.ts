@@ -24,6 +24,10 @@ export type RelatedEventCandidate = {
 export type Issue = {
   id: string;
   title: string;
+  sourceTitle?: string;
+  displaySubtitle?: string;
+  topicLabel?: string;
+  resolutionCondition?: string;
   description: string;
   category: string;
   currentExpectationValue: number;

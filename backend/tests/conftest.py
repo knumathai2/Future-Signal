@@ -19,6 +19,7 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.api.routes import categories as categories_routes
 from app.api.routes import issues as issues_routes
 from app.db.models import (
     AiReport,
@@ -91,6 +92,7 @@ def live_client(db_session):
     def override():
         yield db_session
 
+    app.dependency_overrides[categories_routes._get_optional_db] = override
     app.dependency_overrides[issues_routes._get_optional_db] = override
     try:
         yield TestClient(app)
@@ -239,6 +241,7 @@ def seed_ai_report(
     input_metrics_id: int | None = 1,
     status: str = "success",
     label: str = "latest",
+    prompt_version: str = "template-v1",
 ) -> None:
     db_session.add(
         AiReport(
@@ -248,7 +251,7 @@ def seed_ai_report(
             input_metrics_id=input_metrics_id,
             content=report_content(label),
             model_used="template-v1",
-            prompt_version="template-v1",
+            prompt_version=prompt_version,
             status=status,
         )
     )

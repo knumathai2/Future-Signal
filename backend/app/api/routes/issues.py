@@ -30,6 +30,8 @@ from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.core.ai_report import PROMPT_VERSION
+from app.core.category_taxonomy import category_matches
 from app.core.config import settings
 from app.db.queries import (
     LiveAiReport,
@@ -248,7 +250,11 @@ def list_issues(
     if live is not None:
         live_issues, data_as_of = live
         if category:
-            live_issues = [li for li in live_issues if li.market.category == category]
+            live_issues = [
+                li
+                for li in live_issues
+                if category_matches(li.market.title, li.market.category, category)
+            ]
 
         def _sort_key(li: LiveIssue):
             if sort == "heat":
@@ -267,7 +273,7 @@ def list_issues(
 
     issues = list(_FALLBACK_ISSUES.values())
     if category:
-        issues = [i for i in issues if i.category == category]
+        issues = [i for i in issues if category_matches(i.title, i.category, category)]
     issues = issues[offset : offset + limit]
     return IssueListResponse(
         data_as_of=_NOW,
@@ -364,7 +370,11 @@ def get_issue_report(
         if match is None:
             raise HTTPException(status_code=404, detail="Unknown issue id.")
         try:
-            live_report = load_latest_successful_report(db, match.market.id)
+            live_report = load_latest_successful_report(
+                db,
+                match.market.id,
+                preferred_prompt_version=PROMPT_VERSION,
+            )
         except SQLAlchemyError:
             logger.warning(
                 "FALLBACK: live report query failed, returning report empty state.",
