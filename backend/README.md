@@ -74,6 +74,35 @@ ENV=local ./.venv/bin/python -m app.core.historical_seed \
   --confirm-local-dev-write
 ```
 
+## Scheduled data + AI report batch
+
+The combined batch links data collection, metric calculation, signal detection,
+and stored AI report generation in one write path:
+
+```bash
+ENV=local ./.venv/bin/python -m app.core.scheduled_batch \
+  --use-live-fetch \
+  --max-samples 50 \
+  --confirm-local-dev-write
+```
+
+For development/demo work against the current DB state, generate reports from
+each market's latest existing metric row without collecting new market data:
+
+```bash
+ENV=local ./.venv/bin/python -m app.core.scheduled_batch \
+  --reports-only \
+  --confirm-local-dev-write
+```
+
+The GitHub Actions workflow `.github/workflows/daily-batch.yml` runs the
+combined batch once every 24 hours and can also be started manually from
+Actions. It expects `DATABASE_URL` plus either `OPENROUTER_API_KEY` or
+`OPENAI_API_KEY`. If an `OPENAI_API_KEY` value has the OpenRouter `sk-or-`
+shape, the batch automatically calls `https://openrouter.ai/api/v1` through the
+existing OpenAI-compatible SDK path. For OpenRouter, an unqualified
+`OPENAI_MODEL=gpt-4o-mini` is sent as `openai/gpt-4o-mini`.
+
 ## Lint / Test
 
 ```bash

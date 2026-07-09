@@ -377,8 +377,13 @@ deterministic-default path.
 **Consequences**: Before any live/demo run of `app/core/ai_report_batch.py`
 with a real key, confirm the key is scoped/budgeted appropriately - this ADR
 approves the architecture and provider, not an unbounded number of live calls.
-`memory/architecture.md` and `tasks/completed.md` should reference this ADR
-for TASK-015's provider choice.
+2026-07-09 follow-up: the user clarified that the provided `OPENAI_API_KEY`
+may be used without asking for separate per-run approval for project-scoped
+OpenAI report generation. This standing OpenAI-call approval does not approve
+shared/dev database writes, deployments, schema changes, dependency changes, or
+public API shape changes; those gates remain separate. `memory/architecture.md`
+and `tasks/completed.md` should reference this ADR for TASK-015's provider
+choice.
 
 ---
 
@@ -471,3 +476,69 @@ existing caution calculation.
 collector cycles or running the guarded historical seed command documented in
 `backend/README.md`. Writing to any shared/prod database remains outside this
 approval and must be confirmed separately under `AGENTS.md`.
+
+---
+
+### ADR-026: Combined 24h data and AI report batch
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: User request, implementing Data/AI Implementer
+
+**Context**: The implementation had separate modules for snapshot/metric
+generation, expectation-shift signal detection, and AI report generation.
+As a result, collecting data did not automatically create stored AI summaries,
+and there was no checked-in 24h schedule. The user requested four concrete
+goals: generate AI summaries for the current DB state, connect data/metric/
+signal generation to AI summary generation, run every 24h, and provide a
+development-only manual generation path without adding UI.
+**Decision**: Add `backend/app/core/scheduled_batch.py` as the combined write
+path: normalized/live fetched data -> snapshots/metrics -> signals -> AI
+reports -> `data_collection_logs`. Add `--reports-only` for development/demo
+AI summary generation against the latest existing metric run. Add
+`.github/workflows/daily-batch.yml` to run the combined batch every 24h via
+GitHub Actions, with manual `workflow_dispatch` support. Use existing schema,
+dependencies, and public API shapes.
+**Rationale**: This matches the Technical Design step-8 intent while keeping
+the user-facing API read-only and avoiding a UI-only trigger that could be
+misread as an end-user action.
+**Trade-offs**: The scheduled workflow depends on valid `DATABASE_URL` and
+`OPENAI_API_KEY` secrets. If report generation fails, the CLI now exits
+non-zero so the workflow surfaces the failure instead of silently producing no
+stored summaries.
+**Consequences**: The current configured OpenAI key returned `401 Unauthorized`
+during the first reports-only run. That run inserted failed `ai_reports` audit
+rows but no successful summaries; the report endpoint still returns the
+accepted `not_yet_generated` state until the key is corrected and the
+reports-only command is rerun.
+2026-07-09 follow-up: ADR-027 resolved this by selecting OpenRouter for the
+configured key shape; a later reports-only run created successful stored
+summaries.
+
+---
+
+### ADR-027: Use OpenRouter key through the OpenAI-compatible SDK path
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: User request, implementing Data/AI Implementer
+
+**Context**: The current configured AI key is present but OpenAI's default
+endpoint rejects it with `401 invalid_api_key`; the provider response indicates
+the key shape is OpenRouter-style. The user requested changing the
+implementation to use the OpenRouter key.
+**Decision**: Keep the existing `openai` Python dependency and
+Chat Completions request shape, but support OpenRouter by pointing the OpenAI
+SDK at `https://openrouter.ai/api/v1`. `OPENROUTER_API_KEY` is preferred when
+present; otherwise an `OPENAI_API_KEY` value with the `sk-or-` prefix selects
+OpenRouter automatically. For OpenRouter, unqualified OpenAI model names such
+as `gpt-4o-mini` are converted to OpenRouter's `openai/gpt-4o-mini` slug.
+**Rationale**: OpenRouter documents OpenAI SDK compatibility through `base_url`,
+so this fixes the provider/key mismatch without adding a dependency, changing
+schema, or changing the public API. Existing tests can continue using fake
+`LLMClient` instances, and the API layer remains read-only.
+**Consequences**: Batch report generation can use the existing configured
+OpenRouter key without modifying `.env` or printing secrets. Live provider
+calls remain explicit batch-side side effects and still pass every generated
+summary through the strict schema parser and banned-phrase filter before
+storage.

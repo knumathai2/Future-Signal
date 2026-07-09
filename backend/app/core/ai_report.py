@@ -12,11 +12,11 @@ database at all.
 Technical Design §9-10 is the binding spec; nothing here may add a free-text
 insertion point beyond the named slots in `USER_PROMPT_TEMPLATE`, and nothing
 here may call a paid provider except through `LLMClient.complete()`, which
-callers construct explicitly (see `OpenAIReportClient`) - importing this
+callers construct explicitly (see `OpenAICompatibleReportClient`) - importing this
 module never triggers a network call or requires an API key.
 
-AI provider: OpenAI, per human-approved ADR (memory/decisions.md; recorded by
-this task per AGENTS.md's Human Approval Gate for AI Provider Selection).
+AI provider: OpenAI-compatible chat completions, with OpenRouter selected when
+configured, per human-approved ADRs in memory/decisions.md.
 """
 
 import json
@@ -48,6 +48,7 @@ Rules you must always follow:
 - Never use: bet, buy, sell, trade, position, long, short, profit, win rate,
   recommend, guaranteed, best pick, follow, copy, opportunity.
 - Never suggest any action the reader should take.
+- Never use causal connectors such as "because", "due to", or "caused by".
 - If a related event candidate is provided, describe it only as a "candidate
   for context," never as a cause.
 - If data is limited (low volume, short history, high volatility), say so
@@ -141,41 +142,75 @@ class LLMClient(Protocol):
         ...
 
 
-class OpenAIReportClient:
-    """`LLMClient` backed by the OpenAI Chat Completions API. AI provider
-    selection (OpenAI) is a human-approved ADR (memory/decisions.md) -
-    constructing this class is the explicit, caller-initiated point where a
-    paid external API becomes reachable; nothing elsewhere in this module
-    does so implicitly."""
+class OpenAICompatibleReportClient:
+    """`LLMClient` backed by OpenAI-compatible Chat Completions.
 
-    def __init__(self, client: OpenAI, model: str) -> None:
+    The concrete provider is selected by the caller through the SDK client
+    configuration, for example OpenRouter via `base_url`. Constructing this
+    class is the explicit, caller-initiated point where a paid external API
+    becomes reachable; nothing elsewhere in this module does so implicitly.
+    """
+
+    def __init__(
+        self,
+        client: OpenAI,
+        model: str,
+        *,
+        provider_name: str = "OpenAI",
+        extra_headers: dict[str, str] | None = None,
+    ) -> None:
         self._client = client
         self._model = model
+        self._provider_name = provider_name
+        self._extra_headers = extra_headers or {}
 
     def complete(self, system_prompt: str, user_prompt: str) -> str:
         try:
-            response = self._client.chat.completions.create(
-                model=self._model,
-                messages=[
+            kwargs = {
+                "model": self._model,
+                "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
-                response_format={"type": "json_object"},
-                temperature=0.2,
-                timeout=20,
-            )
+                "response_format": {"type": "json_object"},
+                "temperature": 0.2,
+                "timeout": 20,
+            }
+            if self._extra_headers:
+                kwargs["extra_headers"] = self._extra_headers
+            response = self._client.chat.completions.create(**kwargs)
         except OpenAIError as exc:
             # standards.md: never log full LLM prompts/responses.
-            raise LLMCallError(f"OpenAI call failed: {type(exc).__name__}") from exc
+            raise LLMCallError(
+                f"{self._provider_name} call failed: {type(exc).__name__}"
+            ) from exc
 
         content = response.choices[0].message.content if response.choices else None
         if not content:
-            raise LLMCallError("Empty response from OpenAI.")
+            raise LLMCallError(f"Empty response from {self._provider_name}.")
         return content
 
 
-def build_openai_client(api_key: str, model: str) -> OpenAIReportClient:
-    return OpenAIReportClient(OpenAI(api_key=api_key), model)
+OpenAIReportClient = OpenAICompatibleReportClient
+
+
+def build_openai_client(
+    api_key: str,
+    model: str,
+    *,
+    base_url: str | None = None,
+    provider_name: str = "OpenAI",
+    extra_headers: dict[str, str] | None = None,
+) -> OpenAICompatibleReportClient:
+    kwargs = {"api_key": api_key}
+    if base_url:
+        kwargs["base_url"] = base_url
+    return OpenAICompatibleReportClient(
+        OpenAI(**kwargs),
+        model,
+        provider_name=provider_name,
+        extra_headers=extra_headers,
+    )
 
 
 # --------------------------------------------------------------------------
