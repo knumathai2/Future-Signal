@@ -11,9 +11,8 @@ Harness Version: 1.1
 
 - **Date**: 2026-07-09
 - **Agent Role**: Debugger
-- **Session Goal**: Add an approved local/dev historical seed path so demo
-  charts can use live DB-backed history without fabricating points or changing
-  schema/API contracts.
+- **Session Goal**: Add and run the approved local/dev historical seed path so
+  demo charts can use live DB-backed history.
 - **Branch**: `debug/ISS-004-live-data-seed`
 
 ## Summary
@@ -21,7 +20,8 @@ Harness Version: 1.1
 The configured development DB already had one live collector snapshot/metric row
 per normalized issue, which made issue list payloads DB-backed but left detail
 charts sparse. This session added a guarded historical seed module and tests,
-then documented the command and recorded ADR-025.
+documented the command, recorded ADR-025, and then ran the command against the
+configured development DB.
 
 ## Work Completed
 
@@ -37,6 +37,25 @@ then documented the command and recorded ADR-025.
 - Documented the command in `backend/README.md`.
 - Updated `memory/decisions.md`, `memory/architecture.md`,
   `memory/project.md`, and `memory/known-issues.md`.
+- Ran:
+  `ENV=local ./.venv/bin/python -m app.core.historical_seed --confirm-local-dev-write`.
+- Ran:
+  `ENV=local ./.venv/bin/python -m app.core.historical_seed --interval 1m --fidelity 60 --confirm-local-dev-write`.
+
+## DB Result
+
+- First seed run: `8450 snapshots`, `50 metrics`, `0 signals`, `0 skipped`,
+  `0 failed`.
+- Second seed run: `24738 snapshots`, `50 metrics`, `2 signals`, `0 skipped`,
+  `0 failed`.
+- Final counts: `markets=62`, `market_snapshots=33238`,
+  `market_metrics=150`, `issue_signals=2`, `data_collection_logs=2`.
+- Latest per-market metric coverage: `markets=62`, `change_24h=50`,
+  `change_7d=50`.
+- API verification for one recent issue: `24h_history_points=27`,
+  `7d_history_points=171`, `30d_history_points=303`.
+- 30d full-baseline readiness remains `0` markets; use `7d` for the demo
+  chart window unless a later source-history run proves otherwise.
 
 ## Verification
 
@@ -51,8 +70,6 @@ then documented the command and recorded ADR-025.
 
 ## Notes
 
-- The historical seed command was not run against the configured DB in this
-  session.
 - No schema changes, dependency changes, infrastructure changes, deployment,
   `.env` edits, paid API calls, or production DB writes were performed.
 - Full backend tests need `DATABASE_URL=`/`ENV=test` in this local environment
