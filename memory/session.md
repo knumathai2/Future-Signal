@@ -14,84 +14,110 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-09
-- **Agent Role**: PM / Planner
-- **Session Goal**: Allocate Day 4 work from the latest git state and open the
-  active execution ledger.
-- **Branch**: `pm/TASK-038-day-4-allocation`
+- **Agent Role**: Data/AI Implementer
+- **Session Goal**: Implement TASK-015 (fixed-template AI report generation
+  function and the banned-phrase safety filter).
+- **Branch**: `data-ai/TASK-015-template-report-generation`
 
 ## Previous Session Summary
 
-Day 3 was closed by `TASK-037`; PR #28 merged that closeout into
-`origin/main` at `af83f7e`. The detail/chart/caution/notice path is complete,
-and no Day 3 tasks remain active.
+Day 4 was opened by `TASK-038` (PM allocation, `af83f7e`), which moved
+`TASK-015`, `TASK-039`, `TASK-016`, `TASK-019`, `TASK-040`, and `TASK-018`
+into `tasks/active.md` and defaulted `TASK-015`'s execution to deterministic
+template generation (no live LLM call) pending separate paid-API approval.
 
 ## Current Work
 
-- [x] Read `AGENTS.md`, PRD, Service Design, Technical Design, UX Design,
-      `memory/project.md`, `memory/session.md`, `tasks/active.md`,
-      `tasks/completed.md`, `tasks/backlog.md`, `roadmap.md`, and
-      `prompts/planning.md`.
-- [x] Fetched latest git state with `git fetch --all --prune`; `origin/main`
-      advanced from `89dc3e5` to `af83f7e`.
-- [x] Created PM allocation branch `pm/TASK-038-day-4-allocation` from latest
-      `origin/main`.
-- [x] Reviewed current report, related-event, frontend summary, and fallback
-      implementation surfaces.
-- [x] Created `reports/day-4-work-allocation.md`.
-- [x] Opened Day 4 active work in `tasks/active.md`: `TASK-015`, `TASK-039`,
-      `TASK-016`, `TASK-019`, `TASK-040`, and `TASK-018`.
-- [x] Moved assigned backlog rows out of `tasks/backlog.md` and recorded
-      `TASK-038` in `tasks/completed.md`.
-- [x] Updated `roadmap.md`, `memory/project.md`, `memory/decisions.md`,
-      `memory/known-issues.md`, and `memory/architecture.md` for Day 4
-      allocation.
-
-## Completed This Session
-
-- [x] Day 4 work allocation completed on latest `origin/main`.
-- [x] `TASK-038` recorded as the PM allocation artifact.
-- [x] Day 4 sequencing established:
-      `TASK-015` -> `TASK-039` -> `TASK-016` with `TASK-019`, `TASK-040`, and
-      `TASK-018` supporting demo completion and safety review.
-- [x] Missing Day 4 execution tasks were created directly from PRD section 14:
-      `TASK-039` for backend report/fallback readiness and `TASK-040` for
-      deck/demo draft.
+- [x] Read `AGENTS.md`, Technical Design §9-10, UX Design §5.3, `standards.md`.
+- [x] Found local `main` was stale (only through Day 1); fetched
+      `upstream/main` and branched `data-ai/TASK-015-template-report-generation`
+      from it, which already carried the real Day 4 allocation (PM had already
+      moved `TASK-015` into `tasks/active.md` there - the "still only in
+      backlog.md" case in this task's instructions did not apply once synced).
+- [x] Surfaced a real conflict to the user before writing code: the Day 4
+      allocation's default for `TASK-015` is deterministic template generation
+      with any real LLM provider hook "disabled or stubbed until approved,"
+      which is stricter than Technical Design §9-10's live-LLM-call
+      architecture. Asked the user how to reconcile it.
+- [x] User chose OpenAI as provider, then explicitly chose to override the
+      Day 4 deterministic default and wire a real OpenAI call - recorded as
+      ADR-021 (⚠️ HUMAN APPROVAL, both the paid-API-call gate and the
+      AI-Provider-Selection gate).
+- [x] Implemented `backend/app/core/ai_report.py`: fixed §10.1 system prompt
+      and §10.2 user prompt template (`build_prompt()`, zero free-text
+      insertion points beyond the named slots), `LLMClient` protocol +
+      `OpenAIReportClient` (real OpenAI Chat Completions call, JSON mode),
+      strict schema parse (`parse_report_content()` via `ReportContent` with
+      `extra="forbid"` added to `app/schemas/issues.py`), and the
+      banned-phrase/pattern safety filter (`run_safety_filter()`).
+- [x] Implemented `backend/app/core/ai_report_batch.py`: regeneration
+      eligibility (new signal this run / no successful report yet / latest
+      successful report >24h stale), capped to top 10 by `heat_score`,
+      exactly-one-retry on LLM-call or malformed-schema failure then
+      `status=failed`, and discard-without-retry on a safety-filter failure -
+      in every failure case the previous successful `ai_reports` row is left
+      untouched and keeps serving.
+- [x] Added `openai==2.44.0` to `backend/requirements.txt` (new dependency,
+      approved alongside the provider decision) and `OPENAI_API_KEY`/
+      `OPENAI_MODEL` to `app/core/config.py`/`.env.example`.
+- [x] Wrote `tests/test_ai_report.py` and `tests/test_ai_report_batch.py` (38
+      new tests, 100 total) against a fake `LLMClient` - no real network call
+      made or needed for the suite to pass.
+- [x] Found and fixed a real bug during testing: word-boundary regex (`\b`)
+      treats `-` as a boundary, so the banned word "short" false-positive
+      matched "short-term" - which appears verbatim in Technical Design
+      §10.3's own reference example output. Fixed with a custom boundary
+      `(?<![\w-])...(?![\w-])` so hyphenated compounds like "short-term"/
+      "long-term"/"trade-off" are not rejected while standalone usage still is.
+- [x] Verified Technical Design §10.3's literal reference example round-trips
+      through the parser and passes the filter clean (added as a regression
+      test - explicit DoD "exact tone and format" check).
+- [x] `ruff check .` clean across the whole backend, `pytest` 100/100 passing.
+- [x] Moved `TASK-015` from `tasks/active.md` to `tasks/completed.md`.
+- [x] Recorded ADR-021 in `memory/decisions.md`.
 
 ## Issues Found / Decisions Made
 
-- ADR-020 records the Day 4 scope decision: keep active work limited to
-  summary/demo-flow completion and defer P1 category/feed/extra-metric work.
-- `TD-010` was added: `/api/issues/{id}/report` still serves one hardcoded
-  sample and otherwise returns `not_yet_generated` until `TASK-039` wires
-  latest stored report reads.
-- `TD-009` remains open and is now tied to `TASK-039` / Day 4 demo-flow
-  fallback consistency.
-- No schema, dependency, public API shape, infrastructure, deployment,
-  shared/prod database, or wording-policy change was made.
-- Paid external AI provider calls remain approval-gated; `TASK-015` defaults
-  to deterministic template generation plus a mechanical safety filter.
+- ADR-021: OpenAI selected as AI provider; real client wired; user explicitly
+  approved overriding the Day 4 deterministic-template default. No
+  `OPENAI_API_KEY` is present in this development environment, so **no real/
+  billed API call has actually been executed** - this is architecture +
+  approval, not a live-tested call. Whoever runs this against a real key for
+  the first time (demo prep or `TASK-039`/`TASK-016` integration testing)
+  should treat that as the first real cost-incurring event and watch it.
+- This task intentionally does **not** touch `app/api/routes/issues.py` -
+  wiring `ai_reports` rows into the live `GET /api/issues/{id}/report`
+  response is `TASK-039`'s scope (Backend Implementer), not this task's.
+- `ReportContent` (`app/schemas/issues.py`) gained `model_config =
+  ConfigDict(extra="forbid")`. This tightens validation (an LLM response with
+  an extra field now fails parse rather than being silently trimmed) but does
+  not change the wire shape of the accepted `IssueReportResponse` contract.
+- No schema migration, no shared/production database write, no deployment,
+  and no public API interface change was made. The `ai_reports` table/model
+  already existed (from `TASK-002`, still unapplied to any real database).
 
 ## Verification
 
-- `git fetch --all --prune` -> passed.
-- Branch created from latest `origin/main` at `af83f7e`.
-- `tasks/active.md` -> Day 4 task rows and task details present.
-- `tasks/backlog.md` -> assigned Day 4 backlog rows removed; Day 5 P0 rows
-  remain.
-- `reports/day-4-work-allocation.md` -> created with assignments, order,
-  guardrails, acceptance checklist, and stretch-work limits.
-- `git diff --check` -> passed.
-- Wording scan over added planning lines -> no user-facing hard-block hits;
-  internal planning labels/code terms were reviewed as non-user-facing false
-  positives.
+- `pytest tests/` → 100/100 passed (62 pre-existing + 38 new).
+- `ruff check .` → all checks passed, whole backend.
+- Manual smoke: Technical Design §10.3's exact reference JSON parses via
+  `parse_report_content()` and passes `run_safety_filter()` clean.
+- Manual smoke: `OpenAIReportClient.complete()` correctly wraps a real
+  `openai.APITimeoutError` (constructed via `httpx.Request`) into
+  `LLMCallError`, and raises on an empty-choices response.
+- No live OpenAI network call was made anywhere in this session (no API key
+  configured in this environment).
 
 ## Next Session: To-Do
 
-1. Data/AI should start `TASK-015` on
-   `data-ai/TASK-015-template-report-generation`.
-2. Backend should start `TASK-039` on
-   `backend/TASK-039-report-fallback-readiness`.
-3. Frontend should start `TASK-016` once report success/empty behavior is
-   stable enough to integrate.
-4. PM/Data-AI should complete `TASK-019` and PM should run `TASK-018` after
-   Day 4 copy/template/event/deck text is available.
+1. Backend Implementer (`TASK-039`) wires `GET /api/issues/{id}/report` to
+   read the latest `status="success"` `ai_reports` row via this task's
+   storage shape.
+2. Before any live/demo run of `app/core/ai_report_batch.py` with a real
+   `OPENAI_API_KEY`, confirm the key is scoped/budgeted (ADR-021's
+   consequence note) - this is the first point real API cost becomes possible.
+3. Frontend Implementer (`TASK-016`) can proceed against the accepted
+   `IssueReportResponse`/`ReportNotYetGenerated` shape once `TASK-039` lands.
+4. PM (`TASK-018`) should include `app/core/ai_report.py`'s `SYSTEM_PROMPT`/
+   `USER_PROMPT_TEMPLATE` and the banned-phrase/pattern lists in the Day 4
+   copy/wording lint pass, alongside UI strings.

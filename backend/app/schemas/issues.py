@@ -7,7 +7,7 @@ executable draft of that contract, not a new design.
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 ConfidenceLevel = Literal[
     "sufficient",
@@ -80,7 +80,15 @@ class IssueHistoryResponse(BaseModel):
 
 
 class ReportContent(BaseModel):
-    """Fixed template slots only - never free-form (ADR-003)."""
+    """Fixed template slots only - never free-form (ADR-003).
+
+    `extra="forbid"` is load-bearing for TASK-015: the LLM response must
+    parse into exactly these 5 fields, nothing more/fewer - a response with
+    an extra field fails validation and is treated as a malformed-schema
+    failure (Technical Design §10.6), not silently trimmed.
+    """
+
+    model_config = ConfigDict(extra="forbid")
 
     issue_summary: str
     movement_explanation: str

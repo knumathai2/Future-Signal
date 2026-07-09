@@ -57,6 +57,7 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** �
 | Package managers | npm (frontend), pip (backend) | 2026-07-07 |
 | CI/CD | GitHub Actions (batch schedule + lint/test) | 2026-07-07 |
 | AI generation approach | Template-constrained, LLM only polishes phrasing, banned-phrase filter mandatory | 2026-07-07 (PRD §8.8, Service Design §6) |
+| AI provider | OpenAI (`openai==2.44.0`, real `OpenAIReportClient`) | 2026-07-09 (ADR-021, human-approved) |
 | Data update strategy | Append-only inserts, no upserts | 2026-07-07 (Technical Design §4.10) |
 | Postgres driver | `psycopg[binary]` (psycopg3) | 2026-07-08 (ADR-007, human-approved) |
 | Migration format (interim) | Plain SQL (`backend/migrations/*.sql`), not Alembic | 2026-07-08 (ADR-007) |
@@ -83,5 +84,6 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** �
 - `TASK-014` aligned caution badge labels, visual treatment, accessibility labels, and placement across dashboard and detail surfaces.
 - `TASK-017` added shared brief caution copy, reusable footer copy, and a dedicated in-app information notice surface without adding a routing dependency.
 - `TASK-038` assigned Day 4 active work: `TASK-015` template report generation and safety filter, `TASK-039` report API/fallback readiness, `TASK-016` report display UI, `TASK-019` manual event candidates, `TASK-040` demo/deck draft, and `TASK-018` final wording lint.
+- `TASK-015` implemented `backend/app/core/ai_report.py` (fixed §10.1/§10.2 prompt templates, `OpenAIReportClient`, strict 5-field schema parse, banned-phrase/pattern safety filter) and `backend/app/core/ai_report_batch.py` (regeneration eligibility, top-10-by-heat_score cap, retry-once-then-fail, filter-failure discard-without-retry - previous successful `ai_reports` row always stays served on any failure). Per ADR-021, OpenAI is the real provider (no key configured in this environment, so no live call has executed yet). `GET /api/issues/{id}/report` still needs `TASK-039` to read these rows.
 - Backend local setup should use Python 3.11 on this machine; the default Python 3.9 runtime could not install the pinned `psycopg[binary]==3.2.3` binary package.
 - Day 4 is active from this baseline. Any shared or production schema application, paid external AI call, public API shape change, deployment, or infrastructure change remains separately approval-gated.
