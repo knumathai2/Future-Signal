@@ -1,9 +1,8 @@
-"""Read-only query helpers backing the issues/signals/history API (TASK-010).
+"""Read-only query helpers backing the issues/signals/history/report API.
 
 Scope note: only reads the tables TASK-010 needs (markets, market_outcomes,
-market_snapshots, market_metrics, issue_signals, related_events).
-`ai_reports` is out of scope here (see app/api/routes/issues.py report
-handler / TASK-015).
+market_snapshots, market_metrics, issue_signals, related_events) plus the
+TASK-039 report read path against existing `ai_reports` rows.
 
 No-fabrication rule: a market only becomes a servable "issue" once it has
 both a snapshot (for current_value) and a tracked outcome (for
@@ -20,6 +19,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.db.models import (
+    AiReport,
     IssueSignal,
     Market,
     MarketMetric,
@@ -41,6 +41,12 @@ class LiveIssue:
     confidence_level: str
     # sort=recent only, not part of the public response shape
     updated_at: datetime
+
+
+@dataclass
+class LiveAiReport:
+    report: AiReport
+    data_as_of: datetime
 
 
 def _latest_per_market(rows: list, market_id_attr: str = "market_id") -> dict:
@@ -162,4 +168,33 @@ def load_history_points(
         )
         .scalars()
         .all()
+    )
+
+
+def load_latest_successful_report(
+    db: Session, market_id: uuid.UUID
+) -> LiveAiReport | None:
+    """Return the latest successful stored report for an issue, if one exists.
+
+    `ai_reports` is append-only. Failed rows are kept for traceability but
+    should never be served as the user-visible report; if no successful row is
+    available, callers should return the accepted neutral empty state.
+    """
+    row = (
+        db.execute(
+            select(AiReport, MarketMetric.computed_at)
+            .outerjoin(MarketMetric, AiReport.input_metrics_id == MarketMetric.id)
+            .where(AiReport.market_id == market_id, AiReport.status == "success")
+            .order_by(AiReport.generated_at.desc())
+            .limit(1)
+        )
+        .tuples()
+        .first()
+    )
+    if row is None:
+        return None
+    report, metric_computed_at = row
+    return LiveAiReport(
+        report=report,
+        data_as_of=metric_computed_at or report.generated_at,
     )
