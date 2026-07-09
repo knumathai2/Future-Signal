@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { CautionBadge } from "./CautionBadge";
 import { CAUTION_COPY } from "./cautionCopy";
 import { GlobalFooter, ShortCautionNotice } from "./InformationNotice";
+import { IssueReportCard } from "./IssueReportCard";
 import { IssueTrendChart } from "./IssueTrendChart";
 import { MetricTile } from "./MetricTile";
 import {
@@ -12,11 +13,17 @@ import {
   formatShortDate,
   windowLabel,
 } from "../utils/format";
-import type { ChartWindow, DataStatus, Issue } from "../types/issue";
+import type {
+  ChartWindow,
+  DataStatus,
+  Issue,
+  IssueReportLoadState,
+} from "../types/issue";
 
 type IssueDetailProps = {
   issue: Issue;
   dataStatus?: DataStatus;
+  reportState: IssueReportLoadState;
   onBack: () => void;
   onOpenNotice: () => void;
 };
@@ -72,6 +79,7 @@ function buildSummary(issue: Issue, chartWindow: ChartWindow): string {
 export function IssueDetail({
   issue,
   dataStatus = "ready",
+  reportState,
   onBack,
   onOpenNotice,
 }: IssueDetailProps) {
@@ -225,8 +233,12 @@ export function IssueDetail({
                 <div className="text-xs font-semibold text-ink-faint">
                   {formatShortDate(event.date)}
                 </div>
-                <h3 className="mt-1 text-sm font-bold text-ink">{event.title}</h3>
-                <p className="mt-1 text-sm leading-6 text-ink-soft">{event.note}</p>
+                <h3 className="mt-1 text-sm font-bold text-ink">
+                  {event.title}
+                </h3>
+                <p className="mt-1 text-sm leading-6 text-ink-soft">
+                  {event.note}
+                </p>
               </article>
             ))}
           </div>
@@ -237,30 +249,11 @@ export function IssueDetail({
         )}
       </section>
 
-      <section className="mt-10 rounded-lg border border-line bg-card p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 className="text-lg font-bold text-ink">이슈 요약</h2>
-            <p className="mt-1 text-[11px] font-semibold text-ink-faint">
-              템플릿 기반 데이터 요약
-            </p>
-          </div>
-          <div className="flex flex-col items-start gap-2 sm:items-end">
-            <CautionBadge level={issue.cautionLevel} />
-            <span className="text-xs font-semibold text-ink-faint">
-              데이터 기준 시각: {formatDataTimestamp(issue.dataAsOf)}
-            </span>
-          </div>
-        </div>
-        <p className="mt-4 max-w-4xl text-sm leading-7 text-ink">{summary}</p>
-        <ShortCautionNotice
-          context="summary"
-          cautionLevel={issue.cautionLevel}
-          dataAsOf={issue.dataAsOf}
-          className="mt-4"
-          surface="plain"
-        />
-      </section>
+      <IssueReportCard
+        issue={issue}
+        reportState={reportState}
+        fallbackSummary={summary}
+      />
 
       <GlobalFooter onOpenNotice={onOpenNotice} className="mt-10" />
     </div>

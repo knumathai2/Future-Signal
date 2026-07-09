@@ -19,7 +19,6 @@ readiness, and final wording safety.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-016 | Template report display UI | Frontend Implementer | Frontend Implementer | `frontend/TASK-016-report-display-ui` | assigned |
 | TASK-019 | Curated related-event candidates for representative issues | PM + Data/AI | Data/AI Implementer + PM / Planner | `data-ai/TASK-019-curated-events` | assigned |
 | TASK-040 | Day 4 demo script and deck draft | PM | PM / Planner | `pm/TASK-040-demo-script-deck-draft` | assigned |
 | TASK-018 | Copy/wording lint pass across user-facing surfaces | PM | PM / Planner | `pm/TASK-018-copy-lint` | assigned |
@@ -29,7 +28,7 @@ Completed Day 1, Day 2, Day 3, and PM allocation tasks are archived in
 `TASK-015` (template report generation + safety filter, moved to
 `tasks/completed.md` - see that file and ADR-022 for the OpenAI provider
 override this task required and recorded), and `TASK-039` (report API
-fallback readiness).
+fallback readiness), and `TASK-016` (template report display UI).
 
 ## Day 4 Handoff Notes
 
@@ -48,34 +47,14 @@ fallback readiness).
   `/api/issues/{id}/report` now preserves the accepted response shape, reads
   latest successful `ai_reports` rows in live mode, and keeps the neutral empty
   state when no successful report is available.
-- **Frontend Implementer** starts `TASK-016` against the accepted report shape.
-  The summary area must handle success, not-yet-generated, and fetch-failure
-  states with data-as-of timing and interpretation-caution context nearby.
+- **Frontend Implementer** completed `TASK-016` against the accepted report
+  shape. The summary area now handles success, not-yet-generated, loading, and
+  fetch-failure states with data-as-of timing and interpretation-caution
+  context nearby.
 - **Reviewer / Debugger** stay embedded. Any user-facing string changed during
   Day 4 must pass the project wording lint before review.
 
 ## Active Task Details
-
-### TASK-016: Template report display UI
-- **Owner**: Frontend Implementer
-- **Assignee**: Frontend Implementer
-- **Branch**: `frontend/TASK-016-report-display-ui`
-- **Status**: assigned
-- **Priority**: High
-- **Day**: Day 4
-- **Description**: Replace the local-only summary card path with report-endpoint
-  consumption while keeping the current template fallback and caution context
-  honest during loading, empty, and error states.
-- **Definition of Done**:
-  - [ ] Detail summary area renders stored report sections from the accepted
-        response shape.
-  - [ ] `not_yet_generated` and fetch-failure states are neutral, visible, and
-        do not look like broken data.
-  - [ ] Data-as-of timing and interpretation-caution badge/text stay near the
-        summary content.
-  - [ ] Changed UI strings pass the project wording lint.
-  - [ ] Frontend typecheck, lint, build, and a browser smoke pass cover the
-        Home -> Detail -> Chart -> Summary path.
 
 ### TASK-019: Curated related-event candidates for representative issues
 - **Owner**: PM + Data/AI
