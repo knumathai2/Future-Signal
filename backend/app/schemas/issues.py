@@ -80,21 +80,24 @@ class IssueHistoryResponse(BaseModel):
 
 
 class ReportContent(BaseModel):
-    """Fixed template slots only - never free-form (ADR-003).
+    """Fixed template slots only - never free-form (ADR-003 / ADR-028).
 
     `extra="forbid"` is load-bearing for TASK-015: the LLM response must
-    parse into exactly these 5 fields, nothing more/fewer - a response with
+    parse into exactly these 8 fields, nothing more/fewer - a response with
     an extra field fails validation and is treated as a malformed-schema
     failure (Technical Design §10.6), not silently trimmed.
     """
 
     model_config = ConfigDict(extra="forbid")
 
-    issue_summary: str
-    movement_explanation: str
-    key_change_context: str
-    uncertainty_summary: str
-    neutral_conclusion: str
+    issue_explainer: str
+    why_it_matters: str
+    current_reading: str
+    scenario_major_change: str
+    scenario_limited_change: str
+    scenario_status_quo: str
+    check_points: str
+    caution_note: str
 
 
 class IssueReportResponse(BaseModel):

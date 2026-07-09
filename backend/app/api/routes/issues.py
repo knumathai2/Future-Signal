@@ -26,6 +26,7 @@ from collections.abc import Generator
 from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -372,7 +373,15 @@ def get_issue_report(
             return ReportNotYetGenerated(status="not_yet_generated")
         if live_report is None:
             return ReportNotYetGenerated(status="not_yet_generated")
-        return _issue_report_from_live(live_report)
+        try:
+            return _issue_report_from_live(live_report)
+        except ValidationError:
+            logger.warning(
+                "Live report content does not match the current report schema; "
+                "returning report empty state.",
+                exc_info=True,
+            )
+            return ReportNotYetGenerated(status="not_yet_generated")
 
     if issue_id not in _FALLBACK_ISSUES:
         raise HTTPException(status_code=404, detail="Unknown issue id.")
@@ -384,25 +393,37 @@ def get_issue_report(
         data_as_of=_NOW,
         status="success",
         content=ReportContent(
-            issue_summary=(
-                "Reflected expectation for ratification has risen over "
-                "the past 24 hours."
+            issue_explainer=(
+                "이 이슈는 다자 기후 협정이 정해진 시점까지 비준되는지를 "
+                "공개 데이터 맥락에서 살펴보는 항목입니다."
             ),
-            movement_explanation=(
-                "The change coincides with increased public data "
-                "activity on this issue."
+            why_it_matters=(
+                "협정 비준 여부는 국제 환경 정책과 각국의 후속 절차를 "
+                "이해하는 데 참고 맥락이 될 수 있습니다."
             ),
-            key_change_context=(
-                "Change magnitude crossed the expectation-shift "
-                "threshold for the 24h window."
+            current_reading=(
+                "현재 공개 데이터에서는 이 이슈에 대한 재평가 흐름이 "
+                "관측되고 있으나, 실제 결과를 뜻하지는 않습니다."
             ),
-            uncertainty_summary=(
-                "Data reliability is sufficient for this window; "
-                "interpret recent movements cautiously."
+            scenario_major_change=(
+                "조건이 명확히 성립하는 경우, 비준 절차가 확인되며 관련 "
+                "정책 일정과 후속 이행 논의가 더 중요해질 수 있습니다."
             ),
-            neutral_conclusion=(
-                "This reflects a shift in public expectation data, "
-                "not a predicted outcome."
+            scenario_limited_change=(
+                "관련 논의는 이어지지만 조건이 일부만 충족되는 경우, "
+                "정책 관심은 유지되더라도 실제 절차 변화는 제한적일 수 있습니다."
+            ),
+            scenario_status_quo=(
+                "조건이 성립하지 않는 경우, 기존 협상 또는 비준 절차가 "
+                "대체로 유지되는 상황으로 해석할 수 있습니다."
+            ),
+            check_points=(
+                "확인할 지점은 공식 비준 일정, 참여국 발표, 후속 절차의 "
+                "진행 여부입니다."
+            ),
+            caution_note=(
+                "이 요약은 공개 데이터와 등록된 맥락을 정리한 것이며, "
+                "실제 결과에 대한 전망이나 행동 제안이 아닙니다."
             ),
         ),
     )

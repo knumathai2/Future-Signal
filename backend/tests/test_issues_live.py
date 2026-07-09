@@ -15,7 +15,7 @@ from datetime import timedelta
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routes import issues as issues_routes
-from app.db.models import MarketSnapshot
+from app.db.models import AiReport, MarketSnapshot
 from tests.conftest import (
     MARKET_ID,
     MARKET_ID_NO_METRIC,
@@ -181,7 +181,28 @@ def test_get_issue_report_live_data_returns_latest_successful_report(
     # input_metrics_id=1 links the report to the seeded metric row, so the
     # report's data_as_of reflects the metric snapshot rather than generated_at.
     assert body["data_as_of"].startswith("2026-07-08T09:00:00")
-    assert body["content"]["issue_summary"] == "latest issue summary from stored data."
+    assert body["content"]["issue_explainer"] == "latest issue explainer from stored data."
+
+
+def test_get_issue_report_live_data_with_legacy_schema_returns_not_yet_generated(
+    live_client, db_session
+):
+    seed_basic_market(db_session)
+    seed_ai_report(db_session)
+    report = db_session.get(AiReport, REPORT_ID_LATEST)
+    report.content = {
+        "issue_summary": "legacy issue summary from stored data.",
+        "movement_explanation": "legacy movement explanation.",
+        "key_change_context": "legacy context.",
+        "uncertainty_summary": "legacy uncertainty summary.",
+        "neutral_conclusion": "legacy conclusion.",
+    }
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
 
 
 def test_get_issue_report_live_data_without_success_returns_not_yet_generated(

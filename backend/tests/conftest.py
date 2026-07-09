@@ -219,20 +219,14 @@ def seed_market_without_metric(db_session) -> None:
 
 def report_content(label: str) -> dict[str, str]:
     return {
-        "issue_summary": f"{label} issue summary from stored data.",
-        "movement_explanation": (
-            f"{label} reflected expectation movement is described from stored metrics."
-        ),
-        "key_change_context": (
-            f"{label} related event candidate is context, not a cause."
-        ),
-        "uncertainty_summary": (
-            f"{label} data reliability is sufficient; interpretation still "
-            "requires caution."
-        ),
-        "neutral_conclusion": (
-            f"{label} summary supports issue monitoring without an outcome claim."
-        ),
+        "issue_explainer": f"{label} issue explainer from stored data.",
+        "why_it_matters": f"{label} issue context is described in plain language.",
+        "current_reading": f"{label} current reading is based on stored metrics.",
+        "scenario_major_change": f"{label} major-change scenario is conditional context.",
+        "scenario_limited_change": f"{label} limited-change scenario is conditional context.",
+        "scenario_status_quo": f"{label} status-quo scenario is conditional context.",
+        "check_points": f"{label} checkpoints summarize dates and formal updates.",
+        "caution_note": f"{label} caution note avoids any outcome claim.",
     }
 
 
