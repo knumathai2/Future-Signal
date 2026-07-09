@@ -35,6 +35,11 @@ def test_get_issue_history():
     assert "data_as_of" in body
 
 
+def test_get_issue_history_unknown_id_is_404():
+    response = client.get("/api/issues/does-not-exist/history")
+    assert response.status_code == 404
+
+
 def test_get_issue_report_success():
     response = client.get(f"/api/issues/{ISSUE_ID}/report")
     assert response.status_code == 200
