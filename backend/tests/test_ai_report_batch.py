@@ -239,6 +239,28 @@ def test_market_with_fresh_report_and_no_new_signal_does_not_qualify(db):
     assert select_markets_for_regeneration(db, NOW) == []
 
 
+def test_current_prompt_version_prevents_regeneration_when_timestamp_ties(db):
+    _seed_market(db)
+    db.add(_snapshot(MARKET_ID, NOW))
+    db.add(_metric(MARKET_ID, NOW))
+    for prompt_version in ["v1", PROMPT_VERSION]:
+        db.add(
+            AiReport(
+                id=uuid.uuid4(),
+                market_id=MARKET_ID,
+                generated_at=NOW - timedelta(hours=1),
+                input_metrics_id=None,
+                content=VALID_CONTENT,
+                model_used="gpt-4o-mini",
+                prompt_version=prompt_version,
+                status="success",
+            )
+        )
+    db.commit()
+
+    assert select_markets_for_regeneration(db, NOW) == []
+
+
 def test_market_with_fresh_legacy_prompt_version_qualifies_for_regeneration(db):
     _seed_market(db)
     db.add(_snapshot(MARKET_ID, NOW))

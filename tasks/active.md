@@ -28,8 +28,9 @@ override this task required and recorded), `TASK-039` (report API fallback
 readiness), `TASK-016` (template report display UI), `TASK-019`
 (curated related-event candidates), `TASK-041` (report-generation
 readiness for historical-seed metric timestamps), `TASK-042` (combined
-scheduled/manual report batch), and `TASK-043` (v2 issue-explainer report
-output structure).
+scheduled/manual report batch), `TASK-043` (v2 issue-explainer report
+output structure), `TASK-044` (Korean issue display titles), and `ISS-007`
+(v2 report/category-filter readiness).
 
 ## Day 4 Handoff Notes
 
@@ -69,6 +70,13 @@ output structure).
   are recorded in `reports/task-040-demo-script-deck-draft.md`; the reusable
   startup prompt is recorded in
   `reports/task-040-demo-script-deck-draft-prompt.md`.
+- **Frontend Implementer** completed `TASK-044`. Dashboard and detail headings
+  now show Korean issue display names and 기준 조건 first, with raw Polymarket
+  titles preserved only as detail-screen provenance.
+- **Debugger** resolved `ISS-007`. Report reads now require current v2 content,
+  report regeneration handles same-timestamp rows correctly, and the top-level
+  category filters remain broad Korean groups while detailed topic labels stay
+  in the card/detail display layer.
 - **Reviewer / Debugger** stay embedded. Any user-facing string changed during
   Day 4 must pass the project wording lint before review.
 

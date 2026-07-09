@@ -15,7 +15,8 @@ from datetime import timedelta
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routes import issues as issues_routes
-from app.db.models import AiReport, MarketSnapshot
+from app.core.ai_report import PROMPT_VERSION
+from app.db.models import AiReport, Market, MarketSnapshot
 from tests.conftest import (
     MARKET_ID,
     MARKET_ID_NO_METRIC,
@@ -45,6 +46,63 @@ def test_list_issues_live_data(live_client, db_session):
     assert issue["current_value"] == 0.63
     assert issue["change_24h"] == 0.08
     assert issue["confidence_level"] == "sufficient"
+
+
+def test_list_issues_category_filter_is_case_insensitive(live_client, db_session):
+    seed_basic_market(db_session)
+    market = db_session.get(Market, MARKET_ID)
+    market.category = "Politics"
+    db_session.commit()
+
+    response = live_client.get("/api/issues?category=politics")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body["issues"]) == 1
+    assert body["issues"][0]["category"] == "Politics"
+
+
+def test_categories_live_data_returns_current_issue_categories(live_client, db_session):
+    seed_basic_market(db_session)
+
+    response = live_client.get("/api/categories")
+
+    assert response.status_code == 200
+    assert response.json() == {"categories": ["기술"]}
+
+
+def test_broad_korean_category_filters_ukraine_war_issues(live_client, db_session):
+    seed_basic_market(db_session)
+    market = db_session.get(Market, MARKET_ID)
+    market.title = "Will Russia capture Lyman by September 30, 2026?"
+    market.category = "Ukraine"
+    db_session.commit()
+
+    categories = live_client.get("/api/categories").json()["categories"]
+    response = live_client.get("/api/issues?category=세계")
+
+    assert categories == ["세계"]
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body["issues"]) == 1
+    assert body["issues"][0]["id"] == str(MARKET_ID)
+
+
+def test_broad_korean_category_supports_future_iran_conflict(live_client, db_session):
+    seed_basic_market(db_session)
+    market = db_session.get(Market, MARKET_ID)
+    market.title = "Iran x Israel military clash by December 31, 2026?"
+    market.category = "Geopolitics"
+    db_session.commit()
+
+    categories = live_client.get("/api/categories").json()["categories"]
+    response = live_client.get("/api/issues?category=세계")
+
+    assert categories == ["세계"]
+    assert response.status_code == 200
+    body = response.json()
+    assert len(body["issues"]) == 1
+    assert body["issues"][0]["id"] == str(MARKET_ID)
 
 
 def test_get_issue_detail_live_data(live_client, db_session):
@@ -157,6 +215,7 @@ def test_get_issue_report_live_data_returns_latest_successful_report(
         report_id=REPORT_ID_OLD,
         generated_at=NOW - timedelta(hours=2),
         label="older",
+        prompt_version=PROMPT_VERSION,
     )
     seed_ai_report(
         db_session,
@@ -170,6 +229,7 @@ def test_get_issue_report_live_data_returns_latest_successful_report(
         report_id=REPORT_ID_LATEST,
         generated_at=NOW + timedelta(minutes=5),
         label="latest",
+        prompt_version=PROMPT_VERSION,
     )
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
@@ -184,11 +244,38 @@ def test_get_issue_report_live_data_returns_latest_successful_report(
     assert body["content"]["issue_explainer"] == "latest issue explainer from stored data."
 
 
+def test_get_issue_report_prefers_current_prompt_version_when_timestamps_tie(
+    live_client, db_session
+):
+    seed_basic_market(db_session)
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_OLD,
+        generated_at=NOW,
+        label="legacy",
+        prompt_version="v1",
+    )
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_LATEST,
+        generated_at=NOW,
+        label="current",
+        prompt_version=PROMPT_VERSION,
+    )
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == str(REPORT_ID_LATEST)
+    assert body["content"]["issue_explainer"] == "current issue explainer from stored data."
+
+
 def test_get_issue_report_live_data_with_legacy_schema_returns_not_yet_generated(
     live_client, db_session
 ):
     seed_basic_market(db_session)
-    seed_ai_report(db_session)
+    seed_ai_report(db_session, prompt_version=PROMPT_VERSION)
     report = db_session.get(AiReport, REPORT_ID_LATEST)
     report.content = {
         "issue_summary": "legacy issue summary from stored data.",
@@ -227,7 +314,7 @@ def test_get_issue_report_query_failure_returns_not_yet_generated(
     live_client, db_session, monkeypatch
 ):
     seed_basic_market(db_session)
-    seed_ai_report(db_session)
+    seed_ai_report(db_session, prompt_version=PROMPT_VERSION)
 
     def fail_query(*args, **kwargs):
         raise SQLAlchemyError("simulated report query failure")

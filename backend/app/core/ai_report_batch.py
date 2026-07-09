@@ -53,10 +53,23 @@ class ReportOutcome:
 
 
 def _latest_successful_report(db: Session, market_id: uuid.UUID) -> AiReport | None:
+    latest_current = db.execute(
+        select(AiReport)
+        .where(
+            AiReport.market_id == market_id,
+            AiReport.status == "success",
+            AiReport.prompt_version == PROMPT_VERSION,
+        )
+        .order_by(AiReport.generated_at.desc(), AiReport.id.desc())
+        .limit(1)
+    ).scalar_one_or_none()
+    if latest_current is not None:
+        return latest_current
+
     return db.execute(
         select(AiReport)
         .where(AiReport.market_id == market_id, AiReport.status == "success")
-        .order_by(AiReport.generated_at.desc())
+        .order_by(AiReport.generated_at.desc(), AiReport.id.desc())
         .limit(1)
     ).scalar_one_or_none()
 

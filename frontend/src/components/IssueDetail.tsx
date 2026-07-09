@@ -116,7 +116,7 @@ export function IssueDetail({
 
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-[11px] font-bold text-ink-faint">
-            {formatCategoryLabel(issue.category)}
+            {issue.topicLabel ?? formatCategoryLabel(issue.category)}
           </span>
           <CautionBadge level={issue.cautionLevel} />
         </div>
@@ -124,8 +124,18 @@ export function IssueDetail({
           {issue.title}
         </h1>
         <p className="mt-3 max-w-3xl text-sm leading-6 text-ink-soft">
-          {issue.description}
+          {issue.displaySubtitle ?? issue.description}
         </p>
+        {issue.resolutionCondition ? (
+          <p className="mt-2 max-w-3xl text-xs font-semibold leading-5 text-ink-faint">
+            기준 조건: {issue.resolutionCondition}
+          </p>
+        ) : null}
+        {issue.sourceTitle && issue.sourceTitle !== issue.title ? (
+          <p className="mt-1 max-w-3xl text-xs leading-5 text-ink-faint">
+            원문 시장 질문: {issue.sourceTitle}
+          </p>
+        ) : null}
         <p className="mt-2 text-xs text-ink-faint">
           데이터 기준 시각: {formatDataTimestamp(issue.dataAsOf)}
         </p>
