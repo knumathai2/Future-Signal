@@ -285,6 +285,9 @@ export function Dashboard({
                       {issue.displaySubtitle}
                     </span>
                   ) : null}
+                  <span className="text-xs leading-5 text-ink-faint">
+                    데이터 기준 시각: {formatDataTimestamp(issue.dataAsOf)}
+                  </span>
                 </div>
                 <div className="flex shrink-0 items-center gap-4">
                   <CautionBadge level={issue.cautionLevel} />
