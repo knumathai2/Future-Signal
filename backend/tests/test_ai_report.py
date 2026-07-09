@@ -12,9 +12,16 @@ from app.core.ai_report import (
     LLMCallError,
     OpenAIReportClient,
     ReportPromptInputs,
+    build_openai_client,
     build_prompt,
     parse_report_content,
     run_safety_filter,
+)
+from app.core.config import (
+    OPENROUTER_BASE_URL,
+    _resolve_ai_base_url,
+    _resolve_ai_model,
+    _resolve_ai_provider,
 )
 from app.schemas.issues import ReportContent
 
@@ -252,3 +259,71 @@ def test_openai_client_raises_on_empty_response():
     client = OpenAIReportClient(_EmptyResponseOpenAI(), model="gpt-4o-mini")
     with pytest.raises(LLMCallError):
         client.complete("system", "user")
+
+
+def test_openrouter_key_selects_openrouter_provider():
+    provider = _resolve_ai_provider(
+        provider=None,
+        openrouter_api_key=None,
+        openai_api_key="sk-or-v1-example",
+    )
+
+    assert provider == "openrouter"
+    assert _resolve_ai_base_url(provider, raw_base_url=None) == OPENROUTER_BASE_URL
+    assert _resolve_ai_model(provider, raw_model="gpt-4o-mini") == "openai/gpt-4o-mini"
+
+
+def test_openrouter_model_slug_is_preserved_when_already_qualified():
+    assert (
+        _resolve_ai_model("openrouter", raw_model="anthropic/claude-3.5-sonnet")
+        == "anthropic/claude-3.5-sonnet"
+    )
+    assert _resolve_ai_model("openrouter", raw_model="~openai/gpt-latest") == (
+        "~openai/gpt-latest"
+    )
+
+
+class _CapturingChatCompletions:
+    def __init__(self):
+        self.kwargs = None
+
+    def create(self, **kwargs):
+        self.kwargs = kwargs
+        message = type("Message", (), {"content": '{"ok": true}'})()
+        choice = type("Choice", (), {"message": message})()
+        return type("Resp", (), {"choices": [choice]})()
+
+
+class _CapturingOpenAI:
+    def __init__(self):
+        self.completions = _CapturingChatCompletions()
+        self.chat = type("Chat", (), {"completions": self.completions})()
+
+
+def test_build_openai_client_passes_openrouter_base_url_and_headers(monkeypatch):
+    captured_constructor_kwargs = {}
+    stub = _CapturingOpenAI()
+
+    def fake_openai(**kwargs):
+        captured_constructor_kwargs.update(kwargs)
+        return stub
+
+    monkeypatch.setattr("app.core.ai_report.OpenAI", fake_openai)
+
+    client = build_openai_client(
+        "sk-or-v1-example",
+        "openai/gpt-4o-mini",
+        base_url=OPENROUTER_BASE_URL,
+        provider_name="openrouter",
+        extra_headers={"X-OpenRouter-Title": "Outlook Signals"},
+    )
+
+    assert client.complete("system", "user") == '{"ok": true}'
+    assert captured_constructor_kwargs == {
+        "api_key": "sk-or-v1-example",
+        "base_url": OPENROUTER_BASE_URL,
+    }
+    assert stub.completions.kwargs["model"] == "openai/gpt-4o-mini"
+    assert stub.completions.kwargs["extra_headers"] == {
+        "X-OpenRouter-Title": "Outlook Signals"
+    }

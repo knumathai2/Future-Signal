@@ -41,6 +41,8 @@ _Last updated: 2026-07-09_
 | ISS-002 | Direct Supabase database route was not reachable locally over IPv6. | 2026-07-09 | Resolved by switching to the Supabase pooler URL and adding the missing `DATABASE_URL=` key in `backend/.env`; read-only `select 1` now succeeds. |
 | ISS-003 | Supabase DB was reachable but app schema was not applied. | 2026-07-09 | Resolved by applying `backend/migrations/001_initial_schema.sql` to the configured development Supabase DB after explicit human approval; expected tables and `pgcrypto` are present. |
 | ISS-004 | Development Supabase schema was applied, but live data tables were empty, so the API served the documented static fallback data. | 2026-07-09 | Resolved for the configured development DB by running the existing collector into a temporary artifact directory, filtering the normalized rows against the project hard-block wording list, and running the approved snapshot/metrics path. Inserted 50 `markets`, 50 `market_outcomes`, 50 `market_snapshots`, and 50 `market_metrics`; verified `/api/issues` and the Vite proxy now return DB-backed payloads. |
+| ISS-005 | AI report batch could not use latest historical-seed metric rows because metric timestamps were one microsecond after their source snapshots. | 2026-07-09 | Fixed in `TASK-041`: prompt input lookup now selects the latest snapshot with `captured_at <= market_metrics.computed_at`, tests cover the historical-seed offset and fake-LLM success-row insertion, and approved-only run notes document how to create stored summaries later. |
+| ISS-006 | Current configured AI key was rejected by OpenAI's default endpoint because it is OpenRouter-style. | 2026-07-09 | Resolved by ADR-027 and rerun: the batch now selects OpenRouter automatically for `OPENROUTER_API_KEY` or `OPENAI_API_KEY` values with the `sk-or-` prefix. Final checked DB state has `ai_reports_success=29`, latest scheduled log is `scheduled_batch_success`, and the top 10 checked heat-sorted issues return report `success`. |
 
 ## Open Design Questions Carried From Planning Docs
 
@@ -174,7 +176,8 @@ them before Day 5 lock if they become relevant to the active path:
 ### ISS-005: AI report batch cannot use latest historical-seed metric run
 - **Severity**: High
 - **Found**: 2026-07-09
-- **Status**: Open — assigned as `TASK-041`
+- **Status**: Resolved — fixed in `TASK-041`; creating stored dev/demo report
+  rows still requires a separately approved database-write generation run
 - **Reproduction steps**:
   1. Use the configured development DB after the approved historical seed runs.
   2. Confirm `ai_reports=0` through a read-only DB count or observe
@@ -186,18 +189,59 @@ them before Day 5 lock if they become relevant to the active path:
   - `historical_seed.metric_timestamp_for_seed()` intentionally writes seeded
     metric timestamps as `latest_snapshot_at + 1 microsecond` so seeded metrics
     are newer than first-run metrics.
-  - `build_prompt_inputs_for_market()` currently requires an exact
+  - `build_prompt_inputs_for_market()` previously required an exact
     `MarketSnapshot.captured_at == MarketMetric.computed_at` match.
-  - As a result, the latest seeded metrics can qualify for report generation
-    but fail prompt-input construction because their source snapshots are one
+  - As a result, the latest seeded metrics could qualify for report generation
+    but fail prompt-input construction because their source snapshots were one
     microsecond earlier.
 - **Impact**:
-  - The frontend report card and report read API are implemented, but the live
-    DB-backed demo still has no successful stored report rows to display.
-- **Fix direction**:
-  - `TASK-041` should update report input lookup to use the latest snapshot at
-    or before the metric run timestamp, without fabricating values.
-  - Add tests covering the `+1 microsecond` historical-seed timestamp case and
-    `run_ai_report_batch` success-row insertion with a fake `LLMClient`.
-  - Any actual OpenAI call or shared/dev DB write remains separately
-    approval-gated.
+  - Code readiness is fixed. The configured development DB may still have
+    `ai_reports=0` until an explicitly approved database-write generation run
+    writes stored summaries.
+- **Fix completed**:
+  - `build_prompt_inputs_for_market()` now uses the latest snapshot at or
+    before `market_metrics.computed_at`, without fabricating values.
+  - Tests cover the `+1 microsecond` historical-seed timestamp case,
+    future-only snapshot rejection, and `run_ai_report_batch` success-row
+    insertion with a fake `LLMClient`.
+  - `reports/task-041-report-generation-readiness.md` documents the normal
+    no-report empty state before approval and the approved-only saved-summary
+    procedure.
+  - OpenAI report calls are covered by ADR-022 and the provided-key
+    clarification; any shared/dev DB write remains separately approval-gated.
+
+### ISS-006: OpenRouter-style key was sent to OpenAI's default endpoint
+- **Severity**: High
+- **Found**: 2026-07-09
+- **Status**: Resolved
+- **Evidence**:
+  - The configured environment has both `DATABASE_URL` and `OPENAI_API_KEY`.
+  - Running `ENV=local ./.venv/bin/python -m app.core.scheduled_batch
+    --reports-only --confirm-local-dev-write` reached OpenAI but received
+    `401 Unauthorized` for every attempt.
+  - Rerunning the same command for current-DB generation produced the same
+    result.
+  - Read-only DB counts after the rerun: `ai_reports_total=20`,
+    `ai_reports_success=0`, `ai_reports_failed=20`.
+  - A same-client minimal OpenAI probe confirms `OPENAI_API_KEY` is present,
+    but the configured key is rejected with `AuthenticationError`.
+  - A direct OpenAI SDK probe returns `status_code=401` and
+    `code=invalid_api_key`; the masked key shape in the provider response
+    appears to be OpenRouter-style, so this is an authentication mismatch
+    before model access or quota is checked.
+- **Impact**:
+  - Data/detail/history graph paths work, but the report endpoint returns
+    `{"status":"not_yet_generated"}` because failed rows are never served.
+- **Fix completed**:
+  - Added OpenRouter support without a new dependency: the existing OpenAI SDK
+    path now uses `https://openrouter.ai/api/v1` when `OPENROUTER_API_KEY` is
+    present or `OPENAI_API_KEY` has the `sk-or-` prefix.
+  - For OpenRouter, unqualified model names such as `gpt-4o-mini` are sent as
+    `openai/gpt-4o-mini`.
+  - Reran the reports-only command after fixing the current-DB selector to use
+    each market's latest metric row. Final checked state:
+    `ai_reports_total=49`, `ai_reports_success=29`,
+    `ai_reports_failed=20`, latest log `scheduled_batch_success`.
+  - Verified the top 10 checked heat-sorted issues return report `success` with
+    content. Failed rows from earlier attempts remain for traceability but are
+    never served by the API.
