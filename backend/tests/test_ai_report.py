@@ -26,18 +26,31 @@ from app.core.config import (
 from app.schemas.issues import ReportContent
 
 VALID_CONTENT = {
-    "issue_summary": "This market tracks whether the issue resolves Yes by the deadline.",
-    "movement_explanation": (
-        "Over the past 7 days, the reflected expectation rose by 11 percentage points."
+    "issue_explainer": "이 이슈는 정해진 기준일까지 특정 조건이 확인되는지를 살펴봅니다.",
+    "why_it_matters": (
+        "이 조건은 관련 정책 일정과 이해관계자의 후속 대응을 이해하는 데 "
+        "참고 맥락이 될 수 있습니다."
     ),
-    "key_change_context": (
-        "A related event candidate occurred alongside this period; offered as context, "
-        "not a cause."
+    "current_reading": (
+        "현재 공개 데이터에서는 이 이슈가 일부 재평가되고 있으나, 실제 결과를 "
+        "뜻하지는 않습니다."
     ),
-    "uncertainty_summary": (
-        "Trading activity has been moderate; interpret short-term swings with some caution."
+    "scenario_major_change": (
+        "조건이 명확히 성립하는 경우, 관련 절차가 확인되며 후속 논의가 "
+        "더 중요해질 수 있습니다."
     ),
-    "neutral_conclusion": "Public expectation on this issue has shifted upward over the past week.",
+    "scenario_limited_change": (
+        "논의는 이어지지만 조건이 일부만 충족되는 경우, 실제 변화는 제한적일 수 있습니다."
+    ),
+    "scenario_status_quo": (
+        "조건이 성립하지 않는 경우, 기존 일정이나 제도가 대체로 유지되는 "
+        "상황으로 해석할 수 있습니다."
+    ),
+    "check_points": "확인할 지점은 공식 발표, 기준일, 후속 절차의 진행 여부입니다.",
+    "caution_note": (
+        "이 요약은 공개 데이터와 등록된 맥락을 정리한 것이며, 실제 결과에 "
+        "대한 전망이나 행동 제안이 아닙니다."
+    ),
 }
 
 
@@ -76,8 +89,9 @@ def test_build_prompt_fills_only_the_named_slots():
     assert "+11.0pp" in user_prompt
     assert "sufficient" in user_prompt
     # the fixed instruction footer is present verbatim (never trimmed/altered)
-    assert '"issue_summary": "..."' in user_prompt
-    assert '"neutral_conclusion": "..."' in user_prompt
+    assert '"issue_explainer": "..."' in user_prompt
+    assert '"scenario_major_change": "..."' in user_prompt
+    assert '"caution_note": "..."' in user_prompt
 
 
 def test_build_prompt_uses_none_placeholder_when_no_inflection_or_event():
@@ -102,7 +116,7 @@ def test_parse_valid_json_returns_report_content():
 
     content = parse_report_content(json.dumps(VALID_CONTENT))
     assert isinstance(content, ReportContent)
-    assert content.issue_summary == VALID_CONTENT["issue_summary"]
+    assert content.issue_explainer == VALID_CONTENT["issue_explainer"]
 
 
 def test_parse_malformed_json_returns_none():
@@ -115,7 +129,7 @@ def test_parse_non_object_json_returns_none():
 
 def test_parse_missing_field_returns_none_not_partial():
     incomplete = dict(VALID_CONTENT)
-    del incomplete["neutral_conclusion"]
+    del incomplete["caution_note"]
     import json
 
     assert parse_report_content(json.dumps(incomplete)) is None
@@ -140,11 +154,14 @@ def test_clean_content_passes_filter():
 @pytest.mark.parametrize(
     "field,text",
     [
-        ("issue_summary", "You should buy into this issue now."),
-        ("movement_explanation", "This looks like a good bet for traders."),
-        ("key_change_context", "Consider a long position given the trend."),
-        ("uncertainty_summary", "This is a guaranteed win rate scenario."),
-        ("neutral_conclusion", "We recommend following this expert trader."),
+        ("issue_explainer", "You should buy into this issue now."),
+        ("why_it_matters", "This looks like a good bet for traders."),
+        ("current_reading", "Consider a long position given the trend."),
+        ("scenario_major_change", "This is a guaranteed win rate scenario."),
+        ("scenario_limited_change", "We recommend following this expert trader."),
+        ("scenario_status_quo", "This is the best pick."),
+        ("check_points", "This is a high-return opportunity."),
+        ("caution_note", "This is a signal to act."),
     ],
 )
 def test_banned_phrase_is_rejected(field, text):
@@ -165,7 +182,7 @@ def test_banned_phrase_is_rejected(field, text):
     ],
 )
 def test_banned_pattern_is_rejected(text):
-    content = ReportContent(**dict(VALID_CONTENT, neutral_conclusion=text))
+    content = ReportContent(**dict(VALID_CONTENT, caution_note=text))
     result = run_safety_filter(content)
     assert result.passed is False
     assert result.rule.startswith("banned_pattern:")
@@ -177,7 +194,7 @@ def test_substring_false_positive_is_not_rejected():
     content = ReportContent(
         **dict(
             VALID_CONTENT,
-            neutral_conclusion=(
+            caution_note=(
                 "This issue does not belong to a single category and may update shortly."
             ),
         )
@@ -192,26 +209,34 @@ def test_technical_design_10_3_reference_example_parses_and_passes_filter():
     import json
 
     example = {
-        "issue_summary": (
-            "This market tracks whether [event] will be resolved as 'Yes' by [date], "
-            "based on public trading activity on Polymarket."
+        "issue_explainer": (
+            "이 이슈는 기준일까지 특정 조건이 확인되는지를 공개 데이터 맥락에서 "
+            "살펴보는 항목입니다."
         ),
-        "movement_explanation": (
-            "Over the past 7 days, the expectation reflected in this market rose by 11 "
-            "percentage points, with the largest single shift occurring around [date]."
+        "why_it_matters": (
+            "해당 조건은 관련 기관의 일정, 정책 논의, 후속 절차를 이해하는 데 "
+            "참고 맥락이 될 수 있습니다."
         ),
-        "key_change_context": (
-            "A related event candidate around this time: [event]. This is offered as "
-            "context, not as a confirmed cause."
+        "current_reading": (
+            "현재 공개 데이터에서는 이 이슈가 일부 재평가되고 있으나, 실제 결과를 "
+            "뜻하지는 않습니다."
         ),
-        "uncertainty_summary": (
-            "Trading activity on this market has been moderate over this period; "
-            "interpret short-term swings with some caution."
+        "scenario_major_change": (
+            "조건이 명확히 성립하는 경우, 관련 절차가 확인되며 후속 논의가 "
+            "더 중요해질 수 있습니다."
         ),
-        "neutral_conclusion": (
-            "Public expectation on this issue has shifted upward over the past week, "
-            "though the underlying data reflects market activity rather than a factual "
-            "forecast."
+        "scenario_limited_change": (
+            "관련 논의는 이어지지만 조건이 일부만 충족되는 경우, 실제 변화는 "
+            "제한적일 수 있습니다."
+        ),
+        "scenario_status_quo": (
+            "조건이 성립하지 않는 경우, 기존 일정이나 제도가 대체로 유지되는 "
+            "상황으로 해석할 수 있습니다."
+        ),
+        "check_points": "확인할 지점은 공식 발표, 기준일, 후속 절차의 진행 여부입니다.",
+        "caution_note": (
+            "이 요약은 공개 데이터와 등록된 맥락을 정리한 것이며, 실제 결과에 "
+            "대한 전망이나 행동 제안이 아닙니다."
         ),
     }
 

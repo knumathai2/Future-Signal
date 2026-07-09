@@ -42,11 +42,14 @@ export type DataStatus = "loading" | "ready" | "empty" | "error";
 export type ChartWindow = "24h" | "7d" | "30d";
 
 export type IssueReportContent = {
-  issue_summary: string;
-  movement_explanation: string;
-  key_change_context: string;
-  uncertainty_summary: string;
-  neutral_conclusion: string;
+  issue_explainer: string;
+  why_it_matters: string;
+  current_reading: string;
+  scenario_major_change: string;
+  scenario_limited_change: string;
+  scenario_status_quo: string;
+  check_points: string;
+  caution_note: string;
 };
 
 export type IssueReportSuccessResponse = {
