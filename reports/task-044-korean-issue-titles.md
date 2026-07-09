@@ -20,7 +20,7 @@ what real-world issue a card represented.
 - Added `frontend/src/utils/issueDisplay.ts` to map the current live/demo issue
   set to Korean display copy:
   - topic label
-  - short issue display title
+  - compact issue display title
   - one-line 기준 조건
   - detail-screen source title provenance
 - Updated API-to-frontend mapping so the public API remains unchanged.
@@ -41,8 +41,8 @@ what real-world issue a card represented.
   - Cards show one-line 기준 조건 subtitles.
   - Detail header shows Korean title, 기준 조건, and original market question
     only as secondary provenance.
-- Changed-string safety scan passed; only code-level false positives such as
-  `short` in formatter names remained.
+- Changed-string safety scan passed; only code-level formatter-name false
+  positives remained.
 - `git diff --check` — passed.
 
 ## Notes
