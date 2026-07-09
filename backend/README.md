@@ -15,6 +15,28 @@ pip install -r requirements-dev.txt
 cp .env.example .env         # fill in DATABASE_URL locally, never commit .env
 ```
 
+### Supabase `DATABASE_URL`
+
+Supabase connection strings copied from the dashboard usually start with
+`postgresql://`. The backend now supports that form through `psycopg2-binary`.
+The existing SQLAlchemy/psycopg3 form also remains valid:
+
+```bash
+# Supabase/dashboard-compatible form
+DATABASE_URL=postgresql://USER:ENCODED_PASSWORD@HOST:5432/postgres
+
+# psycopg3-explicit form
+DATABASE_URL=postgresql+psycopg://USER:ENCODED_PASSWORD@HOST:5432/postgres
+```
+
+If the database password contains URL-reserved characters such as `@`, `#`,
+`/`, `?`, `&`, `%`, or `:`, URL-encode the password before placing it in
+`.env`.
+
+If the direct Supabase host (`db.<project-ref>.supabase.co`) resolves but local
+connection fails with an IPv6 routing error such as `No route to host`, switch
+`DATABASE_URL` to the Supabase pooler connection string from the dashboard.
+
 ## Run
 
 ```bash
