@@ -19,8 +19,8 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 - **Version**: v0.6.0-day4-assigned
 - **Phase**: Day 4 active
-- **Next milestone**: Day 4 closeout — report generation readiness, demo/deck draft, and final wording-safety pass
-- **Overall health**: 🟡 Watch — Day 4 core UI/API/event-candidate work is merged on latest `origin/main`, but stored report generation still needs `TASK-041` before the live DB-backed summary path is demo-ready
+- **Next milestone**: Day 4 closeout — demo/deck draft and final wording-safety pass
+- **Overall health**: 🟡 Watch — Day 4 core UI/API/event-candidate work and report-generation code readiness are complete; stored live/dev summaries still require a separately approved generation run before they exist in the DB
 
 ## Tech Summary
 
@@ -53,8 +53,8 @@ Future Signal/
 |---|---|
 | Frontend | Dashboard v1 is integrated with backend routes and static fallback, including ranked issue cards, category/window/sort controls, detail view, Recharts line chart, error fallback states, data-as-of timestamps, caution badges, Day 3-hardened window-specific insufficient-history handling, shared footer copy, a dedicated in-app information notice surface, and `TASK-016` report-card states for success/loading/not-yet-generated/fetch-failure. |
 | Backend | FastAPI app, `/api/health`, accepted `/api/issues`/detail/history/report/category contract, Pydantic schemas, and contract tests exist. `TASK-010` merged live issue list/detail/history read paths with documented static fallback behavior, and `TASK-039` wires `/api/issues/{id}/report` to latest successful stored report rows in live mode while preserving the accepted empty state. `001_initial_schema.sql` has been applied to the currently configured development Supabase DB after human approval; the DB has one live collector snapshot/metric row per normalized issue, ADR-025 adds a guarded historical seed path for richer live chart history, and PR #36 adds a guarded related-event seed path for four normalized/live-reachable demo issues. |
-| Data/AI | `TASK-007` produced 50 normalized records and structured skip details; `TASK-008` computes 24h/7d metrics through a local/dev-safe path; `TASK-009` inserts MVP expectation-shift detector rows from the ±5pp threshold; `TASK-036` adds MVP caution thresholds and marker handoff guidance; `TASK-015` implements fixed-template report generation and safety filtering; `TASK-019` adds curated related-event candidates. `TASK-041` is now active because the configured development DB has `ai_reports=0`, and latest historical-seed metric timestamps are slightly after their source snapshot timestamps while the current report input builder requires exact equality. |
-| PM / Safety | P0 scope remains locked; wording policy references `standards.md` and `memory/glossary.md`; Day 4 active work is sequenced in `reports/day-4-work-allocation.md` with `TASK-041`, `TASK-040`, and final copy lint `TASK-018` assigned. |
+| Data/AI | `TASK-007` produced 50 normalized records and structured skip details; `TASK-008` computes 24h/7d metrics through a local/dev-safe path; `TASK-009` inserts MVP expectation-shift detector rows from the ±5pp threshold; `TASK-036` adds MVP caution thresholds and marker handoff guidance; `TASK-015` implements fixed-template report generation and safety filtering; `TASK-019` adds curated related-event candidates; `TASK-041` fixes report prompt-input lookup for historical-seed metric timestamps while preserving the no-fabrication skip path. |
+| PM / Safety | P0 scope remains locked; wording policy references `standards.md` and `memory/glossary.md`; remaining Day 4 active work is sequenced in `reports/day-4-work-allocation.md` with `TASK-040` and final copy lint `TASK-018` assigned. |
 
 ## Recent Changes
 
@@ -91,6 +91,7 @@ Future Signal/
 | 2026-07-09 | The guarded historical seed path was run against the configured development DB: 33,238 total snapshot rows, 150 metric rows, 2 expectation-shift signal rows, and 7d live chart/metric coverage for the 50 seeded issues. |
 | 2026-07-09 | `TASK-019` completed and merged in PR #36 at `6d0eb44`: related-event candidates are curated for exactly four normalized/live-reachable issue IDs with a guarded local/dev seed script and tests. |
 | 2026-07-09 | `TASK-041` created: AI report generation readiness must close the remaining live/dev gap where `ai_reports=0` and latest historical-seed metric timestamps do not exactly match snapshot timestamps required by the current prompt-input lookup. |
+| 2026-07-09 | `TASK-041` completed from `origin/main` at `01df91b`: report prompt inputs now use the latest snapshot at or before the metric timestamp, tests prove fake-LLM success-row insertion, and approved-only run notes document how to create stored summaries later. |
 
 ## Constraints
 

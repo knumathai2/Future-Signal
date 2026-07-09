@@ -41,6 +41,7 @@ _Last updated: 2026-07-09_
 | ISS-002 | Direct Supabase database route was not reachable locally over IPv6. | 2026-07-09 | Resolved by switching to the Supabase pooler URL and adding the missing `DATABASE_URL=` key in `backend/.env`; read-only `select 1` now succeeds. |
 | ISS-003 | Supabase DB was reachable but app schema was not applied. | 2026-07-09 | Resolved by applying `backend/migrations/001_initial_schema.sql` to the configured development Supabase DB after explicit human approval; expected tables and `pgcrypto` are present. |
 | ISS-004 | Development Supabase schema was applied, but live data tables were empty, so the API served the documented static fallback data. | 2026-07-09 | Resolved for the configured development DB by running the existing collector into a temporary artifact directory, filtering the normalized rows against the project hard-block wording list, and running the approved snapshot/metrics path. Inserted 50 `markets`, 50 `market_outcomes`, 50 `market_snapshots`, and 50 `market_metrics`; verified `/api/issues` and the Vite proxy now return DB-backed payloads. |
+| ISS-005 | AI report batch could not use latest historical-seed metric rows because metric timestamps were one microsecond after their source snapshots. | 2026-07-09 | Fixed in `TASK-041`: prompt input lookup now selects the latest snapshot with `captured_at <= market_metrics.computed_at`, tests cover the historical-seed offset and fake-LLM success-row insertion, and approved-only run notes document how to create stored summaries later. |
 
 ## Open Design Questions Carried From Planning Docs
 
@@ -174,7 +175,8 @@ them before Day 5 lock if they become relevant to the active path:
 ### ISS-005: AI report batch cannot use latest historical-seed metric run
 - **Severity**: High
 - **Found**: 2026-07-09
-- **Status**: Open — assigned as `TASK-041`
+- **Status**: Resolved — fixed in `TASK-041`; creating stored dev/demo report
+  rows still requires a separately approved generation run
 - **Reproduction steps**:
   1. Use the configured development DB after the approved historical seed runs.
   2. Confirm `ai_reports=0` through a read-only DB count or observe
@@ -186,18 +188,23 @@ them before Day 5 lock if they become relevant to the active path:
   - `historical_seed.metric_timestamp_for_seed()` intentionally writes seeded
     metric timestamps as `latest_snapshot_at + 1 microsecond` so seeded metrics
     are newer than first-run metrics.
-  - `build_prompt_inputs_for_market()` currently requires an exact
+  - `build_prompt_inputs_for_market()` previously required an exact
     `MarketSnapshot.captured_at == MarketMetric.computed_at` match.
-  - As a result, the latest seeded metrics can qualify for report generation
-    but fail prompt-input construction because their source snapshots are one
+  - As a result, the latest seeded metrics could qualify for report generation
+    but fail prompt-input construction because their source snapshots were one
     microsecond earlier.
 - **Impact**:
-  - The frontend report card and report read API are implemented, but the live
-    DB-backed demo still has no successful stored report rows to display.
-- **Fix direction**:
-  - `TASK-041` should update report input lookup to use the latest snapshot at
-    or before the metric run timestamp, without fabricating values.
-  - Add tests covering the `+1 microsecond` historical-seed timestamp case and
-    `run_ai_report_batch` success-row insertion with a fake `LLMClient`.
+  - Code readiness is fixed. The configured development DB may still have
+    `ai_reports=0` until an explicitly approved generation run writes stored
+    summaries.
+- **Fix completed**:
+  - `build_prompt_inputs_for_market()` now uses the latest snapshot at or
+    before `market_metrics.computed_at`, without fabricating values.
+  - Tests cover the `+1 microsecond` historical-seed timestamp case,
+    future-only snapshot rejection, and `run_ai_report_batch` success-row
+    insertion with a fake `LLMClient`.
+  - `reports/task-041-report-generation-readiness.md` documents the normal
+    no-report empty state before approval and the approved-only saved-summary
+    procedure.
   - Any actual OpenAI call or shared/dev DB write remains separately
     approval-gated.

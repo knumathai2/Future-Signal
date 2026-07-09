@@ -6,7 +6,9 @@ _Branch: `pm/TASK-038-day-4-allocation`_
 _Git baseline: `origin/main` at `af83f7e` after fetching latest refs_
 _Status update (2026-07-09): current `origin/main` tip is now `6d0eb44`
 after PR #36 (`TASK-019`) merged. `TASK-041` is added from that baseline to
-close the remaining stored-summary generation readiness gap._
+close the remaining stored-summary generation readiness gap. Follow-up:
+`TASK-041` is complete from `origin/main` at `01df91b`; saved summaries still
+require a separately approved generation run._
 
 ## Summary
 
@@ -39,12 +41,11 @@ Most implementation work for the Day 4 demo path is merged.
 - `TASK-019` (Data/AI + PM) is **completed**: PR #36 added a guarded
   `backend/app/db/seed_related_events.py` path and four manually curated,
   normalized/live-reachable related-event candidates.
-- `TASK-041` is now needed because the configured development DB still has
-  `ai_reports=0`, and the latest historical-seed metric timestamps are slightly
-  after their source snapshots. The current report batch input lookup requires
-  exact `MarketSnapshot.captured_at == MarketMetric.computed_at`, so latest
-  historical-seed runs can qualify for generation but fail to build prompt
-  inputs.
+- `TASK-041` is **completed**: report prompt inputs now use the latest
+  `market_snapshots` row at or before the selected metric timestamp, matching
+  historical-seed runs without fabricating values. The configured development
+  DB may still have `ai_reports=0` until the separately approved generation run
+  is performed.
 
 ## Day 4 Assignments
 
@@ -55,7 +56,7 @@ Most implementation work for the Day 4 demo path is merged.
 | TASK-039 | Backend Implementer | `backend/TASK-039-stabilize-api-fallback` | completed | Existing `/api/issues/{id}/report` reads latest stored successful report while preserving the accepted response shape | Feeds `TASK-041`; also addresses `TD-009`/`TD-010` demo fallback consistency |
 | TASK-016 | Frontend Implementer | `frontend/TASK-016-report-display-ui` | completed | Detail summary card consumes the report endpoint and handles not-yet-generated/error states | Ready to display successful stored reports once `TASK-041` closes the generation gap |
 | TASK-019 | PM + Data/AI | `data-ai/TASK-019-curated-events` | completed | 3-5 manually curated event candidates for representative demo issues | Feeds `TASK-018` and `TASK-040` |
-| TASK-041 | Data/AI Implementer | `data-ai/TASK-041-report-generation-readiness` | assigned | Make report batch prompt input construction compatible with historical-seed metric timestamps and document approved demo-generation steps | Feeds `TASK-018`, `TASK-040`, and Day 4 closeout |
+| TASK-041 | Data/AI Implementer | `data-ai/TASK-041-report-generation-readiness` | completed | Report batch prompt input construction is compatible with historical-seed metric timestamps; approved-only demo-generation notes are documented | Feeds `TASK-018`, `TASK-040`, and Day 4 closeout |
 | TASK-040 | PM / Planner | `pm/TASK-040-demo-script-deck-draft` | assigned | Presentation deck outline and demo script draft to roughly 70 percent completeness | Feeds Day 5 final presentation and backup rehearsal |
 | TASK-018 | PM / Planner | `pm/TASK-018-copy-lint` | assigned | Content-safety lint report across UI strings, templates, report text, event candidates, and deck/demo copy | Final Day 4 safety gate before closeout |
 
@@ -68,16 +69,16 @@ Most implementation work for the Day 4 demo path is merged.
 - Frontend completed `TASK-016`.
 - Data/AI + PM completed `TASK-019`.
 
-### Readiness block — next
+### Readiness block — done
 
-- Data/AI starts `TASK-041` from latest `origin/main` at `6d0eb44` or newer.
-  The likely implementation point is `build_prompt_inputs_for_market()` in
-  `backend/app/core/ai_report_batch.py`: use the latest snapshot at or before
-  the metric run timestamp instead of requiring exact timestamp equality, while
-  preserving the no-fabrication rule.
-- Tests should cover the historical-seed `+1 microsecond` metric timestamp case
-  and prove `run_ai_report_batch` can insert successful reports with a fake
-  `LLMClient`.
+- Data/AI completed `TASK-041` from latest `origin/main` at `01df91b`.
+  `build_prompt_inputs_for_market()` in
+  `backend/app/core/ai_report_batch.py` now uses the latest snapshot at or
+  before the metric run timestamp instead of requiring exact timestamp equality,
+  while preserving the no-fabrication rule.
+- Tests cover the historical-seed `+1 microsecond` metric timestamp case,
+  future-only snapshot rejection, and `run_ai_report_batch` successful report
+  insertion with a fake `LLMClient`.
 - Any actual OpenAI call or write to the configured development DB still
   requires explicit user approval for that run.
 
@@ -111,8 +112,8 @@ Most implementation work for the Day 4 demo path is merged.
 
 Day 4 is ready to close only when:
 
-- Stored template summaries exist or can be generated locally for the
-  representative issues without open-ended analysis.
+- Stored template summaries exist or can be generated locally after explicit
+  approval for the representative issues without open-ended analysis.
 - The report endpoint serves the latest successful stored summary when present
   and the accepted neutral empty state when absent.
 - The detail summary card renders success, not-yet-generated, and error states
