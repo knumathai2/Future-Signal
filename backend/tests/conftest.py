@@ -8,7 +8,12 @@ to any shared or production database - the override only affects the
 "sqlite" dialect used here and never touches the real Postgres path.
 """
 import uuid
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+try:
+    from datetime import UTC
+except ImportError:
+    UTC = timezone.utc
+
 
 import pytest
 from fastapi.testclient import TestClient

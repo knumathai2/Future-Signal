@@ -26,7 +26,11 @@ to `insufficient_data` in that case - never a computed or guessed number.
 import logging
 import uuid
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+try:
+    from datetime import UTC
+except ImportError:
+    UTC = timezone.utc
 from typing import Any
 
 from sqlalchemy import select
