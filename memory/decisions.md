@@ -82,6 +82,20 @@ _Last updated: 2026-07-09_
 
 ---
 
+### ADR-029: Dashboard uses Korean issue display copy instead of raw market titles
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: User / Frontend Implementer
+
+**Context**: The dashboard's raw Polymarket titles were English question strings, making it hard to understand the issue at a glance.
+**Decision**: Keep the API and stored source title unchanged, but map frontend issue cards/detail headers to Korean display copy: topic label, short issue title, one-line 기준 조건, and a detail-only original market question.
+**Rationale**: This improves scanability without adding a schema migration or changing the public API. The original title remains available for provenance on the detail screen.
+**Trade-offs**: The first pass uses deterministic frontend mappings for the current live/demo issue set plus conservative fallbacks. New unseen market titles may need additional mapping polish later.
+**Consequences**: Main dashboard cards show Korean issue names first; English source titles are no longer the primary card headline.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07

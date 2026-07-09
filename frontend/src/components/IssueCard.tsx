@@ -22,7 +22,7 @@ export function IssueCard({ issue, onSelect }: IssueCardProps) {
     >
       <div className="flex items-start justify-between gap-3">
         <span className="text-[11px] font-bold text-ink-faint">
-          {formatCategoryLabel(issue.category)}
+          {issue.topicLabel ?? formatCategoryLabel(issue.category)}
         </span>
         <CautionBadge level={issue.cautionLevel} />
       </div>
@@ -30,6 +30,11 @@ export function IssueCard({ issue, onSelect }: IssueCardProps) {
       <h3 className="mt-3 text-base font-semibold leading-snug text-ink">
         {issue.title}
       </h3>
+      {issue.displaySubtitle ? (
+        <p className="mt-2 line-clamp-2 text-sm leading-6 text-ink-soft">
+          {issue.displaySubtitle}
+        </p>
+      ) : null}
 
       <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <MetricTile

@@ -7,6 +7,7 @@ import type {
   RelatedEventCandidate,
 } from "../types/issue";
 import { calculateHistoryChangeForWindow } from "./history";
+import { buildIssueDisplayCopy } from "./issueDisplay";
 
 const DATE_TIME_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
   year: "numeric",
@@ -190,11 +191,20 @@ export function mapApiIssueToFrontendIssue(
   dataAsOf: string,
 ): Issue {
   const currentExpectationValue = apiIssue.current_value * 100;
+  const display = buildIssueDisplayCopy({
+    id: apiIssue.id,
+    title: apiIssue.title,
+    category: apiIssue.category,
+  });
 
   return {
     id: apiIssue.id,
-    title: apiIssue.title,
-    description: "",
+    title: display.displayTitle,
+    sourceTitle: display.sourceTitle,
+    displaySubtitle: display.displaySubtitle,
+    topicLabel: display.topicLabel,
+    resolutionCondition: display.resolutionCondition,
+    description: display.displaySubtitle,
     category: apiIssue.category,
     currentExpectationValue: Number(currentExpectationValue.toFixed(1)),
     change24h: toPercentagePoint(apiIssue.change_24h),
@@ -211,6 +221,13 @@ export function mapApiIssueDetailToFrontendIssue(
   apiDetail: ApiIssueDetail,
   apiHistory: ApiIssueHistoryResponse,
 ): Issue {
+  const display = buildIssueDisplayCopy({
+    id: apiDetail.id,
+    title: apiDetail.title,
+    description: apiDetail.description,
+    category: apiDetail.category,
+  });
+
   const history: IssueHistoryPoint[] = apiHistory.points
     .map((p) => ({
       timestamp: p.captured_at,
@@ -249,8 +266,12 @@ export function mapApiIssueDetailToFrontendIssue(
 
   return {
     id: apiDetail.id,
-    title: apiDetail.title,
-    description: apiDetail.description,
+    title: display.displayTitle,
+    sourceTitle: display.sourceTitle,
+    displaySubtitle: display.displaySubtitle,
+    topicLabel: display.topicLabel,
+    resolutionCondition: display.resolutionCondition,
+    description: display.displaySubtitle,
     category: apiDetail.category,
     currentExpectationValue: roundedCurrentExpectationValue,
     change24h,
