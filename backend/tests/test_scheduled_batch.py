@@ -31,11 +31,14 @@ from app.db.models import (
 
 NOW = datetime(2026, 7, 9, 12, 0, 0, tzinfo=UTC)
 VALID_CONTENT = {
-    "issue_summary": "This market tracks a public issue.",
-    "movement_explanation": "Expectation rose over the past week.",
-    "key_change_context": "No related event candidate is available this period.",
-    "uncertainty_summary": "Trading activity has been moderate.",
-    "neutral_conclusion": "Public expectation has shifted upward.",
+    "issue_explainer": "이 이슈는 정해진 기준일까지 특정 조건이 확인되는지를 살펴봅니다.",
+    "why_it_matters": "이 조건은 관련 정책 일정과 후속 절차를 이해하는 데 참고가 됩니다.",
+    "current_reading": "현재 공개 데이터에서는 일부 재평가 흐름이 관측됩니다.",
+    "scenario_major_change": "조건이 명확히 성립하면 관련 절차가 확인됩니다.",
+    "scenario_limited_change": "논의는 이어지지만 실제 변화는 제한적일 수 있습니다.",
+    "scenario_status_quo": "조건이 성립하지 않으면 기존 흐름이 대체로 유지될 수 있습니다.",
+    "check_points": "확인할 지점은 공식 발표, 기준일, 후속 절차입니다.",
+    "caution_note": "이 요약은 공개 데이터와 등록된 맥락을 정리한 것입니다.",
 }
 
 

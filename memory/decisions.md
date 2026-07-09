@@ -68,6 +68,20 @@ _Last updated: 2026-07-09_
 
 ---
 
+### ADR-028: AI report output shifts from metric summary to issue explainer scenarios
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: User / Data-AI Implementer
+
+**Context**: The first stored AI summaries were too numeric for general readers: they repeated current value and movement figures but did not clearly explain what the issue means or how to read the market question. The user approved changing the public `/api/issues/{id}/report` content shape.
+**Decision**: Replace the old 5-slot report content (`issue_summary`, `movement_explanation`, `key_change_context`, `uncertainty_summary`, `neutral_conclusion`) with 8 fixed slots: `issue_explainer`, `why_it_matters`, `current_reading`, `scenario_major_change`, `scenario_limited_change`, `scenario_status_quo`, `check_points`, and `caution_note`.
+**Rationale**: The new structure helps non-specialist users understand the issue itself, why it matters, what the current data reading suggests in neutral language, and three conditional paths without using value-loaded "best/worst" labels or predicting an outcome.
+**Trade-offs**: This is a public API shape change and old successful `ai_reports` rows no longer validate against the current response schema. They are treated as `not_yet_generated` until a v2 report is generated.
+**Consequences**: `PROMPT_VERSION` advances to `v2`; backend/frontend report schemas and rendering are updated; the database schema remains unchanged because `ai_reports.content` is `jsonb`; all generated content still must pass the banned-phrase/pattern safety filter before storage.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07
