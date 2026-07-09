@@ -19,17 +19,17 @@ readiness, and final wording safety.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-039 | Report API read-path and fallback readiness | Backend Implementer | Backend Implementer | `backend/TASK-039-report-fallback-readiness` | assigned |
 | TASK-016 | Template report display UI | Frontend Implementer | Frontend Implementer | `frontend/TASK-016-report-display-ui` | assigned |
 | TASK-019 | Curated related-event candidates for representative issues | PM + Data/AI | Data/AI Implementer + PM / Planner | `data-ai/TASK-019-curated-events` | assigned |
 | TASK-040 | Day 4 demo script and deck draft | PM | PM / Planner | `pm/TASK-040-demo-script-deck-draft` | assigned |
 | TASK-018 | Copy/wording lint pass across user-facing surfaces | PM | PM / Planner | `pm/TASK-018-copy-lint` | assigned |
 
 Completed Day 1, Day 2, Day 3, and PM allocation tasks are archived in
-`tasks/completed.md`, including `TASK-038` for this Day 4 allocation and
+`tasks/completed.md`, including `TASK-038` for this Day 4 allocation,
 `TASK-015` (template report generation + safety filter, moved to
-`tasks/completed.md` - see that file and ADR-021 for the OpenAI provider
-override this task required and recorded).
+`tasks/completed.md` - see that file and ADR-022 for the OpenAI provider
+override this task required and recorded), and `TASK-039` (report API
+fallback readiness).
 
 ## Day 4 Handoff Notes
 
@@ -39,14 +39,15 @@ override this task required and recorded).
   in `TASK-019`.
 - **Data/AI Implementer** completed `TASK-015` on
   `data-ai/TASK-015-template-report-generation` (see `tasks/completed.md`).
-  Note for `TASK-039`/`TASK-016`/`TASK-018`: contrary to this file's original
-  Day 4 default, the user explicitly approved wiring a real OpenAI call
-  (ADR-021) rather than stubbing it - `openai` is now a real dependency and
+  Note for `TASK-016`/`TASK-018`: contrary to this file's original Day 4
+  default, the user explicitly approved wiring a real OpenAI call (ADR-022)
+  rather than stubbing it - `openai` is now a real dependency and
   `OPENAI_API_KEY`/`OPENAI_MODEL` are real settings, though no key is present
   in this environment so no live call has actually executed yet.
-- **Backend Implementer** starts `TASK-039` in parallel. Preserve the accepted
-  `/api/issues/{id}/report` response shape; wire live reads to existing
-  `ai_reports` rows when present and keep the neutral empty state when absent.
+- **Backend Implementer** completed `TASK-039` in the PR #29 follow-up.
+  `/api/issues/{id}/report` now preserves the accepted response shape, reads
+  latest successful `ai_reports` rows in live mode, and keeps the neutral empty
+  state when no successful report is available.
 - **Frontend Implementer** starts `TASK-016` against the accepted report shape.
   The summary area must handle success, not-yet-generated, and fetch-failure
   states with data-as-of timing and interpretation-caution context nearby.
@@ -54,28 +55,6 @@ override this task required and recorded).
   Day 4 must pass the project wording lint before review.
 
 ## Active Task Details
-
-### TASK-039: Report API read-path and fallback readiness
-- **Owner**: Backend Implementer
-- **Assignee**: Backend Implementer
-- **Branch**: `backend/TASK-039-report-fallback-readiness`
-- **Status**: assigned
-- **Priority**: High
-- **Day**: Day 4
-- **Description**: Wire the existing report endpoint to latest successful
-  stored reports and tighten demo fallback behavior without changing the public
-  response shape.
-- **Definition of Done**:
-  - [ ] `GET /api/issues/{id}/report` returns the latest successful
-        `ai_reports` row when live data is available.
-  - [ ] The accepted `not_yet_generated` response remains the behavior when no
-        report exists.
-  - [ ] Unknown IDs, database-read failure, and fallback sample behavior are
-        covered by backend tests.
-  - [ ] `TD-009` and `TD-010` are either resolved for the demo path or left with
-        a precise Day 5 fallback note.
-  - [ ] No public API interface, schema, dependency, infrastructure, deployment,
-        or shared/prod database write is introduced.
 
 ### TASK-016: Template report display UI
 - **Owner**: Frontend Implementer

@@ -20,6 +20,10 @@ from tests.conftest import (
     MARKET_ID,
     MARKET_ID_NO_METRIC,
     NOW,
+    REPORT_ID_FAILED,
+    REPORT_ID_LATEST,
+    REPORT_ID_OLD,
+    seed_ai_report,
     seed_basic_market,
     seed_market_without_metric,
 )
@@ -112,7 +116,7 @@ def test_get_issue_history_live_data(live_client, db_session):
     assert body["points"][0]["value"] == 0.63
 
 
-def test_history_query_failure_returns_latest_snapshot_point(
+def test_history_query_failure_returns_empty_points(
     live_client, db_session, monkeypatch
 ):
     seed_basic_market(db_session)
@@ -127,9 +131,7 @@ def test_history_query_failure_returns_latest_snapshot_point(
     assert response.status_code == 200
     body = response.json()
     assert body["window"] == "7d"
-    assert len(body["points"]) == 1
-    assert body["points"][0]["captured_at"].startswith("2026-07-08T09:00:00")
-    assert body["points"][0]["value"] == 0.63
+    assert len(body["points"]) == 0
 
 
 def test_missing_metric_yields_null_fields_and_insufficient_data(live_client, db_session):
@@ -144,6 +146,85 @@ def test_missing_metric_yields_null_fields_and_insufficient_data(live_client, db
     assert issue["change_7d"] is None
     assert issue["heat_score"] is None
     assert issue["confidence_level"] == "insufficient_data"
+
+
+def test_get_issue_report_live_data_returns_latest_successful_report(
+    live_client, db_session
+):
+    seed_basic_market(db_session)
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_OLD,
+        generated_at=NOW - timedelta(hours=2),
+        label="older",
+    )
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_FAILED,
+        generated_at=NOW + timedelta(hours=1),
+        status="failed",
+        label="failed",
+    )
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_LATEST,
+        generated_at=NOW + timedelta(minutes=5),
+        label="latest",
+    )
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == str(REPORT_ID_LATEST)
+    assert body["status"] == "success"
+    # input_metrics_id=1 links the report to the seeded metric row, so the
+    # report's data_as_of reflects the metric snapshot rather than generated_at.
+    assert body["data_as_of"].startswith("2026-07-08T09:00:00")
+    assert body["content"]["issue_summary"] == "latest issue summary from stored data."
+
+
+def test_get_issue_report_live_data_without_success_returns_not_yet_generated(
+    live_client, db_session
+):
+    seed_basic_market(db_session)
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_FAILED,
+        generated_at=NOW + timedelta(hours=1),
+        status="failed",
+        label="failed",
+    )
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_get_issue_report_query_failure_returns_not_yet_generated(
+    live_client, db_session, monkeypatch
+):
+    seed_basic_market(db_session)
+    seed_ai_report(db_session)
+
+    def fail_query(*args, **kwargs):
+        raise SQLAlchemyError("simulated report query failure")
+
+    monkeypatch.setattr(issues_routes, "load_latest_successful_report", fail_query)
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_get_issue_report_unknown_id_live_mode_is_404(live_client, db_session):
+    seed_basic_market(db_session)
+
+    response = live_client.get("/api/issues/does-not-exist/report")
+
+    assert response.status_code == 404
 
 
 def test_empty_database_falls_back_to_static_sample(live_client, db_session):
@@ -228,7 +309,7 @@ def test_load_live_issues_failure_falls_back_to_static_sample_history(
     assert response.status_code == 200
     body = response.json()
     assert body["window"] == "7d"
-    assert len(body["points"]) >= 1
+    assert len(body["points"]) == 0
 
 
 def test_history_multiple_snapshots_filtered_and_sorted_by_window(

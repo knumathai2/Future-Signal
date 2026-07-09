@@ -1,5 +1,5 @@
 <!--
-Purpose:        Current session state — context handoff among agents
+Purpose:        Current session state - context handoff among agents
 Owner:          Currently active agent
 Update Trigger: Read at session start; must update before session ends
 Harness Version: 1.1
@@ -24,7 +24,14 @@ Harness Version: 1.1
 Day 4 was opened by `TASK-038` (PM allocation, `af83f7e`), which moved
 `TASK-015`, `TASK-039`, `TASK-016`, `TASK-019`, `TASK-040`, and `TASK-018`
 into `tasks/active.md` and defaulted `TASK-015`'s execution to deterministic
-template generation (no live LLM call) pending separate paid-API approval.
+template generation (no live LLM call) pending separate paid-API approval. A
+concurrent Backend Implementer session resolved PR #29 `CHANGES_REQUESTED`
+feedback and completed `TASK-039` on `backend/TASK-039-stabilize-api-fallback`
+in parallel with this session; its full session record is archived at
+`memory/sessions/2026-07-09-Backend-Implementer-pr29-changes-requested-resolution.md`.
+Merging that work into this branch produced an ADR-021 numbering collision
+(see below) and the conflicts resolved across `tasks/active.md`,
+`tasks/completed.md`, and the `memory/` ledger files.
 
 ## Current Work
 
@@ -41,8 +48,10 @@ template generation (no live LLM call) pending separate paid-API approval.
       architecture. Asked the user how to reconcile it.
 - [x] User chose OpenAI as provider, then explicitly chose to override the
       Day 4 deterministic default and wire a real OpenAI call - recorded as
-      ADR-021 (⚠️ HUMAN APPROVAL, both the paid-API-call gate and the
-      AI-Provider-Selection gate).
+      ADR-022 (⚠️ HUMAN APPROVAL, both the paid-API-call gate and the
+      AI-Provider-Selection gate; ADR-021 was already taken by a concurrent
+      Backend Implementer session's report-read-path decision, discovered
+      while resolving the merge conflict this created).
 - [x] Implemented `backend/app/core/ai_report.py`: fixed §10.1 system prompt
       and §10.2 user prompt template (`build_prompt()`, zero free-text
       insertion points beyond the named slots), `LLMClient` protocol +
@@ -74,11 +83,15 @@ template generation (no live LLM call) pending separate paid-API approval.
       test - explicit DoD "exact tone and format" check).
 - [x] `ruff check .` clean across the whole backend, `pytest` 100/100 passing.
 - [x] Moved `TASK-015` from `tasks/active.md` to `tasks/completed.md`.
-- [x] Recorded ADR-021 in `memory/decisions.md`.
+- [x] Recorded ADR-022 in `memory/decisions.md`.
+- [x] Resolved a merge with `upstream/main`'s `TASK-039` completion (PR #29
+      follow-up), including an ADR-021 number collision - both sessions
+      independently used ADR-021; renumbered this session's entry to ADR-022
+      and kept Backend Implementer's ADR-021 as-is.
 
 ## Issues Found / Decisions Made
 
-- ADR-021: OpenAI selected as AI provider; real client wired; user explicitly
+- ADR-022: OpenAI selected as AI provider; real client wired; user explicitly
   approved overriding the Day 4 deterministic-template default. No
   `OPENAI_API_KEY` is present in this development environment, so **no real/
   billed API call has actually been executed** - this is architecture +
@@ -110,14 +123,18 @@ template generation (no live LLM call) pending separate paid-API approval.
 
 ## Next Session: To-Do
 
-1. Backend Implementer (`TASK-039`) wires `GET /api/issues/{id}/report` to
-   read the latest `status="success"` `ai_reports` row via this task's
-   storage shape.
+1. `TASK-039` is now complete (concurrent Backend Implementer session, PR #29
+   follow-up) - `GET /api/issues/{id}/report` already reads the latest
+   `status="success"` `ai_reports` row this task's storage shape produces.
 2. Before any live/demo run of `app/core/ai_report_batch.py` with a real
-   `OPENAI_API_KEY`, confirm the key is scoped/budgeted (ADR-021's
+   `OPENAI_API_KEY`, confirm the key is scoped/budgeted (ADR-022's
    consequence note) - this is the first point real API cost becomes possible.
 3. Frontend Implementer (`TASK-016`) can proceed against the accepted
-   `IssueReportResponse`/`ReportNotYetGenerated` shape once `TASK-039` lands.
+   `IssueReportResponse`/`ReportNotYetGenerated` shape - `TASK-039` has landed.
 4. PM (`TASK-018`) should include `app/core/ai_report.py`'s `SYSTEM_PROMPT`/
    `USER_PROMPT_TEMPLATE` and the banned-phrase/pattern lists in the Day 4
    copy/wording lint pass, alongside UI strings.
+5. `TD-009` remains open (backend static fallback sample issue titles can
+   differ from the Korean frontend fallback) - see the Backend Implementer's
+   archived session for its precise Day 5 fallback/demo note.
+6. Reviewer should re-review PR #29 after this branch is pushed.
