@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Architecture — Outlook Signals
 
-_Last updated: 2026-07-09_
+_Last updated: 2026-07-10_
 _Full detail: [Technical Design](../docs/tech-design/README.md) — this file is the working summary agents update as the build progresses._
 
 ## System Overview
@@ -71,7 +71,7 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** �
 - No `users`/`watchlists`/wallet-level tables exist even in dormant form — schema itself is a policy signal (Technical Design §4.12)
 - `/api/categories` is a read-only broad Korean filter taxonomy derived from currently servable live issue titles/categories when DB data exists; DB-free/failure mode keeps the documented Korean sample fallback. `/api/issues?category=...` accepts those broad Korean labels and raw stored category values. Detailed labels such as `우크라이나 전쟁` and `이란 전쟁` are frontend card-display labels, not top-level filter values.
 
-## Implementation Status (2026-07-09 Day 4 Allocation)
+## Implementation Status (2026-07-10 Day 4 Closed)
 
 - `/backend` scaffold exists (FastAPI app, `app/api/routes`, `app/core`, `app/db`, `app/schemas`) — see `backend/README.md`. App imports and boots cleanly; smoke-tested via a local venv (`pytest` + a live `uvicorn` request).
 - `/frontend` scaffold exists (Vite + React + TS + Tailwind, npm scripts). `npm run lint` and `npm run build` pass locally in the Day 3 task sessions; production build still reports the known Recharts chunk-size warning tracked as TD-001.
@@ -95,4 +95,8 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** �
 - `TASK-041` is complete: `build_prompt_inputs_for_market()` now selects the latest `market_snapshots` row with `captured_at <= market_metrics.computed_at`, matching the historical-seed `+1 microsecond` metric timestamp without fabricating values. Tests cover prompt-input construction, future-only snapshot rejection, and `run_ai_report_batch` inserting a `status=success` row with a fake `LLMClient`. Local/demo run notes live in `reports/task-041-report-generation-readiness.md`; OpenAI report calls are covered by ADR-022 and the provided-key clarification, while writes to the configured development DB remain separately approval-gated.
 - `TASK-042` is complete: `backend/app/core/scheduled_batch.py` is the combined scheduled/manual write path for data collection -> snapshot/metric generation -> expectation-shift signal detection -> AI report generation -> collection logging. It supports `--reports-only` for dev/demo report generation against each market's latest existing metric row. `.github/workflows/daily-batch.yml` runs the combined batch every 24h via GitHub Actions using `DATABASE_URL` and an approved AI provider key.
 - Backend local setup should use Python 3.11 on this machine; the default Python 3.9 runtime could not install the pinned `psycopg[binary]==3.2.3` binary package.
-- Day 4 is active from this baseline with `TASK-040` and `TASK-018` remaining. Any shared or production schema application, non-project paid external AI call, public API shape change, deployment, or infrastructure change remains separately approval-gated.
+- Day 4 is closed from this baseline with `TASK-040`, `TASK-018`, and `TASK-045`
+  complete. Day 5 can focus on final screenshots, rehearsal, deployment
+  approval handling, and presentation polish. Any shared or production schema
+  application, non-project paid external AI call, public API shape change,
+  deployment, or infrastructure change remains separately approval-gated.

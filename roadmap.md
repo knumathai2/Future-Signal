@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # roadmap.md — Outlook Signals Roadmap
 
-_Last updated: 2026-07-09_
+_Last updated: 2026-07-10_
 _Source: PRD §14 (5-Day Development Schedule) — this file tracks execution against it._
 
 ## Goal
@@ -46,14 +46,14 @@ Ship a genuinely working web MVP within 5 days that lets a user check today's mo
 
 ### Day 4 — Summary feature + demo flow complete
 - [x] PM: draft presentation deck, write demo script
-- [ ] Frontend: UI polish, empty/loading/error states
-- [ ] Backend: stabilize API, fallback data handling
-- [ ] Data/AI: generate template summaries, link manual event candidates (3–5 curated issues)
+- [x] Frontend: UI polish, empty/loading/error states
+- [x] Backend: stabilize API, fallback data handling
+- [x] Data/AI: generate template summaries, link manual event candidates (3–5 curated issues)
 - **Deliverables**: template summaries, 3 representative demo issues, stabilized demo flow, deck 70% complete
-- **Status note (2026-07-09)**: Day 4 implementation work and `TASK-040` demo
-  script/deck draft are complete. Final Day 4 closeout depends on `TASK-018`
-  wording-safety lint across UI strings, report templates, event candidates, and
-  demo/deck copy.
+- **Status note (2026-07-10)**: Day 4 is closed. The summary/report path,
+  related-event candidates, API fallback/readiness, report display states,
+  demo/deck draft, and final `TASK-018` wording-safety lint are complete.
+  Closeout evidence is recorded in `reports/day-4-closeout-plan.md`.
 
 ### Day 5 — Integration QA + presentation finalized
 - [ ] PM: finalize deck, prepare risk-response explanations, finalize demo script

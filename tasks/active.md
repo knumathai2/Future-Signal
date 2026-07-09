@@ -7,18 +7,19 @@ Harness Version: 1.1
 
 # Active Tasks — Outlook Signals
 
-_Last updated: 2026-07-09_
+_Last updated: 2026-07-10_
 
 ## In Progress
 
-Day 4 active work has passed the final wording-safety gate. Allocation evidence
-is recorded in `reports/day-4-work-allocation.md`, and the final copy lint is
-recorded in `reports/task-018-copy-lint.md`.
+Day 4 is closed. Allocation evidence is recorded in
+`reports/day-4-work-allocation.md`, the final copy lint is recorded in
+`reports/task-018-copy-lint.md`, and closeout evidence is recorded in
+`reports/day-4-closeout-plan.md`.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
 
-No active implementation tasks remain after `TASK-018`.
+No active implementation or closeout tasks remain after `TASK-045`.
 
 Completed Day 1, Day 2, Day 3, and PM allocation tasks are archived in
 `tasks/completed.md`, including `TASK-038` for this Day 4 allocation,
@@ -31,7 +32,7 @@ readiness for historical-seed metric timestamps), `TASK-042` (combined
 scheduled/manual report batch), `TASK-043` (v2 issue-explainer report
 output structure), `TASK-044` (Korean issue display titles), `ISS-007`
 (v2 report/category-filter readiness), and `TASK-018` (final copy/wording
-lint).
+lint). `TASK-045` records the PM closeout verification and Day 5 handoff.
 
 ## Day 4 Handoff Notes
 
@@ -80,6 +81,8 @@ lint).
   in the card/detail display layer.
 - **Reviewer / Debugger** stay embedded. Any user-facing string changed during
   Day 4 must pass the project wording lint before review.
+- **PM / Planner** completed `TASK-045`. Day 4 is closed and Day 5 starts from
+  the closeout record in `reports/day-4-closeout-plan.md`.
 
 ## Active Task Details
 
