@@ -68,10 +68,10 @@ def test_categories_live_data_returns_current_issue_categories(live_client, db_s
     response = live_client.get("/api/categories")
 
     assert response.status_code == 200
-    assert response.json() == {"categories": ["AI·기술"]}
+    assert response.json() == {"categories": ["기술"]}
 
 
-def test_korean_topic_category_filters_ukraine_war_issues(live_client, db_session):
+def test_broad_korean_category_filters_ukraine_war_issues(live_client, db_session):
     seed_basic_market(db_session)
     market = db_session.get(Market, MARKET_ID)
     market.title = "Will Russia capture Lyman by September 30, 2026?"
@@ -79,16 +79,16 @@ def test_korean_topic_category_filters_ukraine_war_issues(live_client, db_sessio
     db_session.commit()
 
     categories = live_client.get("/api/categories").json()["categories"]
-    response = live_client.get("/api/issues?category=우크라이나 전쟁")
+    response = live_client.get("/api/issues?category=세계")
 
-    assert "우크라이나 전쟁" in categories
+    assert categories == ["세계"]
     assert response.status_code == 200
     body = response.json()
     assert len(body["issues"]) == 1
     assert body["issues"][0]["id"] == str(MARKET_ID)
 
 
-def test_korean_topic_category_supports_iran_war_group(live_client, db_session):
+def test_broad_korean_category_supports_future_iran_conflict(live_client, db_session):
     seed_basic_market(db_session)
     market = db_session.get(Market, MARKET_ID)
     market.title = "Iran x Israel military clash by December 31, 2026?"
@@ -96,9 +96,9 @@ def test_korean_topic_category_supports_iran_war_group(live_client, db_session):
     db_session.commit()
 
     categories = live_client.get("/api/categories").json()["categories"]
-    response = live_client.get("/api/issues?category=이란 전쟁")
+    response = live_client.get("/api/issues?category=세계")
 
-    assert "이란 전쟁" in categories
+    assert categories == ["세계"]
     assert response.status_code == 200
     body = response.json()
     assert len(body["issues"]) == 1

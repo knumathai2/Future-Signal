@@ -129,7 +129,7 @@ or public response-shape change was made.
 
 ---
 
-### ADR-031: Category filters use Korean topic taxonomy
+### ADR-031: Category filters use broad Korean taxonomy
 
 - **Date**: 2026-07-09
 - **Status**: Accepted
@@ -137,24 +137,26 @@ or public response-shape change was made.
 
 **Context**: Live source categories such as `Politics`, `Crypto`, and
 `Ukraine` were technically accurate but not scan-friendly for a Korean demo.
-The user requested Korean category labels and more recognizable groups such as
-`이란 전쟁` and `우크라이나 전쟁`.
-**Decision**: Add a backend display taxonomy that derives Korean filter labels
-from each issue's stored category and title. `/api/categories` now returns
-Korean display labels such as `우크라이나 전쟁`, `이스라엘·가자`,
-`국제 안보`, `미국 정치`, `가상자산`, and `AI·기술` when matching issues are
-servable. `/api/issues?category=...` accepts those Korean labels while still
-accepting raw stored category values for backward compatibility.
-**Rationale**: The filter buttons become meaningful without changing the
-database schema or issue response shape, and the same taxonomy powers both the
-category list and filtering.
+The user first requested Korean category labels and recognizable conflict
+groups, then clarified that the top filter should remain broad like `정치` and
+`경제` while card-level labels should stay detailed.
+**Decision**: Add a backend taxonomy that derives broad Korean filter labels
+from each issue's stored category and title. `/api/categories` returns broad
+labels such as `정치`, `경제`, `환경`, `기술`, `세계`, and `스포츠` when
+matching issues are servable. `/api/issues?category=...` accepts those Korean
+labels while still accepting raw stored category values for backward
+compatibility. More specific labels such as `우크라이나 전쟁` and `이란 전쟁`
+remain frontend card-display labels, not top-level filter buttons.
+**Rationale**: The filter buttons stay simple and scan-friendly while the cards
+still communicate recognizable topics at a glance. This also avoids a schema
+migration or public issue response shape change.
 **Trade-offs**: This is a deterministic heuristic taxonomy, not a full
-editorial classification workflow. Current live data has no Iran-related issue,
-so `이란 전쟁` is supported and tested but does not appear until a matching
-issue is present.
-**Consequences**: Category buttons are Korean and topic-specific on the live
-dashboard. Synthetic tests cover both `우크라이나 전쟁` and future
-`이란 전쟁` matching.
+editorial classification workflow. Specific conflict labels are no longer
+top-level filters, so users browse them through the broader `세계` category and
+the card label.
+**Consequences**: Category buttons are broad Korean groups on the live
+dashboard; cards keep detailed topic labels via the frontend display layer.
+Synthetic tests cover Ukraine/Iran-style conflict issues mapping to `세계`.
 
 ---
 

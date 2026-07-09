@@ -34,7 +34,7 @@ Ranked/browsable issue list.
 
 | Param | Type | Default | Notes |
 |---|---|---|---|
-| `category` | string | none | match against `/api/categories` Korean display values; raw stored category values are also accepted for backward compatibility |
+| `category` | string | none | match against `/api/categories` broad Korean filter values; raw stored category values are also accepted for backward compatibility |
 | `window` | enum `24h`\|`7d` | `24h` | which change field ranking/`sort=change` uses |
 | `sort` | enum `heat`\|`change`\|`recent` | `heat` | |
 | `limit` | int 1-100 | 20 | |
@@ -146,14 +146,14 @@ hint). This is accepted as final, not an open item.
 
 ## `GET /api/categories`
 
-When live issue data is available, this returns Korean display categories for
-currently servable issues. These can be broader or more recognizable than the
-stored source tags, for example `우크라이나 전쟁`, `이란 전쟁`, `미국 정치`,
-or `가상자산`. In DB-free/static fallback mode, it returns the sample category
-list below.
+When live issue data is available, this returns broad Korean filter categories
+for currently servable issues, such as `정치`, `경제`, `기술`, `세계`, and
+`스포츠`. More specific labels such as `우크라이나 전쟁` or `이란 전쟁` belong
+to the issue-card display layer, not this top-level filter list. In
+DB-free/static fallback mode, it returns the sample category list below.
 
 ```json
-{ "categories": ["환경", "경제"] }
+{ "categories": ["정치", "경제", "환경", "기술", "세계"] }
 ```
 
 ## Error shape (all endpoints)

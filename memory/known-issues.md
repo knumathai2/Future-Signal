@@ -44,14 +44,14 @@ _Last updated: 2026-07-09_
 | ISS-004 | Development Supabase schema was applied, but live data tables were empty, so the API served the documented static fallback data. | 2026-07-09 | Resolved for the configured development DB by running the existing collector into a temporary artifact directory, filtering the normalized rows against the project hard-block wording list, and running the approved snapshot/metrics path. Inserted 50 `markets`, 50 `market_outcomes`, 50 `market_snapshots`, and 50 `market_metrics`; verified `/api/issues` and the Vite proxy now return DB-backed payloads. |
 | ISS-005 | AI report batch could not use latest historical-seed metric rows because metric timestamps were one microsecond after their source snapshots. | 2026-07-09 | Fixed in `TASK-041`: prompt input lookup now selects the latest snapshot with `captured_at <= market_metrics.computed_at`, tests cover the historical-seed offset and fake-LLM success-row insertion, and approved-only run notes document how to create stored summaries later. |
 | ISS-006 | Current configured AI key was rejected by OpenAI's default endpoint because it is OpenRouter-style. | 2026-07-09 | Resolved by ADR-027 and rerun: the batch now selects OpenRouter automatically for `OPENROUTER_API_KEY` or `OPENAI_API_KEY` values with the `sk-or-` prefix. Final checked DB state has `ai_reports_success=29`, latest scheduled log is `scheduled_batch_success`, and the top 10 checked heat-sorted issues return report `success`. |
-| ISS-007 | v2 issue-explainer reports were generated but could be hidden behind same-timestamp v1 rows, and category filters used sample values that did not match live DB categories. | 2026-07-09 | Fixed on `debug/ISS-007-v2-report-category-filter`: report reads now require current `PROMPT_VERSION`, report regeneration prefers current-version rows when timestamps tie, `/api/categories` returns live servable categories, `/api/issues` category filtering is case-insensitive, and the configured DB now has v2 summaries for the default top-20 heat-sorted issues. |
+| ISS-007 | v2 issue-explainer reports were generated but could be hidden behind same-timestamp v1 rows, and category filters used sample values that did not match live DB categories. | 2026-07-09 | Fixed on `debug/ISS-007-v2-report-category-filter`: report reads now require current `PROMPT_VERSION`, report regeneration prefers current-version rows when timestamps tie, `/api/categories` returns broad Korean categories derived from live servable issues, `/api/issues` filtering accepts those labels plus raw stored categories, and the configured DB now has v2 summaries for the default top-20 heat-sorted issues. |
 
 ## Open Design Questions Carried From Planning Docs
 
 Not bugs, but unresolved decisions that can still affect demo readiness - resolve
 them before Day 5 lock if they become relevant to the active path:
 
-- Category taxonomy: Polymarket's own tags vs. manual mapping (PRD §20.4, Service Design §12.1)
+- Category taxonomy follow-up: broad Korean filters are implemented for the demo; a later editorial taxonomy may still refine new source tags as data coverage grows (PRD §20.4, Service Design §12.1)
 - Static-JSON fallback path finalization for full demo operations: API/frontend fallback behavior is implemented and documented by ADR-013; Day 4-5 still need backup captures or demo-script handling.
 - `heat_score` weighting formula — start simple, tune once real data is visible (Technical Design §16.2)
 
@@ -275,9 +275,14 @@ them before Day 5 lock if they become relevant to the active path:
     report rows; legacy rows are preserved but not served.
   - `ai_report_batch` prefers current-version successful rows when determining
     freshness, preventing repeated regeneration for same-timestamp v1/v2 rows.
-  - `/api/categories` now returns distinct categories from currently servable
-    live issues, falling back to the sample list only in DB-free/failure mode.
-  - `/api/issues` category filtering is case-insensitive.
+  - `/api/categories` now returns broad Korean categories derived from
+    currently servable live issues, falling back to the broad Korean sample
+    list only in DB-free/failure mode.
+  - `/api/issues` category filtering accepts those broad Korean labels and
+    remains compatible with raw stored category values.
+  - Frontend card-level topic labels remain detailed, so issue cards can still
+    show labels such as `우크라이나 전쟁` or future `이란 전쟁` while the top
+    filter stays under `세계`.
   - Ran guarded reports-only generation three times against the configured
     local/dev DB. Final checked state: `success|v2|30`, and the default
     top-20 heat-sorted issues all have current v2 report content.

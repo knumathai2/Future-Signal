@@ -14,9 +14,9 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-09
-- **Agent Role**: Data/AI Implementer
-- **Session Goal**: Complete `TASK-043` AI report output structure update to issue-explainer scenarios.
-- **Branch**: `data-ai/TASK-043-issue-explainer-report`
+- **Agent Role**: Debugger
+- **Session Goal**: Resolve `ISS-007` follow-up: keep top category filters broad Korean while preserving detailed issue-card labels.
+- **Branch**: `debug/ISS-007-v2-report-category-filter`
 
 ## Previous Session Summary
 
@@ -318,6 +318,43 @@ timestamp equality.
     backend behavior changed.
   - New unseen live market titles may need additional display-copy mapping
     polish later.
+
+## Follow-up Implementation: Broad Korean Category Filters
+
+- **Date**: 2026-07-09
+- **Agent Role**: Debugger
+- **Branch**: `debug/ISS-007-v2-report-category-filter`
+- **User request**: Keep the main filter categories broad like `정치` and
+  `경제`, while leaving the issue-card category/topic labels as they are now.
+- **Work Completed**:
+  - Updated `backend/app/core/category_taxonomy.py` so `/api/categories`
+    derives broad Korean filter groups such as `정치`, `경제`, `환경`, `기술`,
+    `세계`, and `스포츠` from live issue titles/categories.
+  - Kept `/api/issues?category=...` compatible with both those Korean filter
+    labels and raw stored source categories.
+  - Kept detailed card labels in the frontend display layer; future Iran
+    conflict fallback copy can show `이란 전쟁` on cards while filtering under
+    `세계`.
+  - Updated `backend/API_CONTRACT.md`, ADR-031, `memory/project.md`,
+    `memory/architecture.md`, and `memory/known-issues.md`.
+- **Verification**:
+  - `cd backend && .venv/bin/ruff check app tests` — passed.
+  - `cd backend && DATABASE_URL= .venv/bin/pytest tests/test_issues_contract.py tests/test_issues_live.py` — 34 passed.
+  - `cd backend && DATABASE_URL= .venv/bin/pytest` — 137 passed.
+  - `cd frontend && npm run typecheck` — passed.
+  - `cd frontend && npm run lint` — passed.
+  - `cd frontend && npm run build` — passed with the existing Recharts
+    chunk-size warning.
+  - `git diff --check` — passed.
+  - Local backend check: `/api/categories` returned `['정치', '경제', '기술',
+    '세계', '스포츠']`, and each returned non-empty `/api/issues` results.
+  - Vite proxy check: `http://127.0.0.1:5173/api/categories` returned the same
+    broad category list.
+- **Notes / Remaining Risks**:
+  - No schema, dependency, infrastructure, deployment, public issue response
+    shape, or database write was performed.
+  - `환경` remains in the fallback/order list and will appear in live mode when
+    a servable environment issue exists.
 
 ## Follow-up Review Fixes: PR #38 REQUEST_CHANGES
 

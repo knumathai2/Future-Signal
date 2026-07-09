@@ -322,8 +322,9 @@ function normalizeTitle(title: string): string {
   return title.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
-function fallbackTopicLabel(category: string): string {
-  const normalized = category.trim().toLowerCase();
+function fallbackTopicLabel(category: string, title = ""): string {
+  const normalized = `${title} ${category}`.trim().toLowerCase();
+  if (normalized.includes("iran")) return "이란 전쟁";
   if (normalized.includes("ukraine")) return "우크라이나 이슈";
   if (normalized.includes("gaza")) return "가자 분쟁";
   if (normalized.includes("crypto") || normalized.includes("token")) return "가상자산";
@@ -337,7 +338,7 @@ function fallbackTopicLabel(category: string): string {
 function fallbackDisplayTitle(title: string, category: string): string {
   const cleanTitle = title.trim().replace(/\?+$/, "");
   const normalized = normalizeTitle(title);
-  const topicLabel = fallbackTopicLabel(category);
+  const topicLabel = fallbackTopicLabel(category, title);
 
   if (/[ㄱ-ㅎㅏ-ㅣ가-힣]/.test(cleanTitle)) {
     return cleanTitle;
@@ -346,6 +347,7 @@ function fallbackDisplayTitle(title: string, category: string): string {
   if (normalized.includes("launch a token")) return "토큰 출시 이슈";
   if (normalized.includes("airdrop")) return "에어드롭 이슈";
   if (normalized.includes("ipo")) return "상장 일정 이슈";
+  if (normalized.includes("iran")) return "이란 전쟁 이슈";
   if (normalized.includes("election")) return "선거 일정·결과 이슈";
   if (normalized.includes("out") || normalized.includes("resign")) {
     return "정치 리더십 변화 이슈";
@@ -363,7 +365,7 @@ export function buildIssueDisplayCopy(input: IssueDisplayInput): IssueDisplayCop
   }
 
   const displayTitle = fallbackDisplayTitle(sourceTitle, input.category);
-  const topicLabel = fallbackTopicLabel(input.category);
+  const topicLabel = fallbackTopicLabel(input.category, sourceTitle);
   const resolutionCondition = input.description?.trim() || sourceTitle;
 
   return {

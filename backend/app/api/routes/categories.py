@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["categories"])
 
-_SAMPLE_CATEGORIES = ["환경", "경제"]
+_SAMPLE_CATEGORIES = ["정치", "경제", "환경", "기술", "세계"]
 
 
 def _get_optional_db() -> Generator[Session | None, None, None]:

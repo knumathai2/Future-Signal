@@ -1,66 +1,51 @@
-"""Display-oriented category grouping for issue filters.
+"""Broad Korean category grouping for dashboard filters.
 
-The stored source category is intentionally preserved on issue rows for
-provenance. This module derives Korean filter labels from the stored category
-and title so the dashboard can show user-readable groupings such as
-`우크라이나 전쟁` without a schema migration.
+Stored source categories stay unchanged on issue rows. This module derives a
+small set of broad Korean filter labels so the dashboard filter remains simple
+(`정치`, `경제`, `기술`, `세계`, ...), while issue cards can keep their richer
+topic labels in the frontend display layer.
 """
 
 import re
 
 KOREAN_CATEGORY_ORDER = [
-    "우크라이나 전쟁",
-    "이란 전쟁",
-    "이스라엘·가자",
-    "국제 안보",
-    "미국 정치",
-    "브라질 정치",
-    "영국 정치",
-    "프랑스 정치",
-    "스페인 정치",
-    "러시아 정치",
-    "중국 정치",
-    "튀르키예 정치",
-    "가상자산",
-    "AI·기술",
-    "기업·산업",
-    "미국 사법",
-    "스포츠",
     "정치",
-    "기술",
     "경제",
     "환경",
+    "기술",
     "세계",
+    "스포츠",
+    "기타",
 ]
 
 _RAW_CATEGORY_LABELS = {
-    "airdrops": "가상자산",
-    "bitcoin": "가상자산",
-    "crypto": "가상자산",
-    "token launch": "가상자산",
-    "ipo": "기업·산업",
-    "openai": "AI·기술",
-    "tech": "AI·기술",
-    "hfc": "중국 정치",
-    "parent for derivative": "미국 정치",
-    "president": "미국 정치",
-    "primary elections": "미국 정치",
-    "senate": "미국 정치",
-    "trump": "미국 정치",
-    "trump presidency": "국제 안보",
-    "trump-putin": "국제 안보",
-    "united states": "미국 정치",
-    "us election": "미국 정치",
-    "bernie sanders": "미국 정치",
-    "supreme court": "미국 사법",
-    "supreme court ": "미국 사법",
-    "sports": "스포츠",
-    "soccer": "스포츠",
+    "airdrops": "경제",
+    "bernie sanders": "정치",
+    "bitcoin": "경제",
+    "crypto": "경제",
     "economy": "경제",
     "environment": "환경",
-    "technology": "기술",
-    "world": "세계",
+    "hfc": "정치",
+    "ipo": "경제",
+    "openai": "기술",
+    "parent for derivative": "정치",
     "politics": "정치",
+    "president": "정치",
+    "primary elections": "정치",
+    "senate": "정치",
+    "soccer": "스포츠",
+    "sports": "스포츠",
+    "supreme court": "정치",
+    "tech": "기술",
+    "technology": "기술",
+    "token launch": "경제",
+    "trump": "정치",
+    "trump presidency": "세계",
+    "trump-putin": "세계",
+    "uk": "정치",
+    "united states": "정치",
+    "us election": "정치",
+    "world": "세계",
 }
 
 
@@ -72,99 +57,12 @@ def _contains_any(text: str, terms: tuple[str, ...]) -> bool:
     return any(term in text for term in terms)
 
 
-def _append_unique(labels: list[str], label: str) -> None:
-    if label not in labels:
-        labels.append(label)
-
-
 def issue_category_labels(title: str, category: str) -> tuple[str, ...]:
-    """Return Korean filter labels for one issue.
-
-    Labels are intentionally many-to-one friendly: one issue can belong to a
-    specific topic group such as `우크라이나 전쟁` and a broader group such as
-    `국제 안보`.
-    """
+    """Return broad Korean filter labels for one issue."""
 
     normalized_title = _normalize(title)
     normalized_category = _normalize(category)
     text = f"{normalized_title} {normalized_category}"
-    labels: list[str] = []
-
-    if _contains_any(text, ("iran", "tehran")):
-        _append_unique(labels, "이란 전쟁")
-
-    if _contains_any(
-        text,
-        (
-            "ukraine",
-            "zelenskyy",
-            "kostyantynivka",
-            "lyman",
-            "sumy",
-            "russian sovereignty",
-        ),
-    ):
-        _append_unique(labels, "우크라이나 전쟁")
-
-    if _contains_any(text, ("gaza", "hamas", "israel", "israeli", "netanyahu")):
-        _append_unique(labels, "이스라엘·가자")
-
-    if _contains_any(
-        text,
-        (
-            "military clash",
-            "nato",
-            "nuclear deal",
-            "taiwan",
-            "annex",
-            "sovereignty",
-            "china x india",
-            "u.s. x russia",
-            "us x russia",
-        ),
-    ):
-        _append_unique(labels, "국제 안보")
-
-    if _contains_any(
-        text,
-        (
-            "trump",
-            "jd vance",
-            "gavin newsom",
-            "republican",
-            "democratic",
-            "senate",
-            "house",
-            "midterm",
-            "michigan",
-            "tx-sen",
-            "united states",
-            "us presidential",
-            "us election",
-        ),
-    ):
-        _append_unique(labels, "미국 정치")
-
-    if _contains_any(text, ("brazil", "tarcisio", "ronaldo caiado")):
-        _append_unique(labels, "브라질 정치")
-
-    if _contains_any(text, ("uk election", "next uk election")):
-        _append_unique(labels, "영국 정치")
-
-    if _contains_any(text, ("france", "macron")):
-        _append_unique(labels, "프랑스 정치")
-
-    if _contains_any(text, ("spain", "spanish")):
-        _append_unique(labels, "스페인 정치")
-
-    if _contains_any(text, ("putin", "president of russia")):
-        _append_unique(labels, "러시아 정치")
-
-    if _contains_any(text, ("xi jinping", "china")) and "china x india" not in text:
-        _append_unique(labels, "중국 정치")
-
-    if _contains_any(text, ("erdoğan", "erdogan", "turkey", "türkiye")):
-        _append_unique(labels, "튀르키예 정치")
 
     if _contains_any(
         text,
@@ -183,27 +81,80 @@ def issue_category_labels(title: str, category: str) -> tuple[str, ...]:
             "axiom",
             "unit",
             "hyperliquid",
+            "ipo",
         ),
     ):
-        _append_unique(labels, "가상자산")
+        return ("경제",)
 
     if _contains_any(text, ("openai", "gpt", "hardware", "tech")):
-        _append_unique(labels, "AI·기술")
-
-    if _contains_any(text, ("ipo", "initial public offering")):
-        _append_unique(labels, "기업·산업")
-
-    if _contains_any(text, ("scotus", "supreme court")):
-        _append_unique(labels, "미국 사법")
+        return ("기술",)
 
     if _contains_any(text, ("fifa", "world cup", "ballon d'or", "soccer")):
-        _append_unique(labels, "스포츠")
+        return ("스포츠",)
 
-    if not labels:
-        fallback = _RAW_CATEGORY_LABELS.get(normalized_category)
-        _append_unique(labels, fallback or category.strip() or "기타")
+    if _contains_any(
+        text,
+        (
+            "ukraine",
+            "zelenskyy",
+            "kostyantynivka",
+            "lyman",
+            "sumy",
+            "iran",
+            "tehran",
+            "gaza",
+            "hamas",
+            "israel",
+            "israeli",
+            "netanyahu",
+            "military clash",
+            "nato",
+            "nuclear deal",
+            "taiwan",
+            "annex",
+            "sovereignty",
+            "china x india",
+            "u.s. x russia",
+            "us x russia",
+        ),
+    ):
+        return ("세계",)
 
-    return tuple(labels)
+    if _contains_any(
+        text,
+        (
+            "politics",
+            "election",
+            "president",
+            "parliament",
+            "senate",
+            "house",
+            "midterm",
+            "trump",
+            "jd vance",
+            "gavin newsom",
+            "republican",
+            "democratic",
+            "brazil",
+            "tarcisio",
+            "ronaldo caiado",
+            "france",
+            "macron",
+            "spain",
+            "spanish",
+            "putin",
+            "xi jinping",
+            "erdoğan",
+            "erdogan",
+            "uk election",
+            "supreme court",
+            "scotus",
+        ),
+    ):
+        return ("정치",)
+
+    fallback = _RAW_CATEGORY_LABELS.get(normalized_category)
+    return (fallback or "기타",)
 
 
 def category_matches(title: str, source_category: str, requested_category: str) -> bool:
