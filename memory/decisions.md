@@ -275,3 +275,20 @@ _Last updated: 2026-07-09_
 **Rationale**: This matches the no-fabrication rule used by backend metrics and avoids overstating sparse API/fallback history during the demo.
 **Trade-offs**: A window may show an insufficient-history state even when it has several recent points, if those points do not reach the requested baseline. This is preferable to stretching a shorter span into a longer-window interpretation.
 **Consequences**: `frontend/src/utils/history.ts` is the shared frontend helper for window coverage. The detail chart still preserves the accepted API response shape and uses API-provided `signals` when present, with local adjacent 5pp detection only as a fallback marker source.
+
+---
+
+### ADR-019: Caution-badge thresholds and expectation-shift marker handoff (TASK-036)
+
+- **Date**: 2026-07-09
+- **Status**: Accepted
+- **Decided by**: Data/AI Implementer
+
+**Context**: MVP interpretation caution logic needs to handle `caution_low_activity` and `caution_high_volatility` without waiting for a complex volume/liquidity floor calculation, and `expectation_shift` markers need a clear consumption contract.
+**Decision**:
+1. **Caution Thresholds**: Implemented conservative hardcoded thresholds in `compute_confidence_level` based on sample data: 500 USDC for `volume_24h`, 1000 USDC for `liquidity`, and >15pp absolute change for `change_24h`.
+2. **Precedence**: `insufficient_data` continues to take precedence over any activity or volatility caution state if history is lacking.
+3. **Marker Consumption Contract**: The backend `/api/issues/:id` endpoint will query `issue_signals` for any `expectation_shift` (±5pp threshold, medium severity) rows related to the market. The frontend will consume these rows to render "Expectation Shift" visual markers on the detail chart at the `triggered_at` timestamps, enabling users to visually align shifts with their own context without implying causation.
+**Rationale**: Uses the existing schema and Enum values for `confidence_level` without adding new schema fields, keeping the MVP lightweight. Documenting the marker contract ensures frontend/backend alignment without extending P1 metrics.
+**Trade-offs**: Hardcoded thresholds may need adjustment as real-world Polymarket volume changes, and using absolute 24h change as a volatility proxy is less precise than a full `volatility_score`.
+**Consequences**: Closes MVP path for TD-008. Backend and frontend implementers can proceed with API/UI integration for caution badges and expectation-shift markers.

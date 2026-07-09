@@ -49,6 +49,10 @@ HEAT_SCORE_VOLUME_DIVISOR = 50.0
 HEAT_SCORE_VOLUME_CAP = 30.0
 HEAT_SCORE_MAX = 100.0
 
+CAUTION_LOW_ACTIVITY_VOLUME_THRESHOLD = 500.0
+CAUTION_LOW_ACTIVITY_LIQUIDITY_THRESHOLD = 1000.0
+CAUTION_HIGH_VOLATILITY_THRESHOLD = 0.15
+
 
 def parse_iso_datetime(value: Any) -> datetime | None:
     if not value or not isinstance(value, str):
@@ -290,16 +294,30 @@ def compute_change_for_window(
     return round(current_price - reference.price, 4)
 
 
-def compute_confidence_level(change_24h: float | None, change_7d: float | None) -> str:
+def compute_confidence_level(
+    change_24h: float | None,
+    change_7d: float | None,
+    volume_24h: float | None,
+    liquidity: float | None,
+) -> str:
     """Simplified "market confidence score" (Service Design §5, P0 version):
     `insufficient_data` whenever there isn't enough trailing history to
-    compute either MVP change window, `sufficient` otherwise.
-    `caution_low_activity` / `caution_high_volatility` are accepted by the
-    schema but intentionally not populated yet - see known-issues.md (open
-    volume/liquidity floor question, and volatility_score is P1/not computed
-    by this task)."""
+    compute either MVP change window.
+    `caution_low_activity` if volume or liquidity falls below conservative
+    thresholds (500 USDC / 1000 USDC respectively).
+    `caution_high_volatility` if 24h change is unusually large (>15pp).
+    `sufficient` otherwise.
+    """
     if change_24h is None or change_7d is None:
         return "insufficient_data"
+
+    if (volume_24h is None or volume_24h < CAUTION_LOW_ACTIVITY_VOLUME_THRESHOLD) or \
+       (liquidity is None or liquidity < CAUTION_LOW_ACTIVITY_LIQUIDITY_THRESHOLD):
+        return "caution_low_activity"
+
+    if abs(change_24h) > CAUTION_HIGH_VOLATILITY_THRESHOLD:
+        return "caution_high_volatility"
+
     return "sufficient"
 
 
@@ -320,6 +338,7 @@ def build_metric(
     computed_at: datetime,
     current_price: float,
     current_volume_24h: float | None,
+    current_liquidity: float | None,
     history: list[SnapshotPoint],
 ) -> MarketMetric:
     change_24h = compute_change_for_window(current_price, history, WINDOW_24H, computed_at)
@@ -332,7 +351,9 @@ def build_metric(
         volatility_score=None,  # P1 stretch goal, not computed by TASK-008
         attention_score=None,  # P1 stretch goal, not computed by TASK-008
         heat_score=compute_heat_score(change_24h, current_volume_24h),
-        confidence_level=compute_confidence_level(change_24h, change_7d),
+        confidence_level=compute_confidence_level(
+            change_24h, change_7d, current_volume_24h, current_liquidity
+        ),
     )
 
 
@@ -412,6 +433,7 @@ def run_snapshot_and_metrics(
             "is_new_market": delta.is_new_market,
             "current_value": normalized["current_value"],
             "volume_24h": normalized.get("volume_24h"),
+            "liquidity": normalized.get("liquidity"),
         }
 
     snapshot_result = insert_rows_with_fallback(db, snapshots)
@@ -426,6 +448,7 @@ def run_snapshot_and_metrics(
                 run_timestamp,
                 ctx["current_value"],
                 ctx["volume_24h"],
+                ctx["liquidity"],
                 ctx["history"],
             )
         )
