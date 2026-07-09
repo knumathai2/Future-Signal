@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Known Issues — Outlook Signals
 
-_Last updated: 2026-07-08_
+_Last updated: 2026-07-09_
 
 ## Active Bugs
 
@@ -23,7 +23,7 @@ _Last updated: 2026-07-08_
 | TD-002 | `npm audit` reports Vite/esbuild dev-server vulnerabilities when frontend dependencies stay within the approved Vite 5.x major range. | Dev-server security warning; clearing it requires a Vite major upgrade that needs human approval. | Temporarily accepted for PR #6 by ADR-010; revisit in a dependency-maintenance task with explicit Vite major-upgrade approval and manual demo-flow retest. |
 | TD-003 | Backend dependency install fails on this machine's default Python 3.9 because the pinned `psycopg[binary]==3.2.3` binary package is not available for that local runtime/platform combination. | A new contributor using default `python3` may be blocked before running backend tests. | Use Python 3.11 for local setup, as documented in `backend/README.md`; later decide whether to formalize a minimum Python version in backend tooling. |
 | TD-007 | `backend/API_CONTRACT.md`'s Error shape section documents invalid `window`/`sort` as FastAPI's current `422` behavior rather than forcing the original `400` plan. | Low; frontend should code against `422`. Changing it to `400` would be a public behavior change beyond the TASK-010 conflict-resolution scope. | Leave documented as actual behavior unless PM/Frontend request a separate API-error normalization task. |
-| TD-008 | `TASK-008`'s `market_metrics.confidence_level` only distinguishes `sufficient`/`insufficient_data`; `caution_low_activity`/`caution_high_volatility` are accepted by the schema but never populated (see ADR-015). | `/api/issues` caution badges can't yet flag a technically-sufficient-history market that's actually thin or highly volatile. | Resolve the "Minimum volume/liquidity floor" open question below, add `volatility_score` (P1), then extend `compute_confidence_level` in `app/core/snapshot_metrics.py`. |
+| TD-008 | `TASK-008`'s `market_metrics.confidence_level` only distinguishes `sufficient`/`insufficient_data`; `caution_low_activity`/`caution_high_volatility` are accepted by the schema but never populated (see ADR-015). | `/api/issues` caution badges can't yet flag a technically-sufficient-history market that's actually thin or highly volatile. | Assigned to `TASK-036` for the MVP path: use existing enum values and conservative thresholds without adding schema/API fields; keep P1 metric families deferred unless PM reassigns scope. |
 
 ## Resolved
 
@@ -40,7 +40,7 @@ _Last updated: 2026-07-08_
 Not bugs, but unresolved decisions that will surface as real blockers during the build — resolve these on Day 1-2, don't let them idle:
 
 - Category taxonomy: Polymarket's own tags vs. manual mapping (PRD §20.4, Service Design §12.1)
-- Minimum volume/liquidity floor: exclude from ranking entirely vs. badge as low-confidence (PRD §20.5, Service Design §12.2). Still unresolved as of `TASK-008` - see TD-008; `confidence_level` ships without `caution_low_activity` until this is decided.
+- Minimum volume/liquidity floor: exclude from ranking entirely vs. badge as low-confidence (PRD §20.5, Service Design §12.2). Assigned to `TASK-036` for Day 3; PM default is to keep rows visible and attach caution unless implementation evidence shows a market should be suppressed from the default list.
 - Inflection-point threshold: fixed ±5pp vs. volatility-adjusted (PRD §20.6)
 - Confidence/caution badge: single composite score vs. separate qualitative badges (Service Design §12.4, UX Design §14.2)
 - Static-JSON fallback path finalization for full demo operations: API/frontend fallback behavior is implemented and documented by ADR-013; Day 4-5 still need backup captures or demo-script handling.
