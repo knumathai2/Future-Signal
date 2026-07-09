@@ -33,15 +33,16 @@ Ship a genuinely working web MVP within 5 days that lets a user check today's mo
 - **Status note (2026-07-08)**: Day 2 is closed. The data pipeline, core read API, and dashboard v1 path are merged and verified; closeout evidence is recorded in `reports/day-2-closeout-plan.md`. P1/P2 items remain deferred unless the PM reassigns scope.
 
 ### Day 3 — Detail screen + chart + badges
-- [ ] PM: interpretation-caution text, disclaimer text, terminology revisions
-- [ ] Frontend: detail screen, time-series chart, tooltip
-- [ ] Backend: issue-detail API, price-history API
-- [ ] Data/AI: inflection-point threshold logic (±5pp), interpretation-caution badge logic
+- [x] PM: interpretation-caution text, disclaimer text, terminology revisions
+- [x] Frontend: detail screen, time-series chart, tooltip
+- [x] Backend: issue-detail API, price-history API
+- [x] Data/AI: inflection-point threshold logic (±5pp), interpretation-caution badge logic
 - **Deliverables**: issue detail screen, time-series chart, inflection-point markers, caution badge
-- **Status note (2026-07-09)**: Day 3 work is assigned in `tasks/active.md`
-  and sequenced in `reports/day-3-work-allocation.md`. Shared/dev database
-  schema application remains approval-gated; template summary generation stays
-  deferred until the detail/chart/badge path is stable.
+- **Status note (2026-07-09)**: Day 3 is closed. The detail/chart/badge/notice
+  path is merged through PR #27, no active Day 3 tasks remain, and closeout
+  evidence is recorded in `reports/day-3-closeout-plan.md`. Shared/dev
+  database schema application remains approval-gated; template summary
+  generation moves to Day 4.
 
 ### Day 4 — Summary feature + demo flow complete
 - [ ] PM: draft presentation deck, write demo script

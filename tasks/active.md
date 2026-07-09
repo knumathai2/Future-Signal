@@ -11,16 +11,16 @@ _Last updated: 2026-07-09_
 
 ## In Progress
 
-Day 3 work is assigned. Start from `reports/day-3-work-allocation.md` and the
-Day 2 baseline; keep all work inside PRD §14's detail/chart/badge scope.
-`TASK-013`, `TASK-014`, `TASK-017`, `TASK-035`, and `TASK-036` completed
-2026-07-09 - see `tasks/completed.md`.
+Day 3 is closed. Closeout evidence is recorded in
+`reports/day-3-closeout-plan.md`. `TASK-013`, `TASK-014`, `TASK-017`,
+`TASK-035`, and `TASK-036` completed 2026-07-09 - see `tasks/completed.md`.
+No active implementation tasks remain until PM opens Day 4 work.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
 | — | No active Day 3 tasks remain. | — | — | — | — |
 
-Completed Day 1, Day 2, and PM allocation tasks are archived in
+Completed Day 1, Day 2, Day 3, and PM allocation tasks are archived in
 `tasks/completed.md`.
 
 ## Day 3 Handoff Notes
