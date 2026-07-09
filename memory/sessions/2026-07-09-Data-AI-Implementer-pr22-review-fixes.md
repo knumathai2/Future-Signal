@@ -46,6 +46,10 @@ with a UTF-8 BOM.
       `tasks/completed.md`.
 - [x] Removed `TASK-036` from `tasks/active.md` now that its completion row is
       preserved in `tasks/completed.md`.
+- [x] Re-checked PR #22 after the pushed rebase: GitHub reports
+      `mergeStateStatus: CLEAN`, no inline review threads remain, and
+      `origin/main` is the PR head commit's direct parent.
+- [x] Re-ran the PR #22 verification checks after fetching latest `origin`.
 
 ## Completed This Session
 
@@ -54,6 +58,8 @@ with a UTF-8 BOM.
 - [x] Renumbered the `TASK-036` caution/marker handoff decision to ADR-019 so
       it no longer collides with `TASK-013`'s ADR-018.
 - [x] Removed the UTF-8 BOM from `memory/session.md`.
+- [x] Confirmed the remote PR branch still contains the rebase/ledger fix and
+      has no hidden unresolved inline review threads.
 - [x] Made no schema, public API, dependency, infrastructure, deployment,
       production database, or wording-policy change.
 
@@ -66,20 +72,26 @@ with a UTF-8 BOM.
   the `TASK-036` caution/marker handoff decision to `ADR-019`.
 - Existing local uncommitted PR #25 review artifacts were saved as stash
   `codex-preserve-pr22-reviewfix-start` and were not restored onto this branch.
+- No new decisions or issues were introduced during the final PR #22
+  verification pass.
 
 ## Verification
 
 - Conflict-marker scan across resolved ledger files -> passed.
-- UTF-8 BOM check for `memory/session.md` -> passed.
+- GitHub PR metadata check -> `mergeStateStatus: CLEAN`; review decision still
+  shows the previous `CHANGES_REQUESTED` review until a reviewer re-reviews.
+- Thread-aware PR review check -> no inline review threads.
+- `git merge-base --is-ancestor origin/main HEAD` -> passed.
+- UTF-8 BOM check for `memory/session.md` via `xxd` -> passed.
 - `git diff --check` -> passed.
 - `python -m pytest tests/test_snapshot_metrics.py -q` in `backend` ->
   20 passed.
 - `python -m pytest tests -q` in `backend` -> 62 passed.
 - `python -m ruff check .` in `backend` -> passed.
+- User-facing copy changed: none; wording lint not required.
 
 ## Next Session: To-Do
 
-1. Re-run review checks after the rebased branch is pushed and GitHub updates
-   PR #22 mergeability.
+1. Reviewer can re-review PR #22; no local requested-change blockers remain.
 2. Frontend/Backend integration should continue to consume the existing
    `expectation_shift` signal rows per ADR-019.
