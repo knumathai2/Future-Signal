@@ -43,8 +43,9 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** �
 3. Diffs against the most recent snapshot, inserts a new `market_snapshots` row (append-only)
 4. Computes `change_24h`/`change_7d`/`heat_score`/`confidence_level` into `market_metrics`
 5. Evaluates the ±5pp threshold for `issue_signals` (cooldown-gated to avoid duplicate firing)
-6. Day 4 planned: qualifying markets (new signal, no report yet, or stale >24h) get a new `ai_reports` row via template-constrained LLM call + banned-phrase filter
-7. FastAPI serves the available read-only data; frontend renders Home → Detail → Chart, with report output still pending Day 4 work
+6. Day 4 active: qualifying markets (new expectation-shift row, no report yet, or stale >24h) get a new `ai_reports` row via template-constrained generation plus a safety filter
+7. FastAPI serves the available read-only data; `TASK-039` wires the report endpoint to latest successful stored summaries while preserving the accepted empty state
+8. React renders Home -> Detail -> Chart -> Summary, with `TASK-016` consuming the report endpoint and keeping caution context visible
 
 ## Design Decision Summary
 
@@ -66,7 +67,7 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** �
 - API surface uses `issues`/`signals`/`reports`/`categories` naming — never `markets`/`bets`/`trades`/`positions`/`profits` in any public path, including internal code (Technical Design §5)
 - No `users`/`watchlists`/wallet-level tables exist even in dormant form — schema itself is a policy signal (Technical Design §4.12)
 
-## Implementation Status (2026-07-09 Day 3 Closeout)
+## Implementation Status (2026-07-09 Day 4 Allocation)
 
 - `/backend` scaffold exists (FastAPI app, `app/api/routes`, `app/core`, `app/db`, `app/schemas`) — see `backend/README.md`. App imports and boots cleanly; smoke-tested via a local venv (`pytest` + a live `uvicorn` request).
 - `/frontend` scaffold exists (Vite + React + TS + Tailwind, npm scripts). `npm run lint` and `npm run build` pass locally in the Day 3 task sessions; production build still reports the known Recharts chunk-size warning tracked as TD-001.
@@ -81,5 +82,6 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** �
 - `TASK-013` hardened the issue detail chart: 24h/7d/30d windows require baseline-covered history, tooltip values include timestamp/value/previous-point pp change, and markers consume API-provided rows when present.
 - `TASK-014` aligned caution badge labels, visual treatment, accessibility labels, and placement across dashboard and detail surfaces.
 - `TASK-017` added shared brief caution copy, reusable footer copy, and a dedicated in-app information notice surface without adding a routing dependency.
+- `TASK-038` assigned Day 4 active work: `TASK-015` template report generation and safety filter, `TASK-039` report API/fallback readiness, `TASK-016` report display UI, `TASK-019` manual event candidates, `TASK-040` demo/deck draft, and `TASK-018` final wording lint.
 - Backend local setup should use Python 3.11 on this machine; the default Python 3.9 runtime could not install the pinned `psycopg[binary]==3.2.3` binary package.
-- Day 4 starts from this baseline: template-constrained summary generation/display, copy lint, and manually curated related-event candidates. Any shared or production schema application remains separately approval-gated.
+- Day 4 is active from this baseline. Any shared or production schema application, paid external AI call, public API shape change, deployment, or infrastructure change remains separately approval-gated.

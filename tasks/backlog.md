@@ -8,7 +8,7 @@ Harness Version: 1.1
 # Backlog — Outlook Signals
 
 _Last updated: 2026-07-09_
-_Remaining backlog after Day 3 assignment; active work lives in `tasks/active.md`._
+_Remaining backlog after Day 4 assignment; active work lives in `tasks/active.md`._
 
 Day 2 allocation moved `TASK-007`, `TASK-008`, `TASK-009`, `TASK-010`, and `TASK-012` to `tasks/active.md`. `TASK-031` was created directly from PRD §14's Day 2 PM work because that PM task was missing from the original backlog.
 
@@ -18,14 +18,16 @@ and `TASK-035`/`TASK-036` were created directly in `tasks/active.md` to cover
 the Day 3 backend and Data/AI handoffs that were missing from the original
 backlog.
 
+Day 4 allocation moved `TASK-015`, `TASK-016`, `TASK-018`, and `TASK-019` to
+`tasks/active.md`. `TASK-038` was created directly as the PM allocation task,
+and `TASK-039`/`TASK-040` were created directly in `tasks/active.md` to cover
+the Day 4 backend fallback/readiness and PM deck/demo work that were present in
+PRD section 14 but missing from the original backlog.
+
 ## Must-Have (P0)
 
 | ID | Task | Owner | Day | Size | Notes |
 |----|------|-------|-----|------|-------|
-| TASK-015 | AI report generation function (template + banned-phrase filter) | Data/AI Implementer | 3–4 | L | Technical Design §9–10 — highest-risk task |
-| TASK-016 | AI report display UI | Frontend Implementer | 4 | S | Depends on TASK-015 |
-| TASK-018 | Copy/wording lint pass across all UI strings | PM | 4 | S | Against `../standards.md` Content Safety Lint |
-| TASK-019 | 3–5 curated related events, manually entered | PM + Data/AI | 4 | S | `related_events` table |
 | TASK-020 | Deploy all three services (Vercel, Railway/Render, Supabase/Neon) | Backend Implementer | 5 | M | |
 | TASK-021 | Demo script + static-JSON fallback data | PM | 5 | S | Rehearsed backup for live-demo API failure |
 
