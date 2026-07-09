@@ -19,7 +19,6 @@ readiness, and final wording safety.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-019 | Curated related-event candidates for representative issues | PM + Data/AI | Data/AI Implementer + PM / Planner | `data-ai/TASK-019-curated-events` | assigned |
 | TASK-040 | Day 4 demo script and deck draft | PM | PM / Planner | `pm/TASK-040-demo-script-deck-draft` | assigned |
 | TASK-018 | Copy/wording lint pass across user-facing surfaces | PM | PM / Planner | `pm/TASK-018-copy-lint` | assigned |
 
@@ -55,26 +54,6 @@ fallback readiness), and `TASK-016` (template report display UI).
   Day 4 must pass the project wording lint before review.
 
 ## Active Task Details
-
-### TASK-019: Curated related-event candidates for representative issues
-- **Owner**: PM + Data/AI
-- **Assignee**: Data/AI Implementer + PM / Planner
-- **Branch**: `data-ai/TASK-019-curated-events`
-- **Status**: assigned
-- **Priority**: High
-- **Day**: Day 4
-- **Description**: Select 3-5 representative issues and create manual context
-  candidates that can be shown beside observed changes in the demo.
-- **Definition of Done**:
-  - [ ] Selects exactly 3-5 representative demo issues from existing live,
-        normalized, or fallback issue IDs.
-  - [ ] Each candidate includes title, date, and note text that explicitly
-        frames it as context, not a cause.
-  - [ ] Provides a seed/local-dev insertion path or artifact using existing
-        `related_events` schema boundaries only.
-  - [ ] Does not build automated event matching or write directly to a shared
-        or production database.
-  - [ ] PM runs a wording review before the candidates feed the demo script.
 
 ### TASK-040: Day 4 demo script and deck draft
 - **Owner**: PM
