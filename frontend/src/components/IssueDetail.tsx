@@ -33,7 +33,7 @@ function changeForWindow(
     return issue.change7d;
   }
 
-  return issue.change30d ?? issue.change7d;
+  return issue.change30d;
 }
 
 function buildSummary(issue: Issue, chartWindow: ChartWindow): string {
@@ -74,6 +74,7 @@ export function IssueDetail({ issue, dataStatus = "ready", onBack }: IssueDetail
     () => buildSummary(issue, chartWindow),
     [issue, chartWindow],
   );
+  const selectedWindowChange = changeForWindow(issue, chartWindow);
 
   return (
     <div className="mx-auto min-h-screen w-full max-w-[1180px] px-4 py-6 sm:px-8 lg:px-10 lg:py-10">
@@ -131,7 +132,7 @@ export function IssueDetail({ issue, dataStatus = "ready", onBack }: IssueDetail
         />
         <MetricTile
           label="30일 관측 변화"
-          value={formatPercentagePointChange(issue.change30d ?? issue.change7d)}
+          value={formatPercentagePointChange(issue.change30d)}
         />
       </section>
 
@@ -164,6 +165,24 @@ export function IssueDetail({ issue, dataStatus = "ready", onBack }: IssueDetail
               </button>
             ))}
           </div>
+        </div>
+        <div className="mt-4 rounded-lg border border-line bg-card px-4 py-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <CautionBadge level={issue.cautionLevel} />
+            <span className="text-xs font-semibold text-ink-faint">
+              데이터 기준 시각: {formatDataTimestamp(issue.dataAsOf)}
+            </span>
+          </div>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-ink-soft">
+            <span>{windowLabel(chartWindow)} 선택 기간 관측 변화</span>
+            <span className="font-bold text-ink">
+              {formatPercentagePointChange(selectedWindowChange)}
+            </span>
+          </div>
+          <p className="mt-2 text-xs leading-5 text-ink-faint">
+            차트 표시는 공개 데이터의 관측 흐름과 5pp 기준선 통과 여부만
+            보여주며, 관련 사건 후보를 원인으로 제시하지 않습니다.
+          </p>
         </div>
         <div className="mt-3">
           <IssueTrendChart issue={issue} windowKey={chartWindow} />

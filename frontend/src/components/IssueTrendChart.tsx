@@ -9,7 +9,14 @@ import {
   YAxis,
 } from "recharts";
 import type { ChartWindow, Issue, IssueHistoryPoint } from "../types/issue";
-import { formatExpectationValue, formatShortDate } from "../utils/format";
+import {
+  formatDataTimestamp,
+  formatExpectationValue,
+  formatPercentagePointChange,
+  formatShortDate,
+  windowLabel,
+} from "../utils/format";
+import { getWindowedHistory } from "../utils/history";
 
 type IssueTrendChartProps = {
   issue: Issue;
@@ -18,6 +25,7 @@ type IssueTrendChartProps = {
 
 type TooltipPayload = {
   value?: number;
+  payload?: ChartPoint;
 };
 
 type TooltipProps = {
@@ -26,17 +34,18 @@ type TooltipProps = {
   payload?: TooltipPayload[];
 };
 
-const WINDOW_POINT_COUNTS: Record<ChartWindow, number> = {
-  "24h": 2,
-  "7d": 8,
-  "30d": 31,
+type ChartPoint = IssueHistoryPoint & {
+  changeFromPrevious: number | null;
 };
 
-function getVisibleHistory(
-  history: IssueHistoryPoint[],
-  windowKey: ChartWindow,
-): IssueHistoryPoint[] {
-  return history.slice(-WINDOW_POINT_COUNTS[windowKey]);
+function formatAvailableSpan(availableSpanMs: number): string {
+  const hours = Math.max(0, Math.floor(availableSpanMs / (60 * 60 * 1000)));
+
+  if (hours < 48) {
+    return `${hours}시간`;
+  }
+
+  return `${Math.floor(hours / 24)}일`;
 }
 
 function CustomTooltip({ active, label, payload }: TooltipProps) {
@@ -53,14 +62,44 @@ function CustomTooltip({ active, label, payload }: TooltipProps) {
           {formatExpectationValue(Number(payload[0].value ?? 0))}
         </span>
       </div>
+      <div className="mt-1 text-xs text-ink-soft">
+        이전 관측값 대비:{" "}
+        <span className="font-bold text-ink">
+          {formatPercentagePointChange(payload[0].payload?.changeFromPrevious)}
+        </span>
+      </div>
+      <div className="mt-1 text-[11px] text-ink-faint">
+        {formatDataTimestamp(label)}
+      </div>
     </div>
   );
 }
 
 export function IssueTrendChart({ issue, windowKey }: IssueTrendChartProps) {
-  const visibleHistory = useMemo(
-    () => getVisibleHistory(issue.history, windowKey),
+  const windowedHistory = useMemo(
+    () => getWindowedHistory(issue.history, windowKey),
     [issue.history, windowKey],
+  );
+  const visibleHistory = windowedHistory.points;
+
+  const chartData = useMemo<ChartPoint[]>(
+    () =>
+      visibleHistory.map((point, index) => {
+        if (index === 0) {
+          return {
+            ...point,
+            changeFromPrevious: null,
+          };
+        }
+
+        return {
+          ...point,
+          changeFromPrevious: Number(
+            (point.value - visibleHistory[index - 1].value).toFixed(1),
+          ),
+        };
+      }),
+    [visibleHistory],
   );
 
   const markerPoints = useMemo(() => {
@@ -95,7 +134,7 @@ export function IssueTrendChart({ issue, windowKey }: IssueTrendChartProps) {
 
   const firstMarker = markerPoints[0];
 
-  if (visibleHistory.length < 2) {
+  if (!windowedHistory.hasSufficientHistory) {
     return (
       <div className="rounded-lg border border-line bg-card p-4">
         <div
@@ -104,10 +143,20 @@ export function IssueTrendChart({ issue, windowKey }: IssueTrendChartProps) {
             "border border-dashed border-line-soft px-6 text-center sm:h-[300px]",
           ].join(" ")}
         >
-          <p className="max-w-md text-sm leading-6 text-ink-soft">
-            이 기간의 추이를 표시할 만큼 충분한 이력이 없습니다.
-          </p>
+          <div className="max-w-md">
+            <p className="text-sm font-bold text-ink">
+              {windowLabel(windowKey)} 추이를 표시하기에 이력이 부족합니다
+            </p>
+            <p className="mt-2 text-sm leading-6 text-ink-soft">
+              선택한 기간에는 시작 기준점과 현재 지점이 모두 필요합니다. 현재
+              확인 가능한 이력 범위는 약{" "}
+              {formatAvailableSpan(windowedHistory.availableSpanMs)}입니다.
+            </p>
+          </div>
         </div>
+        <p className="mt-3 text-xs leading-5 text-ink-faint">
+          데이터 기준 시각: {formatDataTimestamp(issue.dataAsOf)}
+        </p>
       </div>
     );
   }
@@ -117,7 +166,7 @@ export function IssueTrendChart({ issue, windowKey }: IssueTrendChartProps) {
       <div className="h-[260px] w-full sm:h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart
-            data={visibleHistory}
+            data={chartData}
             margin={{ top: 16, right: 20, bottom: 6, left: -12 }}
           >
             <XAxis
@@ -165,8 +214,13 @@ export function IssueTrendChart({ issue, windowKey }: IssueTrendChartProps) {
         {firstMarker
           ? `${formatShortDate(firstMarker.timestamp)}: ${
               firstMarker.label
-            }. 표시는 관측된 기준선 통과를 가리키며 원인을 뜻하지 않습니다.`
+            } (${formatPercentagePointChange(
+              firstMarker.change,
+            )}). 표시는 관측된 기준선 통과를 가리키며 원인을 뜻하지 않습니다.`
           : "이 구간에는 5pp 기준선을 넘는 관측 변화가 없습니다."}
+      </p>
+      <p className="mt-2 text-xs leading-5 text-ink-faint">
+        데이터 기준 시각: {formatDataTimestamp(issue.dataAsOf)}
       </p>
     </div>
   );
