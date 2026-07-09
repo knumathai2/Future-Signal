@@ -332,8 +332,8 @@ if __name__ == "__main__":
     if not settings.openai_api_key:
         raise SystemExit(
             "OPENAI_API_KEY is not set. This script calls a paid external AI API "
-            "and requires explicit human approval plus a real key per AGENTS.md - "
-            "set OPENAI_API_KEY before running."
+            "using the project-approved OpenAI provider - set OPENAI_API_KEY "
+            "before running."
         )
 
     from sqlalchemy import func

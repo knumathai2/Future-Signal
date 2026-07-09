@@ -18,21 +18,22 @@ or value is fabricated.
 
 ## Before Approval
 
-The no-report empty state is normal until an explicitly approved generation
-run has happened. In that state:
+The no-report empty state is normal until an explicitly approved database-write
+generation run has happened. In that state:
 
 - `/api/issues/{id}/report` may return `{"status":"not_yet_generated"}`.
 - The frontend summary card should show its neutral not-yet-generated state.
-- `ai_reports=0` is expected if no approved database write and no approved
-  external LLM call has run.
+- `ai_reports=0` is expected if no approved database write has run.
 
 Do not treat this state as a frontend or API failure before the approved
-generation step.
+database-write generation step.
 
 ## Approved-Only Procedure For A Saved Summary
 
-Only proceed after explicit human approval for both actions: writing report rows
-to the configured local/dev database and making the external LLM API call.
+Only proceed after explicit human approval for writing report rows to the
+configured local/dev database. Per the 2026-07-09 user clarification recorded
+in ADR-022, the provided `OPENAI_API_KEY` may be used for project-scoped OpenAI
+report generation without separate per-run approval.
 
 1. Confirm the checked-out code includes `TASK-041`.
 2. Confirm the environment target without printing secret values:
@@ -42,7 +43,7 @@ to the configured local/dev database and making the external LLM API call.
    - `OPENAI_API_KEY` and `OPENAI_MODEL` are configured.
 3. Confirm snapshot and metric rows already exist. The batch entry point selects
    the latest run with `max(market_metrics.computed_at)`.
-4. Run the approved generation command:
+4. Run the approved database-write generation command:
 
    ```bash
    cd backend
