@@ -11,7 +11,9 @@ _Last updated: 2026-07-10_
 
 ## In Progress
 
-No implementation tasks are currently in progress.
+No implementation tasks remain active. Day 5 is closed as a technical MVP
+milestone by ADR-037. Deployment and final presentation operations are deferred
+as `TASK-020` and `TASK-021` in `tasks/backlog.md`.
 
 ## Status Values
 

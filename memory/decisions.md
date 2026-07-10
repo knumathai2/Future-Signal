@@ -566,6 +566,41 @@ and scoped Vercel configuration remain unchanged.
 
 ---
 
+### ADR-037: Close Day 5 on verified technical MVP scope and defer release operations
+
+- **Date**: 2026-07-10
+- **Status**: Accepted
+- **Decided by**: User / PM Planner
+
+**Context**: Day 5 runtime work and integration review were complete, but the
+latest `main` still failed Frontend TypeScript validation because TASK-054 used
+`Array.prototype.at()` under the existing `ES2020` library. Deployment, final
+presentation production, screenshots, rehearsal, and backup capture were also
+unfinished and remained separately approval-gated or operational work.
+
+**Decision**: Fix only the ES2020 compatibility blocker in PR #53, verify the
+full Frontend build path and Backend regression suite, and close Day 5 as a
+technical MVP implementation/review milestone. Move deployment to `TASK-020`
+and final presentation/rehearsal/capture work to `TASK-021`. Do not describe
+those deferred deliverables as completed.
+
+**Rationale**: The core product flow and v3 report path have implementation and
+review evidence. The remaining work does not change the technical MVP and can
+resume independently without obscuring the actual build status.
+
+**Trade-offs**: The closeout does not provide a hosted service, final deck,
+final screenshots, rehearsed presentation, backup recording, or a workflow run
+from the eventual merged PR #53 revision. The repair and closeout record also
+remain outside `main` until PR #53 passes normal review and merge.
+
+**Consequences**: `roadmap.md` marks Day 5 complete with an explicit deferred
+deliverables list, `tasks/backlog.md` retains TASK-020/TASK-021 as follow-up,
+and `reports/day-5-closeout.md` is the evidence record. No deployment,
+dependency, schema, API, infrastructure, database, provider, copy-policy, or UI
+behavior change is approved by this decision.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07

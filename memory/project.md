@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.7.0-day5-v3-integrated
-- **Phase**: Day 5 v3 integration review complete
-- **Next milestone**: Review and merge draft PR #51, then PM closeout, final demo rehearsal, screenshot capture, and any separately approved deployment
-- **Overall health**: 🟢 Good — v3 runtime is on `main`, the scheduled batch configuration is restored, and fix-branch Actions run `29073226485` passed with 50 processed rows and 10 successful reports. Draft PR #51 is mergeable and clean; its prompt-alignment fix still needs the normal review/merge flow.
+- **Version**: v0.8.0-day5-technical-mvp-complete
+- **Phase**: Day 5 technical MVP closed on PR #53
+- **Next milestone**: Review and merge PR #53; optionally resume deployment (`TASK-020`), presentation operations (`TASK-021`), or the approval-gated automated-context program (`TASK-056` onward)
+- **Overall health**: 🟢 Good — PR #53 merges the latest `main`, resolves its ES2020 Frontend build blocker, and passes the complete Frontend build path plus 200 Backend tests and Ruff. Deployment and final presentation assets are explicitly deferred rather than recorded as complete.
 
 ## Tech Summary
 
@@ -51,10 +51,10 @@ Future Signal/
 
 | Area | Current state |
 |---|---|
-| Frontend | Dashboard/detail/chart/fallback flows remain intact. TASK-051 replaces v2 report rendering with the exact ADR-033 evidence-first section order, one visible section at a time, null-only `external_context` hiding, runtime parsing, report data-as-of timing, and report-snapshot caution context. TASK-053 adds five-sentence parser enforcement, exact order/null regressions, copy alignment, and responsive Browser evidence. |
+| Frontend | TASK-051/TASK-053 provide the ADR-033 report UI and parser enforcement. TASK-054 adds routed Home/list/detail/methodology information architecture, a real-history featured chart, ranked summaries, and responsive verification. PR #53 replaces two ES2022-only `.at()` reads with ES2020-compatible index access so typecheck and production build pass without configuration or behavior changes. |
 | Backend | `/api/issues/{id}/report` serves only successful v3 rows whose eight-field content validates, whose linked metric supplies `data_as_of`, and whose timestamp is not later than generation. Legacy, failed, malformed, unlinked, and incompatible rows keep `not_yet_generated`. TASK-053 adds read-time five-sentence enforcement and deterministic fallback-test isolation. Existing issue/category/history behavior and DB schema remain unchanged. |
 | Data/AI | TASK-049 advances generation to `PROMPT_VERSION=v3`: three constrained prose slots plus deterministic candidate comparison, external context, check points, limitations, and exact caution copy. ISS-010 aligned the fixed prompt with the frozen ADR-033 bounds/source scope and the approved Actions model configuration; the latest 10 stored v3 rows passed structural, wording-safety, and semantic validation. |
-| PM / Safety | P0 scope and ADR-033 remain locked. TASK-053 final integration copy/contract review passed with evidence in `reports/review-2026-07-10-task-053-v3-integration.md`; no prohibited feature, policy change, schema/dependency/infrastructure change, deployment, provider call, or configured DB write was introduced. |
+| PM / Safety | P0 scope and ADR-033 remain locked. ADR-037 closes the technical MVP milestone while keeping deployment and presentation operations visible as deferred work. TASK-055's automated-context program remains backlog-only behind its existing approval gates. |
 
 ## Recent Changes
 
@@ -105,14 +105,17 @@ Future Signal/
 | 2026-07-10 | `TASK-052` completed: latest `origin/main` at `106af52` was confirmed, Day 5 v3 implementation was split into `TASK-049` Data/AI generation, `TASK-050` Backend API/read contract, `TASK-051` Frontend dynamic report cards, and `TASK-053` final integration copy/contract review, with allocation evidence recorded in `reports/day-5-v3-implementation-allocation.md`. |
 | 2026-07-10 | `TASK-053` completed on the Reviewer integration branch: TASK-049/050/051 were combined, ADR-033 sentence/semantic/copy gaps were closed, 198 Backend tests and all Frontend checks passed, and 320px/375px null/non-null context Browser QA passed. |
 | 2026-07-10 | `ISS-010` resolved the daily GitHub Actions failure: repository secrets/model configuration were restored without exposing values, the v3 prompt was aligned with existing ADR-033 constraints, and run `29073226485` passed with 50 processed, 0 failed, and 10 successful reports. Draft PR #51 contains the code/test changes. |
+| 2026-07-10 | `TASK-054` information-architecture alignment merged through PR #52, adding routed discovery/list/detail/methodology flows and the revised 7-day Home. |
+| 2026-07-10 | `ISS-011` resolved the final ES2020 Frontend build blocker in PR #53. ADR-037 closes Day 5 as a verified technical MVP milestone and defers deployment plus final presentation operations to TASK-020/TASK-021. |
 
 ## Constraints
 
 - 5-day build window, 4-person team — see `../ORCHESTRATOR.md` and `../roadmap.md` for day-by-day allocation
 - No accounts/login/saving/notifications/reports/team-sharing in MVP (PRD §6.5)
 - No free-form AI analysis, no automated news matching, no wallet-level participant features (see `AGENTS.md` Absolute Restrictions)
-- V3 runtime follows ADR-033 and is complete on the TASK-053 integration
-  branch; the normal merge flow must land that branch before any report refresh,
-  screenshot capture, or deployment uses v3 as the `main` baseline.
+- V3 runtime follows ADR-033 and is present on `main`; PR #53 must merge before
+  its ES2020 compatibility repair and Day 5 closeout records reach `main`.
+- No service deployment or final presentation capture is claimed by the Day 5
+  technical closeout; those remain TASK-020 and TASK-021.
 - Every data-bearing screen requires a data-as-of timestamp + interpretation-caution badge (PRD §8.10)
 - Strict prohibited-wording policy — see `glossary.md` and `../standards.md`
