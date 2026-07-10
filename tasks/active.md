@@ -16,19 +16,15 @@ Day 4 is closed. Allocation evidence is recorded in
 `reports/task-018-copy-lint.md`, and closeout evidence is recorded in
 `reports/day-4-closeout-plan.md`.
 
-`TASK-047` is complete. ADR-032 is now the prerequisite scope-lock for any v3
-AI report, public API shape, wording policy, or automated-news/context-candidate
-implementation work. Frontend, Backend, and Data/AI v3 implementation must read
-ADR-032 before starting and must not expand beyond its approved field list.
+`TASK-048` is complete. ADR-033 supersedes ADR-032 for the approved eight-field
+v3 report content and display contract. Frontend, Backend, and Data/AI v3
+implementation must read both ADRs, follow ADR-033 where they differ, and keep
+runtime changes in separate coordinated tasks.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-048 | Design the v3 Report Contract | Backend Implementer | Backend Implementer | `backend/TASK-048-v3-report-contract` | review |
 
-`TASK-048` is the active Backend-owned contract-design task. It may draft a
-replacement for ADR-032, but it must not freeze the replacement, modify
-ADR-032, or change runtime Backend, Data/AI, or Frontend code before PM/user
-approval.
+No active implementation, approval, or closeout tasks remain after TASK-048.
 
 Completed Day 1, Day 2, Day 3, and PM allocation tasks are archived in
 `tasks/completed.md`, including `TASK-038` for this Day 4 allocation,
@@ -43,7 +39,8 @@ output structure), `TASK-044` (Korean issue display titles), `ISS-007`
 (v2 report/category-filter readiness), and `TASK-018` (final copy/wording
 lint). `TASK-045` records the PM closeout verification and Day 5 handoff.
 `TASK-047` records the v3 AI report policy/API/wording scope-lock and
-implementation prerequisite decision in ADR-032.
+implementation prerequisite decision in ADR-032. `TASK-048` records the
+superseding eight-field contract in ADR-033.
 
 ## Day 4 Handoff Notes
 
@@ -97,34 +94,13 @@ implementation prerequisite decision in ADR-032.
 - **PM / Planner** completed `TASK-047`. ADR-032 locks the v3 report field
   list, public API boundary, tightened wording criteria, manual-only context
   candidate scope, and maintained prohibitions before v3 implementation starts.
+- **Backend Implementer** completed `TASK-048`. ADR-033 preserves ADR-032 as
+  history while superseding its v3 content/display contract with the approved
+  eight-field schema. Runtime remains v2 pending coordinated implementation.
 
 ## Active Task Details
 
-### TASK-048: Design the v3 Report Contract
-
-- **Owner**: Backend Implementer
-- **Assignee**: Backend Implementer
-- **Branch**: `backend/TASK-048-v3-report-contract`
-- **Status**: review
-- **Priority**: High
-- **Day**: Day 5
-- **Description**: Draft an eight-field v3 `ReportContent` replacement for
-  ADR-032 in `backend/API_CONTRACT.md`, including the field decision table,
-  frontend section order/labels, Pydantic v2 model snippet, external-context
-  representation, and caution-level copy matrix. This is contract design only;
-  runtime API, generator, frontend UI, schema, database, and ADR-032 remain
-  unchanged until a separate approval and implementation task.
-- **Definition of Done**:
-  - [x] Map every ADR-032 content field to the proposed eight-field contract.
-  - [x] Define purpose, provenance, type, nullability, length, label, order,
-        safety validation, and missing-value behavior for all eight fields.
-  - [x] Document the `external_context`, weak-inference, conditional-outlook,
-        and caution-level decisions.
-  - [x] Keep API JSON, frontend mapping, and Pydantic draft aligned.
-  - [x] Complete Backend, Data/AI, and Frontend review passes without runtime
-        code changes.
-  - [x] Pass copy/wording checks and `git diff --check`.
-  - [x] Separate contract-freeze approval items from implementation follow-up.
+No active task details remain.
 
 ## Status Values
 

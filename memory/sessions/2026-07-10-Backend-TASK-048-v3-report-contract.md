@@ -1,7 +1,7 @@
 <!--
 Purpose:        Archived TASK-048 Backend contract-design session handoff
 Owner:          Backend Implementer
-Update Trigger: TASK-048 draft review or approval follow-up
+Update Trigger: TASK-048 implementation follow-up
 Harness Version: 1.1
 -->
 
@@ -12,20 +12,21 @@ Harness Version: 1.1
 - **Date**: 2026-07-10
 - **Role**: Backend Implementer
 - **Branch**: `backend/TASK-048-v3-report-contract`
-- **Status**: Review; awaiting PM/user approval before contract freeze
+- **Status**: Completed; ADR-033 accepted, runtime unchanged
 
 ## Outcome
 
-TASK-048 produced a non-frozen eight-field v3 report-contract replacement in
-`backend/API_CONTRACT.md`. The draft includes the ADR-032 mapping, exact field
+TASK-048 produced the approved eight-field v3 report-contract replacement in
+`backend/API_CONTRACT.md`. The contract includes the ADR-032 mapping, exact field
 decisions, external-context choice, conditional and non-causal safety rules,
 four-level caution matrix, successful JSON example, Frontend order/labels, and
 Pydantic v2 model. Data/AI and Frontend completed read-only reviews, and their
 findings were incorporated.
 
-ADR-032 and every runtime Backend, Data/AI, and Frontend path remain unchanged.
-The active task is in `review`, not completed. PM/user approval is required
-before a new ADR may supersede ADR-032 or coordinated implementation begins.
+ADR-033 supersedes ADR-032 for the v3 content/display contract while preserving
+ADR-032 as history. The approved character upper bounds support at most five
+concise sentences per field. Every runtime Backend, Data/AI, and Frontend path
+remains unchanged pending coordinated implementation.
 
 ## Verification
 
@@ -33,8 +34,8 @@ before a new ADR may supersede ADR-032 or coordinated implementation begins.
 - Pydantic 2.12.5 accepts valid nullable/non-null payloads and rejects missing,
   extra, blank, and wrong-type payloads.
 - Frontend mapping keys are unique, exhaustive, and evidence-first.
-- Korean fixtures fit every proposed character bound.
-- Proposed response copy and labels pass the prohibited-wording scan.
+- Korean fixtures fit every approved character bound.
+- Approved response copy and labels pass the prohibited-wording scan.
 - `git diff --check` is part of final handoff verification.
 
 ## Scope Boundary
