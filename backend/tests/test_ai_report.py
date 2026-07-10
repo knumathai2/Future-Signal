@@ -103,6 +103,14 @@ def test_build_prompt_returns_fixed_system_prompt_verbatim():
     assert system_prompt == SYSTEM_PROMPT
 
 
+def test_build_prompt_states_every_adr_033_llm_field_length_bound():
+    system_prompt, _ = build_prompt(_inputs())
+
+    assert "issue_overview 30-600 characters" in system_prompt
+    assert "current_data_reading 50-700" in system_prompt
+    assert "possible_outlook 60-700 characters" in system_prompt
+
+
 def test_build_prompt_fills_only_the_named_slots():
     _, user_prompt = build_prompt(_inputs())
 

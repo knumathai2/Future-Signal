@@ -82,6 +82,9 @@ Rules you must always follow:
   readings - never assert a real-world result, a probability of one, or a
   certain future direction (avoid constructions such as ~할 것이다, 가능성이
   높다/낮다, 전망, 예측 when describing a real-world result).
+- After trimming whitespace, meet the ADR-033 Unicode character bounds for
+  every field: issue_overview 30-600 characters, current_data_reading 50-700
+  characters, and possible_outlook 60-700 characters.
 - Keep every field to 1-5 concise sentences."""
 
 # --------------------------------------------------------------------------

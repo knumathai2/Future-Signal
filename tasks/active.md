@@ -11,12 +11,9 @@ _Last updated: 2026-07-10_
 
 ## In Progress
 
-No implementation tasks remain active. `TASK-049`, `TASK-050`, `TASK-051`,
-and `TASK-053` are archived in `tasks/completed.md` after the integrated v3
-report review passed on `review/TASK-053-v3-report-copy-lint`.
-
-The remaining Day 5 work is PM closeout, final demo rehearsal, screenshot
-capture, and any separately approved deployment or report-refresh action.
+| ID | Task | Owner | Assignee | Branch | Status |
+|----|------|-------|----------|--------|--------|
+| ISS-010 | Restore scheduled GitHub Actions batch credentials and verify rerun | Backend Implementer | Debugger | `debug/ISS-010-actions-secrets` | in_progress |
 
 ## Status Values
 
