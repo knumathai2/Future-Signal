@@ -7,12 +7,13 @@ Harness Version: 1.1
 
 # Known Issues — Outlook Signals
 
-_Last updated: 2026-07-09_
+_Last updated: 2026-07-10_
 
 ## Active Bugs
 
 | ID | Severity | Description | Found | Owner |
 |----|----------|-------------|-------|-------|
+| ISS-008 | High | PR #49's v3 report generator can omit required candidate identity, accept metric text inconsistent with structured inputs, and reject ADR-033's approved Korean external-context wording. | PR #49 review, 2026-07-10 | Data/AI Implementer |
 
 ## Technical Debt
 
@@ -71,6 +72,33 @@ them before Day 5 lock if they become relevant to the active path:
 - **Workaround**:
 - **Permanent fix direction**:
 ```
+
+### ISS-008: PR #49 v3 report contract and safety validation gaps
+- **Severity**: High
+- **Found**: 2026-07-10 during PR #49 review
+- **Status**: Open; GitHub review state is `CHANGES_REQUESTED`
+- **Evidence**:
+  - Review: <https://github.com/knumathai2/Future-Signal/pull/49#pullrequestreview-4668601361>
+  - Backend tests and Ruff pass, so focused contract regressions are needed.
+  - A candidate input produced `possible_drivers` with neither its title nor
+    its recorded date.
+  - A 63% structured input paired with 99% model-authored text passed both
+    current safety and semantic checks.
+  - ADR-033's approved Korean external-context example is rejected by the
+    global `원인` pattern and by the literal candidate-term requirement.
+- **Root cause**:
+  - Candidate-present output uses a constant instead of the loaded title/date.
+  - Metric-bearing model prose has length and wording checks but no comparison
+    with `ReportPromptInputs`.
+  - The Korean relationship filter is applied as an unqualified substring.
+  - The semantic qualifier is narrower than the approved contract example.
+- **Workaround**:
+  - Do not approve or use PR #49's v3 generator for a report refresh until the
+    review findings are resolved.
+- **Permanent fix direction**:
+  - Resolve all four inline review comments, add contract-example and
+    mismatched-value regression tests, and request re-review on the updated
+    commit.
 
 ### ISS-001: Detail chart blank with one-point history
 - **Severity**: High

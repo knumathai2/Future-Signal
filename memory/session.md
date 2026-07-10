@@ -14,66 +14,71 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-10
-- **Agent Role**: Frontend Implementer
-- **Session Goal**: Prepare a reusable, contract-complete startup prompt for
-  `TASK-051` without changing frontend runtime behavior.
-- **Branch**: `frontend/TASK-051-v3-report-cards`
+- **Agent Role**: Reviewer
+- **Session Goal**: Review PR #49 (`TASK-049`) and publish the review to
+  GitHub without changing implementation code.
+- **Branch**: `review/TASK-053-v3-report-copy-lint`
 
 ## Context Read
 
 - `AGENTS.md`
-- `docs/prd/README.md` and linked PRD sections
-- `docs/ux-design/README.md` and linked UX guidance
+- `docs/prd/README.md`
+- `docs/service-design/README.md` and the AI/signal/participant section
+- `docs/tech-design/README.md` and the AI-report architecture section
 - `memory/project.md`
 - Previous `memory/session.md`
 - `tasks/active.md`
-- `prompts/implementation-frontend.md`
-- `memory/architecture.md`
+- `prompts/review.md`
 - `standards.md`
 - `memory/glossary.md`
-- `memory/decisions.md` ADR-033
-- `backend/API_CONTRACT.md` ADR-033 v3 report and Frontend mapping sections
-- `reports/day-5-v3-implementation-allocation.md`
-- Current frontend report types, loader, report card, and caution components
+- `memory/decisions.md` ADR-033 and PR #49's ADR-034 addition
+- `backend/API_CONTRACT.md` ADR-033 v3 report contract
+- PR #49 metadata, patches, tests, and existing review state
 
 ## Work Completed
 
-- Confirmed `TASK-051` is assigned to the Frontend Implementer on
-  `frontend/TASK-051-v3-report-cards`.
-- Created the task branch from the latest `origin/main` state available at
-  session start.
-- Added `reports/task-051-v3-report-cards-prompt.md` as a reusable startup
-  prompt for the implementation session.
-- The prompt captures the exact ADR-033 fields, `report_version="v3"`, Korean
-  labels, evidence-first order, runtime invalid-response behavior,
-  `external_context` null handling, accessible single-section navigation,
-  report-specific timing/caution semantics, responsive fixtures, verification
-  commands, and coordination boundaries with `TASK-050` and `TASK-053`.
-- Kept `TASK-051` assigned because this session prepared its prompt but did not
-  implement or verify the runtime UI.
+- Reviewed PR #49 at head `ae76a6b147c9f45e16dd56f65b1d43e22f218ff2`.
+- Compared the generator and batch changes with ADR-033, the TASK-049
+  completion criteria, the wording policy, and the stored-report safety
+  boundary.
+- Ran the complete backend test suite and Ruff from a detached PR-head
+  worktree: `175 passed`; `ruff check .` passed.
+- Reproduced four contract/safety defects:
+  - `possible_drivers` omits the reviewed candidate title and date.
+  - A model-authored `current_data_reading` can contain a value inconsistent
+    with structured inputs while all current checks pass.
+  - The global Korean `원인` pattern rejects ADR-033's approved negative
+    relationship disclaimer.
+  - The external-context qualifier requires the literal word `candidate` or
+    `후보`, so the approved Korean example still fails semantic validation.
+- Submitted a GitHub `CHANGES_REQUESTED` review with four inline comments:
+  <https://github.com/knumathai2/Future-Signal/pull/49#pullrequestreview-4668601361>.
+- Verified the submitted review is anchored to the inspected head and all
+  four inline comments exist.
 
 ## Files Changed
 
-- `reports/task-051-v3-report-cards-prompt.md`
+- `reports/review-2026-07-10-task-049-v3-report-generation.md`
+- `memory/known-issues.md`
 - `memory/session.md`
-- `memory/sessions/2026-07-10-Frontend-TASK-051-prompt-prep.md`
+- `memory/sessions/2026-07-10-Reviewer-PR-049.md`
 
 ## Verification
 
-- Confirmed the prompt's field names, nullability, order, Korean labels, and
-  report-caution boundary against ADR-033 and `backend/API_CONTRACT.md`.
-- Confirmed the current frontend is still on fixed v2 report types/rendering,
-  so the prompt names the actual expected change surface.
-- Confirmed the frontend has no test-runner dependency; the prompt prohibits
-  adding one without approval and provides a dependency-free invariant path.
-- Ran documentation diff and wording checks for the new prompt.
-- No runtime code, API/schema, dependency, infrastructure, deployment,
-  external-provider call, database write, or secret-file access was performed.
+- `backend`: `175 passed in 0.72s`
+- `backend`: `ruff check .` -> `All checks passed!`
+- GitHub review ID `4668601361` -> `CHANGES_REQUESTED`
+- Inline review comment IDs: `3556450260`, `3556450261`, `3556450263`,
+  `3556450264`
+- No implementation code, dependency, public API, schema, infrastructure,
+  deployment configuration, database, provider call, or secret file was
+  changed or accessed.
 
 ## Notes / Remaining Risks
 
-- `TASK-051` implementation and responsive browser QA remain outstanding.
-- `TASK-050` owns the shared Backend/Pydantic/API runtime contract. The
-  Frontend may work from typed fixtures but should integrate only against the
-  final v3 response behavior.
-- `TASK-053` remains the final integrated copy/contract review.
+- PR #49 should not be approved until all four review findings are fixed and
+  covered by regression tests.
+- `TASK-049` remains in `review`; it is not moved to completed.
+- `TASK-053` remains the later integrated Backend/Frontend/Data review after
+  `TASK-050` and `TASK-051` are ready; this PR-specific review does not close
+  that task.
