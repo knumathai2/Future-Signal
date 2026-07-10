@@ -169,7 +169,6 @@ function SectionNavigator({
       {/* Compact section indicators */}
       <div
         className="mt-3 flex flex-wrap gap-1 justify-center"
-        aria-hidden="true"
       >
         {visibleSections.map((section, idx) => (
           <button
