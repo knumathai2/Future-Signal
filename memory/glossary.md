@@ -20,8 +20,9 @@ _Last updated: 2026-07-10_
 | Expectation Shift Detected | The MVP's only sudden-change signal: ±5pp change within a rolling window (Service Design §7) |
 | Data-as-of timestamp | Required on every data-bearing screen; shown even when serving last-known-good/fallback data |
 | Confidence / caution level | `sufficient` / `caution_low_activity` / `caution_high_volatility` / `insufficient_data` — DB field `confidence_level` |
-| v3 AI report | The ADR-032 report shape for `/api/issues/{id}/report`: fixed fields only, no free-form analysis, no causal or action-oriented wording, and storage allowed only after schema plus copy-safety validation |
-| Context candidate note | Optional v3 report field derived only from manually curated related-event candidates; always framed as context to check alongside the observed change, never as a cause |
+| v3 AI report | The ADR-033 eight-field report shape for `/api/issues/{id}/report`: fixed fields only, no open-ended analysis, no causal or action-oriented wording, and storage allowed only after schema plus copy-safety validation |
+| External context | Nullable v3 narrative derived only from PM/Data-approved related-event notes; source metadata remains in issue-detail `related_events`, and the section is hidden only when the value is `null` |
+| Context candidate comparison | Required v3 `possible_drivers` content derived only from approved candidate title/date or the fixed absence copy; always states that the data does not establish a relationship with the observed movement |
 | Offline candidate discovery | A non-public PM/Data review aid that may help find possible context candidates but cannot write to the database, change the public API, display results, or replace manual curation in MVP/v3 |
 
 ## Abbreviations
@@ -81,7 +82,7 @@ or verify the blocking rule.
 | Trust badge | Interpretation-caution badge |
 | Cause analysis | Related event candidate |
 
-### v3 report wording replacements (ADR-032)
+### v3 report wording replacements (ADR-033)
 
 | Avoid | Use instead |
 |---|---|

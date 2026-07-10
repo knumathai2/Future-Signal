@@ -11,6 +11,7 @@ _Last updated: 2026-07-10_
 
 | ID | Task | Completed | Owner | Notes |
 |----|------|-----------|-------|-------|
+| TASK-048 | Design the v3 Report Contract | 2026-07-10 | Backend Implementer | `backend/TASK-048-v3-report-contract`. Drafted and received user/PM approval for the ADR-033 eight-field v3 contract, including ADR-032 mapping, exact types/nullability/Unicode character bounds, a maximum of five concise sentences per field, external-context Option A, conditional and non-causal safety rules, the four-level Korean caution matrix, evidence-first Frontend labels/order, and a strict Pydantic v2 model snippet. Data/AI and Frontend completed read-only reviews. Runtime API, generator, schema, tests, Frontend types/UI, database, migrations, dependencies, infrastructure, and deployment remain unchanged pending coordinated implementation. |
 | — | AI Development Harness v1.1 initial setup | 2026-07-07 | PM | Standard tier, monorepo, npm+pip, GitHub Actions |
 | TASK-001 | Repo scaffold: `/frontend` + `/backend` project shells | 2026-07-08 | Backend Implementer | `backend/TASK-001-repo-scaffold`. FastAPI app import-smoke-tested; frontend hand-scaffolded (npm/node unavailable in this environment, not run). |
 | TASK-002 | DB schema draft for MVP tables | 2026-07-08 | Backend Implementer | Draft accepted as a Day 1 artifact in ADR-011. Migration remains unapplied; applying schema changes to any shared or production database still requires separate human approval. |
