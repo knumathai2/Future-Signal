@@ -1,7 +1,8 @@
-"""TASK-015: regeneration eligibility (new signal / no report / 24h stale),
-the top-10-per-run cost-control cap, retry-once-then-fail handling, and the
-guarantee that a filtered/failed generation never disturbs the previously
-stored successful report.
+"""TASK-049: regeneration eligibility (new signal / no report / 24h stale),
+the top-10-per-run cost-control cap, retry-once-then-fail handling, the
+ADR-033 deterministic field assembly wired through the batch pipeline, and
+the guarantee that a filtered/failed generation never disturbs the
+previously stored successful report.
 
 Uses an in-memory SQLite database (same pattern as
 tests/test_signal_detection.py) - no shared/production database touched.
@@ -19,7 +20,15 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.core.ai_report import PROMPT_VERSION, LLMCallError
+from app.core.ai_report import (
+    CAUTION_NOTE_BY_LEVEL,
+    POSSIBLE_DRIVERS_NO_CANDIDATE,
+    POSSIBLE_DRIVERS_WITH_CANDIDATE,
+    PROMPT_VERSION,
+    LLMCallError,
+    LLMReportFields,
+    assemble_report_content,
+)
 from app.core.ai_report_batch import (
     MAX_REPORTS_PER_BATCH_RUN,
     STALENESS_THRESHOLD,
@@ -35,6 +44,7 @@ from app.db.models import (
     IssueSignal,
     Market,
     MarketMetric,
+    MarketOutcome,
     MarketSnapshot,
     RelatedEvent,
 )
@@ -42,7 +52,27 @@ from app.db.models import (
 NOW = datetime(2026, 7, 9, 12, 0, 0, tzinfo=UTC)
 MARKET_ID = uuid.UUID("11111111-1111-4111-8111-111111111111")
 
-VALID_CONTENT = {
+# The three LLM-authored fields only (ADR-033) - possible_drivers,
+# external_context, what_to_check, data_limitations, and caution_note are
+# assembled deterministically by app/core/ai_report.py, never LLM output.
+VALID_LLM_RESPONSE = {
+    "issue_overview": (
+        "이 이슈는 정해진 기준일까지 특정 조건이 확인되는지를 공개 데이터 맥락에서 살펴봅니다."
+    ),
+    "current_data_reading": (
+        "현재 공개 예측시장 참여자 데이터에서는 이 이슈가 일부 재평가되고 있으나, "
+        "실제 결과를 뜻하지는 않습니다."
+    ),
+    "possible_outlook": (
+        "이후 공개 데이터에서 관찰된 움직임의 지속 또는 완화가 확인되더라도, 이는 "
+        "데이터의 흐름만 설명하며 현실의 결과를 입증하지 않습니다."
+    ),
+}
+
+# A pre-existing/legacy stored report row's content - shape does not need to
+# validate against the current schema since these rows only exercise
+# regeneration-eligibility and storage-history assertions, never a live read.
+LEGACY_CONTENT = {
     "issue_explainer": "이 이슈는 정해진 기준일까지 특정 조건이 확인되는지를 살펴봅니다.",
     "why_it_matters": "이 조건은 관련 정책 일정과 후속 절차를 이해하는 데 참고가 됩니다.",
     "current_reading": "현재 공개 데이터에서는 일부 재평가 흐름이 관측됩니다.",
@@ -52,6 +82,22 @@ VALID_CONTENT = {
     "check_points": "확인할 지점은 공식 발표, 기준일, 후속 절차입니다.",
     "caution_note": "이 요약은 공개 데이터와 등록된 맥락을 정리한 것입니다.",
 }
+
+
+def _expected_v3_content(db, market_id, computed_at) -> dict:
+    """Builds the exact expected stored content for a market/metric pair by
+    running the same deterministic assembly the production pipeline uses,
+    so tests assert against the real contract rather than a hand-duplicated
+    fixture that could silently drift from it."""
+    market = db.get(Market, market_id)
+    metric = db.execute(
+        select(MarketMetric).where(
+            MarketMetric.market_id == market_id, MarketMetric.computed_at == computed_at
+        )
+    ).scalar_one()
+    inputs = build_prompt_inputs_for_market(db, market, metric, computed_at)
+    content = assemble_report_content(inputs, LLMReportFields(**VALID_LLM_RESPONSE))
+    return content.model_dump()
 
 
 @compiles(BigInteger, "sqlite")
@@ -80,6 +126,7 @@ def db():
         engine,
         tables=[
             Market.__table__,
+            MarketOutcome.__table__,
             MarketSnapshot.__table__,
             MarketMetric.__table__,
             IssueSignal.__table__,
@@ -206,7 +253,7 @@ def test_market_with_stale_report_qualifies(db):
             market_id=MARKET_ID,
             generated_at=NOW - STALENESS_THRESHOLD - timedelta(minutes=1),
             input_metrics_id=None,
-            content=VALID_CONTENT,
+            content=LEGACY_CONTENT,
             model_used="gpt-4o-mini",
             prompt_version="v1",
             status="success",
@@ -228,7 +275,7 @@ def test_market_with_fresh_report_and_no_new_signal_does_not_qualify(db):
             market_id=MARKET_ID,
             generated_at=NOW - timedelta(hours=1),
             input_metrics_id=None,
-            content=VALID_CONTENT,
+            content=LEGACY_CONTENT,
             model_used="gpt-4o-mini",
             prompt_version=PROMPT_VERSION,
             status="success",
@@ -250,7 +297,7 @@ def test_current_prompt_version_prevents_regeneration_when_timestamp_ties(db):
                 market_id=MARKET_ID,
                 generated_at=NOW - timedelta(hours=1),
                 input_metrics_id=None,
-                content=VALID_CONTENT,
+                content=LEGACY_CONTENT,
                 model_used="gpt-4o-mini",
                 prompt_version=prompt_version,
                 status="success",
@@ -271,7 +318,7 @@ def test_market_with_fresh_legacy_prompt_version_qualifies_for_regeneration(db):
             market_id=MARKET_ID,
             generated_at=NOW - timedelta(hours=1),
             input_metrics_id=None,
-            content=VALID_CONTENT,
+            content=LEGACY_CONTENT,
             model_used="gpt-4o-mini",
             prompt_version="v1",
             status="success",
@@ -330,7 +377,7 @@ def test_only_evaluates_metrics_computed_in_this_run(db):
     assert select_markets_for_regeneration(db, NOW) == []
 
 
-# --- generate_report_for_market -------------------------------------------
+# --- build_prompt_inputs_for_market ----------------------------------------
 
 
 def _inputs_for(db, market_id=MARKET_ID, computed_at=NOW):
@@ -342,126 +389,6 @@ def _inputs_for(db, market_id=MARKET_ID, computed_at=NOW):
     ).scalar_one()
     inputs = build_prompt_inputs_for_market(db, market, metric, computed_at)
     return market, metric, inputs
-
-
-def test_successful_generation_stores_success_row(db):
-    _seed_market(db)
-    db.add(_snapshot(MARKET_ID, NOW))
-    db.add(_metric(MARKET_ID, NOW))
-    db.commit()
-    market, metric, inputs = _inputs_for(db)
-
-    client = FakeLLMClient([json.dumps(VALID_CONTENT)])
-    outcome = generate_report_for_market(db, market, metric, inputs, client, NOW, "gpt-4o-mini")
-
-    assert outcome.status == "success"
-    stored = db.execute(select(AiReport)).scalars().all()
-    assert len(stored) == 1
-    assert stored[0].status == "success"
-    assert stored[0].content == VALID_CONTENT
-    assert client.calls == 1
-
-
-def test_one_transient_error_then_success_is_retried_and_stored(db):
-    _seed_market(db)
-    db.add(_snapshot(MARKET_ID, NOW))
-    db.add(_metric(MARKET_ID, NOW))
-    db.commit()
-    market, metric, inputs = _inputs_for(db)
-
-    client = FakeLLMClient([LLMCallError("timeout"), json.dumps(VALID_CONTENT)])
-    outcome = generate_report_for_market(db, market, metric, inputs, client, NOW, "gpt-4o-mini")
-
-    assert outcome.status == "success"
-    assert client.calls == 2
-    stored = db.execute(select(AiReport)).scalars().all()
-    assert len(stored) == 1
-    assert stored[0].status == "success"
-
-
-def test_two_consecutive_errors_records_failed_and_keeps_previous_report(db):
-    _seed_market(db)
-    db.add(_snapshot(MARKET_ID, NOW))
-    db.add(_metric(MARKET_ID, NOW))
-    previous = AiReport(
-        id=uuid.uuid4(),
-        market_id=MARKET_ID,
-        generated_at=NOW - timedelta(hours=1),
-        input_metrics_id=None,
-        content=VALID_CONTENT,
-        model_used="gpt-4o-mini",
-        prompt_version="v1",
-        status="success",
-    )
-    db.add(previous)
-    db.commit()
-    market, metric, inputs = _inputs_for(db)
-
-    client = FakeLLMClient([LLMCallError("timeout"), LLMCallError("timeout again")])
-    outcome = generate_report_for_market(db, market, metric, inputs, client, NOW, "gpt-4o-mini")
-
-    assert outcome.status == "failed"
-    assert client.calls == 2  # exactly one retry, never more
-
-    rows = db.execute(select(AiReport).order_by(AiReport.generated_at)).scalars().all()
-    assert len(rows) == 2
-    assert rows[-1].status == "failed"
-
-    # the service-facing "previous report" is still the latest *successful* row
-    latest_success = db.execute(
-        select(AiReport)
-        .where(AiReport.market_id == MARKET_ID, AiReport.status == "success")
-        .order_by(AiReport.generated_at.desc())
-        .limit(1)
-    ).scalar_one()
-    assert latest_success.id == previous.id
-    assert latest_success.content == VALID_CONTENT
-
-
-def test_malformed_json_is_treated_as_failure_not_partially_parsed(db):
-    _seed_market(db)
-    db.add(_snapshot(MARKET_ID, NOW))
-    db.add(_metric(MARKET_ID, NOW))
-    db.commit()
-    market, metric, inputs = _inputs_for(db)
-
-    client = FakeLLMClient(["{not valid json", "{not valid json either"])
-    outcome = generate_report_for_market(db, market, metric, inputs, client, NOW, "gpt-4o-mini")
-
-    assert outcome.status == "failed"
-    stored = db.execute(select(AiReport)).scalars().all()
-    assert stored[0].status == "failed"
-    assert stored[0].content == {}
-
-
-def test_filter_failure_discards_output_and_does_not_touch_ai_reports(db):
-    _seed_market(db)
-    db.add(_snapshot(MARKET_ID, NOW))
-    db.add(_metric(MARKET_ID, NOW))
-    previous = AiReport(
-        id=uuid.uuid4(),
-        market_id=MARKET_ID,
-        generated_at=NOW - timedelta(hours=1),
-        input_metrics_id=None,
-        content=VALID_CONTENT,
-        model_used="gpt-4o-mini",
-        prompt_version="v1",
-        status="success",
-    )
-    db.add(previous)
-    db.commit()
-    market, metric, inputs = _inputs_for(db)
-
-    unsafe_content = dict(VALID_CONTENT, caution_note="We recommend you buy into this now.")
-    client = FakeLLMClient([json.dumps(unsafe_content)])
-    outcome = generate_report_for_market(db, market, metric, inputs, client, NOW, "gpt-4o-mini")
-
-    assert outcome.status == "filtered"
-    assert client.calls == 1  # filter failures are never retried
-
-    rows = db.execute(select(AiReport)).scalars().all()
-    assert len(rows) == 1  # only the pre-seeded previous row - nothing new stored
-    assert rows[0].id == previous.id
 
 
 def test_prompt_inputs_use_latest_snapshot_at_or_before_metric_timestamp(db):
@@ -502,6 +429,291 @@ def test_future_only_snapshot_is_not_used_for_prompt_inputs(db):
     assert build_prompt_inputs_for_market(db, market, metric, NOW) is None
 
 
+def test_prompt_inputs_include_tracked_outcome_label_and_end_date(db):
+    _seed_market(db)
+    db.add(_snapshot(MARKET_ID, NOW))
+    db.add(_metric(MARKET_ID, NOW))
+    db.add(
+        MarketOutcome(
+            id=uuid.uuid4(),
+            market_id=MARKET_ID,
+            outcome_label="Yes",
+            token_id="token-1",
+            is_tracked=True,
+        )
+    )
+    db.commit()
+
+    _, _, inputs = _inputs_for(db)
+    assert inputs.outcome_label == "Yes"
+    assert inputs.end_date.replace(tzinfo=UTC) == NOW + timedelta(days=30)
+
+
+def test_prompt_inputs_have_no_related_event_fields_when_none_curated(db):
+    _seed_market(db)
+    db.add(_snapshot(MARKET_ID, NOW))
+    db.add(_metric(MARKET_ID, NOW))
+    db.commit()
+
+    _, _, inputs = _inputs_for(db)
+    assert inputs.related_event_title is None
+    assert inputs.related_event_date is None
+    assert inputs.related_event_note is None
+
+
+def test_prompt_inputs_include_curated_related_event_title_date_and_note_separately(db):
+    _seed_market(db)
+    db.add(_snapshot(MARKET_ID, NOW))
+    db.add(_metric(MARKET_ID, NOW))
+    event_date = datetime(2026, 2, 18, tzinfo=UTC)
+    db.add(
+        RelatedEvent(
+            id=uuid.uuid4(),
+            market_id=MARKET_ID,
+            event_title="Curated Context Event",
+            event_date=event_date,
+            note="Candidate context for review; not presented as a cause.",
+        )
+    )
+    db.commit()
+
+    _, _, inputs = _inputs_for(db)
+    assert inputs.related_event_title == "Curated Context Event"
+    assert inputs.related_event_date.replace(tzinfo=UTC) == event_date
+    assert inputs.related_event_note == "Candidate context for review; not presented as a cause."
+
+
+# --- generate_report_for_market -------------------------------------------
+
+
+def test_successful_generation_stores_success_row(db):
+    _seed_market(db)
+    db.add(_snapshot(MARKET_ID, NOW))
+    db.add(_metric(MARKET_ID, NOW))
+    db.commit()
+    market, metric, inputs = _inputs_for(db)
+
+    client = FakeLLMClient([json.dumps(VALID_LLM_RESPONSE)])
+    outcome = generate_report_for_market(db, market, metric, inputs, client, NOW, "gpt-4o-mini")
+
+    assert outcome.status == "success"
+    stored = db.execute(select(AiReport)).scalars().all()
+    assert len(stored) == 1
+    assert stored[0].status == "success"
+    assert stored[0].content == _expected_v3_content(db, MARKET_ID, NOW)
+    assert client.calls == 1
+
+
+def test_successful_generation_uses_no_candidate_possible_drivers_when_none_curated(db):
+    _seed_market(db)
+    db.add(_snapshot(MARKET_ID, NOW))
+    db.add(_metric(MARKET_ID, NOW))
+    db.commit()
+    market, metric, inputs = _inputs_for(db)
+
+    client = FakeLLMClient([json.dumps(VALID_LLM_RESPONSE)])
+    generate_report_for_market(db, market, metric, inputs, client, NOW, "gpt-4o-mini")
+
+    stored = db.execute(select(AiReport)).scalars().all()
+    assert stored[0].content["possible_drivers"] == POSSIBLE_DRIVERS_NO_CANDIDATE
+    assert stored[0].content["external_context"] is None
+
+
+def test_successful_generation_uses_with_candidate_possible_drivers_when_curated(db):
+    _seed_market(db)
+    db.add(_snapshot(MARKET_ID, NOW))
+    db.add(_metric(MARKET_ID, NOW))
+    db.add(
+        RelatedEvent(
+            id=uuid.uuid4(),
+            market_id=MARKET_ID,
+            event_title="Curated Context Event",
+            event_date=datetime(2026, 2, 18, tzinfo=UTC),
+            note="Candidate context for review; not presented as a cause.",
+        )
+    )
+    db.commit()
+    market, metric, inputs = _inputs_for(db)
+
+    client = FakeLLMClient([json.dumps(VALID_LLM_RESPONSE)])
+    generate_report_for_market(db, market, metric, inputs, client, NOW, "gpt-4o-mini")
+
+    stored = db.execute(select(AiReport)).scalars().all()
+    assert stored[0].content["possible_drivers"] == POSSIBLE_DRIVERS_WITH_CANDIDATE
+    assert (
+        stored[0].content["external_context"]
+        == "Candidate context for review; not presented as a cause."
+    )
+
+
+def test_successful_generation_uses_deterministic_caution_note_for_confidence_level(db):
+    _seed_market(db)
+    db.add(_snapshot(MARKET_ID, NOW))
+    db.add(_metric(MARKET_ID, NOW))
+    db.commit()
+    market, metric, inputs = _inputs_for(db)
+
+    client = FakeLLMClient([json.dumps(VALID_LLM_RESPONSE)])
+    generate_report_for_market(db, market, metric, inputs, client, NOW, "gpt-4o-mini")
+
+    stored = db.execute(select(AiReport)).scalars().all()
+    assert stored[0].content["caution_note"] == CAUTION_NOTE_BY_LEVEL["sufficient"]
+
+
+def test_one_transient_error_then_success_is_retried_and_stored(db):
+    _seed_market(db)
+    db.add(_snapshot(MARKET_ID, NOW))
+    db.add(_metric(MARKET_ID, NOW))
+    db.commit()
+    market, metric, inputs = _inputs_for(db)
+
+    client = FakeLLMClient([LLMCallError("timeout"), json.dumps(VALID_LLM_RESPONSE)])
+    outcome = generate_report_for_market(db, market, metric, inputs, client, NOW, "gpt-4o-mini")
+
+    assert outcome.status == "success"
+    assert client.calls == 2
+    stored = db.execute(select(AiReport)).scalars().all()
+    assert len(stored) == 1
+    assert stored[0].status == "success"
+
+
+def test_two_consecutive_errors_records_failed_and_keeps_previous_report(db):
+    _seed_market(db)
+    db.add(_snapshot(MARKET_ID, NOW))
+    db.add(_metric(MARKET_ID, NOW))
+    previous = AiReport(
+        id=uuid.uuid4(),
+        market_id=MARKET_ID,
+        generated_at=NOW - timedelta(hours=1),
+        input_metrics_id=None,
+        content=LEGACY_CONTENT,
+        model_used="gpt-4o-mini",
+        prompt_version="v1",
+        status="success",
+    )
+    db.add(previous)
+    db.commit()
+    market, metric, inputs = _inputs_for(db)
+
+    client = FakeLLMClient([LLMCallError("timeout"), LLMCallError("timeout again")])
+    outcome = generate_report_for_market(db, market, metric, inputs, client, NOW, "gpt-4o-mini")
+
+    assert outcome.status == "failed"
+    assert client.calls == 2  # exactly one retry, never more
+
+    rows = db.execute(select(AiReport).order_by(AiReport.generated_at)).scalars().all()
+    assert len(rows) == 2
+    assert rows[-1].status == "failed"
+
+    # the service-facing "previous report" is still the latest *successful* row
+    latest_success = db.execute(
+        select(AiReport)
+        .where(AiReport.market_id == MARKET_ID, AiReport.status == "success")
+        .order_by(AiReport.generated_at.desc())
+        .limit(1)
+    ).scalar_one()
+    assert latest_success.id == previous.id
+    assert latest_success.content == LEGACY_CONTENT
+
+
+def test_malformed_json_is_treated_as_failure_not_partially_parsed(db):
+    _seed_market(db)
+    db.add(_snapshot(MARKET_ID, NOW))
+    db.add(_metric(MARKET_ID, NOW))
+    db.commit()
+    market, metric, inputs = _inputs_for(db)
+
+    client = FakeLLMClient(["{not valid json", "{not valid json either"])
+    outcome = generate_report_for_market(db, market, metric, inputs, client, NOW, "gpt-4o-mini")
+
+    assert outcome.status == "failed"
+    stored = db.execute(select(AiReport)).scalars().all()
+    assert stored[0].status == "failed"
+    assert stored[0].content == {}
+
+
+def test_llm_field_below_minimum_length_is_treated_as_failure(db):
+    _seed_market(db)
+    db.add(_snapshot(MARKET_ID, NOW))
+    db.add(_metric(MARKET_ID, NOW))
+    db.commit()
+    market, metric, inputs = _inputs_for(db)
+
+    too_short = dict(VALID_LLM_RESPONSE, issue_overview="Too short.")
+    client = FakeLLMClient([json.dumps(too_short), json.dumps(too_short)])
+    outcome = generate_report_for_market(db, market, metric, inputs, client, NOW, "gpt-4o-mini")
+
+    assert outcome.status == "failed"
+    assert outcome.reason == "assembled_content_failed_v3_bounds"
+    assert client.calls == 2
+
+
+def test_filter_failure_discards_output_and_does_not_touch_ai_reports(db):
+    _seed_market(db)
+    db.add(_snapshot(MARKET_ID, NOW))
+    db.add(_metric(MARKET_ID, NOW))
+    previous = AiReport(
+        id=uuid.uuid4(),
+        market_id=MARKET_ID,
+        generated_at=NOW - timedelta(hours=1),
+        input_metrics_id=None,
+        content=LEGACY_CONTENT,
+        model_used="gpt-4o-mini",
+        prompt_version="v1",
+        status="success",
+    )
+    db.add(previous)
+    db.commit()
+    market, metric, inputs = _inputs_for(db)
+
+    unsafe_response = dict(
+        VALID_LLM_RESPONSE,
+        possible_outlook=(
+            "이 이슈에 대해 우리는 매수를 추천합니다. 이는 확실한 수익 기회입니다. "
+            "충분히 긴 문장을 위해 추가 설명을 덧붙입니다."
+        ),
+    )
+    client = FakeLLMClient([json.dumps(unsafe_response)])
+    outcome = generate_report_for_market(db, market, metric, inputs, client, NOW, "gpt-4o-mini")
+
+    assert outcome.status == "filtered"
+    assert client.calls == 1  # filter failures are never retried
+
+    rows = db.execute(select(AiReport)).scalars().all()
+    assert len(rows) == 1  # only the pre-seeded previous row - nothing new stored
+    assert rows[0].id == previous.id
+
+
+def test_external_context_missing_qualifier_is_filtered_before_storage(db):
+    _seed_market(db)
+    db.add(_snapshot(MARKET_ID, NOW))
+    db.add(_metric(MARKET_ID, NOW))
+    db.add(
+        RelatedEvent(
+            id=uuid.uuid4(),
+            market_id=MARKET_ID,
+            event_title="Curated Context Event",
+            event_date=datetime(2026, 2, 18, tzinfo=UTC),
+            note=(
+                "This narrative note has no qualifier at all, just filler "
+                "text to satisfy the minimum length requirement here."
+            ),
+        )
+    )
+    db.commit()
+    market, metric, inputs = _inputs_for(db)
+
+    client = FakeLLMClient([json.dumps(VALID_LLM_RESPONSE)])
+    outcome = generate_report_for_market(db, market, metric, inputs, client, NOW, "gpt-4o-mini")
+
+    assert outcome.status == "filtered"
+    assert outcome.reason == (
+        "external_context:external_context_missing_candidate_not_cause_qualifier"
+    )
+    stored = db.execute(select(AiReport)).scalars().all()
+    assert stored == []
+
+
 # --- run_ai_report_batch (end to end) -------------------------------------
 
 
@@ -520,7 +732,7 @@ def test_batch_run_generates_for_qualifying_markets_only(db):
             market_id=other_id,
             generated_at=NOW - timedelta(hours=1),
             input_metrics_id=None,
-            content=VALID_CONTENT,
+            content=LEGACY_CONTENT,
             model_used="gpt-4o-mini",
             prompt_version=PROMPT_VERSION,
             status="success",
@@ -528,7 +740,7 @@ def test_batch_run_generates_for_qualifying_markets_only(db):
     )
     db.commit()
 
-    client = FakeLLMClient([json.dumps(VALID_CONTENT)])
+    client = FakeLLMClient([json.dumps(VALID_LLM_RESPONSE)])
     outcomes = run_ai_report_batch(db, NOW, client, "gpt-4o-mini")
 
     assert len(outcomes) == 1
@@ -545,7 +757,7 @@ def test_batch_run_stores_success_when_metric_is_after_latest_snapshot(db):
     db.commit()
     metric = db.execute(select(MarketMetric)).scalar_one()
 
-    client = FakeLLMClient([json.dumps(VALID_CONTENT)])
+    client = FakeLLMClient([json.dumps(VALID_LLM_RESPONSE)])
     outcomes = run_ai_report_batch(db, metric_at, client, "gpt-4o-mini")
 
     assert len(outcomes) == 1

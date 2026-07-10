@@ -27,12 +27,22 @@ from app.core.ai_report import (
     LLMCallError,
     LLMClient,
     ReportPromptInputs,
+    assemble_report_content,
     build_prompt,
-    parse_report_content,
+    parse_llm_fields,
     run_safety_filter,
+    run_semantic_checks,
 )
 from app.core.snapshot_metrics import as_utc_naive
-from app.db.models import AiReport, IssueSignal, Market, MarketMetric, MarketSnapshot, RelatedEvent
+from app.db.models import (
+    AiReport,
+    IssueSignal,
+    Market,
+    MarketMetric,
+    MarketOutcome,
+    MarketSnapshot,
+    RelatedEvent,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -185,15 +195,24 @@ def _describe_inflection_point(db: Session, market_id: uuid.UUID) -> str | None:
     return f"A {magnitude_pp:+.1f}pp expectation shift was detected in the {signal.window} window."
 
 
-def _describe_related_event(db: Session, market_id: uuid.UUID) -> str | None:
+def _find_related_event(db: Session, market_id: uuid.UUID) -> RelatedEvent | None:
     """First curated related-event candidate for this market, if any
-    (Service Design §8: manually curated, 3-5 demo issues only)."""
-    event = db.execute(
+    (Service Design §8: manually curated, 3-5 demo issues only). Returns the
+    row itself so callers can use title/date and note as separate,
+    non-duplicated inputs (ADR-033: `possible_drivers` uses title/date only,
+    `external_context` uses the reviewed note only)."""
+    return db.execute(
         select(RelatedEvent).where(RelatedEvent.market_id == market_id).limit(1)
     ).scalar_one_or_none()
-    if event is None:
-        return None
-    return f"{event.event_title} ({event.event_date}): {event.note}"
+
+
+def _find_tracked_outcome_label(db: Session, market_id: uuid.UUID) -> str | None:
+    outcome = db.execute(
+        select(MarketOutcome).where(
+            MarketOutcome.market_id == market_id, MarketOutcome.is_tracked.is_(True)
+        )
+    ).scalar_one_or_none()
+    return outcome.outcome_label if outcome is not None else None
 
 
 def build_prompt_inputs_for_market(
@@ -214,16 +233,24 @@ def build_prompt_inputs_for_market(
     if snapshot is None:
         return None
 
+    related_event = _find_related_event(db, market.id)
+
     return ReportPromptInputs(
         title=market.title,
         description=market.description or "No description provided.",
         category=market.category,
+        outcome_label=_find_tracked_outcome_label(db, market.id),
+        end_date=market.end_date,
         current_value=float(snapshot.price),
         change_24h=float(metric.change_24h) if metric.change_24h is not None else None,
         change_7d=float(metric.change_7d) if metric.change_7d is not None else None,
         confidence_level=metric.confidence_level,
         inflection_point_summary=_describe_inflection_point(db, market.id),
-        related_event_or_none=_describe_related_event(db, market.id),
+        volume_24h=float(snapshot.volume_24h) if snapshot.volume_24h is not None else None,
+        liquidity=float(snapshot.liquidity) if snapshot.liquidity is not None else None,
+        related_event_title=related_event.event_title if related_event is not None else None,
+        related_event_date=related_event.event_date if related_event is not None else None,
+        related_event_note=related_event.note if related_event is not None else None,
     )
 
 
@@ -260,12 +287,24 @@ def generate_report_for_market(
             )
             continue
 
-        content = parse_report_content(raw)
-        if content is None:
+        llm_fields = parse_llm_fields(raw)
+        if llm_fields is None:
             last_error = "malformed_or_schema_mismatched_response"
             logger.warning(
                 "AI report attempt %s/%s produced a malformed/schema-mismatched "
                 "response for market %s.",
+                attempt,
+                MAX_ATTEMPTS,
+                market.id,
+            )
+            continue
+
+        content = assemble_report_content(inputs, llm_fields)
+        if content is None:
+            last_error = "assembled_content_failed_v3_bounds"
+            logger.warning(
+                "AI report attempt %s/%s produced content that failed ADR-033 "
+                "structural validation for market %s.",
                 attempt,
                 MAX_ATTEMPTS,
                 market.id,
@@ -310,6 +349,22 @@ def generate_report_for_market(
             market_id=market.id,
             status="filtered",
             reason=f"{filter_result.field}:{filter_result.rule}",
+        )
+
+    semantic_result = run_semantic_checks(content, inputs)
+    if not semantic_result.passed:
+        logger.error(
+            "AI report semantic check rejected market %s: field=%s rule=%s. "
+            "Output discarded, not stored, not retried; previous successful "
+            "report (if any) stays live.",
+            market.id,
+            semantic_result.field,
+            semantic_result.rule,
+        )
+        return ReportOutcome(
+            market_id=market.id,
+            status="filtered",
+            reason=f"{semantic_result.field}:{semantic_result.rule}",
         )
 
     db.add(
