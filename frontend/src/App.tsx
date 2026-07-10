@@ -7,8 +7,8 @@ import type {
   DataStatus,
   Issue,
   IssueReportLoadState,
-  IssueReportResponse,
 } from "./types/issue";
+import { parseReportResponse } from "./utils/reportParser";
 import {
   mapApiIssueToFrontendIssue,
   mapApiIssueDetailToFrontendIssue,
@@ -30,20 +30,13 @@ async function fetchJson<T>(url: string, message: string): Promise<T> {
 
 async function loadIssueReport(issueId: string): Promise<IssueReportLoadState> {
   try {
-    const apiReport = await fetchJson<IssueReportResponse>(
-      `/api/issues/${issueId}/report`,
-      "Failed to load issue report",
-    );
-
-    if (apiReport.status === "success") {
-      return { status: "success", report: apiReport };
+    const res = await fetch(`/api/issues/${issueId}/report`);
+    if (!res.ok) {
+      throw new Error("Failed to load issue report");
     }
 
-    if (apiReport.status === "not_yet_generated") {
-      return { status: "not_yet_generated" };
-    }
-
-    throw new Error("Unexpected issue report status");
+    const raw: unknown = await res.json();
+    return parseReportResponse(raw);
   } catch (err) {
     console.error(err);
     return { status: "error" };
