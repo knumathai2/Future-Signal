@@ -48,7 +48,7 @@ _Last updated: 2026-07-10_
 
 ### Prohibited wording — never ship, in any context (UI, AI output, error states, placeholder text, internal debug labels)
 
-`bet, buy, sell, trade, position, long, short, profit, win rate, odds, copy trader, follow this user, expert trader, best pick, recommended outcome, high-return opportunity, guaranteed prediction, signal to act, recommendation`
+`bet, buy, sell, trade, position, long, short, profit, win rate, odds, copy trader, follow this user, expert trader, best pick, recommended outcome, high-return opportunity, guaranteed, guaranteed prediction, signal to act, recommend, recommendation`
 
 Korean v3 additions for UI, fallback strings, and AI/template output:
 

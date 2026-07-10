@@ -216,11 +216,11 @@ read as their prerequisite and must stay within the field list and policy below.
 
 | Field | Type | Nullable | Producer / owner | Exposed through API | UI usage | Safety/copy validation required |
 |---|---|---:|---|---|---|---|
-| `id` | UUID string | No | Backend | Yes | Report identity / React key only | No |
+| `id` | UUID string | No for success; absent for `not_yet_generated` | Backend | Yes | Report identity / React key only | No |
 | `status` | enum: `success`, `not_yet_generated` | No | Backend | Yes | Report state rendering | No |
 | `report_version` | string, expected `v3` for this policy | No for success | Backend from `prompt_version` | Yes | Optional debug/support display; not a marketing label | No |
 | `generated_at` | ISO 8601 timestamp | No for success | Data/AI batch | Yes | Report freshness | No |
-| `data_as_of` | ISO 8601 timestamp | No for success | Data/AI batch from metric snapshot | Yes | Required timestamp near report | No |
+| `data_as_of` | ISO 8601 timestamp | No for success | Backend from `input_metrics_id` -> `market_metrics.computed_at` | Yes | Required timestamp near report | No |
 | `prompt_version` | string | No | Data/AI batch | No | Storage/read compatibility gate | No |
 | `model_used` | string | Yes | Data/AI batch | No | Internal audit only | No |
 | `input_metrics_id` | bigint | No for generated rows | Data/AI batch | No | Traceability to computed metrics | No |
@@ -242,8 +242,8 @@ read as their prerequisite and must stay within the field list and policy below.
 - English hard-block terms remain the `standards.md` and `memory/glossary.md`
   list: `bet`, `buy`, `sell`, `trade`, `position`, `long`, `short`, `profit`,
   `win rate`, `odds`, `copy trader`, `follow this user`, `expert trader`,
-  `best pick`, `recommended outcome`, `high-return opportunity`,
-  `guaranteed prediction`, `signal to act`, and `recommendation`.
+  `best pick`, `recommended outcome`, `high-return opportunity`, `guaranteed`,
+  `guaranteed prediction`, `signal to act`, `recommend`, and `recommendation`.
 - Korean UI/template output must also avoid direct action, return, certainty,
   and copy-participant wording, including: `베팅`, `매수`, `매도`, `포지션`,
   `롱`, `숏`, `수익`, `승률`, `배당`, `추천`, `보장`, `확정`, `따라하기`,
@@ -269,8 +269,11 @@ read as their prerequisite and must stay within the field list and policy below.
   - Run the English and Korean hard-block term scan with case folding.
   - Run pattern checks for action advice, future-outcome claims, causal claims,
     participant-following language, and certainty framing.
-  - Require non-empty `caution_note`, non-empty `data_limitations`, and a
-    report-level `data_as_of` timestamp.
+  - Require non-empty `caution_note` and non-empty `data_limitations`.
+  - Before storing a success row, require `input_metrics_id` to resolve to a
+    `market_metrics.computed_at` timestamp. The API derives top-level
+    `data_as_of` from that relationship when reading the report; `data_as_of`
+    is not added to `ai_reports.content` and does not require a schema change.
   - If `context_candidate_note` is non-null, require candidate-not-cause
     language before storage.
   - On any failure, discard the generated content, log the failure reason, and
