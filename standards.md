@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # standards.md — Outlook Signals Standards
 
-_Last updated: 2026-07-07_
+_Last updated: 2026-07-10_
 
 ## Code Style
 
@@ -55,7 +55,10 @@ Types: `feat` | `fix` | `docs` | `style` | `refactor` | `test` | `chore` | `secu
 Every user-facing string and every AI/template output must be checked against these lists before it ships. See `memory/glossary.md` for the full term list and UX Design §5 for the source policy.
 
 **Prohibited — hard block on any occurrence:**
-`bet, buy, sell, trade, position, long, short, profit, win rate, copy trader, follow this user, expert trader, best pick, recommended outcome, high-return opportunity, guaranteed prediction, odds, signal to act`
+`bet, buy, sell, trade, position, long, short, profit, win rate, odds, copy trader, follow this user, expert trader, best pick, recommended outcome, high-return opportunity, guaranteed, guaranteed prediction, signal to act, recommend, recommendation`
+
+**Korean v3 additions — hard block in UI, fallback strings, and AI/template output:**
+`베팅, 매수, 매도, 포지션, 롱, 숏, 수익, 승률, 배당, 추천, 보장, 확정, 따라하기, 고수, 전문 트레이더, 고수익, 기회`
 
 **Use-carefully — only with a qualifying phrase attached, never standalone:**
 `signal, alert, watch, momentum, confidence, market activity, probability spike` — see UX Design §5.2 for the exact safe phrasing pattern for each.
@@ -65,6 +68,8 @@ Every user-facing string and every AI/template output must be checked against th
 - Related-event candidates must always carry the "candidate, not cause" qualifier
 - No numeric confidence stated as a probability of a real-world outcome (e.g., never "73% likely to happen")
 - Every metric-bearing surface must ship with its caution badge in the same viewport — no exceptions for "obviously fine" markets
+- v3 AI reports must validate against ADR-032's exact field list before storage; missing, extra, or unsafe fields block storage
+- Policy/lint docs and tests may quote prohibited expressions only to define or verify the blocking rule; demo-visible docs and product copy may not normalize those terms as user-facing language
 
 ## Documentation Standards
 

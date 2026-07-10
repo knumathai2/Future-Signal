@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Glossary — Outlook Signals
 
-_Last updated: 2026-07-07_
+_Last updated: 2026-07-10_
 
 ## Domain Terms (use these exact framings in UI copy and AI output)
 
@@ -20,6 +20,9 @@ _Last updated: 2026-07-07_
 | Expectation Shift Detected | The MVP's only sudden-change signal: ±5pp change within a rolling window (Service Design §7) |
 | Data-as-of timestamp | Required on every data-bearing screen; shown even when serving last-known-good/fallback data |
 | Confidence / caution level | `sufficient` / `caution_low_activity` / `caution_high_volatility` / `insufficient_data` — DB field `confidence_level` |
+| v3 AI report | The ADR-032 report shape for `/api/issues/{id}/report`: fixed fields only, no free-form analysis, no causal or action-oriented wording, and storage allowed only after schema plus copy-safety validation |
+| Context candidate note | Optional v3 report field derived only from manually curated related-event candidates; always framed as context to check alongside the observed change, never as a cause |
+| Offline candidate discovery | A non-public PM/Data review aid that may help find possible context candidates but cannot write to the database, change the public API, display results, or replace manual curation in MVP/v3 |
 
 ## Abbreviations
 
@@ -45,7 +48,14 @@ _Last updated: 2026-07-07_
 
 ### Prohibited wording — never ship, in any context (UI, AI output, error states, placeholder text, internal debug labels)
 
-`bet, buy, sell, trade, position, long, short, profit, win rate, odds, copy trader, follow this user, expert trader, best pick, recommended outcome, high-return opportunity, guaranteed prediction, signal to act, recommendation`
+`bet, buy, sell, trade, position, long, short, profit, win rate, odds, copy trader, follow this user, expert trader, best pick, recommended outcome, high-return opportunity, guaranteed, guaranteed prediction, signal to act, recommend, recommendation`
+
+Korean v3 additions for UI, fallback strings, and AI/template output:
+
+`베팅, 매수, 매도, 포지션, 롱, 숏, 수익, 승률, 배당, 추천, 보장, 확정, 따라하기, 고수, 전문 트레이더, 고수익, 기회`
+
+Policy/lint documents and tests may quote prohibited expressions only to define
+or verify the blocking rule.
 
 ### Use-carefully wording — only with a qualifying phrase attached, never standalone
 
@@ -70,3 +80,13 @@ _Last updated: 2026-07-07_
 | Recommended issue | Exploration list ranked by change magnitude |
 | Trust badge | Interpretation-caution badge |
 | Cause analysis | Related event candidate |
+
+### v3 report wording replacements (ADR-032)
+
+| Avoid | Use instead |
+|---|---|
+| Automated news match | Manually curated context candidate |
+| Cause of the movement | Context candidate around the observed change |
+| Outcome is likely | Current public data reading |
+| AI prediction | Data summary / issue report |
+| Confidence in the outcome | Data reliability / interpretation caution |
