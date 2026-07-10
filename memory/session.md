@@ -16,7 +16,8 @@ Harness Version: 1.1
 - **Date**: 2026-07-10
 - **Agent Role**: PM / Planner
 - **Session Goal**: Judge whether Day 4 can close, then perform Day 4 closeout
-  and Day 5 handoff alignment if ready.
+  and Day 5 handoff alignment if ready; follow-up user request localized the
+  TASK-040 demo/deck draft into Korean.
 - **Branch**: `pm/TASK-045-day-4-closeout`
 
 ## Context Read
@@ -63,6 +64,16 @@ Harness Version: 1.1
 - Updated `roadmap.md`, `reports/day-4-work-allocation.md`,
   `memory/project.md`, `memory/architecture.md`, `tasks/active.md`, and
   `tasks/completed.md` for Day 4 closure and Day 5 handoff.
+- Localized `reports/task-040-demo-script-deck-draft.md` into Korean while
+  preserving task IDs, file paths, API endpoint references, and the issue
+  monitoring / interpretation-support framing.
+- Started the local demo stack on user request:
+  - Backend FastAPI server is running from `backend/` with
+    `./.venv/bin/uvicorn app.main:app --reload` at `http://127.0.0.1:8000`.
+  - Frontend Vite server is running from `frontend/` with `npm run dev` at
+    `http://localhost:5173/`.
+  - Existing `backend/.env` and `frontend/.env` were detected but not printed
+    or modified.
 
 ## Files Changed
 
@@ -75,6 +86,8 @@ Harness Version: 1.1
 - `tasks/completed.md`
 - `memory/session.md`
 - `memory/sessions/2026-07-10-PM-Planner-day-4-closeout.md`
+- `reports/task-040-demo-script-deck-draft.md`
+- `memory/sessions/2026-07-10-Debugger-local-stack-startup.md`
 
 ## Verification
 
@@ -83,6 +96,16 @@ Harness Version: 1.1
 - Closeout-doc wording scan passed for the new closeout report and session
   archive; the wider changed-file scan only surfaced existing policy/template
   references outside the new closeout copy.
+- TASK-040 Korean draft hard-block English wording scan returned no matches.
+- TASK-040 Korean draft caution/future/causal wording scan only surfaced
+  negative-context uses such as "does not assert causes" and "not prediction".
+- `git diff --check -- reports/task-040-demo-script-deck-draft.md` passed.
+- Local stack startup verification passed:
+  - `curl http://127.0.0.1:8000/api/health` returned status `ok`.
+  - `curl -I http://localhost:5173/` returned `HTTP/1.1 200 OK`.
+  - `curl 'http://localhost:5173/api/issues?limit=1'` returned a proxied
+    issue payload, and the backend logged `GET /api/issues?limit=1` as
+    `200 OK`.
 - App tests were not rerun for the closeout because source code did not change;
   latest app validation is recorded in `reports/task-018-copy-lint.md`.
 
@@ -101,3 +124,5 @@ Harness Version: 1.1
 - No schema changes, dependency changes, infrastructure changes, deployment,
   public API shape changes, external AI calls, or database writes were made.
 - No new product/policy decision or known issue was required.
+- The local backend and frontend dev-server terminal sessions are intentionally
+  left running for demo use.
