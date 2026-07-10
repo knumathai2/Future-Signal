@@ -23,8 +23,12 @@ ADR-032 before starting and must not expand beyond its approved field list.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
+| TASK-048 | Design the v3 Report Contract | Backend Implementer | Backend Implementer | `backend/TASK-048-v3-report-contract` | review |
 
-No active implementation, approval, or closeout tasks remain after `TASK-047`.
+`TASK-048` is the active Backend-owned contract-design task. It may draft a
+replacement for ADR-032, but it must not freeze the replacement, modify
+ADR-032, or change runtime Backend, Data/AI, or Frontend code before PM/user
+approval.
 
 Completed Day 1, Day 2, Day 3, and PM allocation tasks are archived in
 `tasks/completed.md`, including `TASK-038` for this Day 4 allocation,
@@ -96,7 +100,31 @@ implementation prerequisite decision in ADR-032.
 
 ## Active Task Details
 
-No active task details remain.
+### TASK-048: Design the v3 Report Contract
+
+- **Owner**: Backend Implementer
+- **Assignee**: Backend Implementer
+- **Branch**: `backend/TASK-048-v3-report-contract`
+- **Status**: review
+- **Priority**: High
+- **Day**: Day 5
+- **Description**: Draft an eight-field v3 `ReportContent` replacement for
+  ADR-032 in `backend/API_CONTRACT.md`, including the field decision table,
+  frontend section order/labels, Pydantic v2 model snippet, external-context
+  representation, and caution-level copy matrix. This is contract design only;
+  runtime API, generator, frontend UI, schema, database, and ADR-032 remain
+  unchanged until a separate approval and implementation task.
+- **Definition of Done**:
+  - [x] Map every ADR-032 content field to the proposed eight-field contract.
+  - [x] Define purpose, provenance, type, nullability, length, label, order,
+        safety validation, and missing-value behavior for all eight fields.
+  - [x] Document the `external_context`, weak-inference, conditional-outlook,
+        and caution-level decisions.
+  - [x] Keep API JSON, frontend mapping, and Pydantic draft aligned.
+  - [x] Complete Backend, Data/AI, and Frontend review passes without runtime
+        code changes.
+  - [x] Pass copy/wording checks and `git diff --check`.
+  - [x] Separate contract-freeze approval items from implementation follow-up.
 
 ## Status Values
 
