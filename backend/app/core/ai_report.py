@@ -68,6 +68,9 @@ Rules you must always follow:
   mentioning the data reading.
 - Frame every value as a reading of public prediction-market participant
   data, never as a probability or forecast of a real-world outcome.
+- In Korean, name that source only with the exact no-space compound
+  "공개 예측시장 참여자 데이터". Never write "예측 시장" with a space and
+  never use "예측" in any other phrase.
 - Never label anything as best, worst, good, bad, desirable, or undesirable.
 - Never state or imply that a real-world outcome will or will not happen.
 - Never use: bet, buy, sell, trade, position, long, short, profit, win rate,
@@ -102,6 +105,13 @@ Current expectation value: {current_value}
 7d change: {change_7d}
 Data reliability/caution level: {confidence_level}
 Recent inflection point (if any): {inflection_point_summary}
+
+Before returning the JSON, verify these trimmed Unicode character counts:
+- issue_overview: 30-600 characters
+- current_data_reading: 50-700 characters and includes the exact Korean phrase
+  "공개 예측시장 참여자 데이터"
+- possible_outlook: 60-700 characters
+Do not return a field below its minimum. Keep each field to 1-5 sentences.
 
 Produce a JSON object in Korean with exactly these fields:
 {{
