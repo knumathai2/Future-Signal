@@ -1,15 +1,11 @@
 <!--
-Purpose:        Current session state - context handoff among agents
-Owner:          Currently active agent
-Update Trigger: Read at session start; must update before session ends
+Purpose:        Archived session handoff for TASK-051 prompt preparation
+Owner:          Frontend Implementer
+Update Trigger: This file is immutable after session close
 Harness Version: 1.1
 -->
 
-# Current Session - Outlook Signals
-
-> After this session, copy this file to `memory/sessions/YYYY-MM-DD-[ROLE].md`.
-
----
+# Session Archive - TASK-051 Prompt Preparation
 
 ## Session Info
 
@@ -77,3 +73,4 @@ Harness Version: 1.1
   Frontend may work from typed fixtures but should integrate only against the
   final v3 response behavior.
 - `TASK-053` remains the final integrated copy/contract review.
+
