@@ -56,11 +56,17 @@ Ship a genuinely working web MVP within 5 days that lets a user check today's mo
   Closeout evidence is recorded in `reports/day-4-closeout-plan.md`.
 
 ### Day 5 — Integration QA + presentation finalized
-- [ ] PM: finalize deck, prepare risk-response explanations, finalize demo script
-- [ ] Frontend: polish demo screens, check responsiveness
-- [ ] Backend: deploy, prepare dummy fallback for API outage
-- [ ] Data/AI: check data errors, reinforce representative examples
+- [ ] PM: finalize deck, prepare risk-response explanations, finalize demo script, and coordinate final v3 review (`TASK-052` complete; `TASK-053` assigned)
+- [ ] Frontend: polish demo screens, check responsiveness, and implement ADR-033 dynamic report cards (`TASK-051`)
+- [ ] Backend: implement ADR-033 report runtime/read contract, prepare dummy fallback for API outage, and deploy only with separate approval (`TASK-050`)
+- [ ] Data/AI: implement ADR-033 v3 report generation, check data errors, and reinforce representative examples (`TASK-049`)
 - **Deliverables**: deployed MVP, presentation deck, demo scenario, backup video/screen captures, Q&A response sheet
+- **Status note (2026-07-10)**: Latest `origin/main` is `106af52`, including
+  completed `TASK-047` and `TASK-048`. `TASK-052` allocated Day 5 v3 runtime
+  work across Data/AI, Backend, Frontend, and Reviewer roles in
+  `reports/day-5-v3-implementation-allocation.md`. Runtime remains v2 until
+  those implementation/review tasks close; report refreshes, configured DB
+  writes, and deployment remain separately approval-gated.
 
 ## Backlog Ideas (Phase 2+ — do not build during the hackathon without HUMAN APPROVAL)
 
