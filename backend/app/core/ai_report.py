@@ -38,7 +38,7 @@ from datetime import datetime
 from typing import Protocol
 
 from openai import OpenAI, OpenAIError
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from app.core.snapshot_metrics import (
     CAUTION_HIGH_VOLATILITY_THRESHOLD,
@@ -275,6 +275,15 @@ class LLMReportFields(BaseModel):
     possible_outlook: str
 
 
+_SENTENCE_TERMINATOR_PATTERN = re.compile(r"[.!?]+(?=\s|$)")
+
+
+def _sentence_count(value: str) -> int:
+    """Count prose sentences consistently for the ADR-033 1-5 limit."""
+    matches = _SENTENCE_TERMINATOR_PATTERN.findall(value.strip())
+    return len(matches) or 1
+
+
 class ReportContent(BaseModel):
     """Frozen ADR-033 v3 report content - exactly eight fields, `external_context`
     the only nullable value. This module's own validation copy of the contract
@@ -291,6 +300,14 @@ class ReportContent(BaseModel):
     what_to_check: str = Field(min_length=30, max_length=600)
     data_limitations: str = Field(min_length=80, max_length=700)
     caution_note: str = Field(min_length=120, max_length=700)
+
+    @field_validator("*")
+    @classmethod
+    def limit_sentence_count(cls, value: str | None) -> str | None:
+        """ADR-033 limits every non-null report field to five sentences."""
+        if value is not None and _sentence_count(value) > 5:
+            raise ValueError("Report fields must contain at most five sentences.")
+        return value
 
 
 def parse_llm_fields(raw_text: str) -> LLMReportFields | None:
@@ -762,6 +779,33 @@ def _current_data_reading_matches_inputs(
     return True
 
 
+def _has_public_participant_data_scope(text: str) -> bool:
+    """Require the report to identify the reading as scoped public data."""
+    lowered = text.lower()
+    korean_scope = "공개" in text and "데이터" in text and (
+        "참여자" in text or "예측시장" in text
+    )
+    english_scope = "public" in lowered and "data" in lowered and (
+        "participant" in lowered or "prediction market" in lowered
+    )
+    return korean_scope or english_scope
+
+
+_CONDITIONAL_OUTLOOK_PATTERN = re.compile(
+    r"(?:경우|다면|더라도|수\s*있|\bif\b|\bwhen\b|\bcould\b|\bmight\b|\bmay\b)",
+    re.IGNORECASE,
+)
+
+
+def _possible_outlook_is_conditional_public_data(text: str) -> bool:
+    """Keep `possible_outlook` conditional and limited to later data reads."""
+    lowered = text.lower()
+    has_public_data_scope = ("공개" in text and "데이터" in text) or (
+        "public" in lowered and "data" in lowered
+    )
+    return has_public_data_scope and bool(_CONDITIONAL_OUTLOOK_PATTERN.search(text))
+
+
 def run_semantic_checks(content: ReportContent, inputs: ReportPromptInputs) -> SafetyFilterResult:
     """Cross-field validation beyond phrase/pattern scanning: exact
     deterministic caution-literal match, metric consistency, exact
@@ -778,6 +822,20 @@ def run_semantic_checks(content: ReportContent, inputs: ReportPromptInputs) -> S
             passed=False,
             rule="current_data_reading_metric_mismatch",
             field="current_data_reading",
+        )
+
+    if not _has_public_participant_data_scope(content.current_data_reading):
+        return SafetyFilterResult(
+            passed=False,
+            rule="current_data_reading_missing_public_participant_scope",
+            field="current_data_reading",
+        )
+
+    if not _possible_outlook_is_conditional_public_data(content.possible_outlook):
+        return SafetyFilterResult(
+            passed=False,
+            rule="possible_outlook_missing_conditional_public_data_scope",
+            field="possible_outlook",
         )
 
     if content.possible_drivers != build_possible_drivers(inputs):

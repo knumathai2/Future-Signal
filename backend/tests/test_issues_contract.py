@@ -1,11 +1,29 @@
+import pytest
 from fastapi.testclient import TestClient
 
+from app.api.routes import categories as categories_routes
+from app.api.routes import issues as issues_routes
 from app.main import app
 
 client = TestClient(app)
 
 ISSUE_ID = "b3f1c2a4-0000-4000-8000-000000000001"
 NOT_YET_GENERATED_ISSUE_ID = "a71e9d3b-0000-4000-8000-000000000002"
+
+
+@pytest.fixture(autouse=True)
+def force_static_fallback():
+    """Keep fallback contract tests independent of configured development DBs."""
+
+    def override():
+        yield None
+
+    app.dependency_overrides[categories_routes._get_optional_db] = override
+    app.dependency_overrides[issues_routes._get_optional_db] = override
+    try:
+        yield
+    finally:
+        app.dependency_overrides.clear()
 
 
 def test_list_issues_has_data_as_of_and_confidence_level():

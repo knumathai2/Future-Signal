@@ -22,7 +22,7 @@ vm.runInNewContext(
   { filename: parserUrl.pathname },
 );
 
-const { parseReportResponse } = parserModule.exports;
+const { getVisibleSections, parseReportResponse } = parserModule.exports;
 
 const validContent = {
   issue_overview: "가".repeat(30),
@@ -48,6 +48,44 @@ function makePayload(overrides = {}) {
 }
 
 assert.equal(parseReportResponse(makePayload()).status, "success");
+
+const fullState = parseReportResponse(makePayload());
+assert.equal(fullState.status, "success");
+assert.deepEqual(
+  Array.from(getVisibleSections(fullState.report.content), (section) => section.key),
+  [
+    "issue_overview",
+    "current_data_reading",
+    "external_context",
+    "possible_drivers",
+    "possible_outlook",
+    "what_to_check",
+    "data_limitations",
+    "caution_note",
+  ],
+);
+
+const nullContextState = parseReportResponse(
+  makePayload({
+    content: { ...validContent, external_context: null },
+  }),
+);
+assert.equal(nullContextState.status, "success");
+assert.deepEqual(
+  Array.from(
+    getVisibleSections(nullContextState.report.content),
+    (section) => section.key,
+  ),
+  [
+    "issue_overview",
+    "current_data_reading",
+    "possible_drivers",
+    "possible_outlook",
+    "what_to_check",
+    "data_limitations",
+    "caution_note",
+  ],
+);
 assert.equal(
   parseReportResponse(
     makePayload({
@@ -66,6 +104,14 @@ for (const invalidPayload of [
   makePayload({
     generated_at: "2026-07-10T09:00:00.123455Z",
     data_as_of: "2026-07-10T09:00:00.123456Z",
+  }),
+  makePayload({
+    content: {
+      ...validContent,
+      issue_overview:
+        "첫 문장입니다. 둘째 문장입니다. 셋째 문장입니다. " +
+        "넷째 문장입니다. 다섯째 문장입니다. 여섯째 문장입니다.",
+    },
   }),
 ]) {
   assert.equal(parseReportResponse(invalidPayload).status, "error");

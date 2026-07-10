@@ -21,38 +21,50 @@ Harness Version: 1.1
 
 ## Context Read
 
-- `AGENTS.md`
-- Full PRD, Service Design, Technical Design, and UX Design document sets
-- `memory/project.md`
-- Previous `memory/session.md`
-- `tasks/active.md`
-- `prompts/review.md`
-- `standards.md`
-- `memory/glossary.md`
-- `memory/decisions.md` ADR-032, ADR-033, and ADR-034
-- `backend/API_CONTRACT.md` ADR-033 v3 report contract
-- Day 5 v3 allocation and TASK-049/050/051 implementation handoffs
+- Project constitution and full PRD, Service Design, Technical Design, and UX
+  Design document sets
+- Project/session/task memory and Reviewer prompt
+- `standards.md`, `memory/glossary.md`, ADR-032/033/034
+- v3 API contract and Day 5 allocation/handoff records
+- TASK-049/050/051 code, tests, PR metadata, and integrated runtime behavior
 
 ## Work Completed
 
-- Previously reviewed and approved the corrected TASK-049 PR head `363bf2f`.
-- Confirmed TASK-049 and TASK-051 are merged to `origin/main`.
-- Confirmed TASK-050 PR #47 was merged into the frontend task branch rather
-  than `main`; its Backend head is not yet an ancestor of `origin/main`.
-- Integrated the latest `origin/main` and TASK-050 Backend head on the
-  TASK-053 reviewer branch for the required cross-surface review.
-- Resolved the expected generator/schema conflicts by keeping TASK-049's v3
-  generation model and TASK-050's public API model as separate contract
-  validators, matching the implementation ownership boundary.
+- Integrated TASK-049 (`363bf2f`), TASK-051 (`057769f`), and TASK-050
+  (`b5e77be`) on the Reviewer branch. TASK-050 had been merged into the
+  Frontend branch rather than `main`, so this branch restores the intended
+  combined baseline.
+- Verified exact v3 fields, labels, order, nullability, current-version reads,
+  neutral empty states, data-as-of timing, and caution placement.
+- Added consistent maximum-five-sentence validation in Data/AI, Backend, and
+  Frontend runtime validation.
+- Added semantic rejection for current readings without public
+  participant-data scope and for later-reading text without conditional
+  public-data framing.
+- Isolated static fallback contract tests from configured development DB state.
+- Added Frontend parser order/null/sentence regressions and aligned UI notice
+  copy with ADR-033 and the Korean hard-block list.
+- Recorded the review in
+  `reports/review-2026-07-10-task-053-v3-integration.md`, resolved ISS-009,
+  archived TASK-049/050/051/053, and updated project/architecture memory.
 
 ## Verification
 
-- Pending integrated static checks, full Backend/Frontend verification, and
-  320px/375px browser QA.
+- Backend: `198 passed in 1.32s`; Ruff passed.
+- Frontend: typecheck, lint, build, and report-parser checks passed.
+- `git diff --check` and changed-string copy lint passed.
+- Browser warning/error log was empty.
+- 320px/375px null-context flow: seven ordered sections, one visible body, no
+  horizontal overflow, report timing and caution visible.
+- 320px/375px non-null-context maximum fixtures: eight ordered sections,
+  600/700-code-point content wrapped without overflow or truncation.
 
 ## Notes / Remaining Risks
 
-- No provider call, database write, deployment, schema migration, dependency,
-  infrastructure change, or secret access is authorized or required.
-- TASK-053 cannot close until the integrated Backend/Data/Frontend result is
-  reviewed and evidence is recorded.
+- Vite still reports the known non-blocking bundle-size warning TD-001.
+- The Reviewer branch requires the normal project merge flow before `main`
+  contains TASK-050 and the final TASK-053 fixes.
+- A v3 report refresh, configured database write, screenshot run against live
+  v3 data, or deployment remains a separate approval-gated action.
+- No provider call, configured database write, migration, dependency,
+  infrastructure change, deployment, or secret access occurred.

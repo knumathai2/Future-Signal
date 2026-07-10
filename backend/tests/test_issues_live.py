@@ -630,6 +630,28 @@ def test_v3_report_length_boundary_rejection(live_client, db_session):
     assert response.json() == {"status": "not_yet_generated"}
 
 
+def test_v3_report_sentence_count_rejection(live_client, db_session):
+    seed_basic_market(db_session)
+    content = report_content("sentence_count")
+    content["issue_overview"] = (
+        "First sentence. Second sentence. Third sentence. "
+        "Fourth sentence. Fifth sentence. Sixth sentence."
+    )
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_LATEST,
+        prompt_version="v3",
+        status="success",
+    )
+    report = db_session.get(AiReport, REPORT_ID_LATEST)
+    report.content = content
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
 def test_v3_report_extra_field_rejection(live_client, db_session):
     seed_basic_market(db_session)
     content = report_content("extra")

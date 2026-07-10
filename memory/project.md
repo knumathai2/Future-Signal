@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.6.3-day5-v3-allocation
-- **Phase**: Day 5 v3 implementation allocated
-- **Next milestone**: Parallel v3 runtime implementation, integrated copy/contract review, final demo rehearsal, screenshot capture, and presentation polish
-- **Overall health**: 🟢 Good — Day 4 core UI/API/event-candidate work, report-generation code readiness, broad Korean live category filtering, the 24h combined batch path, demo/deck draft, and final copy/wording lint are complete; OpenRouter-backed v2 summaries have been generated and verified for the default top-20 heat-sorted issues; ADR-033 freezes the approved eight-field v3 report contract; and `TASK-049`, `TASK-050`, `TASK-051`, and `TASK-053` now split the Day 5 implementation/review work
+- **Version**: v0.7.0-day5-v3-integrated
+- **Phase**: Day 5 v3 integration review complete
+- **Next milestone**: PM closeout, final demo rehearsal, screenshot capture, and separately approved deployment/report refresh
+- **Overall health**: 🟢 Good — the ADR-033 v3 generator, API/read contract, and dynamic report UI are integrated on `review/TASK-053-v3-report-copy-lint`; copy, contract, full test/build, and 320px/375px Browser verification passed. The review branch still needs the normal project merge flow before `main` contains TASK-050 and the final TASK-053 fixes.
 
 ## Tech Summary
 
@@ -51,10 +51,10 @@ Future Signal/
 
 | Area | Current state |
 |---|---|
-| Frontend | Dashboard v1 is integrated with backend routes and static fallback, including ranked issue cards, category/window/sort controls, detail view, Recharts line chart, error fallback states, data-as-of timestamps, caution badges, Day 3-hardened window-specific insufficient-history handling, shared footer copy, a dedicated in-app information notice surface, `TASK-043` report-card states/labels for the v2 issue-explainer summary, and `TASK-044` Korean issue display copy for raw English market titles. `TASK-051` is assigned to replace fixed v2 report rendering with ADR-033 dynamic sections shown as one visible card section at a time. |
-| Backend | FastAPI app, `/api/health`, accepted `/api/issues`/detail/history/report/category contract, Pydantic schemas, and contract tests exist. `TASK-010` merged live issue list/detail/history read paths with documented static fallback behavior, `TASK-039` wires `/api/issues/{id}/report` to stored report rows in live mode while preserving the accepted empty state, `TASK-043` updates runtime report `content` to the v2 issue-explainer schema, and `ISS-007` makes the report endpoint serve current-prompt-version rows only. `TASK-048` and ADR-033 freeze the replacement eight-field v3 contract as documentation only; `TASK-050` is assigned to implement that schema/read contract. Runtime remains v2 until coordinated implementation closes. `/api/categories` now returns broad Korean filter labels derived from live servable issues, such as `정치`, `경제`, `기술`, `세계`, and `스포츠`; `/api/issues` category filtering accepts those Korean labels plus raw stored category values, while detailed issue-topic labels remain in the frontend card display layer. `001_initial_schema.sql` has been applied to the currently configured development Supabase DB after human approval; the DB has one live collector snapshot/metric row per normalized issue, ADR-025 adds a guarded historical seed path for richer live chart history, and PR #36 adds a guarded related-event seed path for four normalized/live-reachable demo issues. |
-| Data/AI | `TASK-007` produced 50 normalized records and structured skip details; `TASK-008` computes 24h/7d metrics through a local/dev-safe path; `TASK-009` inserts MVP expectation-shift detector rows from the ±5pp threshold; `TASK-036` adds MVP caution thresholds and marker handoff guidance; `TASK-015` implements fixed-template report generation and safety filtering; `TASK-019` adds curated related-event candidates; `TASK-041` fixes report prompt-input lookup for historical-seed metric timestamps while preserving the no-fabrication skip path; `TASK-042` adds the combined data/metric/signal/report batch runner, dev-only reports-only command, and 24h scheduled workflow; `TASK-043` advances report generation to `PROMPT_VERSION=v2` with issue explainer and conditional scenario slots; `ISS-007` verified `success|v2|30` in the configured development DB and current v2 content for the default top-20 heat-sorted issues. `TASK-049` is assigned to implement ADR-033 v3 generation, validation, prompt-versioning, deterministic caution, and non-causal context handling. |
-| PM / Safety | P0 scope remains locked; wording policy references `standards.md` and `memory/glossary.md`; `TASK-040` demo/deck draft is complete in `reports/task-040-demo-script-deck-draft.md`; `TASK-018` final copy/wording lint passed with notes in `reports/task-018-copy-lint.md`; Day 4 closeout evidence is recorded in `reports/day-4-closeout-plan.md`; `TASK-047` and ADR-032 preserve the original v3 scope-lock history, while user-approved TASK-048/ADR-033 now define the superseding eight-field contract and manual-only context boundary. `TASK-052` records the Day 5 allocation, and `TASK-053` is assigned as the final v3 integration copy/contract review. |
+| Frontend | Dashboard/detail/chart/fallback flows remain intact. TASK-051 replaces v2 report rendering with the exact ADR-033 evidence-first section order, one visible section at a time, null-only `external_context` hiding, runtime parsing, report data-as-of timing, and report-snapshot caution context. TASK-053 adds five-sentence parser enforcement, exact order/null regressions, copy alignment, and responsive Browser evidence. |
+| Backend | `/api/issues/{id}/report` serves only successful v3 rows whose eight-field content validates, whose linked metric supplies `data_as_of`, and whose timestamp is not later than generation. Legacy, failed, malformed, unlinked, and incompatible rows keep `not_yet_generated`. TASK-053 adds read-time five-sentence enforcement and deterministic fallback-test isolation. Existing issue/category/history behavior and DB schema remain unchanged. |
+| Data/AI | TASK-049 advances generation to `PROMPT_VERSION=v3`: three constrained prose slots plus deterministic candidate comparison, external context, check points, limitations, and exact caution copy. Safety and semantic checks cover prohibited wording, metric consistency, reviewed-candidate provenance, current public participant-data scope, conditional later-data scope, and the ADR-033 length/sentence contract. No v3 provider call or configured DB write was performed in TASK-053. |
+| PM / Safety | P0 scope and ADR-033 remain locked. TASK-053 final integration copy/contract review passed with evidence in `reports/review-2026-07-10-task-053-v3-integration.md`; no prohibited feature, policy change, schema/dependency/infrastructure change, deployment, provider call, or configured DB write was introduced. |
 
 ## Recent Changes
 
@@ -103,13 +103,15 @@ Future Signal/
 | 2026-07-10 | `TASK-047` completed: ADR-032 approved the v3 AI report policy, the exact v3 report field list, limited public API shape changes, tightened wording-safety criteria, manual-only context-candidate scope, and maintained prohibitions before implementation begins. |
 | 2026-07-10 | `TASK-048` completed: ADR-033 supersedes ADR-032 for the v3 content/display contract, accepting the eight-field schema, Option A external context, exact caution matrix, evidence-first Frontend order, Unicode character bounds, and a maximum of five concise sentences per field without changing runtime v2 paths. |
 | 2026-07-10 | `TASK-052` completed: latest `origin/main` at `106af52` was confirmed, Day 5 v3 implementation was split into `TASK-049` Data/AI generation, `TASK-050` Backend API/read contract, `TASK-051` Frontend dynamic report cards, and `TASK-053` final integration copy/contract review, with allocation evidence recorded in `reports/day-5-v3-implementation-allocation.md`. |
+| 2026-07-10 | `TASK-053` completed on the Reviewer integration branch: TASK-049/050/051 were combined, ADR-033 sentence/semantic/copy gaps were closed, 198 Backend tests and all Frontend checks passed, and 320px/375px null/non-null context Browser QA passed. |
 
 ## Constraints
 
 - 5-day build window, 4-person team — see `../ORCHESTRATOR.md` and `../roadmap.md` for day-by-day allocation
 - No accounts/login/saving/notifications/reports/team-sharing in MVP (PRD §6.5)
 - No free-form AI analysis, no automated news matching, no wallet-level participant features (see `AGENTS.md` Absolute Restrictions)
-- V3 runtime work must follow ADR-033; runtime remains v2 until `TASK-049`,
-  `TASK-050`, `TASK-051`, and `TASK-053` close.
+- V3 runtime follows ADR-033 and is complete on the TASK-053 integration
+  branch; the normal merge flow must land that branch before any report refresh,
+  screenshot capture, or deployment uses v3 as the `main` baseline.
 - Every data-bearing screen requires a data-as-of timestamp + interpretation-caution badge (PRD §8.10)
 - Strict prohibited-wording policy — see `glossary.md` and `../standards.md`

@@ -60,9 +60,11 @@ const OVERRIDES_BY_TITLE: Record<string, IssueDisplayOverride> = {
   },
   "macron out by july 31, 2026?": {
     displayTitle: "프랑스 대통령직 변화 이슈",
-    displaySubtitle: "2026년 7월 31일까지 마크롱 대통령직 변화 여부를 다룹니다.",
+    displaySubtitle:
+      "2026년 7월 31일까지 프랑스 대통령의 재임 상태 변화를 다룹니다.",
     topicLabel: "프랑스 정치",
-    resolutionCondition: "기준일까지 마크롱이 대통령직에서 물러나는지 여부",
+    resolutionCondition:
+      "기준일까지 프랑스 대통령의 재임 상태가 바뀌는지 여부",
   },
   "xi jinping out before 2027?": {
     displayTitle: "중국 지도부 변화 이슈",
