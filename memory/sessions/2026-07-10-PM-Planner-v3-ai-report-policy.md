@@ -56,8 +56,7 @@ Harness Version: 1.1
 ## Work Completed
 
 - Confirmed existing ADR location and style in `memory/decisions.md`.
-- Created `pm/TASK-047-v3-ai-report-policy` from the existing dirty worktree,
-  preserving prior uncommitted `TASK-046` memory/task handoff changes.
+- Created `pm/TASK-047-v3-ai-report-policy` for the v3 policy scope lock.
 - Added ADR-032 to `memory/decisions.md` with:
   - accepted v3 AI summary/report policy,
   - exact v3 field list,
@@ -69,6 +68,10 @@ Harness Version: 1.1
 - Updated `standards.md` and `memory/glossary.md` to tighten the shared v3
   wording policy, including Korean hard-block terms and ADR-032 validation
   requirements.
+- Resolved review findings by aligning the English hard-block lists, preserving
+  the existing `not_yet_generated` response shape, documenting the no-migration
+  `data_as_of` derivation path, and removing unrelated carried-over task records
+  from this PR's scope.
 - Updated `memory/project.md` to record `TASK-047` and ADR-032 as the v3
   implementation prerequisite.
 - Updated `tasks/active.md` to keep active tasks empty while explicitly
@@ -88,15 +91,13 @@ Harness Version: 1.1
 - `memory/session.md`
 - `memory/sessions/2026-07-10-PM-Planner-v3-ai-report-policy.md`
 
-Existing uncommitted `TASK-046` changes remain preserved in the worktree:
-`memory/known-issues.md`,
-`memory/sessions/2026-07-10-DataAI-luna-report-refresh.md`, and prior edits in
-`memory/project.md`, `memory/session.md`, and `tasks/completed.md`.
-
 ## Verification
 
 - `git diff --check` passed.
 - Changed-file list checked with `git diff --name-only`.
+- Review-fix verification confirmed the three English hard-block lists match,
+  the empty-state and `data_as_of` rules are explicit, and unrelated Data/AI
+  refresh records are absent from the net PR diff.
 - Hard-block wording scan over changed docs/task files completed. Hits were
   expected policy-list entries in `standards.md`, `memory/glossary.md`, and
   ADR-032; historic task/decision records; plus a known false positive for

@@ -55,7 +55,7 @@ Types: `feat` | `fix` | `docs` | `style` | `refactor` | `test` | `chore` | `secu
 Every user-facing string and every AI/template output must be checked against these lists before it ships. See `memory/glossary.md` for the full term list and UX Design §5 for the source policy.
 
 **Prohibited — hard block on any occurrence:**
-`bet, buy, sell, trade, position, long, short, profit, win rate, copy trader, follow this user, expert trader, best pick, recommended outcome, high-return opportunity, guaranteed prediction, odds, signal to act`
+`bet, buy, sell, trade, position, long, short, profit, win rate, odds, copy trader, follow this user, expert trader, best pick, recommended outcome, high-return opportunity, guaranteed, guaranteed prediction, signal to act, recommend, recommendation`
 
 **Korean v3 additions — hard block in UI, fallback strings, and AI/template output:**
 `베팅, 매수, 매도, 포지션, 롱, 숏, 수익, 승률, 배당, 추천, 보장, 확정, 따라하기, 고수, 전문 트레이더, 고수익, 기회`
