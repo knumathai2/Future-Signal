@@ -4,10 +4,11 @@ Field names mirror the example JSON already agreed in
 ../../docs/tech-design/03-api-and-batch-pipeline.md §5 - this module is the
 executable draft of that contract, not a new design.
 """
+import re
 from datetime import datetime
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 ConfidenceLevel = Literal[
     "sufficient",
@@ -17,6 +18,13 @@ ConfidenceLevel = Literal[
 ]
 SignalSeverity = Literal["low", "medium", "high", "critical"]
 IssueStatus = Literal["active", "closed", "resolved"]
+
+_SENTENCE_TERMINATOR_PATTERN = re.compile(r"[.!?]+(?=\s|$)")
+
+
+def _sentence_count(value: str) -> int:
+    matches = _SENTENCE_TERMINATOR_PATTERN.findall(value.strip())
+    return len(matches) or 1
 
 
 class IssueSummary(BaseModel):
@@ -165,6 +173,14 @@ class ReportContent(BaseModel):
             description="Mandatory report-level interpretation caution.",
         ),
     ]
+
+    @field_validator("*")
+    @classmethod
+    def limit_sentence_count(cls, value: str | None) -> str | None:
+        """Reject stored content outside ADR-033's 1-5 sentence limit."""
+        if value is not None and _sentence_count(value) > 5:
+            raise ValueError("Report fields must contain at most five sentences.")
+        return value
 
 
 class IssueReportResponse(BaseModel):
