@@ -27,7 +27,7 @@ implementation allocation evidence is recorded in
 |----|------|-------|----------|--------|--------|
 | TASK-049 | Implement v3 report generation content | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-049-v3-report-generation` | assigned |
 | TASK-050 | Implement v3 report API/read contract | Backend Implementer | Backend Implementer | `backend/TASK-050-v3-report-runtime` | assigned |
-| TASK-051 | Implement v3 dynamic report UI | Frontend Implementer | Frontend Implementer | `frontend/TASK-051-v3-report-cards` | assigned |
+| TASK-051 | Implement v3 dynamic report UI | Frontend Implementer | Frontend Implementer | `frontend/TASK-051-v3-report-cards` | review |
 | TASK-053 | Review v3 integration copy and contract | Reviewer | Reviewer | `review/TASK-053-v3-report-copy-lint` | assigned |
 
 Completed Day 1, Day 2, Day 3, and PM allocation tasks are archived in
@@ -178,7 +178,7 @@ git-state check and Day 5 v3 implementation allocation.
 - **Owner**: Frontend Implementer
 - **Assignee**: Frontend Implementer
 - **Branch**: `frontend/TASK-051-v3-report-cards`
-- **Status**: assigned
+- **Status**: review
 - **Priority**: High
 - **Day**: Day 5
 - **Description**: Replace fixed v2 report rendering with a dynamic ADR-033
