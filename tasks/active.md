@@ -16,15 +16,19 @@ Day 4 is closed. Allocation evidence is recorded in
 `reports/task-018-copy-lint.md`, and closeout evidence is recorded in
 `reports/day-4-closeout-plan.md`.
 
-`TASK-048` is complete. ADR-033 supersedes ADR-032 for the approved eight-field
-v3 report content and display contract. Frontend, Backend, and Data/AI v3
-implementation must read both ADRs, follow ADR-033 where they differ, and keep
-runtime changes in separate coordinated tasks.
+`TASK-047` and `TASK-048` are complete. ADR-033 supersedes ADR-032 for the
+approved eight-field v3 report content and display contract. Frontend, Backend,
+and Data/AI v3 implementation must read both ADRs, follow ADR-033 where they
+differ, and keep runtime changes in separate coordinated tasks. Day 5 v3
+implementation allocation evidence is recorded in
+`reports/day-5-v3-implementation-allocation.md`.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-
-No active implementation, approval, or closeout tasks remain after TASK-048.
+| TASK-049 | Implement v3 report generation content | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-049-v3-report-generation` | assigned |
+| TASK-050 | Implement v3 report API/read contract | Backend Implementer | Backend Implementer | `backend/TASK-050-v3-report-runtime` | assigned |
+| TASK-051 | Implement v3 dynamic report UI | Frontend Implementer | Frontend Implementer | `frontend/TASK-051-v3-report-cards` | assigned |
+| TASK-053 | Review v3 integration copy and contract | Reviewer | Reviewer | `review/TASK-053-v3-report-copy-lint` | assigned |
 
 Completed Day 1, Day 2, Day 3, and PM allocation tasks are archived in
 `tasks/completed.md`, including `TASK-038` for this Day 4 allocation,
@@ -40,9 +44,10 @@ output structure), `TASK-044` (Korean issue display titles), `ISS-007`
 lint). `TASK-045` records the PM closeout verification and Day 5 handoff.
 `TASK-047` records the v3 AI report policy/API/wording scope-lock and
 implementation prerequisite decision in ADR-032. `TASK-048` records the
-superseding eight-field contract in ADR-033.
+superseding eight-field contract in ADR-033. `TASK-052` records the latest
+git-state check and Day 5 v3 implementation allocation.
 
-## Day 4 Handoff Notes
+## Day 5 Allocation Notes
 
 - **PM / Planner** completed `TASK-038` in
   `reports/day-4-work-allocation.md`. PM completed the demo/deck draft
@@ -97,10 +102,123 @@ superseding eight-field contract in ADR-033.
 - **Backend Implementer** completed `TASK-048`. ADR-033 preserves ADR-032 as
   history while superseding its v3 content/display contract with the approved
   eight-field schema. Runtime remains v2 pending coordinated implementation.
+- **PM / Planner** completed `TASK-052`. Latest `origin/main` is
+  `106af52`, which includes PR #45 (`TASK-047`) and PR #46 (`TASK-048`).
+  Runtime remains v2, but Day 5 v3 work is now split across Data/AI,
+  Backend, Frontend, and Reviewer tasks.
+- **Data/AI Implementer** owns `TASK-049`. Implement ADR-033 generation,
+  prompt-version, deterministic caution, non-causal context handling, and
+  safety validation. Do not perform a real provider call or write generated
+  reports to the configured DB without a separate approval.
+- **Backend Implementer** owns `TASK-050`. Implement the ADR-033 report
+  schema/read contract and version gating. Backend owns shared API/Pydantic
+  schema edits so Data/AI and Frontend can avoid duplicate contract changes.
+- **Frontend Implementer** owns `TASK-051`. Replace fixed v2 report-section
+  rendering with dynamic ADR-033 sections, displayed as a single visible card
+  section at a time, while hiding `external_context` only when it is `null`.
+- **Reviewer** owns `TASK-053`. Start after the implementation branches are
+  ready for integration, and run copy/wording, response-shape, mobile, and
+  data-as-of/caution checks before any demo data refresh or deployment.
+- **Parallelization**: `TASK-049`, `TASK-050`, and `TASK-051` can begin in
+  parallel from ADR-033. Coordinate the shared `ReportContent`/API contract
+  surface through `TASK-050`; `TASK-053` is sequential and should review the
+  integrated result.
 
 ## Active Task Details
 
-No active task details remain.
+### TASK-049: Implement v3 report generation content
+- **Owner**: Data/AI Implementer
+- **Assignee**: Data/AI Implementer
+- **Branch**: `data-ai/TASK-049-v3-report-generation`
+- **Status**: assigned
+- **Priority**: High
+- **Day**: Day 5
+- **Description**: Replace runtime report generation with ADR-033 v3 content:
+  `issue_overview`, `current_data_reading`, `possible_outlook`,
+  `possible_drivers`, `external_context`, `what_to_check`,
+  `data_limitations`, and `caution_note`. Preserve maintained prohibitions,
+  conditional public-data wording, non-causal context language, and
+  deterministic caution behavior.
+- **Definition of Done**:
+  - [ ] Generated content validates against ADR-033 fields, nullability, and
+        Unicode character bounds.
+  - [ ] `external_context` uses only PM/Data-reviewed narrative notes and is
+        `null` when approval or content is unavailable.
+  - [ ] `possible_drivers` uses reviewed title/date candidates only as
+        comparison context, never as cause.
+  - [ ] `caution_note` and `data_limitations` cover all required caution and
+        limitation language, including low-data cases.
+  - [ ] Tests cover valid v3 output, malformed output rejection, banned wording,
+        weak-inference blocking, and no-candidate behavior.
+  - [ ] No live provider call or configured DB write is performed without
+        separate approval.
+
+### TASK-050: Implement v3 report API/read contract
+- **Owner**: Backend Implementer
+- **Assignee**: Backend Implementer
+- **Branch**: `backend/TASK-050-v3-report-runtime`
+- **Status**: assigned
+- **Priority**: High
+- **Day**: Day 5
+- **Description**: Move the report read path and shared schema from current v2
+  runtime behavior to the approved ADR-033 v3 content contract while preserving
+  the existing endpoint path and neutral empty-state behavior.
+- **Definition of Done**:
+  - [ ] Shared Pydantic/API schemas enforce the ADR-033 eight-field content
+        shape, required nullable `external_context`, and extra-field rejection.
+  - [ ] `/api/issues/{id}/report` serves only current v3 successful report rows
+        and keeps `not_yet_generated` for absent, failed, or legacy rows.
+  - [ ] Contract tests cover success, null `external_context`, legacy version
+        exclusion, not-yet-generated, and unknown issue paths.
+  - [ ] API contract documentation stays aligned with runtime behavior.
+  - [ ] No migration, dependency, infrastructure, deployment, or unapproved DB
+        write is introduced.
+
+### TASK-051: Implement v3 dynamic report UI
+- **Owner**: Frontend Implementer
+- **Assignee**: Frontend Implementer
+- **Branch**: `frontend/TASK-051-v3-report-cards`
+- **Status**: assigned
+- **Priority**: High
+- **Day**: Day 5
+- **Description**: Replace fixed v2 report rendering with a dynamic ADR-033
+  section renderer. Display the report as a card-style flow where only one
+  field is visible at a time, using the evidence-first order and Korean labels
+  approved in ADR-033.
+- **Definition of Done**:
+  - [ ] Frontend report types match ADR-033 exactly.
+  - [ ] Sections render in this order: `issue_overview`,
+        `current_data_reading`, `external_context`, `possible_drivers`,
+        `possible_outlook`, `what_to_check`, `data_limitations`,
+        `caution_note`.
+  - [ ] `external_context` is hidden only when the value is `null`; other empty
+        or missing required fields are treated as invalid/error state.
+  - [ ] One-section-at-a-time card navigation works on desktop and mobile
+        without text overflow or layout shift.
+  - [ ] Data-as-of timing and interpretation-caution context remain near the
+        report experience.
+  - [ ] Frontend typecheck, lint, build, and browser responsive checks pass.
+
+### TASK-053: Review v3 integration copy and contract
+- **Owner**: Reviewer
+- **Assignee**: Reviewer
+- **Branch**: `review/TASK-053-v3-report-copy-lint`
+- **Status**: assigned
+- **Priority**: High
+- **Day**: Day 5
+- **Description**: Review the integrated v3 report runtime, UI, and copy before
+  any report refresh, screenshot capture, or deployment.
+- **Definition of Done**:
+  - [ ] ADR-033 field names, labels, order, nullability, and response-shape
+        behavior match Backend and Frontend runtime code.
+  - [ ] User-facing strings pass `standards.md`, `memory/glossary.md`, and
+        ADR-033 wording-safety checks.
+  - [ ] No outcome assertion, action language, individual participant analysis,
+        causal event explanation, or probability-as-real-world-result wording
+        ships.
+  - [ ] Every data-bearing report state has nearby data-as-of and caution
+        context.
+  - [ ] Integration test/build evidence is recorded before PM closeout.
 
 ## Status Values
 
