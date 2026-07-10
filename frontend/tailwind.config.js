@@ -13,6 +13,8 @@ export default {
         "line-soft": "oklch(93% 0.01 65)",
         accent: "oklch(52% 0.13 45)",
         "accent-soft": "oklch(93% 0.035 55)",
+        decline: "oklch(48% 0.075 245)",
+        "decline-soft": "oklch(94% 0.02 245)",
       },
       boxShadow: {
         soft: "0 18px 40px rgb(30 25 15 / 0.08)",
