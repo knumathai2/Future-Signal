@@ -311,12 +311,13 @@ def parse_llm_fields(raw_text: str) -> LLMReportFields | None:
 # what_to_check, data_limitations, and caution_note are never LLM free text).
 # --------------------------------------------------------------------------
 
-# Fixed Korean statements reused verbatim from the ADR-033/API_CONTRACT.md
-# approved example and the approved no-candidate literal - never paraphrased,
-# since these are the exact strings PM/user approval covers.
+# Fixed Korean statements reused from the ADR-033/API_CONTRACT.md approved
+# example and the approved no-candidate literal. The candidate-present value is
+# a format template because ADR-033 requires the reviewed title and recorded
+# date to remain visible in the deterministic comparison index.
 POSSIBLE_DRIVERS_WITH_CANDIDATE = (
-    "수동 검토를 마친 맥락 후보의 제목과 기록 날짜는 관찰된 움직임과 함께 "
-    "비교할 수 있습니다. 해당 시점은 비교를 위해 제공되며, 현재 데이터는 이 "
+    "수동 검토를 마친 맥락 후보 「{title}」의 기록 날짜 {date}는 관찰된 움직임과 "
+    "함께 비교할 수 있습니다. 해당 시점은 비교를 위해 제공되며, 현재 데이터는 이 "
     "맥락 후보와 움직임 사이의 관계를 입증하지 않습니다."
 )
 POSSIBLE_DRIVERS_NO_CANDIDATE = (
@@ -382,17 +383,27 @@ def _has_reviewed_candidate(inputs: ReportPromptInputs) -> bool:
     """A candidate exists only via the PM/Data-approved curated
     `related_events` path (Service Design §8) - title presence is the signal
     that a row was found for this market."""
-    return bool(inputs.related_event_title)
+    return bool((inputs.related_event_title or "").strip())
+
+
+def _format_related_event_date(event_date: datetime | None) -> str:
+    """Format a reviewed candidate date without fabricating a missing value."""
+    if event_date is None:
+        return "기록 날짜가 제공되지 않았습니다"
+    return event_date.date().isoformat()
 
 
 def build_possible_drivers(inputs: ReportPromptInputs) -> str:
-    """Deterministic candidate index only - never a causal explanation
-    (ADR-033 weak-inference rules). Never inserts the actual title/date text;
-    that provenance stays in `external_context`/issue-detail `related_events`."""
-    return (
-        POSSIBLE_DRIVERS_WITH_CANDIDATE
-        if _has_reviewed_candidate(inputs)
-        else POSSIBLE_DRIVERS_NO_CANDIDATE
+    """Build the deterministic candidate index required by ADR-033.
+
+    A reviewed title and date are comparison context, not an explanation of
+    the movement. Missing dates stay explicit rather than being fabricated.
+    """
+    if not _has_reviewed_candidate(inputs):
+        return POSSIBLE_DRIVERS_NO_CANDIDATE
+    return POSSIBLE_DRIVERS_WITH_CANDIDATE.format(
+        title=(inputs.related_event_title or "").strip(),
+        date=_format_related_event_date(inputs.related_event_date),
     )
 
 
@@ -576,7 +587,9 @@ KOREAN_BANNED_PATTERNS: tuple[re.Pattern, ...] = tuple(
         r"때문에",
         r"로\s*인해",
         r"주요\s*요인",
-        r"원인",
+        # Allow the ADR-033-approved negative disclaimer, while still
+        # rejecting positive causal claims such as "변화의 원인입니다".
+        r"원인(?!으로\s*제시되지\s*않|이\s*아니|이\s*아님)",
         r"영향을\s*주었다",
         r"촉발했다",
         r"할\s*것이다",
@@ -667,7 +680,7 @@ def run_safety_filter(content: ReportContent) -> SafetyFilterResult:
 # `assemble_report_content` builders themselves.
 # --------------------------------------------------------------------------
 
-_CANDIDATE_QUALIFIER_TERMS: tuple[str, ...] = ("candidate", "후보")
+_CANDIDATE_QUALIFIER_TERMS: tuple[str, ...] = ("candidate", "후보", "맥락 메모")
 _NOT_CAUSE_QUALIFIER_TERMS: tuple[str, ...] = (
     "not a cause",
     "not presented as a cause",
@@ -683,19 +696,88 @@ def _external_context_has_required_qualifier(note: str) -> bool:
     qualifier. Heuristic substring check - defense in depth on top of the
     curated-data review process, not a replacement for it."""
     lowered = note.lower()
-    has_candidate_term = any(term in lowered or term in note for term in _CANDIDATE_QUALIFIER_TERMS)
-    has_not_cause_term = any(term in lowered or term in note for term in _NOT_CAUSE_QUALIFIER_TERMS)
+    has_candidate_term = any(term.lower() in lowered for term in _CANDIDATE_QUALIFIER_TERMS)
+    has_not_cause_term = any(term.lower() in lowered for term in _NOT_CAUSE_QUALIFIER_TERMS)
     return has_candidate_term and has_not_cause_term
+
+
+_PERCENT_VALUE_PATTERN = re.compile(
+    r"(?<![\d.])([+-]?\d+(?:[.,]\d+)?)\s*(?:%|퍼센트)(?!포인트)",
+    re.IGNORECASE,
+)
+_PERCENT_POINT_VALUE_PATTERN = re.compile(
+    r"(?<![\d.])([+-]?\d+(?:[.,]\d+)?)\s*(?:퍼센트포인트|%p|pp)(?!\w)",
+    re.IGNORECASE,
+)
+
+
+def _parse_numeric_tokens(pattern: re.Pattern[str], text: str) -> list[float]:
+    """Parse localized metric tokens while tolerating comma decimals."""
+    return [float(raw.replace(",", ".")) for raw in pattern.findall(text)]
+
+
+def _approximately_matches(actual: float, expected: float) -> bool:
+    """Allow the one-decimal rounding used by the prompt and UI copy."""
+    return abs(actual - expected) <= 0.06
+
+
+def _current_data_reading_matches_inputs(
+    text: str, inputs: ReportPromptInputs
+) -> bool:
+    """Reject metric-bearing model prose that contradicts structured inputs.
+
+    The model may omit a metric when it uses a neutral non-numeric sentence,
+    but every percentage or percentage-point value it does state must match a
+    current value or available 24h/7d change. This prevents unsupported values
+    from reaching storage without forcing one exact Korean sentence shape.
+    """
+    percent_values = _parse_numeric_tokens(_PERCENT_VALUE_PATTERN, text)
+    if any(
+        not _approximately_matches(value, inputs.current_value * 100)
+        for value in percent_values
+    ):
+        return False
+
+    available_changes = [
+        change * 100
+        for change in (inputs.change_24h, inputs.change_7d)
+        if change is not None
+    ]
+    point_values = _parse_numeric_tokens(_PERCENT_POINT_VALUE_PATTERN, text)
+    if any(
+        not any(_approximately_matches(value, expected) for expected in available_changes)
+        for value in point_values
+    ):
+        return False
+
+    if point_values and not available_changes:
+        return False
+
+    mentions_24h = "24시간" in text or "24h" in text.lower()
+    mentions_7d = "7일" in text or "7d" in text.lower()
+    if mentions_24h and inputs.change_24h is None:
+        return False
+    if mentions_7d and inputs.change_7d is None:
+        return False
+    return True
 
 
 def run_semantic_checks(content: ReportContent, inputs: ReportPromptInputs) -> SafetyFilterResult:
     """Cross-field validation beyond phrase/pattern scanning: exact
-    deterministic caution-literal match, exact possible_drivers literal
-    match, and the external_context candidate-not-cause qualifier."""
+    deterministic caution-literal match, metric consistency, exact
+    possible_drivers literal match, and the external_context candidate-not-
+    cause qualifier."""
     expected_caution = CAUTION_NOTE_BY_LEVEL.get(inputs.confidence_level)
     if expected_caution is None or content.caution_note != expected_caution:
         return SafetyFilterResult(
             passed=False, rule="caution_note_literal_mismatch", field="caution_note"
+        )
+
+    if not _current_data_reading_matches_inputs(content.current_data_reading, inputs):
+        return SafetyFilterResult(
+            passed=False,
+            rule="current_data_reading_metric_mismatch",
+            field="current_data_reading",
         )
 
     if content.possible_drivers != build_possible_drivers(inputs):

@@ -44,7 +44,7 @@ VALID_LLM_FIELDS = {
     "issue_overview": "이 이슈는 공개된 기한까지 문서에 적힌 조건이 충족되는지를 추적합니다.",
     "current_data_reading": (
         "데이터 기준 시각에 공개 예측시장 참여자 데이터에 반영된 기대값은 63%이며, "
-        "24시간 전보다 8.2퍼센트포인트 높게 관찰되었습니다."
+        "24시간 전보다 8.0퍼센트포인트 높게 관찰되었습니다."
     ),
     "possible_outlook": (
         "이후 공개 데이터에서 관찰된 움직임의 지속, 확대 또는 완화가 확인되더라도, "
@@ -180,16 +180,25 @@ def test_possible_drivers_uses_no_candidate_literal_when_none_reviewed():
 
 
 def test_possible_drivers_uses_with_candidate_literal_when_one_is_reviewed():
-    assert build_possible_drivers(_reviewed_candidate_inputs()) == POSSIBLE_DRIVERS_WITH_CANDIDATE
+    inputs = _reviewed_candidate_inputs()
+    expected = POSSIBLE_DRIVERS_WITH_CANDIDATE.format(
+        title="Kraken Files Initial Registration Statement Draft",
+        date="2026-02-18",
+    )
+    assert build_possible_drivers(inputs) == expected
 
 
-def test_possible_drivers_never_embeds_actual_title_or_date_text():
-    """Weak-inference rule: possible_drivers is a generic comparison
-    statement, never a restatement that could be mistaken for an
-    explanation - the actual title/date lives in external_context only."""
+def test_possible_drivers_includes_reviewed_title_and_date_without_causal_claim():
+    """ADR-033 requires the reviewed title/date as comparison context."""
     text = build_possible_drivers(_reviewed_candidate_inputs())
-    assert "Kraken" not in text
-    assert "2026-02-18" not in text
+    assert "Kraken Files Initial Registration Statement Draft" in text
+    assert "2026-02-18" in text
+    assert "관계를 입증하지 않습니다" in text
+
+
+def test_possible_drivers_states_missing_reviewed_date_without_fabricating_one():
+    text = build_possible_drivers(_reviewed_candidate_inputs(related_event_date=None))
+    assert "기록 날짜가 제공되지 않았습니다" in text
 
 
 def test_external_context_is_null_when_no_reviewed_note_exists():
@@ -364,6 +373,20 @@ def test_korean_causal_or_forecast_pattern_is_rejected(korean_text):
     assert result.rule.startswith("banned_pattern:")
 
 
+def test_approved_korean_negative_causal_disclaimer_passes_filter():
+    content = assemble_report_content(_reviewed_candidate_inputs(), _llm_fields())
+    content = content.model_copy(
+        update={
+            "external_context": (
+                "수동 검토를 마친 맥락 메모는 관찰된 움직임과 함께 살펴볼 정보로만 "
+                "제공되며, 변화의 원인으로 제시되지 않습니다."
+            )
+        }
+    )
+    assert run_safety_filter(content).passed is True
+    assert run_semantic_checks(content, _reviewed_candidate_inputs()).passed is True
+
+
 def test_substring_false_positive_is_not_rejected():
     # "belong" contains "long", "shortly" contains "short" - word-boundary
     # matching must not reject these.
@@ -399,7 +422,13 @@ def test_semantic_checks_reject_caution_note_mismatched_with_confidence_level():
 def test_semantic_checks_reject_possible_drivers_claiming_a_candidate_that_was_not_reviewed():
     inputs = _inputs()  # no reviewed candidate
     content = assemble_report_content(inputs, _llm_fields())
-    tampered = content.model_copy(update={"possible_drivers": POSSIBLE_DRIVERS_WITH_CANDIDATE})
+    tampered = content.model_copy(
+        update={
+            "possible_drivers": POSSIBLE_DRIVERS_WITH_CANDIDATE.format(
+                title="Unreviewed candidate", date="2026-02-18"
+            )
+        }
+    )
     result = run_semantic_checks(tampered, inputs)
     assert result.passed is False
     assert result.rule == "possible_drivers_literal_mismatch"
@@ -416,6 +445,29 @@ def test_semantic_checks_reject_external_context_missing_candidate_not_cause_qua
     result = run_semantic_checks(content, inputs)
     assert result.passed is False
     assert result.rule == "external_context_missing_candidate_not_cause_qualifier"
+
+
+def test_semantic_checks_reject_current_data_reading_metric_mismatch():
+    inputs = _inputs()
+    content = assemble_report_content(
+        inputs,
+        _llm_fields(
+            current_data_reading=(
+                "데이터 기준 시각에 공개 예측시장 참여자 데이터에 반영된 기대값은 "
+                "99%로 관찰되었습니다."
+            )
+            * 2
+        ),
+    )
+    result = run_semantic_checks(content, inputs)
+    assert result.passed is False
+    assert result.rule == "current_data_reading_metric_mismatch"
+
+
+def test_semantic_checks_accept_current_data_reading_metrics_matching_inputs():
+    inputs = _inputs()
+    content = assemble_report_content(inputs, _llm_fields())
+    assert run_semantic_checks(content, inputs).passed is True
 
 
 # --- OpenAIReportClient ----------------------------------------------------
