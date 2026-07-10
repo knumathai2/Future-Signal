@@ -13,7 +13,6 @@ _Last updated: 2026-07-10_
 
 | ID | Severity | Description | Found | Owner |
 |----|----------|-------------|-------|-------|
-| ISS-008 | High | PR #49's v3 report generator can omit required candidate identity, accept metric text inconsistent with structured inputs, and reject ADR-033's approved Korean external-context wording. | PR #49 review, 2026-07-10 | Data/AI Implementer |
 
 ## Technical Debt
 
@@ -31,6 +30,7 @@ _Last updated: 2026-07-10_
 
 | ID | Description | Resolved | Method |
 |----|-------------|----------|--------|
+| ISS-008 | PR #49 v3 report generation could omit reviewed candidate identity, accept metric text inconsistent with structured inputs, and reject approved Korean context wording. | 2026-07-10 | Fixed in PR head `363bf2f`; deterministic title/date output, metric consistency validation, approved negative-disclaimer handling, and `맥락 메모` qualifier coverage were added with regression tests. All four GitHub review threads were resolved and the PR was approved. |
 | ISS-001 | Detail chart could not display a trend for 24h/7d/30d when the API history path returned only one point; this was not caused by the 5pp inflection-marker threshold. | 2026-07-08 | Frontend now renders an explicit insufficient-history state when the visible chart window has fewer than two history points. |
 | DQ-001 | API no-report-yet response shape needed PM/Frontend sign-off. | 2026-07-08 | ADR-008 accepted `200 {"status": "not_yet_generated"}` as the canonical response. |
 | TD-004 | `backend/API_CONTRACT.md` still contained stale "draft/open item" wording for the report-empty response even though ADR-008 accepted `200 {"status": "not_yet_generated"}`. | 2026-07-08 | Cleaned up during `TASK-010` - "Open item for PM sign-off" section now states the accepted behavior as final; response shape unchanged. |
@@ -76,7 +76,7 @@ them before Day 5 lock if they become relevant to the active path:
 ### ISS-008: PR #49 v3 report contract and safety validation gaps
 - **Severity**: High
 - **Found**: 2026-07-10 during PR #49 review
-- **Status**: Open; GitHub review state is `CHANGES_REQUESTED`
+- **Status**: Resolved in PR head `363bf2f`; GitHub review state is `APPROVED`
 - **Evidence**:
   - Review: <https://github.com/knumathai2/Future-Signal/pull/49#pullrequestreview-4668601361>
   - Backend tests and Ruff pass, so focused contract regressions are needed.
@@ -92,13 +92,15 @@ them before Day 5 lock if they become relevant to the active path:
     with `ReportPromptInputs`.
   - The Korean relationship filter is applied as an unqualified substring.
   - The semantic qualifier is narrower than the approved contract example.
-- **Workaround**:
-  - Do not approve or use PR #49's v3 generator for a report refresh until the
-    review findings are resolved.
-- **Permanent fix direction**:
-  - Resolve all four inline review comments, add contract-example and
-    mismatched-value regression tests, and request re-review on the updated
-    commit.
+- **Fix**:
+  - `possible_drivers` now includes the reviewed title/date deterministically,
+    metric-bearing `current_data_reading` prose is checked against structured
+    values, the approved negative Korean disclaimer is accepted, and the
+    approved `맥락 메모` qualifier is recognized.
+  - Regression tests cover all four findings; the fixed head passes 179
+    backend tests and Ruff.
+  - All four GitHub review threads were answered and resolved, followed by an
+    approval review.
 
 ### ISS-001: Detail chart blank with one-point history
 - **Severity**: High

@@ -69,3 +69,17 @@ the global pattern is corrected.
 - Align the external-context qualifier with ADR-033's approved Korean example.
 - Add regression tests for each corrected behavior and re-run the complete
   backend suite and Ruff.
+
+## Follow-up Resolution
+
+The requested changes were implemented in PR head commit `363bf2f`:
+
+- `possible_drivers` now includes the reviewed candidate title and date.
+- Metric-bearing `current_data_reading` prose is checked against structured
+  current and change values before storage.
+- The approved Korean negative relationship disclaimer is accepted while
+  positive causal wording remains blocked.
+- The approved `맥락 메모` external-context qualifier is accepted.
+
+The four review threads were answered and resolved. The fixed head passes 179
+backend tests and Ruff, and the follow-up GitHub review is `APPROVED`.
