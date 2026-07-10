@@ -431,6 +431,64 @@ single enforceable contract for Backend, Data/AI, and Frontend implementation.
 
 ---
 
+### ADR-034: TASK-049 splits v3 content into LLM-authored prose and deterministic template fields
+
+- **Date**: 2026-07-10
+- **Status**: Accepted (implementation-scope note, not a policy/field-list/schema
+  change - no human approval gate applies)
+- **Decided by**: Data/AI Implementer
+
+**Context**: ADR-033 requires an exact deterministic Korean `caution_note`
+literal per `confidence_level`, a `possible_drivers` value that is "a
+deterministic index" and never a causal explanation, and an `external_context`
+that is a verbatim pass-through of a PM/Data-reviewed note with "no new
+inference ... added." Asking an LLM to reproduce those fields freely each call
+would risk inexact caution copy, invented candidate detail, or paraphrased
+provenance - all of which ADR-033 treats as validation failures.
+**Decision**: `app/core/ai_report.py`'s v3 prompt asks the model for exactly
+three fields - `issue_overview`, `current_data_reading`, `possible_outlook`.
+`possible_drivers`, `external_context`, `what_to_check`, `data_limitations`,
+and `caution_note` are built deterministically in code from
+`ReportPromptInputs` (stored/curated values only) and merged with the LLM's
+three fields by `assemble_report_content()` into the frozen eight-field
+`ReportContent`. The related-event candidate (title/date/note) is never
+inserted into the LLM prompt at all, so the model cannot weave it into
+`possible_outlook`/`current_data_reading` with causal framing. `caution_note`
+is selected from an exact-literal lookup table keyed by `confidence_level`;
+`data_limitations` independently checks missing-history/low-activity/
+high-volatility flags from raw snapshot/metric inputs (not the collapsed enum
+alone) so one enum value can't hide another real limitation.
+**Rationale**: Keeps the legally/ethically sensitive fields under full
+program control instead of LLM sampling variance, exactly matching ADR-033's
+"deterministic template" and "exact deterministic Korean template" language
+for these fields, and makes the DoD's deterministic-caution and
+no-candidate/weak-inference test requirements exactly assertable.
+**Trade-offs**: `possible_drivers`/`what_to_check` read as more formulaic than
+free LLM prose. `ReportPromptInputs` grew new fields (`outcome_label`,
+`end_date`, `volume_24h`, `liquidity`, `related_event_title`,
+`related_event_date`, `related_event_note`) that `app/core/ai_report_batch.py`
+now populates from `Market`/`MarketSnapshot`/`MarketOutcome`/`RelatedEvent`
+rows already in scope for TASK-049 (Data/AI owns `ai_report_batch.py`).
+**Consequences**: `app/core/ai_report.py` defines its own local `ReportContent`/
+`LLMReportFields` Pydantic models (a structural copy of the ADR-033 contract),
+kept separate from `app/schemas/issues.py` so this task and Backend's
+TASK-050 (which owns the public API/Pydantic schema) do not collide on the
+same file - matching `reports/day-5-v3-implementation-allocation.md`'s
+parallelization plan. `PROMPT_VERSION` is now `"v3"`. `parse_report_content`
+is replaced by `parse_llm_fields` (validates only the three LLM fields) plus
+`assemble_report_content` (merges and validates the full eight-field object);
+`run_semantic_checks` adds cross-field checks (exact caution literal,
+exact possible_drivers literal, external_context candidate-not-cause
+qualifier) beyond the existing banned-phrase/pattern filter, which itself
+gained the ADR-033 Korean hard-block terms and Korean causal/forecast
+patterns (with a carve-out so the approved "예측시장" - prediction market -
+domain term is never mistakenly flagged by the new forecast-word ban). No
+live provider call or configured/shared database write was made implementing
+or testing this - all tests run against a fake `LLMClient` and in-memory
+SQLite.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07
