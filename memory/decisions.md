@@ -489,6 +489,40 @@ SQLite.
 
 ---
 
+### ADR-035: Scheduled batch uses complete repository configuration and explicit v3 prompt constraints
+
+- **Date**: 2026-07-10
+- **Status**: Accepted (human-approved configuration repair; no product-policy,
+  schema, dependency, or public API change)
+- **Decided by**: User request, implementing Debugger / Data-AI Implementer
+
+**Context**: The first scheduled GitHub Actions run failed because the
+repository had no Actions secrets, leaving `DATABASE_URL` and the AI credential
+empty. After restoring them, the workflow fallback model produced valid JSON
+whose prose often missed ADR-033's already-approved character bounds or the
+existing public-participant-data and conditional-later-data checks. The
+repository `OPENAI_MODEL` variable was also absent, so Actions did not use the
+approved project model configured for local development.
+**Decision**: Store the approved development `DATABASE_URL` and AI credential
+as repository Actions secrets without printing their values; set the
+`OPENAI_MODEL` repository variable to the approved project model; and repeat
+ADR-033's existing Unicode bounds, exact Korean public-data source compound,
+and current-reading scope directly in the fixed three-field LLM prompt. Keep
+all structural, wording-safety, and semantic filters unchanged.
+**Rationale**: A scheduled environment must receive the same approved project
+configuration as the guarded local path, and the model prompt should state the
+same constraints that the mandatory pre-storage validators enforce. This fixes
+runtime drift without weakening the policy or accepting invalid prose.
+**Consequences**: GitHub Actions branch run `29073226485` completed with 50
+processed rows, 0 collection failures, and 10 successful reports. Read-only
+post-run validation confirmed the latest 10 v3 rows pass the structural,
+wording-safety, and semantic checks. Draft PR #51 carries the prompt/test
+changes; `main` requires the normal review flow before those code changes land.
+The runner's separate Node.js action-runtime deprecation warning is tracked as
+TD-012.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07

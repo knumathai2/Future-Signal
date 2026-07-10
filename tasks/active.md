@@ -11,9 +11,8 @@ _Last updated: 2026-07-10_
 
 ## In Progress
 
-| ID | Task | Owner | Assignee | Branch | Status |
-|----|------|-------|----------|--------|--------|
-| ISS-010 | Restore scheduled GitHub Actions batch credentials and verify rerun | Backend Implementer | Debugger | `debug/ISS-010-actions-secrets` | in_progress |
+No implementation tasks remain active. `ISS-010` is archived in
+`tasks/completed.md` after the scheduled batch passed on its fix branch.
 
 ## Status Values
 

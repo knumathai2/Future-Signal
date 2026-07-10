@@ -14,63 +14,57 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-10
-- **Agent Role**: Reviewer
-- **Session Goal**: Complete `TASK-053` integrated v3 report copy, contract,
-  responsive-layout, and data-as-of/caution review.
-- **Branch**: `review/TASK-053-v3-report-copy-lint`
+- **Agent Role**: Debugger / Data-AI Implementer
+- **Session Goal**: Diagnose and restore the failed daily GitHub Actions batch.
+- **Branch**: `debug/ISS-010-actions-secrets`
 
 ## Context Read
 
-- Project constitution and full PRD, Service Design, Technical Design, and UX
-  Design document sets
-- Project/session/task memory and Reviewer prompt
-- `standards.md`, `memory/glossary.md`, ADR-032/033/034
-- v3 API contract and Day 5 allocation/handoff records
-- TASK-049/050/051 code, tests, PR metadata, and integrated runtime behavior
+- `AGENTS.md`, PRD operations/release, Technical Design batch/operations,
+  project/session/task memory, Backend and Debugger prompts
+- `gh-fix-ci` and GitHub publish workflow instructions
+- Failed Actions runs `29046517327`, `29072425374`, `29072749970`, and
+  `29073016704`
+- ADR-022, ADR-026, ADR-027, ADR-033, and ADR-034
 
 ## Work Completed
 
-- Integrated TASK-049 (`363bf2f`), TASK-051 (`057769f`), and TASK-050
-  (`b5e77be`) on the Reviewer branch. TASK-050 had been merged into the
-  Frontend branch rather than `main`, so this branch restores the intended
-  combined baseline.
-- Verified exact v3 fields, labels, order, nullability, current-version reads,
-  neutral empty states, data-as-of timing, and caution placement.
-- Added consistent maximum-five-sentence validation in Data/AI, Backend, and
-  Frontend runtime validation.
-- Added semantic rejection for current readings without public
-  participant-data scope and for later-reading text without conditional
-  public-data framing.
-- Isolated static fallback contract tests from configured development DB state.
-- Added Frontend parser order/null/sentence regressions and aligned UI notice
-  copy with ADR-033 and the Korean hard-block list.
-- Recorded the review in
-  `reports/review-2026-07-10-task-053-v3-integration.md`, resolved ISS-009,
-  archived TASK-049/050/051/053, and updated project/architecture memory.
-- Resolved PR #50's conflict by fast-forwarding its remote head from
-  `7d25c45` to the already reviewed integration head `1001ddc`, which contains
-  the latest `main` merge and the intended TASK-049/050/051 integration.
+- Confirmed the repository initially had no Actions secrets or variables;
+  `DATABASE_URL`, `OPENROUTER_API_KEY`, and `OPENAI_API_KEY` were all empty in
+  the original scheduled run.
+- After explicit user approval, registered the existing approved development
+  `DATABASE_URL` and AI credential as repository Actions secrets without
+  exposing their values.
+- Re-ran the workflow and isolated the next failure to model-authored v3 prose:
+  the fallback model omitted minimum character counts or required safe data
+  scope, so the existing validators correctly blocked storage.
+- Added ADR-033's existing per-field Unicode bounds to the system and task
+  prompt, required the exact approved Korean public-data source compound, and
+  added regression tests.
+- Set the repository `OPENAI_MODEL` variable to the approved local project
+  model so scheduled and guarded local runs use the same configuration.
+- Pushed commits `613eae3` and `0cc3e33`, then opened draft PR #51.
+- Recorded ADR-035, resolved ISS-010, and tracked the non-blocking GitHub action
+  runtime warning as TD-012.
 
 ## Verification
 
-- Backend: `198 passed in 1.64s`; Ruff passed after the PR conflict resolution.
-- Frontend: typecheck, lint, build, and report-parser checks passed.
-- `git diff --check` and changed-string copy lint passed.
-- GitHub reports PR #50 as `MERGEABLE` with merge state `CLEAN` at
-  `1001ddc`.
-- Browser warning/error log was empty.
-- 320px/375px null-context flow: seven ordered sections, one visible body, no
-  horizontal overflow, report timing and caution visible.
-- 320px/375px non-null-context maximum fixtures: eight ordered sections,
-  600/700-code-point content wrapped without overflow or truncation.
+- Successful Actions run: `29073226485` on commit `0cc3e33`.
+- Batch summary: 50 processed, 0 failed, 0 new signals, 10 reports successful,
+  0 reports skipped, `error=None`.
+- Backend: 200 tests passed; Ruff and `git diff --check` passed.
+- Read-only post-run copy/contract check: latest 10 v3 success rows passed 10/10
+  structural, 10/10 wording-safety, and 10/10 semantic validation.
+- Draft PR #51 is open, mergeable, and `CLEAN` against `main`.
 
 ## Notes / Remaining Risks
 
-- Vite still reports the known non-blocking bundle-size warning TD-001.
-- The Reviewer branch requires the normal project merge flow before `main`
-  contains TASK-050 and the final TASK-053 fixes; PR #50 is now conflict-free
-  and ready for that flow.
-- A v3 report refresh, configured database write, screenshot run against live
-  v3 data, or deployment remains a separate approval-gated action.
-- No provider call, configured database write, migration, dependency,
-  infrastructure change, deployment, or secret access occurred.
+- PR #51 still requires normal review and human-controlled merge; no self-merge
+  was performed.
+- The manual workflow run is successful but is not reported as a PR status
+  check because `daily-batch.yml` is schedule/dispatch only.
+- GitHub warns that the Node.js 20 runtime for `actions/checkout@v4` and
+  `actions/setup-python@v5` is deprecated and currently forced to Node.js 24;
+  this is non-blocking and tracked as TD-012.
+- No schema, dependency, public API, product-safety policy, or deployment change
+  was made.
