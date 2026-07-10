@@ -219,16 +219,35 @@ def seed_market_without_metric(db_session) -> None:
     db_session.commit()
 
 
-def report_content(label: str) -> dict[str, str]:
+def report_content(label: str) -> dict[str, str | None]:
     return {
-        "issue_explainer": f"{label} issue explainer from stored data.",
-        "why_it_matters": f"{label} issue context is described in plain language.",
-        "current_reading": f"{label} current reading is based on stored metrics.",
-        "scenario_major_change": f"{label} major-change scenario is conditional context.",
-        "scenario_limited_change": f"{label} limited-change scenario is conditional context.",
-        "scenario_status_quo": f"{label} status-quo scenario is conditional context.",
-        "check_points": f"{label} checkpoints summarize dates and formal updates.",
-        "caution_note": f"{label} caution note avoids any outcome claim.",
+        "issue_overview": (
+            f"{label} issue overview from stored data that explains the tracked condition."
+        ),
+        "current_data_reading": (
+            f"{label} current data reading tracks expectation value based on "
+            "public participant dataset."
+        ),
+        "possible_outlook": (
+            f"{label} possible outlook describes conditional later readings "
+            "without asserting a real-world forecast."
+        ),
+        "possible_drivers": (
+            f"{label} possible drivers lists manually reviewed factor candidates "
+            "for comparison alongside the movement."
+        ),
+        "external_context": (
+            f"{label} external context narrative for manually reviewed context candidate."
+        ),
+        "what_to_check": f"{label} what to check lists verification items and dates.",
+        "data_limitations": (
+            f"{label} data limitations details activity level, liquidity depth, "
+            "volatility, and representativeness constraints."
+        ),
+        "caution_note": (
+            f"{label} caution note includes participant scope, no-outcome claims, "
+            "representativeness limitations, and independent verification requirement."
+        ),
     }
 
 
@@ -241,7 +260,7 @@ def seed_ai_report(
     input_metrics_id: int | None = 1,
     status: str = "success",
     label: str = "latest",
-    prompt_version: str = "template-v1",
+    prompt_version: str = "v3",
 ) -> None:
     db_session.add(
         AiReport(

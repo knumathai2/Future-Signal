@@ -287,6 +287,19 @@ def test_assemble_report_content_rejects_unknown_confidence_level():
     assert content is None
 
 
+def test_assemble_report_content_rejects_more_than_five_sentences():
+    content = assemble_report_content(
+        _inputs(),
+        _llm_fields(
+            issue_overview=(
+                "첫 문장입니다. 둘째 문장입니다. 셋째 문장입니다. "
+                "넷째 문장입니다. 다섯째 문장입니다. 여섯째 문장입니다."
+            )
+        ),
+    )
+    assert content is None
+
+
 # --- run_safety_filter ----------------------------------------------------
 
 
@@ -468,6 +481,38 @@ def test_semantic_checks_accept_current_data_reading_metrics_matching_inputs():
     inputs = _inputs()
     content = assemble_report_content(inputs, _llm_fields())
     assert run_semantic_checks(content, inputs).passed is True
+
+
+def test_semantic_checks_reject_current_data_reading_without_public_participant_scope():
+    inputs = _inputs()
+    content = assemble_report_content(
+        inputs,
+        _llm_fields(
+            current_data_reading=(
+                "현재 수치는 63%이며 24시간 전보다 8.0퍼센트포인트 높게 "
+                "관찰되었습니다. 이 값은 참고용으로만 살펴봐야 합니다."
+            )
+        ),
+    )
+    result = run_semantic_checks(content, inputs)
+    assert result.passed is False
+    assert result.rule == "current_data_reading_missing_public_participant_scope"
+
+
+def test_semantic_checks_reject_nonconditional_possible_outlook():
+    inputs = _inputs()
+    content = assemble_report_content(
+        inputs,
+        _llm_fields(
+            possible_outlook=(
+                "이후 공개 데이터는 관찰된 흐름을 설명합니다. "
+                "현실의 결과와는 구분되며 다른 자료를 통한 독립 확인이 필요합니다."
+            )
+        ),
+    )
+    result = run_semantic_checks(content, inputs)
+    assert result.passed is False
+    assert result.rule == "possible_outlook_missing_conditional_public_data_scope"
 
 
 # --- OpenAIReportClient ----------------------------------------------------

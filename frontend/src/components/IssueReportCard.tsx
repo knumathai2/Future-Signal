@@ -50,7 +50,7 @@ function NotYetGeneratedBody() {
       </h3>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-ink-soft">
         이슈 정보와 차트는 계속 확인할 수 있습니다. 요약이 생성되면 이슈
-        설명과 가능한 전개를 고정된 섹션 형식으로 표시합니다.
+        설명과 조건부 전개를 고정된 섹션 형식으로 표시합니다.
       </p>
     </div>
   );

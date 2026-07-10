@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Known Issues — Outlook Signals
 
-_Last updated: 2026-07-09_
+_Last updated: 2026-07-10_
 
 ## Active Bugs
 
@@ -30,6 +30,8 @@ _Last updated: 2026-07-09_
 
 | ID | Description | Resolved | Method |
 |----|-------------|----------|--------|
+| ISS-009 | Integrated v3 runtime omitted the ADR-033 five-sentence enforcement, could accept report prose without the required public-data scope, had environment-dependent fallback contract tests, and retained Korean hard-block copy in UI strings. | 2026-07-10 | TASK-053 added matching Backend/Frontend sentence validation, semantic public-data/conditional checks, isolated fallback tests from configured DB state, replaced blocked UI copy, and passed complete code, copy, and responsive-browser verification. |
+| ISS-008 | PR #49 v3 report generation could omit reviewed candidate identity, accept metric text inconsistent with structured inputs, and reject approved Korean context wording. | 2026-07-10 | Fixed in PR head `363bf2f`; deterministic title/date output, metric consistency validation, approved negative-disclaimer handling, and `맥락 메모` qualifier coverage were added with regression tests. All four GitHub review threads were resolved and the PR was approved. |
 | ISS-001 | Detail chart could not display a trend for 24h/7d/30d when the API history path returned only one point; this was not caused by the 5pp inflection-marker threshold. | 2026-07-08 | Frontend now renders an explicit insufficient-history state when the visible chart window has fewer than two history points. |
 | DQ-001 | API no-report-yet response shape needed PM/Frontend sign-off. | 2026-07-08 | ADR-008 accepted `200 {"status": "not_yet_generated"}` as the canonical response. |
 | TD-004 | `backend/API_CONTRACT.md` still contained stale "draft/open item" wording for the report-empty response even though ADR-008 accepted `200 {"status": "not_yet_generated"}`. | 2026-07-08 | Cleaned up during `TASK-010` - "Open item for PM sign-off" section now states the accepted behavior as final; response shape unchanged. |
@@ -71,6 +73,60 @@ them before Day 5 lock if they become relevant to the active path:
 - **Workaround**:
 - **Permanent fix direction**:
 ```
+
+### ISS-008: PR #49 v3 report contract and safety validation gaps
+- **Severity**: High
+- **Found**: 2026-07-10 during PR #49 review
+- **Status**: Resolved in PR head `363bf2f`; GitHub review state is `APPROVED`
+- **Evidence**:
+  - Review: <https://github.com/knumathai2/Future-Signal/pull/49#pullrequestreview-4668601361>
+  - Backend tests and Ruff pass, so focused contract regressions are needed.
+  - A candidate input produced `possible_drivers` with neither its title nor
+    its recorded date.
+  - A 63% structured input paired with 99% model-authored text passed both
+    current safety and semantic checks.
+  - ADR-033's approved Korean external-context example is rejected by the
+    global `원인` pattern and by the literal candidate-term requirement.
+- **Root cause**:
+  - Candidate-present output uses a constant instead of the loaded title/date.
+  - Metric-bearing model prose has length and wording checks but no comparison
+    with `ReportPromptInputs`.
+  - The Korean relationship filter is applied as an unqualified substring.
+  - The semantic qualifier is narrower than the approved contract example.
+- **Fix**:
+  - `possible_drivers` now includes the reviewed title/date deterministically,
+    metric-bearing `current_data_reading` prose is checked against structured
+    values, the approved negative Korean disclaimer is accepted, and the
+    approved `맥락 메모` qualifier is recognized.
+  - Regression tests cover all four findings; the fixed head passes 179
+    backend tests and Ruff.
+  - All four GitHub review threads were answered and resolved, followed by an
+    approval review.
+
+### ISS-009: Integrated v3 contract and copy gaps
+- **Severity**: High
+- **Found**: 2026-07-10 during TASK-053 integrated review
+- **Status**: Resolved on `review/TASK-053-v3-report-copy-lint`
+- **Evidence**:
+  - A six-sentence field passed generation, safety, and semantic checks.
+  - A metric-consistent current reading without public participant-data scope
+    passed semantic validation.
+  - A non-conditional later-data paragraph passed `possible_outlook` checks.
+  - Fallback contract tests read the configured development DB and failed five
+    assertions instead of deterministically exercising fallback behavior.
+  - Three UI strings contained the Korean v3 hard-block term `확정`; the Korean
+    spelling of Macron also contained the blocked substring `롱`.
+- **Fix**:
+  - Matching Data/AI, public API, and Frontend parser validation now rejects
+    more than five sentences per non-null field.
+  - Semantic checks require current readings to identify scoped public
+    participant data and conditional developments to remain within later
+    public-data readings.
+  - Fallback contract tests explicitly override the optional DB dependency.
+  - UI wording now uses safe alternatives and the policy notice lists the v3
+    section responsibilities.
+  - Backend (198 tests + Ruff), Frontend (typecheck, lint, build, parser), copy
+    lint, and 320px/375px Browser QA all pass.
 
 ### ISS-001: Detail chart blank with one-point history
 - **Severity**: High
