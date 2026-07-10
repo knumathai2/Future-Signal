@@ -25,6 +25,15 @@ const SHORT_DATE_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
   timeZone: "UTC",
 });
 
+const COMPACT_DATE_TIME_FORMATTER = new Intl.DateTimeFormat("ko-KR", {
+  month: "numeric",
+  day: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+  timeZone: "UTC",
+});
+
 const CATEGORY_LABELS: Record<string, string> = {
   climate: "기후",
   culture: "문화",
@@ -47,6 +56,10 @@ export function formatDataTimestamp(timestamp: string): string {
 
 export function formatShortDate(timestamp: string): string {
   return SHORT_DATE_FORMATTER.format(new Date(timestamp));
+}
+
+export function formatCompactDataTimestamp(timestamp: string): string {
+  return `${COMPACT_DATE_TIME_FORMATTER.format(new Date(timestamp))} UTC`;
 }
 
 export function formatExpectationValue(value: number): string {
@@ -78,6 +91,13 @@ export function windowLabel(windowKey: ChartWindow): string {
   }
 
   return "30일";
+}
+
+export function issueChangeForWindow(
+  issue: Issue,
+  windowKey: Extract<ChartWindow, "24h" | "7d">,
+): number | null | undefined {
+  return windowKey === "24h" ? issue.change24h : issue.change7d;
 }
 
 export function formatCategoryLabel(category: string): string {
@@ -235,7 +255,8 @@ export function mapApiIssueDetailToFrontendIssue(
     }))
     .sort(
       (left, right) =>
-        new Date(left.timestamp).getTime() - new Date(right.timestamp).getTime(),
+        new Date(left.timestamp).getTime() -
+        new Date(right.timestamp).getTime(),
     );
 
   const apiSignalPoints = apiDetail.signals.map((signal) => ({
@@ -248,16 +269,19 @@ export function mapApiIssueDetailToFrontendIssue(
     ? apiSignalPoints
     : buildLocalInflectionPoints(history);
 
-  const relatedEventCandidates: RelatedEventCandidate[] = apiDetail.related_events.map((e) => ({
-    title: e.event_title,
-    date: e.event_date,
-    note: e.note,
-  }));
+  const relatedEventCandidates: RelatedEventCandidate[] =
+    apiDetail.related_events.map((e) => ({
+      title: e.event_title,
+      date: e.event_date,
+      note: e.note,
+    }));
 
   const currentExpectationValue = apiDetail.current_value * 100;
   const change24h = toPercentagePoint(apiDetail.change_24h);
   const change7d = toPercentagePoint(apiDetail.change_7d);
-  const roundedCurrentExpectationValue = Number(currentExpectationValue.toFixed(1));
+  const roundedCurrentExpectationValue = Number(
+    currentExpectationValue.toFixed(1),
+  );
   const change30d = calculateHistoryChangeForWindow(
     history,
     roundedCurrentExpectationValue,
