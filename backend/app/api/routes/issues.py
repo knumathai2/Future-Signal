@@ -30,7 +30,6 @@ from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.core.ai_report import PROMPT_VERSION
 from app.core.category_taxonomy import category_matches
 from app.core.config import settings
 from app.db.queries import (
@@ -233,6 +232,7 @@ def _issue_report_from_live(live_report: LiveAiReport) -> IssueReportResponse:
         generated_at=live_report.report.generated_at,
         data_as_of=live_report.data_as_of,
         status="success",
+        report_version="v3",
         content=ReportContent(**live_report.report.content),
     )
 
@@ -373,7 +373,7 @@ def get_issue_report(
             live_report = load_latest_successful_report(
                 db,
                 match.market.id,
-                preferred_prompt_version=PROMPT_VERSION,
+                preferred_prompt_version="v3",
             )
         except SQLAlchemyError:
             logger.warning(
@@ -383,6 +383,17 @@ def get_issue_report(
             return ReportNotYetGenerated(status="not_yet_generated")
         if live_report is None:
             return ReportNotYetGenerated(status="not_yet_generated")
+
+        if (
+            live_report.data_as_of is None
+            or live_report.data_as_of > live_report.report.generated_at
+        ):
+            logger.warning(
+                "Report data_as_of is unavailable or in the future compared to generated_at; "
+                "returning report empty state."
+            )
+            return ReportNotYetGenerated(status="not_yet_generated")
+
         try:
             return _issue_report_from_live(live_report)
         except ValidationError:
@@ -402,38 +413,38 @@ def get_issue_report(
         generated_at=_NOW,
         data_as_of=_NOW,
         status="success",
+        report_version="v3",
         content=ReportContent(
-            issue_explainer=(
-                "이 이슈는 다자 기후 협정이 정해진 시점까지 비준되는지를 "
-                "공개 데이터 맥락에서 살펴보는 항목입니다."
+            issue_overview="이 이슈는 공개된 기한까지 문서에 적힌 조건이 충족되는지를 추적합니다.",
+            current_data_reading=(
+                "데이터 기준 시각에 공개 예측시장 참여자 데이터에 반영된 기대값은 63%이며, "
+                "24시간 전보다 8.2퍼센트포인트 높게 관찰되었습니다."
             ),
-            why_it_matters=(
-                "협정 비준 여부는 국제 환경 정책과 각국의 후속 절차를 "
-                "이해하는 데 참고 맥락이 될 수 있습니다."
+            possible_outlook=(
+                "이후 공개 데이터에서 관찰된 움직임의 지속, 확대 또는 완화가 확인되더라도, "
+                "이는 데이터의 흐름만 설명하며 현실의 결과나 변화의 이유를 입증하지 않습니다."
             ),
-            current_reading=(
-                "현재 공개 데이터에서는 이 이슈에 대한 재평가 흐름이 "
-                "관측되고 있으나, 실제 결과를 뜻하지는 않습니다."
+            possible_drivers=(
+                "이 움직임과 함께 비교할 수 있도록 수동 검토를 마친 맥락 후보가 없습니다. "
+                "현재 데이터는 관찰된 움직임만 보여 주며, 추가 맥락은 다른 자료를 통해 "
+                "독립적으로 확인해야 합니다."
             ),
-            scenario_major_change=(
-                "조건이 명확히 성립하는 경우, 비준 절차가 확인되며 관련 "
-                "정책 일정과 후속 이행 논의가 더 중요해질 수 있습니다."
+            external_context=None,
+            what_to_check=(
+                "게시된 이슈 문구와 기록된 기한, 데이터 기준 시각, "
+                "이후 공개 데이터 갱신 내용을 추가로 확인해야 합니다."
             ),
-            scenario_limited_change=(
-                "관련 논의는 이어지지만 조건이 일부만 충족되는 경우, "
-                "정책 관심은 유지되더라도 실제 절차 변화는 제한적일 수 있습니다."
-            ),
-            scenario_status_quo=(
-                "조건이 성립하지 않는 경우, 기존 협상 또는 비준 절차가 "
-                "대체로 유지되는 상황으로 해석할 수 있습니다."
-            ),
-            check_points=(
-                "확인할 지점은 공식 비준 일정, 참여국 발표, 후속 절차의 "
-                "진행 여부입니다."
+            data_limitations=(
+                "이 읽기는 활동량, 유동성, 24시간 변화 폭, 24시간 및 "
+                "7일 이력 범위의 영향을 받습니다. "
+                "공개 예측시장 참여자 데이터는 전체 대중의 판단을 대표하지 않습니다."
             ),
             caution_note=(
-                "이 요약은 공개 데이터와 등록된 맥락을 정리한 것이며, "
-                "실제 결과에 대한 전망이나 행동 제안이 아닙니다."
+                "이 내용은 공개 예측시장 참여자 데이터에 나타난 흐름을 정리한 것이며, "
+                "전체 대중의 판단을 대표하거나 현실의 결과를 입증하지 않습니다. "
+                "24시간 및 7일 비교 지점이 있고 활동량과 유동성이 설정된 하한보다 낮지 않으며 "
+                "24시간 변화 폭이 큰 움직임 기준을 넘지 않지만, "
+                "다른 자료를 통해 독립적으로 확인해야 합니다."
             ),
         ),
     )

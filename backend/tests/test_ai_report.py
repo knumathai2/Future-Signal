@@ -39,7 +39,6 @@ from app.core.config import (
     _resolve_ai_model,
     _resolve_ai_provider,
 )
-
 VALID_LLM_FIELDS = {
     "issue_overview": "이 이슈는 공개된 기한까지 문서에 적힌 조건이 충족되는지를 추적합니다.",
     "current_data_reading": (
