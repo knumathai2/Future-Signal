@@ -45,6 +45,25 @@ export type DataStatus = "loading" | "ready" | "empty" | "error";
 
 export type ChartWindow = "24h" | "7d" | "30d";
 
+export type IssueListSort = "heat" | "change" | "recent";
+
+export type DirectionSummary = {
+  upwardCount: number;
+  downwardCount: number;
+  unchangedCount: number;
+  insufficientCount: number;
+  directionalCount: number;
+  upwardRatio: number;
+  downwardRatio: number;
+};
+
+export type CategorySummary = {
+  label: string;
+  totalCount: number;
+  validCount: number;
+  averageChange: number | null;
+};
+
 export type IssueReportContent = {
   issue_overview: string;
   current_data_reading: string;
