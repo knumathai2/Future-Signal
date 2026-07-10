@@ -1,7 +1,7 @@
-# API Contract Draft — Outlook Signals
+# API Contract — Outlook Signals
 
-_Status: current v2 runtime contract plus a non-frozen TASK-048 v3 replacement
-draft. ADR-032 remains accepted until PM/user approval and a superseding ADR.
+_Status: current v2 runtime contract plus the TASK-048 v3 replacement contract
+frozen by ADR-033, which supersedes ADR-032 for v3 implementation scope.
 The current runtime shapes are backed by Pydantic schemas
 (`app/schemas/issues.py`, `app/schemas/health.py`) and routes
 (`app/api/routes/`); the TASK-048 snippets are documentation only and do not
@@ -144,14 +144,14 @@ rather than Technical Design §5's originally proposed `204` (HTTP `204 No
 Content` cannot carry a body per spec, so most clients would discard the
 hint). This is accepted as final, not an open item.
 
-## Proposed v3 report contract replacement (TASK-048, not frozen)
+## Approved v3 report contract replacement (TASK-048, ADR-033)
 
-This section is a design draft only. It does not change the current endpoint,
-Pydantic schema, report generator, stored rows, frontend types, or report UI.
-ADR-032 remains the accepted v3 policy until the PM/user approves this
-replacement and a new ADR supersedes ADR-032 without rewriting its history.
+This section is the frozen implementation contract, but TASK-048 does not
+change the current endpoint, Pydantic schema, report generator, stored rows,
+frontend types, or report UI. ADR-033 supersedes ADR-032 for future v3 work
+without rewriting ADR-032's history.
 
-The proposed `content` object has exactly these eight keys:
+The approved `content` object has exactly these eight keys:
 
 ```json
 {
@@ -173,23 +173,23 @@ The proposed `content` object has exactly these eight keys:
 - ADR-032 accepted an eleven-field `content` object with a nullable
   `context_candidate_note`, three separate scenario fields, and separate
   `current_reading` and `recent_change_summary` fields.
-- This proposal consolidates ADR-032 into eight content fields, introduces
+- ADR-033 consolidates ADR-032 into eight content fields, introduces
   `possible_drivers`, and makes `external_context` the only nullable value.
-- `possible_outlook` can be misread as a real-world forecast. The proposed
+- `possible_outlook` can be misread as a real-world forecast. The approved
   contract limits it to conditional descriptions of how the public-data
   reading could continue, expand, or moderate; it cannot state a result, a
   result probability, or a future direction as fact.
-- `possible_drivers` can be misread as causal analysis. The proposed contract
+- `possible_drivers` can be misread as causal analysis. The approved contract
   permits only manually reviewed or structured-input factor candidates and
   requires an adjacent statement that the available data does not establish
   influence or causation. Its frontend label avoids causal wording.
-- The two risky key names remain in this draft because TASK-048 requires the
-  fixed eight-field set. Retaining them in the frozen public API requires
-  explicit PM/user approval; this task does not rename them unilaterally.
+- The two risky key names remain in the frozen contract under the approved
+  non-forecasting and non-causal validation rules. Their Frontend labels remain
+  the safer display boundary defined below.
 
 ### ADR-032 field mapping
 
-| ADR-032 content field | Proposed v3 field | Change | Boundary preserved by the proposal |
+| ADR-032 content field | Approved v3 field | Change | Boundary preserved by ADR-033 |
 |---|---|---|---|
 | `issue_explainer` | `issue_overview` | Renamed and narrowed | Explain the issue and its resolution condition; do not add unsupported significance claims. |
 | `why_it_matters` | `issue_overview` | Standalone field removed; source-backed orientation may be consolidated | Keep only context needed to understand the issue; do not speculate about impact. |
@@ -217,9 +217,9 @@ UTC values. `data_as_of` must be less than or equal to `generated_at`.
 | `report_version` | Required literal `v3`, derived from the accepted prompt/schema version. |
 | `generated_at` | Required report-generation timestamp from the stored row. |
 | `data_as_of` | Required timestamp derived through `input_metrics_id` to `market_metrics.computed_at`; it is never generated text. |
-| `content` | Required object that contains every proposed key exactly once; no extra or missing key is accepted. |
+| `content` | Required object that contains every approved key exactly once; no extra or missing key is accepted. |
 
-Complete draft example:
+Complete approved example:
 
 ```json
 {
@@ -256,14 +256,14 @@ clusters, or model tokens.
 
 | Field name | Purpose | Input source or producer | API type | Required or nullable | Minimum length | Maximum length | Length measurement unit | Frontend label | Display order | Safety validation | Missing-value behavior |
 |---|---|---|---|---|---:|---:|---|---|---:|---|---|
-| `issue_overview` | Explain what the issue is and the documented condition being tracked. | Stored title, description, category, tracked outcome label, and optional end date. The later generator input must expose only the values that exist. | string | Required, non-null | 30 | 400 | Trimmed Unicode code points | Issue Overview | 1 | No outcome assertion, unsupported significance claim, or broader-public claim. | If title and description do not document the tracked condition clearly enough, reject the report; do not invent resolution criteria. |
-| `current_data_reading` | Describe the values and movement currently observed in public data. | Current snapshot, fixed 24h/7d computed changes, inflection timing, and `data_as_of`; deterministic values phrased by the Data/AI template. | string | Required, non-null | 50 | 500 | Trimmed Unicode code points | Current Data Reading | 2 | Must identify the reading as public participant data; no real-world probability or unsupported metric. | If a fixed comparison window is unavailable, state that limitation and omit its magnitude. If no current snapshot exists, reject the report. |
-| `possible_outlook` | Describe conditional developments in later public-data readings without forecasting a real-world outcome. | Current reading and fixed 24h/7d changes; fixed Data/AI template only. It does not use an external event to explain later movement. | string | Required, non-null | 60 | 450 | Trimmed Unicode code points | Conditional Developments | 5 | Conditional data-reading language only; no result probability, certainty, asserted future direction, or external-condition linkage. | Use the fixed later-reading pattern defined below. If no current snapshot exists, reject the report. |
-| `possible_drivers` | Identify reviewed context candidates that can be compared with movement without asserting a relationship. | Title and date from PM/Data-approved curated `related_events` rows; deterministic template only. | string | Required, non-null | 80 | 450 | Trimmed Unicode code points | Factors to Check Alongside the Movement | 4 | Must state that timing is for comparison and that no relationship is established; causal connectors and rankings are blocked. | If no approved candidate exists, use the fixed no-candidate statement defined below; do not invent a factor. |
-| `external_context` | Present the approved narrative note for manually reviewed external context. | `related_events[].note` from the PM/Data-approved curated path; no new inference or provenance claim may be added. | string or null | Key required; value nullable | 40 when non-null | 500 when non-null | Trimmed Unicode code points | External Context | 3 | Every context item must be manually reviewed and carry candidate-not-cause wording; no automatically matched material. | Use `null` when approval cannot be established or no reviewed note exists. Empty string and placeholder copy are rejected; Frontend hides the section only for `null`. |
-| `what_to_check` | List documented text, dates, and data updates requiring further verification. | Stored title/description, optional end date, approved context title/date, structured missing-input flags, and `data_as_of`. | string | Required, non-null | 30 | 400 | Trimmed Unicode code points | What to Check | 6 | Verification language only; no instruction to act on an outcome and no unsupported source or official-status claim. | If issue-specific items are unavailable, require a fixed check of the published issue wording, recorded dates, later public-data updates, and timestamp. |
-| `data_limitations` | Explain limitations involving activity, liquidity, the current large-movement volatility proxy, history, and representativeness. | Fixed 24h/7d changes, snapshot volume/liquidity inputs, history availability, caution enum, and source-scope constants. A later prompt-input extension is required. | string | Required, non-null | 80 | 500 | Trimmed Unicode code points | Data Limitations | 7 | Must describe every independently detected limitation, even when enum precedence exposes only one level, and must not claim broader-public representativeness. | Missing comparison inputs force the `insufficient_data` limitations template; the section is never hidden. |
-| `caution_note` | Provide the mandatory interpretation-caution statement for the report as a whole. | Exact deterministic Korean template selected from `confidence_level`, then equality/clause and safety validated. | string | Required, non-null | 120 | 500 | Trimmed Unicode code points | Interpretation Caution | 8 | Must include public-participant scope, no real-world-result claim, broader-public limitation, and independent verification. | If the caution enum is missing or the exact required copy cannot be rendered, reject the report; the section is never hidden. |
+| `issue_overview` | Explain what the issue is and the documented condition being tracked. | Stored title, description, category, tracked outcome label, and optional end date. The later generator input must expose only the values that exist. | string | Required, non-null | 30 | 600 | Trimmed Unicode code points | Issue Overview | 1 | No outcome assertion, unsupported significance claim, or broader-public claim. | If title and description do not document the tracked condition clearly enough, reject the report; do not invent resolution criteria. |
+| `current_data_reading` | Describe the values and movement currently observed in public data. | Current snapshot, fixed 24h/7d computed changes, inflection timing, and `data_as_of`; deterministic values phrased by the Data/AI template. | string | Required, non-null | 50 | 700 | Trimmed Unicode code points | Current Data Reading | 2 | Must identify the reading as public participant data; no real-world probability or unsupported metric. | If a fixed comparison window is unavailable, state that limitation and omit its magnitude. If no current snapshot exists, reject the report. |
+| `possible_outlook` | Describe conditional developments in later public-data readings without forecasting a real-world outcome. | Current reading and fixed 24h/7d changes; fixed Data/AI template only. It does not use an external event to explain later movement. | string | Required, non-null | 60 | 700 | Trimmed Unicode code points | Conditional Developments | 5 | Conditional data-reading language only; no result probability, certainty, asserted future direction, or external-condition linkage. | Use the fixed later-reading pattern defined below. If no current snapshot exists, reject the report. |
+| `possible_drivers` | Identify reviewed context candidates that can be compared with movement without asserting a relationship. | Title and date from PM/Data-approved curated `related_events` rows; deterministic template only. | string | Required, non-null | 80 | 700 | Trimmed Unicode code points | Factors to Check Alongside the Movement | 4 | Must state that timing is for comparison and that no relationship is established; causal connectors and rankings are blocked. | If no approved candidate exists, use the fixed no-candidate statement defined below; do not invent a factor. |
+| `external_context` | Present the approved narrative note for manually reviewed external context. | `related_events[].note` from the PM/Data-approved curated path; no new inference or provenance claim may be added. | string or null | Key required; value nullable | 40 when non-null | 700 when non-null | Trimmed Unicode code points | External Context | 3 | Every context item must be manually reviewed and carry candidate-not-cause wording; no automatically matched material. | Use `null` when approval cannot be established or no reviewed note exists. Empty string and placeholder copy are rejected; Frontend hides the section only for `null`. |
+| `what_to_check` | List documented text, dates, and data updates requiring further verification. | Stored title/description, optional end date, approved context title/date, structured missing-input flags, and `data_as_of`. | string | Required, non-null | 30 | 600 | Trimmed Unicode code points | What to Check | 6 | Verification language only; no instruction to act on an outcome and no unsupported source or official-status claim. | If issue-specific items are unavailable, require a fixed check of the published issue wording, recorded dates, later public-data updates, and timestamp. |
+| `data_limitations` | Explain limitations involving activity, liquidity, the current large-movement volatility proxy, history, and representativeness. | Fixed 24h/7d changes, snapshot volume/liquidity inputs, history availability, caution enum, and source-scope constants. A later prompt-input extension is required. | string | Required, non-null | 80 | 700 | Trimmed Unicode code points | Data Limitations | 7 | Must describe every independently detected limitation, even when enum precedence exposes only one level, and must not claim broader-public representativeness. | Missing comparison inputs force the `insufficient_data` limitations template; the section is never hidden. |
+| `caution_note` | Provide the mandatory interpretation-caution statement for the report as a whole. | Exact deterministic Korean template selected from `confidence_level`, then equality/clause and safety validated. | string | Required, non-null | 120 | 700 | Trimmed Unicode code points | Interpretation Caution | 8 | Must include public-participant scope, no real-world-result claim, broader-public limitation, and independent verification. | If the caution enum is missing or the exact required copy cannot be rendered, reject the report; the section is never hidden. |
 
 Fixed Korean no-candidate statement for `possible_drivers`:
 
@@ -276,7 +276,7 @@ Fixed Korean no-candidate statement for `possible_drivers`:
 The later implementation must not assume that every conceptual input already
 exists in `ReportPromptInputs`.
 
-| Input | Current availability | v3 draft use |
+| Input | Current availability | v3 contract use |
 |---|---|---|
 | Title, description, category | Stored and already passed to the generator. | `issue_overview`, with no added resolution claim. |
 | Tracked outcome label and optional end date | Stored, but not currently passed to `ReportPromptInputs`. | May be added to the later prompt-input object without a database change. |
@@ -289,16 +289,15 @@ exists in `ReportPromptInputs`.
 The report generator remains Korean. The complete example, no-candidate
 literal, and caution matrix therefore use Korean fixtures. Each fixture must
 pass the same trimmed Unicode-code-point bounds as generated content. Every
-generated narrative field remains limited to 1-3 concise sentences. The reduced
-maximums above are an editorial/mobile budget, not permission to fill every
-field to its limit.
+generated narrative field remains limited to 1-5 concise sentences. The
+approved maximums are an upper bound, not a target for every response.
 
 ### `external_context` representation decision
 
 | Option | Compatible with the fixed eight-field contract? | Metadata and review implications | Decision |
 |---|---|---|---|
-| A. Narrative text in `external_context`; metadata elsewhere | Yes. The field remains `string | null`, and existing issue-detail `related_events` remains the metadata area. | Current metadata is title, reviewed note, and an event date when recorded. A source URL is not present in the current DB or public response. Every included item must be manually reviewed. | **Selected for this draft.** |
-| B. Structured narrative plus source metadata object | Not compatible with the proposed string type. It could stay within eight keys only by changing this field to an object. | Better association of title/date/URL, but URL is not currently stored. Changing the type requires separate public API approval and coordinated Backend/Frontend/Data work. Adding metadata outside `content` would be an additional public API field and also requires approval. | Not selected. |
+| A. Narrative text in `external_context`; metadata elsewhere | Yes. The field remains `string | null`, and existing issue-detail `related_events` remains the metadata area. | Current metadata is title, reviewed note, and an event date when recorded. A source URL is not present in the current DB or public response. Every included item must be manually reviewed. | **Selected by ADR-033.** |
+| B. Structured narrative plus source metadata object | Not compatible with the approved string type. It could stay within eight keys only by changing this field to an object. | Better association of title/date/URL, but URL is not currently stored. Changing the type requires separate public API approval and coordinated Backend/Frontend/Data work. Adding metadata outside `content` would be an additional public API field and also requires approval. | Not selected. |
 | C. Source information embedded in the narrative string | Technically compatible. | Metadata becomes difficult to validate, parse, link, and update; URLs would consume narrative length and mix provenance with generated copy. | Rejected. |
 
 Under Option A:
@@ -354,12 +353,9 @@ Korean generated text must also block causal-link patterns such as `때문에`,
 that the candidate `설명한다` the movement. These strings are quoted here only
 to define validation rules.
 
-The key name `possible_drivers` itself can imply causal analysis. If it is
-retained, the public UI must use the non-causal label "Factors to Check
-Alongside the Movement" and the semantic validator must enforce the rules
-above. If PM determines that the key still violates the wording policy, a
-safer key name must be approved in the superseding ADR; TASK-048 does not make
-that rename on its own.
+The key name `possible_drivers` itself can imply causal analysis. ADR-033
+retains it only with the public label "Factors to Check Alongside the
+Movement" and the semantic validator rules above.
 
 ### Safety rules for `possible_outlook`
 
@@ -393,10 +389,9 @@ Korean generated text must also block certainty/forecast patterns such as
 real-world result or assert a future data direction. These strings are quoted
 here only to define validation rules.
 
-The key name `possible_outlook` can itself be read as forecasting. The draft
-therefore uses the frontend label "Conditional Developments" and requires the
-field-level restrictions above. Retaining the key in a frozen public contract
-is an explicit PM/user approval item.
+The key name `possible_outlook` can itself be read as forecasting. ADR-033
+retains it only with the Frontend label "Conditional Developments" and the
+field-level restrictions above.
 
 ### Mandatory `caution_note` copy by caution level
 
@@ -412,7 +407,7 @@ Every enum value must communicate all four baseline meanings:
 3. It does not establish a real-world outcome.
 4. The reader should verify the information independently.
 
-| `confidence_level` enum | Meanings that must appear | Condition-specific limitation | Draft deterministic Korean literal | Additional blocked wording patterns |
+| `confidence_level` enum | Meanings that must appear | Condition-specific limitation | Approved deterministic Korean literal | Additional blocked wording patterns |
 |---|---|---|---|---|
 | `sufficient` | All four baseline meanings; 24h and 7d comparisons exist, activity and liquidity are not below their configured floors, and absolute 24h movement does not exceed the configured large-movement threshold. | Sufficiency applies only to the available inputs, not accuracy, representativeness, or outcome certainty. | "이 내용은 공개 예측시장 참여자 데이터에 나타난 흐름을 정리한 것이며, 전체 대중의 판단을 대표하거나 현실의 결과를 입증하지 않습니다. 24시간 및 7일 비교 지점이 있고 활동량과 유동성이 설정된 하한보다 낮지 않으며 24시간 변화 폭이 큰 움직임 기준을 넘지 않지만, 다른 자료를 통해 독립적으로 확인해야 합니다." | "No caution needed", "fully reliable", "confirms the outcome", or any equivalent assurance. |
 | `caution_low_activity` | All four baseline meanings; reported 24h volume or liquidity is unavailable or below its configured floor. | Movement may be more sensitive to limited activity or available depth. The enum does not establish observation count, staleness, or participant identity. | "이 내용은 공개 예측시장 참여자 데이터에 나타난 흐름을 정리한 것이며, 전체 대중의 판단을 대표하거나 현실의 결과를 입증하지 않습니다. 24시간 활동량 또는 유동성이 없거나 설정된 하한보다 낮아 관찰된 변화가 제한된 활동이나 깊이에 민감할 수 있으므로, 다른 자료를 통해 독립적으로 확인해야 합니다." | Claims that the movement is invalid, can be ignored, is stale, or was caused by a particular participant. |
@@ -433,14 +428,14 @@ meanings are present.
 
 All copy must also pass the project-wide English/Korean hard-block term scan,
 future-outcome, causal-claim, certainty, action-advice, and participant-following
-pattern checks in `standards.md`, `memory/glossary.md`, and ADR-032. The matrix
+pattern checks in `standards.md`, `memory/glossary.md`, and ADR-033. The matrix
 adds condition-specific requirements; it does not weaken the shared policy.
 
-### Draft Frontend section order and labels
+### Approved Frontend section order and labels
 
-This mapping is contract documentation only. It must not be connected to the
-runtime UI until the replacement contract is approved and Backend, Data/AI,
-and Frontend switch together.
+This mapping is the approved contract documentation only. It must not be
+connected to the runtime UI until Backend, Data/AI, and Frontend switch
+together in coordinated implementation tasks.
 
 The display order is evidence-first: reviewed external context appears before
 candidate comparison and conditional-development copy. The JSON object itself
@@ -479,9 +474,9 @@ const V3_REPORT_SECTIONS = [
 ```
 
 The English labels are semantic contract references, not final shipped locale
-copy. Draft Korean labels for the current UI are:
+copy. Approved Korean labels for the current UI are:
 
-| Key | Draft Korean label |
+| Key | Approved Korean label |
 |---|---|
 | `issue_overview` | 이슈 개요 |
 | `current_data_reading` | 현재 데이터 읽기 |
@@ -493,8 +488,8 @@ copy. Draft Korean labels for the current UI are:
 | `caution_note` | 해석 주의 |
 
 Both label sets describe reading, context, verification, and caution rather
-than an outcome or action, so they are compatible with the current UX wording
-policy. They remain draft copy.
+than an outcome or action, so ADR-033 accepts them as the implementation
+contract copy.
 
 `external_context` is the only nullable value. Its heading and body are both
 hidden exactly when the API value is `null`:
@@ -513,7 +508,7 @@ strings are invalid. A later Frontend test must assert eight unique mapping
 keys and exact set equality with the frozen content type/schema; `satisfies`
 alone checks key validity but not exhaustiveness.
 
-The draft does not add top-level `confidence_level`. Therefore the stored
+ADR-033 does not add top-level `confidence_level`. Therefore the stored
 report's `caution_note`, not the current issue object's caution badge, is the
 snapshot-bound caution indicator. A later UI must not present a current issue
 badge as if it qualifies a stored report when their `data_as_of` values differ.
@@ -522,10 +517,10 @@ report's `data_as_of` directly adjacent to `current_data_reading`, while keeping
 the full `caution_note` at the end. Labels must wrap naturally without ellipsis
 or truncation. The later Frontend task must verify the maximum-length fixtures
 at 320px and 375px widths before release. If a snapshot-bound enum badge is
-required instead, adding `confidence_level` to the report response is a
-separate public API approval item.
+required instead, adding `confidence_level` to the report response would
+require a future separate public API approval.
 
-### Draft Pydantic v2 model for v3 `ReportContent`
+### Implementation-draft Pydantic v2 model for v3 `ReportContent`
 
 This snippet is not applied to `app/schemas/issues.py` in TASK-048. It shows
 the proposed structural validation for a later coordinated implementation.
@@ -549,7 +544,7 @@ class ReportContent(BaseModel):
         Field(
             strict=True,
             min_length=30,
-            max_length=400,
+            max_length=600,
             description="What the issue is and the condition being tracked.",
         ),
     ]
@@ -558,7 +553,7 @@ class ReportContent(BaseModel):
         Field(
             strict=True,
             min_length=50,
-            max_length=500,
+            max_length=700,
             description="Values and movement currently observed in public data.",
         ),
     ]
@@ -567,7 +562,7 @@ class ReportContent(BaseModel):
         Field(
             strict=True,
             min_length=60,
-            max_length=450,
+            max_length=700,
             description="Conditional developments without a real-world forecast.",
         ),
     ]
@@ -576,7 +571,7 @@ class ReportContent(BaseModel):
         Field(
             strict=True,
             min_length=80,
-            max_length=450,
+            max_length=700,
             description="Reviewed context candidates to compare without causation.",
         ),
     ]
@@ -586,7 +581,7 @@ class ReportContent(BaseModel):
             Field(
                 strict=True,
                 min_length=40,
-                max_length=500,
+                max_length=700,
                 description="Manually reviewed external context narrative.",
             ),
         ]
@@ -596,7 +591,7 @@ class ReportContent(BaseModel):
         Field(
             strict=True,
             min_length=30,
-            max_length=400,
+            max_length=600,
             description="Facts, dates, criteria, and sources needing verification.",
         ),
     ]
@@ -605,7 +600,7 @@ class ReportContent(BaseModel):
         Field(
             strict=True,
             min_length=80,
-            max_length=500,
+            max_length=700,
             description="Activity, volatility, history, and representativeness limits.",
         ),
     ]
@@ -614,7 +609,7 @@ class ReportContent(BaseModel):
         Field(
             strict=True,
             min_length=120,
-            max_length=500,
+            max_length=700,
             description="Mandatory report-level interpretation caution.",
         ),
     ]
@@ -638,40 +633,37 @@ before storage; structural Pydantic validation alone is not sufficient.
   endpoint continues to return `200` with
   `{"status": "not_yet_generated"}`.
 - Unknown issue IDs continue to return `404`.
-- No current response is partially transformed from v1/v2 to this proposal.
-- This draft uses the existing `/api/issues/{id}/report` endpoint and existing
+- No current response is partially transformed from v1/v2 to this contract.
+- This contract uses the existing `/api/issues/{id}/report` endpoint and existing
   JSONB report storage. It requires no database migration and adds no endpoint.
 - TASK-048 does not change runtime Pydantic schemas, generator prompts,
   validators, API routes, tests, frontend types, UI mapping, database rows,
   dependencies, infrastructure, or deployment.
 
-### Approval items before contract freeze
+### Contract-freeze approval resolution
 
-1. Approve this eight-field replacement for ADR-032 and authorize a new ADR to
-   supersede ADR-032 without editing ADR-032's history.
-2. Approve retaining the public keys `possible_outlook` and
-   `possible_drivers` with the non-forecasting/non-causal validation above, or
-   authorize safer key names before freeze.
-3. Approve Option A for `external_context`, including `string | null`, hide on
-   `null`, and source metadata remaining in issue-detail `related_events`.
-4. Approve the Unicode-code-point length bounds, 1-3 sentence limit, mobile
-   fixture budget, and the requirement that the Frontend use the same counting
-   rule if it validates content.
-5. Approve the mandatory caution-copy matrix as a tightening of report copy
-   policy for all four `confidence_level` values, including current enum
-   semantics, precedence, and deterministic Korean literals.
-6. Approve keeping top-level `confidence_level` out of the report response and
-   treating `caution_note` as the report-snapshot caution indicator, or approve
-   the additional public response field needed for a snapshot-bound badge.
-7. Approve the evidence-first Frontend order and the English/Korean draft label
-   mapping, subject to 320px and 375px fixture QA before runtime release.
-8. Approve the exact provenance boundary: fixed 24h/7d windows, no distinct
+ADR-033 records PM/user approval of:
+
+1. The eight-field replacement for ADR-032, without editing ADR-032's history.
+2. Retaining `possible_outlook` and `possible_drivers` with the approved
+   non-forecasting and non-causal validation rules.
+3. Option A for `external_context`, including `string | null`, hide on `null`,
+   and source metadata remaining in issue-detail `related_events`.
+4. Trimmed Unicode-code-point bounds with the approved maximums above and a
+   per-field limit of 1-5 sentences. Frontend must use the same counting rule
+   if it validates content.
+5. The mandatory caution-copy matrix, enum semantics, precedence, and
+   deterministic Korean literals.
+6. Keeping top-level `confidence_level` out of the report response and treating
+   `caution_note` as the report-snapshot caution indicator.
+7. The evidence-first Frontend order and English/Korean label mapping, subject
+   to 320px and 375px fixture QA before runtime release.
+8. The exact provenance boundary: fixed 24h/7d windows, no distinct
    resolution-criteria field, no source URL or review flag, and only
    no-migration prompt-input extensions for already stored values.
 
-Only after these items are approved may a superseding ADR freeze the contract.
-Backend, Data/AI, and Frontend runtime changes must then be performed together
-in separate coordinated implementation tasks.
+Backend, Data/AI, and Frontend runtime changes remain separate coordinated
+implementation tasks. This approval does not itself switch any runtime path.
 
 ## `GET /api/categories`
 
