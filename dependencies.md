@@ -7,13 +7,14 @@ Harness Version: 1.1
 
 # dependencies.md — Outlook Signals Dependencies
 
-_Last updated: 2026-07-09_
+_Last updated: 2026-07-10_
 
 ## Core Dependencies — Frontend
 
 | Package | Purpose |
 |---------|---------|
 | react, react-dom | UI framework |
+| react-router-dom `^7.18.0` | React 18-compatible browser routing for Home, full issue list, detail, and methodology — approved for TASK-054 on 2026-07-10 |
 | vite | Build tool / dev server |
 | typescript | Type safety |
 | tailwindcss | Styling |

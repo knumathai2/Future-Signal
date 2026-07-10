@@ -31,7 +31,7 @@ PostgreSQL -- markets / market_outcomes / market_snapshots / market_metrics / is
 FastAPI backend (read-only REST API) -- /api/issues /api/issues/:id /api/issues/:id/history /api/issues/:id/report ...
         |  HTTPS/JSON
         v
-React + Vite frontend -- Home / Issue List / Detail / Chart / AI Report / Disclaimer
+React + Vite + React Router frontend -- `/` Home / `/issues` Issue List / `/issues/:id` Detail / `/methodology` Disclaimer
 ```
 
 Key rule: **the API layer never calls the AI provider or Polymarket directly** â€” it only reads from Postgres. This decouples "is a report fresh" from "is a user waiting," and lets the API degrade to last-known-good data on failure.
@@ -45,7 +45,7 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 5. Evaluates the Â±5pp threshold for `issue_signals` (cooldown-gated to avoid duplicate firing)
 6. Qualifying markets (new expectation-shift row, no report yet, or stale >24h) get a new `ai_reports` row via template-constrained generation plus a safety filter; report prompt inputs use the latest snapshot at or before the metric timestamp so historical-seed metric rows remain usable without fabricating values
 7. FastAPI serves the available read-only data; the report endpoint accepts only current `v3` rows whose ADR-033 content and metric-linked timestamp validate, while legacy/failed/malformed rows preserve the neutral empty state
-8. React renders Home -> Detail -> Chart -> Summary; the v3 report shows one evidence-first section at a time, hides only null external context, and keeps report timing plus snapshot caution in the same card
+8. React Router renders Home -> Issue List -> Detail -> Chart -> Summary with shareable list query state; detail core, history, and report requests are independent, and the v3 report shows one evidence-first section at a time while keeping report timing plus snapshot caution in the same card
 
 ## Design Decision Summary
 
@@ -60,6 +60,7 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 | AI report content schema | ADR-033 v3 eight-field report: issue overview, current data reading, nullable external context, reviewed candidate comparison, conditional developments, checks, data limitations, and caution | 2026-07-10 (ADR-033, human-approved public API shape change) |
 | AI provider | OpenAI-compatible Chat Completions via `openai==2.44.0`; OpenRouter selected by `OPENROUTER_API_KEY` or `sk-or-` key shape | 2026-07-09 (ADR-022, ADR-027, human-approved) |
 | Scheduled report model | GitHub Actions `OPENAI_MODEL` repository variable aligned with the approved project model; workflow keeps its existing fallback only when the variable is absent | 2026-07-10 (ADR-035, human-approved configuration repair) |
+| Frontend browser routing | React Router 7 on React 18; `/`, `/issues`, `/issues/:issueId`, and `/methodology`, with scoped Vercel SPA rewrites | 2026-07-10 (ADR-036, human-approved dependency and deployment configuration) |
 | Data update strategy | Append-only inserts, no upserts | 2026-07-07 (Technical Design Â§4.10) |
 | Postgres driver | `psycopg[binary]` (psycopg3) | 2026-07-08 (ADR-007, human-approved) |
 | Postgres URL compatibility | `psycopg2-binary==2.9.10` for provider-copied `postgresql://...` URLs | 2026-07-09 (ADR-023, human-approved) |
@@ -83,7 +84,7 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 - `TASK-008` snapshot/metrics logic computes `change_24h`, `change_7d`, placeholder `heat_score`, and confidence levels through a local/dev-safe path. `TASK-036` adds MVP `caution_low_activity` and `caution_high_volatility` thresholds documented in ADR-019.
 - `TASK-009` expectation-shift detector inserts `expectation_shift` rows for the MVP Â±5pp threshold with a 24h cooldown and no evaluation for insufficient data.
 - `backend/app/core/historical_seed.py` is the guarded local/dev-only path for demo chart history (ADR-025): it appends missing CLOB price-history points, inserts fresh metrics, runs the existing expectation-shift detector, and records a collection log without schema/API changes or rewrites of existing snapshot rows.
-- `TASK-012` dashboard v1 reads the backend API, keeps a static fallback path, and displays data-as-of timestamps plus caution badges on data-bearing views.
+- `TASK-054` replaces the dashboard-v1 state flow with real browser routes. Home defaults to 7 days and derives one featured rank-1 issue, a featured-only real-history Recharts preview, a direction summary, a featured-inclusive top-five table, and per-category valid-change arithmetic means from the existing read APIs. `/issues` keeps its 24-hour default plus URL-backed client search/filter/sort/pagination; detail core/history/report reads remain independently cancellable; every route has a main landmark, shared navigation, and direct-entry handling. Scoped Vercel SPA rewrites do not intercept `/api`.
 - `TASK-035` verified the existing detail/history read paths for the Day 3 chart/marker flow without changing accepted response shapes.
 - `TASK-013` hardened the issue detail chart: 24h/7d/30d windows require baseline-covered history, tooltip values include timestamp/value/previous-point pp change, and markers consume API-provided rows when present.
 - `TASK-014` aligned caution badge labels, visual treatment, accessibility labels, and placement across dashboard and detail surfaces.
