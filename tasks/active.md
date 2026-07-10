@@ -25,7 +25,7 @@ implementation allocation evidence is recorded in
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-049 | Implement v3 report generation content | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-049-v3-report-generation` | assigned |
+| TASK-049 | Implement v3 report generation content | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-049-v3-report-generation` | review |
 | TASK-050 | Implement v3 report API/read contract | Backend Implementer | Backend Implementer | `backend/TASK-050-v3-report-runtime` | assigned |
 | TASK-051 | Implement v3 dynamic report UI | Frontend Implementer | Frontend Implementer | `frontend/TASK-051-v3-report-cards` | assigned |
 | TASK-053 | Review v3 integration copy and contract | Reviewer | Reviewer | `review/TASK-053-v3-report-copy-lint` | assigned |
@@ -106,10 +106,28 @@ git-state check and Day 5 v3 implementation allocation.
   `106af52`, which includes PR #45 (`TASK-047`) and PR #46 (`TASK-048`).
   Runtime remains v2, but Day 5 v3 work is now split across Data/AI,
   Backend, Frontend, and Reviewer tasks.
-- **Data/AI Implementer** owns `TASK-049`. Implement ADR-033 generation,
-  prompt-version, deterministic caution, non-causal context handling, and
-  safety validation. Do not perform a real provider call or write generated
-  reports to the configured DB without a separate approval.
+- **Data/AI Implementer** completed implementation for `TASK-049` (status
+  `review`, pending Reviewer/PM close-out alongside `TASK-050`/`TASK-051`).
+  `app/core/ai_report.py` now targets `PROMPT_VERSION = "v3"`: the LLM prompt
+  asks only for `issue_overview`, `current_data_reading`, and
+  `possible_outlook`; `possible_drivers`, `external_context`, `what_to_check`,
+  `data_limitations`, and `caution_note` are assembled deterministically from
+  `ReportPromptInputs` and merged by `assemble_report_content()` into the
+  frozen ADR-033 eight-field `ReportContent` (this module's own structural
+  copy of the contract, kept separate from `app/schemas/issues.py` per the
+  parallelization plan so Backend's `TASK-050` schema edits don't collide).
+  See ADR-034 for the full design rationale. `app/core/ai_report_batch.py`
+  now also resolves the tracked outcome label and curated related-event
+  title/date/note separately from `Market`/`MarketOutcome`/`RelatedEvent`.
+  Safety validation gained the ADR-033 Korean hard-block terms, Korean
+  causal/forecast patterns, and new `run_semantic_checks` cross-field checks
+  (exact caution literal, exact possible_drivers literal, external_context
+  candidate-not-cause qualifier). Tests cover valid v3 assembly, malformed/
+  short-field rejection, English+Korean banned wording, weak-inference
+  blocking, and no-candidate behavior in `tests/test_ai_report.py` and
+  `tests/test_ai_report_batch.py`; `tests/test_scheduled_batch.py`'s fake LLM
+  fixture was updated to the new three-field response shape. No real provider
+  call or configured/shared DB write was made or is needed for this task.
 - **Backend Implementer** owns `TASK-050`. Implement the ADR-033 report
   schema/read contract and version gating. Backend owns shared API/Pydantic
   schema edits so Data/AI and Frontend can avoid duplicate contract changes.
@@ -130,7 +148,7 @@ git-state check and Day 5 v3 implementation allocation.
 - **Owner**: Data/AI Implementer
 - **Assignee**: Data/AI Implementer
 - **Branch**: `data-ai/TASK-049-v3-report-generation`
-- **Status**: assigned
+- **Status**: review
 - **Priority**: High
 - **Day**: Day 5
 - **Description**: Replace runtime report generation with ADR-033 v3 content:
@@ -140,17 +158,17 @@ git-state check and Day 5 v3 implementation allocation.
   conditional public-data wording, non-causal context language, and
   deterministic caution behavior.
 - **Definition of Done**:
-  - [ ] Generated content validates against ADR-033 fields, nullability, and
+  - [x] Generated content validates against ADR-033 fields, nullability, and
         Unicode character bounds.
-  - [ ] `external_context` uses only PM/Data-reviewed narrative notes and is
+  - [x] `external_context` uses only PM/Data-reviewed narrative notes and is
         `null` when approval or content is unavailable.
-  - [ ] `possible_drivers` uses reviewed title/date candidates only as
+  - [x] `possible_drivers` uses reviewed title/date candidates only as
         comparison context, never as cause.
-  - [ ] `caution_note` and `data_limitations` cover all required caution and
+  - [x] `caution_note` and `data_limitations` cover all required caution and
         limitation language, including low-data cases.
-  - [ ] Tests cover valid v3 output, malformed output rejection, banned wording,
+  - [x] Tests cover valid v3 output, malformed output rejection, banned wording,
         weak-inference blocking, and no-candidate behavior.
-  - [ ] No live provider call or configured DB write is performed without
+  - [x] No live provider call or configured DB write is performed without
         separate approval.
 
 ### TASK-050: Implement v3 report API/read contract
