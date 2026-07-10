@@ -30,15 +30,23 @@ from app.db.models import (
 )
 
 NOW = datetime(2026, 7, 9, 12, 0, 0, tzinfo=UTC)
+
+# ADR-033 v3: only the three LLM-authored fields are ever sent as a fake
+# `LLMClient` response - possible_drivers/external_context/what_to_check/
+# data_limitations/caution_note are assembled deterministically by
+# app/core/ai_report.py from structured inputs, never from LLM text.
 VALID_CONTENT = {
-    "issue_explainer": "이 이슈는 정해진 기준일까지 특정 조건이 확인되는지를 살펴봅니다.",
-    "why_it_matters": "이 조건은 관련 정책 일정과 후속 절차를 이해하는 데 참고가 됩니다.",
-    "current_reading": "현재 공개 데이터에서는 일부 재평가 흐름이 관측됩니다.",
-    "scenario_major_change": "조건이 명확히 성립하면 관련 절차가 확인됩니다.",
-    "scenario_limited_change": "논의는 이어지지만 실제 변화는 제한적일 수 있습니다.",
-    "scenario_status_quo": "조건이 성립하지 않으면 기존 흐름이 대체로 유지될 수 있습니다.",
-    "check_points": "확인할 지점은 공식 발표, 기준일, 후속 절차입니다.",
-    "caution_note": "이 요약은 공개 데이터와 등록된 맥락을 정리한 것입니다.",
+    "issue_overview": (
+        "이 이슈는 정해진 기준일까지 특정 조건이 확인되는지를 공개 데이터 맥락에서 살펴봅니다."
+    ),
+    "current_data_reading": (
+        "현재 공개 예측시장 참여자 데이터에서는 이 이슈가 일부 재평가되고 있으나, "
+        "실제 결과를 뜻하지는 않습니다."
+    ),
+    "possible_outlook": (
+        "이후 공개 데이터에서 관찰된 움직임의 지속 또는 완화가 확인되더라도, 이는 "
+        "데이터의 흐름만 설명하며 현실의 결과를 입증하지 않습니다."
+    ),
 }
 
 

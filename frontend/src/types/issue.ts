@@ -46,21 +46,22 @@ export type DataStatus = "loading" | "ready" | "empty" | "error";
 export type ChartWindow = "24h" | "7d" | "30d";
 
 export type IssueReportContent = {
-  issue_explainer: string;
-  why_it_matters: string;
-  current_reading: string;
-  scenario_major_change: string;
-  scenario_limited_change: string;
-  scenario_status_quo: string;
-  check_points: string;
+  issue_overview: string;
+  current_data_reading: string;
+  possible_outlook: string;
+  possible_drivers: string;
+  external_context: string | null;
+  what_to_check: string;
+  data_limitations: string;
   caution_note: string;
 };
 
 export type IssueReportSuccessResponse = {
   id: string;
+  status: "success";
+  report_version: "v3";
   generated_at: string;
   data_as_of: string;
-  status: "success";
   content: IssueReportContent;
 };
 

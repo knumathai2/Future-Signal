@@ -260,9 +260,10 @@ export function IssueDetail({
       </section>
 
       <IssueReportCard
-        issue={issue}
+        issueId={issue.id}
         reportState={reportState}
         fallbackSummary={summary}
+        issueDataAsOf={issue.dataAsOf}
       />
 
       <GlobalFooter onOpenNotice={onOpenNotice} className="mt-10" />
