@@ -28,7 +28,7 @@ from typing import Protocol
 from openai import OpenAI, OpenAIError
 from pydantic import ValidationError
 
-from app.schemas.issues import ReportContent
+from app.schemas.issues import ReportContentV2 as ReportContent
 
 logger = logging.getLogger(__name__)
 
