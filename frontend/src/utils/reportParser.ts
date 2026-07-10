@@ -186,7 +186,7 @@ function validateContent(
  *
  * A success payload is valid only when:
  * - top-level `status` is `"success"` and `report_version` is `"v3"`
- * - `id`, `generated_at`, `data_as_of` are non-empty strings
+ * - `id` is a non-empty string, `generated_at` and `data_as_of` are valid date strings
  * - `content` has the exact eight-key set with valid values
  *
  * The accepted empty response `{ status: "not_yet_generated" }` is also handled.
@@ -216,9 +216,9 @@ export function parseReportResponse(raw: unknown): IssueReportLoadState {
     typeof raw.id !== "string" ||
     raw.id.trim().length === 0 ||
     typeof raw.generated_at !== "string" ||
-    raw.generated_at.trim().length === 0 ||
+    Number.isNaN(Date.parse(raw.generated_at)) ||
     typeof raw.data_as_of !== "string" ||
-    raw.data_as_of.trim().length === 0
+    Number.isNaN(Date.parse(raw.data_as_of))
   ) {
     return { status: "error" };
   }
