@@ -539,7 +539,11 @@ def test_successful_generation_uses_with_candidate_possible_drivers_when_curated
     generate_report_for_market(db, market, metric, inputs, client, NOW, "gpt-4o-mini")
 
     stored = db.execute(select(AiReport)).scalars().all()
-    assert stored[0].content["possible_drivers"] == POSSIBLE_DRIVERS_WITH_CANDIDATE
+    assert stored[0].content["possible_drivers"] == POSSIBLE_DRIVERS_WITH_CANDIDATE.format(
+        title="Curated Context Event", date="2026-02-18"
+    )
+    assert "Curated Context Event" in stored[0].content["possible_drivers"]
+    assert "2026-02-18" in stored[0].content["possible_drivers"]
     assert (
         stored[0].content["external_context"]
         == "Candidate context for review; not presented as a cause."
