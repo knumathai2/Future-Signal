@@ -8,7 +8,7 @@ Harness Version: 1.1
 # Backlog — Outlook Signals
 
 _Last updated: 2026-07-10_
-_Remaining backlog after Day 4 assignment; active work lives in `tasks/active.md`._
+_Deferred and post-hackathon backlog after the Day 5 technical closeout; active work lives in `tasks/active.md`._
 
 Day 2 allocation moved `TASK-007`, `TASK-008`, `TASK-009`, `TASK-010`, and `TASK-012` to `tasks/active.md`. `TASK-031` was created directly from PRD §14's Day 2 PM work because that PM task was missing from the original backlog.
 
@@ -24,12 +24,16 @@ and `TASK-039`/`TASK-040` were created directly in `tasks/active.md` to cover
 the Day 4 backend fallback/readiness and PM deck/demo work that were present in
 PRD section 14 but missing from the original backlog.
 
-## Must-Have (P0)
+## Deferred Release and Presentation Work
 
-| ID | Task | Owner | Day | Size | Notes |
-|----|------|-------|-----|------|-------|
-| TASK-020 | Deploy all three services (Vercel, Railway/Render, Supabase/Neon) | Backend Implementer | 5 | M | |
-| TASK-021 | Demo script + static-JSON fallback data | PM | 5 | S | Rehearsed backup for live-demo API failure |
+ADR-037 closes the technical MVP milestone without claiming these operational
+deliverables are finished. They can be resumed independently after the
+hackathon closeout.
+
+| ID | Task | Owner | Original Day | Size | Resume condition | Notes |
+|----|------|-------|--------------|------|------------------|-------|
+| TASK-020 | Deploy the approved service set | Backend Implementer | 5 | M | Explicit deployment approval and target-platform access | No deployment was performed during Day 5 closeout. |
+| TASK-021 | Finalize presentation assets, rehearse the demo, and capture the backup sequence | PM | 5 | S | Presentation work is resumed | The outline, script, Q&A draft, and static fallback behavior exist; the final deck, screenshots, rehearsal, and backup capture remain. |
 
 ## Should-Have (P1 — build only if Day 1–4 P0 finishes early)
 

@@ -32,6 +32,7 @@ _Last updated: 2026-07-10_
 
 | ID | Description | Resolved | Method |
 |----|-------------|----------|--------|
+| ISS-011 | TASK-054 used `Array.prototype.at()` in `FeaturedIssueCard.tsx`, so the latest `main` failed TypeScript checks under the configured `ES2020` library and could not complete a production build. | 2026-07-10 | PR #53 replaced both last-item reads with equivalent array index access. No TypeScript target, dependency, copy, API, or behavior changed. Frontend typecheck, lint, report-parser regression, production build, and changed-file formatting passed. |
 | ISS-010 | The daily GitHub Actions batch had no repository secrets, then its fallback model repeatedly produced v3 prose that missed ADR-033 bounds or wording/semantic requirements. | 2026-07-10 | With user approval, restored `DATABASE_URL` and the approved AI credential as Actions secrets, set the repository `OPENAI_MODEL` variable to the approved project model, and added the already-frozen v3 field bounds/source-scope instructions to the fixed prompt. Run `29073226485` passed with 50 processed, 0 failed, and 10 successful reports; the latest 10 stored v3 rows passed structural, wording-safety, and semantic validation. |
 | ISS-009 | Integrated v3 runtime omitted the ADR-033 five-sentence enforcement, could accept report prose without the required public-data scope, had environment-dependent fallback contract tests, and retained Korean hard-block copy in UI strings. | 2026-07-10 | TASK-053 added matching Backend/Frontend sentence validation, semantic public-data/conditional checks, isolated fallback tests from configured DB state, replaced blocked UI copy, and passed complete code, copy, and responsive-browser verification. |
 | ISS-008 | PR #49 v3 report generation could omit reviewed candidate identity, accept metric text inconsistent with structured inputs, and reject approved Korean context wording. | 2026-07-10 | Fixed in PR head `363bf2f`; deterministic title/date output, metric consistency validation, approved negative-disclaimer handling, and `맥락 메모` qualifier coverage were added with regression tests. All four GitHub review threads were resolved and the PR was approved. |
@@ -53,11 +54,10 @@ _Last updated: 2026-07-10_
 
 ## Open Design Questions Carried From Planning Docs
 
-Not bugs, but unresolved decisions that can still affect demo readiness - resolve
-them before Day 5 lock if they become relevant to the active path:
+Not bugs, but unresolved decisions that can affect later demo or product work:
 
 - Category taxonomy follow-up: broad Korean filters are implemented for the demo; a later editorial taxonomy may still refine new source tags as data coverage grows (PRD §20.4, Service Design §12.1)
-- Static-JSON fallback path finalization for full demo operations: API/frontend fallback behavior is implemented and documented by ADR-013; Day 4-5 still need backup captures or demo-script handling.
+- Static-JSON fallback path finalization for full demo operations: API/frontend fallback behavior and demo-script handling exist; final rehearsal and backup capture are deferred to `TASK-021`.
 - `heat_score` weighting formula — start simple, tune once real data is visible (Technical Design §16.2)
 
 ## Known Data Issues
