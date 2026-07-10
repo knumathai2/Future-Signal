@@ -341,6 +341,96 @@ automated news system.
 
 ---
 
+### ADR-033: Eight-field v3 Report Contract supersedes ADR-032
+
+- **Date**: 2026-07-10
+- **Status**: Accepted
+- **Decided by**: User / PM, drafted by Backend Implementer
+- **Supersedes**: ADR-032 for the v3 report content and display contract only
+
+**Context**: ADR-032 approved an eleven-field v3 report shape. TASK-048 was
+assigned to evaluate a different eight-field `ReportContent` contract and to
+produce a complete Backend decision table, Data/AI safety review, and Frontend
+display review before any runtime change. The accepted TASK-048 contract
+differs from ADR-032, so the replacement must be recorded without rewriting
+ADR-032's history.
+
+**Decision**: Accept the TASK-048 contract in `backend/API_CONTRACT.md` as the
+frozen v3 implementation contract. Successful v3 `content` contains exactly:
+
+1. `issue_overview`
+2. `current_data_reading`
+3. `possible_outlook`
+4. `possible_drivers`
+5. `external_context`
+6. `what_to_check`
+7. `data_limitations`
+8. `caution_note`
+
+`external_context` is the only nullable value; its key remains required and the
+Frontend hides its complete section only when the value is `null`. Narrative
+context comes only from the PM/Data-approved curated path. Existing
+issue-detail `related_events` remains the source-metadata area; source URL and
+stored review-status metadata are not added.
+
+The approved trimmed Unicode-code-point length bounds are:
+
+| Field | Minimum | Maximum |
+|---|---:|---:|
+| `issue_overview` | 30 | 600 |
+| `current_data_reading` | 50 | 700 |
+| `possible_outlook` | 60 | 700 |
+| `possible_drivers` | 80 | 700 |
+| `external_context` when non-null | 40 | 700 |
+| `what_to_check` | 30 | 600 |
+| `data_limitations` | 80 | 700 |
+| `caution_note` | 120 | 700 |
+
+Each generated narrative field is limited to 1-5 concise sentences. Backend
+and Frontend must use the same trimmed Unicode-code-point measurement if both
+validate content.
+
+Retain `possible_outlook` only for conditional descriptions of later public
+data readings, never a real-world result or asserted future direction. Retain
+`possible_drivers` only as a deterministic index of manually reviewed context
+candidate title/date with an explicit no-relationship statement. The approved
+Frontend labels are `Conditional Developments` and `Factors to Check Alongside
+the Movement`, with the Korean labels and evidence-first order frozen in the
+API contract.
+
+Use external-context Option A, the exact provenance boundary, current caution
+enum semantics and precedence, deterministic Korean caution literals, and the
+approved missing-value behavior in `backend/API_CONTRACT.md`. Top-level
+`confidence_level` is not added; the stored report's required `caution_note`
+is the report-snapshot caution indicator. Successful responses still require
+`report_version="v3"`, `generated_at`, `data_as_of`, and `status="success"`.
+The accepted `not_yet_generated` and unknown-ID behavior remain unchanged.
+
+**Safety boundary**: ADR-033 keeps every maintained prohibition and validation
+rule from ADR-032 unless this decision explicitly replaces a content-field or
+display detail. Output remains fixed-schema and template-constrained. No causal
+claim, real-world outcome assertion, action-oriented wording, automated public
+context matching, or unreviewed external context is allowed.
+
+**Rationale**: The eight-field contract gives each report section one clear
+responsibility, separates reviewed context narrative from candidate comparison,
+keeps data limitations and interpretation caution explicit, and provides a
+single enforceable contract for Backend, Data/AI, and Frontend implementation.
+
+**Consequences**:
+
+- ADR-032 remains immutable historical context but no longer defines the v3
+  content/display contract; ADR-033 is the implementation prerequisite.
+- TASK-048 is complete as contract design and approval work.
+- Runtime Backend, Data/AI, and Frontend remain on v2 until separate coordinated
+  implementation tasks switch schema, generation, tests, types, and UI
+  together.
+- No database migration, new endpoint, dependency, infrastructure change,
+  deployment, external provider call, or database write is approved or
+  performed by this decision.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07

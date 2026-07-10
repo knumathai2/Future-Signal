@@ -68,7 +68,7 @@ Every user-facing string and every AI/template output must be checked against th
 - Related-event candidates must always carry the "candidate, not cause" qualifier
 - No numeric confidence stated as a probability of a real-world outcome (e.g., never "73% likely to happen")
 - Every metric-bearing surface must ship with its caution badge in the same viewport — no exceptions for "obviously fine" markets
-- v3 AI reports must validate against ADR-032's exact field list before storage; missing, extra, or unsafe fields block storage
+- v3 AI reports must validate against ADR-033's exact eight-field contract before storage; missing, extra, or unsafe fields block storage
 - Policy/lint docs and tests may quote prohibited expressions only to define or verify the blocking rule; demo-visible docs and product copy may not normalize those terms as user-facing language
 
 ## Documentation Standards
