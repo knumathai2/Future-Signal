@@ -5,7 +5,7 @@ Field names mirror the example JSON already agreed in
 executable draft of that contract, not a new design.
 """
 from datetime import datetime
-from typing import Literal
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -80,24 +80,91 @@ class IssueHistoryResponse(BaseModel):
 
 
 class ReportContent(BaseModel):
-    """Fixed template slots only - never free-form (ADR-003 / ADR-028).
+    """Fixed template slots only - never free-form (ADR-003 / ADR-033).
 
-    `extra="forbid"` is load-bearing for TASK-015: the LLM response must
+    `extra="forbid"` is load-bearing: the LLM response must
     parse into exactly these 8 fields, nothing more/fewer - a response with
     an extra field fails validation and is treated as a malformed-schema
-    failure (Technical Design §10.6), not silently trimmed.
+    failure, not silently trimmed.
     """
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(
+        extra="forbid",
+        str_strip_whitespace=True,
+    )
 
-    issue_explainer: str
-    why_it_matters: str
-    current_reading: str
-    scenario_major_change: str
-    scenario_limited_change: str
-    scenario_status_quo: str
-    check_points: str
-    caution_note: str
+    issue_overview: Annotated[
+        str,
+        Field(
+            strict=True,
+            min_length=30,
+            max_length=600,
+            description="What the issue is and the condition being tracked.",
+        ),
+    ]
+    current_data_reading: Annotated[
+        str,
+        Field(
+            strict=True,
+            min_length=50,
+            max_length=700,
+            description="Values and movement currently observed in public data.",
+        ),
+    ]
+    possible_outlook: Annotated[
+        str,
+        Field(
+            strict=True,
+            min_length=60,
+            max_length=700,
+            description="Conditional developments without a real-world forecast.",
+        ),
+    ]
+    possible_drivers: Annotated[
+        str,
+        Field(
+            strict=True,
+            min_length=80,
+            max_length=700,
+            description="Reviewed context candidates to compare without causation.",
+        ),
+    ]
+    external_context: Annotated[
+        str | None,
+        Field(
+            strict=True,
+            min_length=40,
+            max_length=700,
+            description="Manually reviewed external context narrative.",
+        ),
+    ]
+    what_to_check: Annotated[
+        str,
+        Field(
+            strict=True,
+            min_length=30,
+            max_length=600,
+            description="Facts, dates, criteria, and sources needing verification.",
+        ),
+    ]
+    data_limitations: Annotated[
+        str,
+        Field(
+            strict=True,
+            min_length=80,
+            max_length=700,
+            description="Activity, volatility, history, and representativeness limits.",
+        ),
+    ]
+    caution_note: Annotated[
+        str,
+        Field(
+            strict=True,
+            min_length=120,
+            max_length=700,
+            description="Mandatory report-level interpretation caution.",
+        ),
+    ]
 
 
 class IssueReportResponse(BaseModel):
@@ -106,6 +173,7 @@ class IssueReportResponse(BaseModel):
     data_as_of: datetime
     content: ReportContent
     status: Literal["success"]
+    report_version: Literal["v3"]
 
 
 class ReportNotYetGenerated(BaseModel):
@@ -123,3 +191,21 @@ class ErrorBody(BaseModel):
 
 class ErrorResponse(BaseModel):
     error: ErrorBody
+
+
+class ReportContentV2(BaseModel):
+    """Legacy v2 template slots, kept for compatibility with the generator
+
+    (TASK-049 separately owns updates to the generator, prompt version, etc.)
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    issue_explainer: str
+    why_it_matters: str
+    current_reading: str
+    scenario_major_change: str
+    scenario_limited_change: str
+    scenario_status_quo: str
+    check_points: str
+    caution_note: str
