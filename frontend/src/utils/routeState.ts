@@ -13,6 +13,10 @@ export function parseListWindow(value: string | null): ListWindow {
   return value === "7d" ? "7d" : "24h";
 }
 
+export function parseHomeWindow(value: string | null): ListWindow {
+  return value === "24h" ? "24h" : "7d";
+}
+
 export function parseListSort(value: string | null): IssueListSort {
   return value === "change" || value === "recent" ? value : "heat";
 }

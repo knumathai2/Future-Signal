@@ -554,6 +554,16 @@ task. The existing backend API, database schema, collection pipeline, wording
 policy, and Vercel project root remain unchanged. No deployment is performed by
 TASK-054.
 
+**Follow-up decision (2026-07-10)**: Supersede only ADR-036's Home composition
+of one featured issue plus four unique compact rows. Home now defaults to the
+7-day window and uses one shared absolute-change ranking: the featured issue is
+rank 1 and appears again in a top-five ranking table. Add a direction summary
+whose ratio denominator is upward plus downward issues only, and replace each
+category's largest-change value with the simple arithmetic mean of valid
+selected-window changes. The existing routes, `/issues` 24-hour default,
+client search, detail loading boundaries, public API, schema, dependency set,
+and scoped Vercel configuration remain unchanged.
+
 ---
 
 ### ADR-004: Monorepo, npm + pip, GitHub Actions

@@ -38,6 +38,9 @@ function NotFoundPage() {
 
 export default function App() {
   const [categories, setCategories] = useState<string[]>([]);
+  const [categoriesStatus, setCategoriesStatus] = useState<
+    "loading" | "ready" | "error"
+  >("loading");
 
   useEffect(() => {
     const controller = new AbortController();
@@ -46,12 +49,16 @@ export default function App() {
       "Failed to load categories",
       controller.signal,
     )
-      .then((data) => setCategories(data.categories ?? []))
+      .then((data) => {
+        setCategories(data.categories ?? []);
+        setCategoriesStatus("ready");
+      })
       .catch((error) => {
         if (error instanceof DOMException && error.name === "AbortError") {
           return;
         }
         console.error(error);
+        setCategoriesStatus("error");
       });
 
     return () => controller.abort();
@@ -67,7 +74,15 @@ export default function App() {
       </a>
       <RouteFocus />
       <Routes>
-        <Route path="/" element={<Dashboard categories={categories} />} />
+        <Route
+          path="/"
+          element={
+            <Dashboard
+              categories={categories}
+              categoriesStatus={categoriesStatus}
+            />
+          }
+        />
         <Route
           path="/issues"
           element={<IssueListPage categories={categories} />}
