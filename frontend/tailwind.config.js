@@ -8,7 +8,7 @@ export default {
         card: "oklch(99% 0.006 75)",
         ink: "oklch(22% 0.02 55)",
         "ink-soft": "oklch(45% 0.02 55)",
-        "ink-faint": "oklch(62% 0.015 55)",
+        "ink-faint": "oklch(54% 0.015 55)",
         line: "oklch(87% 0.015 65)",
         "line-soft": "oklch(93% 0.01 65)",
         accent: "oklch(52% 0.13 45)",

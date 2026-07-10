@@ -14,57 +14,51 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-10
-- **Agent Role**: Debugger / Data-AI Implementer
-- **Session Goal**: Diagnose and restore the failed daily GitHub Actions batch.
-- **Branch**: `debug/ISS-010-actions-secrets`
+- **Agent Role**: Frontend Implementer
+- **Session Goal**: Implement TASK-054 information-architecture redesign.
+- **Branch**: `frontend/TASK-054-information-architecture`
 
 ## Context Read
 
-- `AGENTS.md`, PRD operations/release, Technical Design batch/operations,
-  project/session/task memory, Backend and Debugger prompts
-- `gh-fix-ci` and GitHub publish workflow instructions
-- Failed Actions runs `29046517327`, `29072425374`, `29072749970`, and
-  `29073016704`
-- ADR-022, ADR-026, ADR-027, ADR-033, and ADR-034
+- `AGENTS.md`, PRD, UX Design, current project/session/task memory, and the
+  Frontend Implementer prompt
+- User-approved TASK-054 scope, including React Router 7, scoped Vercel
+  rewrites, client search/responsive behavior, pagination, and short caution
+  copy
+- Existing API contracts and frontend list/detail/report mapping code
 
 ## Work Completed
 
-- Confirmed the repository initially had no Actions secrets or variables;
-  `DATABASE_URL`, `OPENROUTER_API_KEY`, and `OPENAI_API_KEY` were all empty in
-  the original scheduled run.
-- After explicit user approval, registered the existing approved development
-  `DATABASE_URL` and AI credential as repository Actions secrets without
-  exposing their values.
-- Re-ran the workflow and isolated the next failure to model-authored v3 prose:
-  the fallback model omitted minimum character counts or required safe data
-  scope, so the existing validators correctly blocked storage.
-- Added ADR-033's existing per-field Unicode bounds to the system and task
-  prompt, required the exact approved Korean public-data source compound, and
-  added regression tests.
-- Set the repository `OPENAI_MODEL` variable to the approved local project
-  model so scheduled and guarded local runs use the same configuration.
-- Pushed commits `613eae3` and `0cc3e33`, then opened draft PR #51.
-- Recorded ADR-035, resolved ISS-010, and tracked the non-blocking GitHub action
-  runtime warning as TD-012.
+- Created a clean worktree from `origin/main` so the original workspace's
+  uncommitted session/known-issue edits remain untouched.
+- Added `react-router-dom@^7.18.0`, `BrowserRouter`, shared navigation, route
+  focus handling, route-level main landmarks, and a client-side 404.
+- Reduced Home to one featured issue plus four unique compact rows, independent
+  featured history, 24-hour/7-day state, and category summaries.
+- Added `/issues` client search, broad-category/window/sort filters, shareable
+  query state, 10-row numbered pagination, and a mobile filter disclosure.
+- Split detail core/history/report requests into independently rendered,
+  cancellable states; added breadcrumb and list-state-aware return behavior.
+- Added scoped Vercel SPA rewrites and documented ADR-036 plus the approved
+  dependency.
 
 ## Verification
 
-- Successful Actions run: `29073226485` on commit `0cc3e33`.
-- Batch summary: 50 processed, 0 failed, 0 new signals, 10 reports successful,
-  0 reports skipped, `error=None`.
-- Backend: 200 tests passed; Ruff and `git diff --check` passed.
-- Read-only post-run copy/contract check: latest 10 v3 success rows passed 10/10
-  structural, 10/10 wording-safety, and 10/10 semantic validation.
-- Draft PR #51 is open, mergeable, and `CLEAN` against `main`.
+- Frontend typecheck and ESLint pass during implementation; final build/parser
+  checks and safety scans are recorded in the completed-task entry.
+- Browser QA covered 320px, 390px, 768px, and 1280px. No tested route had
+  horizontal overflow or more than one main landmark.
+- At 390×844, the featured issue is 218px tall and fully visible in the first
+  viewport; the four compact rows are 183px each and all five issue links are
+  unique.
+- Verified search, mobile filter disclosure, page 2 direct entry, list-to-detail
+  return, detail direct entry, methodology, client 404, unknown issue ID, query
+  normalization, 24-hour/7-day switching, and retained rows during list refresh.
 
 ## Notes / Remaining Risks
 
-- PR #51 still requires normal review and human-controlled merge; no self-merge
-  was performed.
-- The manual workflow run is successful but is not reported as a PR status
-  check because `daily-batch.yml` is schedule/dispatch only.
-- GitHub warns that the Node.js 20 runtime for `actions/checkout@v4` and
-  `actions/setup-python@v5` is deprecated and currently forced to Node.js 24;
-  this is non-blocking and tracked as TD-012.
-- No schema, dependency, public API, product-safety policy, or deployment change
-  was made.
+- No backend API, database schema, data collection, production data, or public
+  report contract changed.
+- `frontend/vercel.json` is configuration only; no deployment was performed.
+- The existing frontend audit/dependency-maintenance warnings remain outside
+  TASK-054; no unapproved major upgrade or forced audit fix was performed.

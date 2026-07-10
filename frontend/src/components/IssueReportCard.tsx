@@ -1,13 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { ShortCautionNotice } from "./InformationNotice";
-import type {
-  IssueReportContent,
-  IssueReportLoadState,
-} from "../types/issue";
+import type { IssueReportContent, IssueReportLoadState } from "../types/issue";
 import { formatDataTimestamp } from "../utils/format";
-import {
-  getVisibleSections,
-} from "../utils/reportParser";
+import { getVisibleSections } from "../utils/reportParser";
 
 type IssueReportCardProps = {
   issueId: string;
@@ -49,8 +44,8 @@ function NotYetGeneratedBody() {
         저장된 템플릿 요약이 아직 없습니다
       </h3>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-ink-soft">
-        이슈 정보와 차트는 계속 확인할 수 있습니다. 요약이 생성되면 이슈
-        설명과 조건부 전개를 고정된 섹션 형식으로 표시합니다.
+        이슈 정보와 차트는 계속 확인할 수 있습니다. 요약이 생성되면 이슈 설명과
+        조건부 전개를 고정된 섹션 형식으로 표시합니다.
       </p>
     </div>
   );
@@ -77,15 +72,8 @@ function ErrorBody({ fallbackSummary }: { fallbackSummary: string }) {
 // One-section-at-a-time card navigation
 // ---------------------------------------------------------------------------
 
-function SectionNavigator({
-  content,
-}: {
-  content: IssueReportContent;
-}) {
-  const visibleSections = useMemo(
-    () => getVisibleSections(content),
-    [content],
-  );
+function SectionNavigator({ content }: { content: IssueReportContent }) {
+  const visibleSections = useMemo(() => getVisibleSections(content), [content]);
 
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -113,9 +101,7 @@ function SectionNavigator({
         className="rounded-lg border border-line-soft bg-card px-4 py-4"
         style={{ minHeight: "7rem" }}
       >
-        <h3 className="text-sm font-bold text-ink">
-          {currentSection.label}
-        </h3>
+        <h3 className="text-sm font-bold text-ink">{currentSection.label}</h3>
         <p className="mt-3 max-w-4xl text-sm leading-7 text-ink-soft whitespace-pre-wrap break-words">
           {sectionValue}
         </p>
@@ -132,7 +118,7 @@ function SectionNavigator({
           disabled={isFirst}
           aria-label="이전 섹션"
           className={
-            "rounded-full border px-4 py-2 text-xs font-bold transition " +
+            "inline-flex min-h-11 items-center rounded-full border px-4 text-xs font-bold transition " +
             (isFirst
               ? "cursor-not-allowed border-line-soft text-ink-faint"
               : "border-line text-ink hover:border-accent hover:text-accent")
@@ -156,7 +142,7 @@ function SectionNavigator({
           disabled={isLast}
           aria-label="다음 섹션"
           className={
-            "rounded-full border px-4 py-2 text-xs font-bold transition " +
+            "inline-flex min-h-11 items-center rounded-full border px-4 text-xs font-bold transition " +
             (isLast
               ? "cursor-not-allowed border-line-soft text-ink-faint"
               : "border-line text-ink hover:border-accent hover:text-accent")
@@ -167,9 +153,7 @@ function SectionNavigator({
       </nav>
 
       {/* Compact section indicators */}
-      <div
-        className="mt-3 flex flex-wrap gap-1 justify-center"
-      >
+      <div className="mt-3 flex flex-wrap gap-1 justify-center">
         {visibleSections.map((section, idx) => (
           <button
             key={section.key}
@@ -178,7 +162,7 @@ function SectionNavigator({
             aria-label={`${section.label} 섹션으로 이동`}
             aria-current={idx === activeIndex ? "step" : undefined}
             className={
-              "rounded-full px-2.5 py-1 text-[10px] font-bold transition " +
+              "inline-flex min-h-11 items-center rounded-full px-2.5 text-[10px] font-bold transition " +
               (idx === activeIndex
                 ? "bg-ink text-card"
                 : "bg-line-soft text-ink-faint hover:bg-line hover:text-ink-soft")

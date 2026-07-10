@@ -45,6 +45,8 @@ export type DataStatus = "loading" | "ready" | "empty" | "error";
 
 export type ChartWindow = "24h" | "7d" | "30d";
 
+export type IssueListSort = "heat" | "change" | "recent";
+
 export type IssueReportContent = {
   issue_overview: string;
   current_data_reading: string;

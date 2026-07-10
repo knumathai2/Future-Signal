@@ -55,7 +55,9 @@ function CustomTooltip({ active, label, payload }: TooltipProps) {
 
   return (
     <div className="rounded-lg border border-line bg-card px-3 py-2 shadow-soft">
-      <div className="text-xs font-semibold text-ink">{formatShortDate(label)}</div>
+      <div className="text-xs font-semibold text-ink">
+        {formatShortDate(label)}
+      </div>
       <div className="mt-1 text-xs text-ink-soft">
         공개 데이터에 반영된 기대값:{" "}
         <span className="font-bold text-ink">
@@ -103,7 +105,9 @@ export function IssueTrendChart({ issue, windowKey }: IssueTrendChartProps) {
   );
 
   const markerPoints = useMemo(() => {
-    const visibleTimestamps = new Set(visibleHistory.map((point) => point.timestamp));
+    const visibleTimestamps = new Set(
+      visibleHistory.map((point) => point.timestamp),
+    );
 
     return issue.inflectionPoints
       .filter((point) => visibleTimestamps.has(point.timestamp))
@@ -175,7 +179,7 @@ export function IssueTrendChart({ issue, windowKey }: IssueTrendChartProps) {
               axisLine={false}
               tickLine={false}
               minTickGap={28}
-              tick={{ fill: "oklch(62% 0.015 55)", fontSize: 11 }}
+              tick={{ fill: "oklch(54% 0.015 55)", fontSize: 11 }}
             />
             <YAxis
               domain={domain}
@@ -183,16 +187,23 @@ export function IssueTrendChart({ issue, windowKey }: IssueTrendChartProps) {
               axisLine={false}
               tickLine={false}
               width={42}
-              tick={{ fill: "oklch(62% 0.015 55)", fontSize: 11 }}
+              tick={{ fill: "oklch(54% 0.015 55)", fontSize: 11 }}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ stroke: "oklch(87% 0.015 65)" }} />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{ stroke: "oklch(87% 0.015 65)" }}
+            />
             <Line
               type="monotone"
               dataKey="value"
               stroke="oklch(52% 0.13 45)"
               strokeWidth={2.4}
               dot={false}
-              activeDot={{ r: 4, stroke: "oklch(22% 0.02 55)", strokeWidth: 1.5 }}
+              activeDot={{
+                r: 4,
+                stroke: "oklch(22% 0.02 55)",
+                strokeWidth: 1.5,
+              }}
               isAnimationActive={false}
             />
             {markerPoints.map((point) => (

@@ -11,8 +11,7 @@ _Last updated: 2026-07-10_
 
 ## In Progress
 
-No implementation tasks remain active. `ISS-010` is archived in
-`tasks/completed.md` after the scheduled batch passed on its fix branch.
+No implementation tasks are currently in progress.
 
 ## Status Values
 
