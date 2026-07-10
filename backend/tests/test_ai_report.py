@@ -23,7 +23,7 @@ from app.core.config import (
     _resolve_ai_model,
     _resolve_ai_provider,
 )
-from app.schemas.issues import ReportContent
+from app.schemas.issues import ReportContentV2 as ReportContent
 
 VALID_CONTENT = {
     "issue_explainer": "이 이슈는 정해진 기준일까지 특정 조건이 확인되는지를 살펴봅니다.",

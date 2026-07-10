@@ -215,5 +215,5 @@ def load_latest_successful_report(
     report, metric_computed_at = row
     return LiveAiReport(
         report=report,
-        data_as_of=metric_computed_at or report.generated_at,
+        data_as_of=metric_computed_at,
     )

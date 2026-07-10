@@ -26,7 +26,7 @@ implementation allocation evidence is recorded in
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
 | TASK-049 | Implement v3 report generation content | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-049-v3-report-generation` | assigned |
-| TASK-050 | Implement v3 report API/read contract | Backend Implementer | Backend Implementer | `backend/TASK-050-v3-report-runtime` | assigned |
+| TASK-050 | Implement v3 report API/read contract | Backend Implementer | Backend Implementer | `backend/TASK-050-v3-report-runtime` | review |
 | TASK-051 | Implement v3 dynamic report UI | Frontend Implementer | Frontend Implementer | `frontend/TASK-051-v3-report-cards` | review |
 | TASK-053 | Review v3 integration copy and contract | Reviewer | Reviewer | `review/TASK-053-v3-report-copy-lint` | assigned |
 
@@ -157,21 +157,21 @@ git-state check and Day 5 v3 implementation allocation.
 - **Owner**: Backend Implementer
 - **Assignee**: Backend Implementer
 - **Branch**: `backend/TASK-050-v3-report-runtime`
-- **Status**: assigned
+- **Status**: review
 - **Priority**: High
 - **Day**: Day 5
 - **Description**: Move the report read path and shared schema from current v2
   runtime behavior to the approved ADR-033 v3 content contract while preserving
   the existing endpoint path and neutral empty-state behavior.
 - **Definition of Done**:
-  - [ ] Shared Pydantic/API schemas enforce the ADR-033 eight-field content
+  - [x] Shared Pydantic/API schemas enforce the ADR-033 eight-field content
         shape, required nullable `external_context`, and extra-field rejection.
-  - [ ] `/api/issues/{id}/report` serves only current v3 successful report rows
+  - [x] `/api/issues/{id}/report` serves only current v3 successful report rows
         and keeps `not_yet_generated` for absent, failed, or legacy rows.
-  - [ ] Contract tests cover success, null `external_context`, legacy version
+  - [x] Contract tests cover success, null `external_context`, legacy version
         exclusion, not-yet-generated, and unknown issue paths.
-  - [ ] API contract documentation stays aligned with runtime behavior.
-  - [ ] No migration, dependency, infrastructure, deployment, or unapproved DB
+  - [x] API contract documentation stays aligned with runtime behavior.
+  - [x] No migration, dependency, infrastructure, deployment, or unapproved DB
         write is introduced.
 
 ### TASK-051: Implement v3 dynamic report UI

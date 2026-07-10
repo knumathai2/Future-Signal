@@ -15,7 +15,6 @@ from datetime import timedelta
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routes import issues as issues_routes
-from app.core.ai_report import PROMPT_VERSION
 from app.db.models import AiReport, Market, MarketSnapshot
 from tests.conftest import (
     MARKET_ID,
@@ -24,6 +23,7 @@ from tests.conftest import (
     REPORT_ID_FAILED,
     REPORT_ID_LATEST,
     REPORT_ID_OLD,
+    report_content,
     seed_ai_report,
     seed_basic_market,
     seed_market_without_metric,
@@ -215,7 +215,7 @@ def test_get_issue_report_live_data_returns_latest_successful_report(
         report_id=REPORT_ID_OLD,
         generated_at=NOW - timedelta(hours=2),
         label="older",
-        prompt_version=PROMPT_VERSION,
+        prompt_version="v3",
     )
     seed_ai_report(
         db_session,
@@ -223,13 +223,14 @@ def test_get_issue_report_live_data_returns_latest_successful_report(
         generated_at=NOW + timedelta(hours=1),
         status="failed",
         label="failed",
+        prompt_version="v3",
     )
     seed_ai_report(
         db_session,
         report_id=REPORT_ID_LATEST,
         generated_at=NOW + timedelta(minutes=5),
         label="latest",
-        prompt_version=PROMPT_VERSION,
+        prompt_version="v3",
     )
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
@@ -238,10 +239,14 @@ def test_get_issue_report_live_data_returns_latest_successful_report(
     body = response.json()
     assert body["id"] == str(REPORT_ID_LATEST)
     assert body["status"] == "success"
+    assert body["report_version"] == "v3"
     # input_metrics_id=1 links the report to the seeded metric row, so the
     # report's data_as_of reflects the metric snapshot rather than generated_at.
     assert body["data_as_of"].startswith("2026-07-08T09:00:00")
-    assert body["content"]["issue_explainer"] == "latest issue explainer from stored data."
+    expected_overview = (
+        "latest issue overview from stored data that explains the tracked condition."
+    )
+    assert body["content"]["issue_overview"] == expected_overview
 
 
 def test_get_issue_report_prefers_current_prompt_version_when_timestamps_tie(
@@ -260,7 +265,7 @@ def test_get_issue_report_prefers_current_prompt_version_when_timestamps_tie(
         report_id=REPORT_ID_LATEST,
         generated_at=NOW,
         label="current",
-        prompt_version=PROMPT_VERSION,
+        prompt_version="v3",
     )
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
@@ -268,21 +273,28 @@ def test_get_issue_report_prefers_current_prompt_version_when_timestamps_tie(
     assert response.status_code == 200
     body = response.json()
     assert body["id"] == str(REPORT_ID_LATEST)
-    assert body["content"]["issue_explainer"] == "current issue explainer from stored data."
+    expected_overview = (
+        "current issue overview from stored data that explains the tracked condition."
+    )
+    assert body["content"]["issue_overview"] == expected_overview
 
 
 def test_get_issue_report_live_data_with_legacy_schema_returns_not_yet_generated(
     live_client, db_session
 ):
     seed_basic_market(db_session)
-    seed_ai_report(db_session, prompt_version=PROMPT_VERSION)
+    seed_ai_report(db_session, prompt_version="v3")
     report = db_session.get(AiReport, REPORT_ID_LATEST)
+    # Give it legacy v2 content structure which violates v3 schema fields
     report.content = {
-        "issue_summary": "legacy issue summary from stored data.",
-        "movement_explanation": "legacy movement explanation.",
-        "key_change_context": "legacy context.",
-        "uncertainty_summary": "legacy uncertainty summary.",
-        "neutral_conclusion": "legacy conclusion.",
+        "issue_explainer": "legacy issue explainer from stored data.",
+        "why_it_matters": "legacy why it matters.",
+        "current_reading": "legacy current reading.",
+        "scenario_major_change": "legacy major.",
+        "scenario_limited_change": "legacy limited.",
+        "scenario_status_quo": "legacy status quo.",
+        "check_points": "legacy check points.",
+        "caution_note": "legacy caution note.",
     }
     db_session.commit()
 
@@ -302,6 +314,7 @@ def test_get_issue_report_live_data_without_success_returns_not_yet_generated(
         generated_at=NOW + timedelta(hours=1),
         status="failed",
         label="failed",
+        prompt_version="v3",
     )
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
@@ -314,7 +327,7 @@ def test_get_issue_report_query_failure_returns_not_yet_generated(
     live_client, db_session, monkeypatch
 ):
     seed_basic_market(db_session)
-    seed_ai_report(db_session, prompt_version=PROMPT_VERSION)
+    seed_ai_report(db_session, prompt_version="v3")
 
     def fail_query(*args, **kwargs):
         raise SQLAlchemyError("simulated report query failure")
@@ -485,3 +498,328 @@ def test_history_multiple_snapshots_filtered_and_sorted_by_window(
     # without a client-side sort.
     timestamps = [p["captured_at"] for p in points_30d]
     assert timestamps == sorted(timestamps)
+
+
+def test_v3_report_success_response(live_client, db_session):
+    seed_basic_market(db_session)
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_LATEST,
+        prompt_version="v3",
+        status="success",
+        label="v3_success",
+    )
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "success"
+    assert body["report_version"] == "v3"
+    expected_context = (
+        "v3_success external context narrative for manually reviewed context candidate."
+    )
+    expected_overview = (
+        "v3_success issue overview from stored data that explains the tracked condition."
+    )
+    assert body["content"]["external_context"] == expected_context
+    assert body["content"]["issue_overview"] == expected_overview
+
+
+def test_v3_report_explicit_null_external_context(live_client, db_session):
+    seed_basic_market(db_session)
+    content = report_content("v3_null_context")
+    content["external_context"] = None
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_LATEST,
+        prompt_version="v3",
+        status="success",
+    )
+    # override seeded content to have explicitly null external_context
+    report = db_session.get(AiReport, REPORT_ID_LATEST)
+    report.content = content
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "success"
+    assert body["report_version"] == "v3"
+    assert body["content"]["external_context"] is None
+
+
+def test_v3_report_missing_external_context_key_rejection(live_client, db_session):
+    seed_basic_market(db_session)
+    content = report_content("v3_missing_key")
+    # remove the key entirely
+    content.pop("external_context")
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_LATEST,
+        prompt_version="v3",
+        status="success",
+    )
+    report = db_session.get(AiReport, REPORT_ID_LATEST)
+    report.content = content
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+    assert response.status_code == 200
+    # Validation error should cause fallback to not_yet_generated
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v3_report_empty_and_whitespace_only_rejection(live_client, db_session):
+    seed_basic_market(db_session)
+    # 1. empty string rejection
+    content_empty = report_content("v3_empty")
+    content_empty["issue_overview"] = ""
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_LATEST,
+        prompt_version="v3",
+        status="success",
+    )
+    report = db_session.get(AiReport, REPORT_ID_LATEST)
+    report.content = content_empty
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+    # 2. whitespace-only string rejection
+    content_whitespace = report_content("v3_ws")
+    content_whitespace["issue_overview"] = "   "
+    report.content = content_whitespace
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v3_report_length_boundary_rejection(live_client, db_session):
+    seed_basic_market(db_session)
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_LATEST,
+        prompt_version="v3",
+        status="success",
+    )
+    report = db_session.get(AiReport, REPORT_ID_LATEST)
+
+    # 1. Below min_length (issue_overview minimum length is 30)
+    content_too_short = report_content("short")
+    content_too_short["issue_overview"] = "Too short overview."  # 19 chars
+    report.content = content_too_short
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+    # 2. Above max_length (issue_overview maximum length is 600)
+    content_too_long = report_content("long")
+    content_too_long["issue_overview"] = "A" * 601
+    report.content = content_too_long
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v3_report_extra_field_rejection(live_client, db_session):
+    seed_basic_market(db_session)
+    content = report_content("extra")
+    content["unapproved_extra_field"] = "This field should trigger extra forbid validation."
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_LATEST,
+        prompt_version="v3",
+        status="success",
+    )
+    report = db_session.get(AiReport, REPORT_ID_LATEST)
+    report.content = content
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v3_report_missing_required_field_rejection(live_client, db_session):
+    seed_basic_market(db_session)
+    content = report_content("missing")
+    content.pop("issue_overview")  # missing required field
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_LATEST,
+        prompt_version="v3",
+        status="success",
+    )
+    report = db_session.get(AiReport, REPORT_ID_LATEST)
+    report.content = content
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v3_report_legacy_version_gating(live_client, db_session):
+    seed_basic_market(db_session)
+
+    # 1. Verify v1 / v2 legacy-row exclusion
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_OLD,
+        generated_at=NOW - timedelta(hours=1),
+        prompt_version="v2",  # legacy version
+        status="success",
+        label="v2_legacy",
+    )
+
+    response_legacy_only = live_client.get(f"/api/issues/{MARKET_ID}/report")
+    assert response_legacy_only.status_code == 200
+    assert response_legacy_only.json() == {"status": "not_yet_generated"}
+
+    # 2. Version gating when a legacy row is newer than a v3 row
+    # v3 row is older, v2 row is newer. Both must have generated_at >= data_as_of (NOW)
+    import uuid
+    v3_report_id = uuid.uuid4()
+    seed_ai_report(
+        db_session,
+        report_id=v3_report_id,
+        generated_at=NOW + timedelta(minutes=5),
+        prompt_version="v3",
+        status="success",
+        label="v3_older",
+    )
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_LATEST,
+        generated_at=NOW + timedelta(minutes=10),
+        prompt_version="v2",
+        status="success",
+        label="v2_newer",
+    )
+
+    response_mixed = live_client.get(f"/api/issues/{MARKET_ID}/report")
+    assert response_mixed.status_code == 200
+    body = response_mixed.json()
+    assert body["id"] == str(v3_report_id)  # Serves the older v3 row instead of the newer v2 row
+    assert body["status"] == "success"
+    assert body["report_version"] == "v3"
+
+
+def test_v3_report_failed_row_exclusion(live_client, db_session):
+    seed_basic_market(db_session)
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_FAILED,
+        prompt_version="v3",
+        status="failed",
+    )
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v3_report_no_report_empty_state(live_client, db_session):
+    seed_basic_market(db_session)
+    # No reports seeded at all
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v3_report_malformed_v3_content(live_client, db_session):
+    seed_basic_market(db_session)
+    content = report_content("malformed")
+    content["issue_overview"] = 1234567890  # integer type instead of string
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_LATEST,
+        prompt_version="v3",
+        status="success",
+    )
+    report = db_session.get(AiReport, REPORT_ID_LATEST)
+    report.content = content
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v3_report_without_linked_metric_timestamp(live_client, db_session):
+    seed_basic_market(db_session)
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_LATEST,
+        prompt_version="v3",
+        status="success",
+        input_metrics_id=None,  # unlinked
+    )
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v3_report_invalid_data_as_of_future_than_generated_at(live_client, db_session):
+    seed_basic_market(db_session)
+    # data_as_of = NOW (linked from metric computed_at)
+    # generated_at = NOW - 1 hour (so data_as_of > generated_at)
+    seed_ai_report(
+        db_session,
+        report_id=REPORT_ID_LATEST,
+        prompt_version="v3",
+        status="success",
+        generated_at=NOW - timedelta(hours=1),
+    )
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v3_report_unknown_issue_id_is_404(live_client, db_session):
+    seed_basic_market(db_session)
+    response = live_client.get("/api/issues/does-not-exist/report")
+    assert response.status_code == 404
+
+
+def test_v3_static_fallback_validates_contract(live_client):
+    # Unset DATABASE_URL in mock setup to trigger static fallback
+    # The default issue_id "b3f1c2a4-0000-4000-8000-000000000001" returns the static fallback
+    url = "/api/issues/b3f1c2a4-0000-4000-8000-000000000001/report"
+    response = live_client.get(url)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "success"
+    assert body["report_version"] == "v3"
+    expected_overview = "이 이슈는 공개된 기한까지 문서에 적힌 조건이 충족되는지를 추적합니다."
+    expected_caution = (
+        "이 내용은 공개 예측시장 참여자 데이터에 나타난 흐름을 정리한 것이며, "
+        "전체 대중의 판단을 대표하거나 현실의 결과를 입증하지 않습니다. "
+        "24시간 및 7일 비교 지점이 있고 활동량과 유동성이 설정된 하한보다 낮지 않으며 "
+        "24시간 변화 폭이 큰 움직임 기준을 넘지 않지만, "
+        "다른 자료를 통해 독립적으로 확인해야 합니다."
+    )
+    assert body["content"]["issue_overview"] == expected_overview
+    assert body["content"]["possible_drivers"] == (
+        "이 움직임과 함께 비교할 수 있도록 수동 검토를 마친 맥락 후보가 없습니다. "
+        "현재 데이터는 관찰된 움직임만 보여 주며, 추가 맥락은 다른 자료를 통해 "
+        "독립적으로 확인해야 합니다."
+    )
+    assert body["content"]["external_context"] is None
+    assert body["content"]["what_to_check"] == (
+        "게시된 이슈 문구와 기록된 기한, 데이터 기준 시각, "
+        "이후 공개 데이터 갱신 내용을 추가로 확인해야 합니다."
+    )
+    assert body["content"]["caution_note"] == expected_caution

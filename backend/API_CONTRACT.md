@@ -1,11 +1,10 @@
 # API Contract — Outlook Signals
 
-_Status: current v2 runtime contract plus the TASK-048 v3 replacement contract
-frozen by ADR-033, which supersedes ADR-032 for v3 implementation scope.
-The current runtime shapes are backed by Pydantic schemas
+_Status: Implemented v3 runtime contract as defined by ADR-033.
+The runtime shapes are backed by Pydantic schemas
 (`app/schemas/issues.py`, `app/schemas/health.py`) and routes
-(`app/api/routes/`); the TASK-048 snippets are documentation only and do not
-appear in `GET /openapi.json` or `/docs`._
+(`app/api/routes/`). Legacy v1 and v2 report contents are gated out
+and treated as not yet generated._
 
 **All endpoints are read-only.** All timestamps are ISO 8601 UTC. Public
 paths use `issues` / `signals` / `reports` / `categories` — never `markets`,
@@ -101,32 +100,34 @@ separate calls — done here).
 
 `404` if `id` is unknown.
 
-## `GET /api/issues/{id}/report` — current runtime contract (v2)
+## `GET /api/issues/{id}/report` — current runtime contract (v3)
 
 Latest AI report. Content is fixed template slots only — never free-form
-(ADR-003, updated by ADR-028) — and must pass the banned-phrase filter before
+(ADR-003, updated by ADR-033) — and must pass the banned-phrase filter before
 storage.
 When live data is available, the API serves the latest `status="success"`
-`ai_reports` row for the issue using the current prompt version. Failed rows
-and legacy prompt-version rows are retained in storage but are not returned
-from this endpoint. Stored current-version content that does not match the
-current schema is treated as not yet generated rather than partially served.
+`ai_reports` row for the issue where `prompt_version="v3"`. Failed rows
+and legacy prompt-version rows (v1, v2) are retained in storage but are NOT returned
+from this endpoint (they are gated out and treated as `not_yet_generated`). Stored
+content that does not match the v3 schema, has no linked metric computed_at timestamp,
+or has `data_as_of > generated_at` is treated as not yet generated rather than partially served.
 
 ```json
 {
   "id": "7c2e1a90-0000-4000-8000-0000000000aa",
-  "generated_at": "2026-07-08T09:00:00Z",
-  "data_as_of": "2026-07-08T09:00:00Z",
   "status": "success",
+  "report_version": "v3",
+  "generated_at": "2026-07-10T09:05:00Z",
+  "data_as_of": "2026-07-10T09:00:00Z",
   "content": {
-    "issue_explainer": "...",
-    "why_it_matters": "...",
-    "current_reading": "...",
-    "scenario_major_change": "...",
-    "scenario_limited_change": "...",
-    "scenario_status_quo": "...",
-    "check_points": "...",
-    "caution_note": "..."
+    "issue_overview": "이 이슈는 공개된 기한까지 문서에 적힌 조건이 충족되는지를 추적합니다.",
+    "current_data_reading": "데이터 기준 시각에 공개 예측시장 참여자 데이터에 반영된 기대값은 63%이며, 24시간 전보다 8.2퍼센트포인트 높게 관찰되었습니다.",
+    "possible_outlook": "이후 공개 데이터에서 관찰된 움직임의 지속, 확대 또는 완화가 확인되더라도, 이는 데이터의 흐름만 설명하며 현실의 결과나 변화의 이유를 입증하지 않습니다.",
+    "possible_drivers": "이 움직임과 함께 비교할 수 있도록 수동 검토를 마친 맥락 후보가 없습니다. 현재 데이터는 관찰된 움직임만 보여 주며, 추가 맥락은 다른 자료를 통해 독립적으로 확인해야 합니다.",
+    "external_context": null,
+    "what_to_check": "게시된 이슈 문구와 기록된 기한, 데이터 기준 시각, 이후 공개 데이터 갱신 내용을 추가로 확인해야 합니다.",
+    "data_limitations": "이 읽기는 활동량, 유동성, 24시간 변화 폭, 24시간 및 7일 이력 범위의 영향을 받습니다. 공개 예측시장 참여자 데이터는 전체 대중의 판단을 대표하지 않습니다.",
+    "caution_note": "이 내용은 공개 예측시장 참여자 데이터에 나타난 흐름을 정리한 것이며, 전체 대중의 판단을 대표하거나 현실의 결과를 입증하지 않습니다. 24시간 및 7일 비교 지점이 있고 활동량과 유동성이 설정된 하한보다 낮지 않으며 24시간 변화 폭이 큰 움직임 기준을 넘지 않지만, 다른 자료를 통해 독립적으로 확인해야 합니다."
   }
 }
 ```
@@ -144,12 +145,13 @@ rather than Technical Design §5's originally proposed `204` (HTTP `204 No
 Content` cannot carry a body per spec, so most clients would discard the
 hint). This is accepted as final, not an open item.
 
+## Legacy v2 report contract (Superseded by v3)
+
+The legacy v2 report shape is no longer served from the API. The existing generator may still generate v2 reports internally until TASK-049 is resolved, but the public API filters these out as `not_yet_generated`.
+
 ## Approved v3 report contract replacement (TASK-048, ADR-033)
 
-This section is the frozen implementation contract, but TASK-048 does not
-change the current endpoint, Pydantic schema, report generator, stored rows,
-frontend types, or report UI. ADR-033 supersedes ADR-032 for future v3 work
-without rewriting ADR-032's history.
+This section remains as the historical contract design freeze. ADR-033 supersedes ADR-032.
 
 The approved `content` object has exactly these eight keys:
 
@@ -232,9 +234,9 @@ Complete approved example:
     "issue_overview": "이 이슈는 공개된 기한까지 문서에 적힌 조건이 충족되는지를 추적합니다.",
     "current_data_reading": "데이터 기준 시각에 공개 예측시장 참여자 데이터에 반영된 기대값은 63%이며, 24시간 전보다 8.2퍼센트포인트 높게 관찰되었습니다.",
     "possible_outlook": "이후 공개 데이터에서 관찰된 움직임의 지속, 확대 또는 완화가 확인되더라도, 이는 데이터의 흐름만 설명하며 현실의 결과나 변화의 이유를 입증하지 않습니다.",
-    "possible_drivers": "수동 검토를 마친 맥락 후보의 제목과 기록 날짜는 관찰된 움직임과 함께 비교할 수 있습니다. 해당 시점은 비교를 위해 제공되며, 현재 데이터는 이 맥락 후보와 움직임 사이의 관계를 입증하지 않습니다.",
-    "external_context": "수동 검토를 마친 맥락 메모는 관찰된 움직임과 함께 살펴볼 정보로만 제공되며, 변화의 원인으로 제시되지 않습니다.",
-    "what_to_check": "이슈에 적힌 기준과 기한, 맥락 후보의 기록 날짜, 이후 공개 데이터 갱신 내용을 추가로 확인해야 합니다.",
+    "possible_drivers": "이 움직임과 함께 비교할 수 있도록 수동 검토를 마친 맥락 후보가 없습니다. 현재 데이터는 관찰된 움직임만 보여 주며, 추가 맥락은 다른 자료를 통해 독립적으로 확인해야 합니다.",
+    "external_context": null,
+    "what_to_check": "게시된 이슈 문구와 기록된 기한, 데이터 기준 시각, 이후 공개 데이터 갱신 내용을 추가로 확인해야 합니다.",
     "data_limitations": "이 읽기는 활동량, 유동성, 24시간 변화 폭, 24시간 및 7일 이력 범위의 영향을 받습니다. 공개 예측시장 참여자 데이터는 전체 대중의 판단을 대표하지 않습니다.",
     "caution_note": "이 내용은 공개 예측시장 참여자 데이터에 나타난 흐름을 정리한 것이며, 전체 대중의 판단을 대표하거나 현실의 결과를 입증하지 않습니다. 24시간 및 7일 비교 지점이 있고 활동량과 유동성이 설정된 하한보다 낮지 않으며 24시간 변화 폭이 큰 움직임 기준을 넘지 않지만, 다른 자료를 통해 독립적으로 확인해야 합니다."
   }
