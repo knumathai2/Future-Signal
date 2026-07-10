@@ -104,6 +104,41 @@ function unicodeCodePointLength(value: string): number {
   return Array.from(value.trim()).length;
 }
 
+const UTC_ISO_TIMESTAMP_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?(Z|\+00:00)$/;
+
+/**
+ * Validate a timezone-aware ISO 8601 UTC timestamp and return a fixed-width
+ * canonical value that preserves microseconds for chronological comparison.
+ */
+function normalizeUtcIsoTimestamp(value: string): string | null {
+  const match = UTC_ISO_TIMESTAMP_PATTERN.exec(value);
+  if (!match) {
+    return null;
+  }
+
+  const parsed = Date.parse(value);
+  if (!Number.isFinite(parsed)) {
+    return null;
+  }
+
+  const parsedDate = new Date(parsed);
+  const [, year, month, day, hour, minute, second] = match;
+  if (
+    parsedDate.getUTCFullYear() !== Number(year) ||
+    parsedDate.getUTCMonth() + 1 !== Number(month) ||
+    parsedDate.getUTCDate() !== Number(day) ||
+    parsedDate.getUTCHours() !== Number(hour) ||
+    parsedDate.getUTCMinutes() !== Number(minute) ||
+    parsedDate.getUTCSeconds() !== Number(second)
+  ) {
+    return null;
+  }
+
+  const fraction = (match[7] ?? "").padEnd(6, "0");
+  return `${year}-${month}-${day}T${hour}:${minute}:${second}.${fraction}Z`;
+}
+
 // ---------------------------------------------------------------------------
 // Report response parser / type guard
 // ---------------------------------------------------------------------------
@@ -178,7 +213,20 @@ function validateContent(
     }
   }
 
-  return raw as unknown as IssueReportContent;
+  // Render the same normalized strings that were used for length validation.
+  return {
+    issue_overview: (raw.issue_overview as string).trim(),
+    current_data_reading: (raw.current_data_reading as string).trim(),
+    possible_outlook: (raw.possible_outlook as string).trim(),
+    possible_drivers: (raw.possible_drivers as string).trim(),
+    external_context:
+      raw.external_context === null
+        ? null
+        : (raw.external_context as string).trim(),
+    what_to_check: (raw.what_to_check as string).trim(),
+    data_limitations: (raw.data_limitations as string).trim(),
+    caution_note: (raw.caution_note as string).trim(),
+  };
 }
 
 /**
@@ -186,7 +234,7 @@ function validateContent(
  *
  * A success payload is valid only when:
  * - top-level `status` is `"success"` and `report_version` is `"v3"`
- * - `id` is a non-empty string, `generated_at` and `data_as_of` are valid date strings
+ * - `id` is non-empty and timestamps are UTC ISO values in chronological order
  * - `content` has the exact eight-key set with valid values
  *
  * The accepted empty response `{ status: "not_yet_generated" }` is also handled.
@@ -216,10 +264,14 @@ export function parseReportResponse(raw: unknown): IssueReportLoadState {
     typeof raw.id !== "string" ||
     raw.id.trim().length === 0 ||
     typeof raw.generated_at !== "string" ||
-    Number.isNaN(Date.parse(raw.generated_at)) ||
-    typeof raw.data_as_of !== "string" ||
-    Number.isNaN(Date.parse(raw.data_as_of))
+    typeof raw.data_as_of !== "string"
   ) {
+    return { status: "error" };
+  }
+
+  const generatedAt = normalizeUtcIsoTimestamp(raw.generated_at);
+  const dataAsOf = normalizeUtcIsoTimestamp(raw.data_as_of);
+  if (generatedAt === null || dataAsOf === null || dataAsOf > generatedAt) {
     return { status: "error" };
   }
 
@@ -229,11 +281,11 @@ export function parseReportResponse(raw: unknown): IssueReportLoadState {
   }
 
   const report: IssueReportSuccessResponse = {
-    id: raw.id as string,
+    id: raw.id,
     status: "success",
     report_version: "v3",
-    generated_at: raw.generated_at as string,
-    data_as_of: raw.data_as_of as string,
+    generated_at: raw.generated_at,
+    data_as_of: raw.data_as_of,
     content,
   };
 
