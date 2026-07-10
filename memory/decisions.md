@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Decision Log — Outlook Signals
 
-_Last updated: 2026-07-09_
+_Last updated: 2026-07-10_
 
 ## Template
 
@@ -157,6 +157,184 @@ the card label.
 **Consequences**: Category buttons are broad Korean groups on the live
 dashboard; cards keep detailed topic labels via the frontend display layer.
 Synthetic tests cover Ukraine/Iran-style conflict issues mapping to `세계`.
+
+---
+
+### ADR-032: v3 AI Report Policy and Scope Lock
+
+- **Date**: 2026-07-10
+- **Status**: Accepted
+- **Decided by**: User / PM Planner
+
+**Context**: v2 reports are live as fixed issue explainers, but v3 implementation
+would touch the public `/api/issues/{id}/report` response, AI prompt/schema
+contract, frontend report rendering, and copy policy. This approval must land
+before Frontend, Backend, or Data/AI implementation begins, because
+`AGENTS.md` gates public API shape changes and wording-policy changes behind
+human approval. PRD and Service Design still prohibit free-form analysis,
+future-outcome claims, causal news matching, action-oriented wording, and
+wallet/participant-level surfaces.
+
+**Decision**: Approve v3 as a scope-locked, template-constrained report update.
+The only approved public API change is the v3 report response shape listed
+below. No database schema migration, new endpoint, infrastructure change,
+deployment, paid external API call, or production/shared database write is
+approved by this ADR. v3 implementation tasks may begin only after this ADR is
+read as their prerequisite and must stay within the field list and policy below.
+
+**v3 AI summary/report policy**:
+
+- v3 remains a fixed-schema data summary/report, not open-ended analysis.
+- The model may only fill named slots from structured inputs that the pipeline
+  already computed or PM/Data manually curated.
+- The report may describe observed movement, current data reading, conditional
+  scenario context, check points, and interpretation limits.
+- The report must not assert causes, predict outcomes, rank actions, or imply
+  that the data represents the public at large.
+- Every successful report must include a caution section and must carry a
+  data-as-of timestamp through the API response.
+- A safety failure blocks storage and keeps the previous successful current
+  report live. Do not auto-retry a safety-filter failure with the same prompt.
+- Legacy v1/v2 report rows remain audit history. They must not be served as v3
+  content unless they validate against the v3 schema and current prompt version.
+
+**Approved public API shape changes**:
+
+- `GET /api/issues/{id}/report` may add `report_version` to successful
+  responses, derived from the current prompt/schema version.
+- Successful `content` becomes exactly the fixed v3 field set below.
+- `context_candidate_note` is the only nullable content field. If it is `null`,
+  the frontend hides that section.
+- `status="not_yet_generated"` and unknown-id `404` behavior stay unchanged.
+- No new report-generation endpoint, user-facing regenerate button, issue-list
+  field, history field, category field, or signal field is approved here.
+- No schema migration is approved. The existing `ai_reports.content` JSONB
+  storage may hold the v3 object, and `prompt_version` remains the storage-side
+  compatibility gate.
+
+**Final v3 field list**:
+
+| Field | Type | Nullable | Producer / owner | Exposed through API | UI usage | Safety/copy validation required |
+|---|---|---:|---|---|---|---|
+| `id` | UUID string | No | Backend | Yes | Report identity / React key only | No |
+| `status` | enum: `success`, `not_yet_generated` | No | Backend | Yes | Report state rendering | No |
+| `report_version` | string, expected `v3` for this policy | No for success | Backend from `prompt_version` | Yes | Optional debug/support display; not a marketing label | No |
+| `generated_at` | ISO 8601 timestamp | No for success | Data/AI batch | Yes | Report freshness | No |
+| `data_as_of` | ISO 8601 timestamp | No for success | Data/AI batch from metric snapshot | Yes | Required timestamp near report | No |
+| `prompt_version` | string | No | Data/AI batch | No | Storage/read compatibility gate | No |
+| `model_used` | string | Yes | Data/AI batch | No | Internal audit only | No |
+| `input_metrics_id` | bigint | No for generated rows | Data/AI batch | No | Traceability to computed metrics | No |
+| `content.issue_explainer` | string | No | Data/AI template | Yes | "Issue summary" section | Yes |
+| `content.why_it_matters` | string | No | Data/AI template | Yes | "Why it matters" section | Yes |
+| `content.current_reading` | string | No | Data/AI template | Yes | Current data reading section | Yes |
+| `content.recent_change_summary` | string | No | Data/AI template from computed metrics | Yes | Recent movement section; includes window, direction, magnitude, and observed timing when available | Yes |
+| `content.context_candidate_note` | string | Yes | PM/Data manual related-event candidate, phrased by Data/AI template | Yes | Optional manually curated context candidate section | Yes |
+| `content.scenario_major_change` | string | No | Data/AI template | Yes | Conditional scenario section | Yes |
+| `content.scenario_limited_change` | string | No | Data/AI template | Yes | Conditional scenario section | Yes |
+| `content.scenario_status_quo` | string | No | Data/AI template | Yes | Conditional scenario section | Yes |
+| `content.check_points` | string | No | Data/AI template | Yes | Verification/check-points section | Yes |
+| `content.caution_note` | string | No | Data/AI template | Yes | Required caution note | Yes |
+| `content.data_limitations` | string | No | Data/AI template from confidence/caution inputs | Yes | Data limitations section; activity, volatility, history, and source limitation language | Yes |
+
+**Approved wording/safety policy changes**:
+
+- v3 tightens the existing policy; it does not remove any prohibited term.
+- English hard-block terms remain the `standards.md` and `memory/glossary.md`
+  list: `bet`, `buy`, `sell`, `trade`, `position`, `long`, `short`, `profit`,
+  `win rate`, `odds`, `copy trader`, `follow this user`, `expert trader`,
+  `best pick`, `recommended outcome`, `high-return opportunity`,
+  `guaranteed prediction`, `signal to act`, and `recommendation`.
+- Korean UI/template output must also avoid direct action, return, certainty,
+  and copy-participant wording, including: `베팅`, `매수`, `매도`, `포지션`,
+  `롱`, `숏`, `수익`, `승률`, `배당`, `추천`, `보장`, `확정`, `따라하기`,
+  `고수`, `전문 트레이더`, `고수익`, and `기회`.
+- Approved replacement language: "reflected expectation value",
+  "observed movement in public data", "interpretation-caution badge",
+  "related event candidate", "context candidate that can be checked alongside
+  the change", "data reliability", "public data reading", and Korean
+  equivalents such as `공개 데이터에 반영된 기대값`, `관찰된 변화`,
+  `해석 주의`, `맥락 후보`, and `공개 데이터 읽기`.
+- Ambiguous wording rules:
+  - `signal` may appear only as a neutral compound label such as
+    `Expectation Shift Detected`; never as a standalone action cue.
+  - `confidence` must mean data reliability, not outcome certainty.
+  - `likely`, `will`, `must`, and Korean future/certainty equivalents must not
+    describe real-world outcome probability.
+  - Causal connectors are prohibited in generated/user-facing output when
+    linking context to movement. Use timing/co-occurrence phrasing only.
+  - A related/context candidate must carry a candidate-not-cause qualifier in
+    the same sentence or adjacent UI text.
+- Validation before AI output is stored:
+  - Parse exactly the v3 schema, reject missing or extra fields.
+  - Run the English and Korean hard-block term scan with case folding.
+  - Run pattern checks for action advice, future-outcome claims, causal claims,
+    participant-following language, and certainty framing.
+  - Require non-empty `caution_note`, non-empty `data_limitations`, and a
+    report-level `data_as_of` timestamp.
+  - If `context_candidate_note` is non-null, require candidate-not-cause
+    language before storage.
+  - On any failure, discard the generated content, log the failure reason, and
+    keep the previous successful current-version report as the served response.
+- Shared standard: the same criteria apply to UI copy, AI templates, fallback
+  strings, demo-visible docs, and generated report content. Policy/lint docs
+  and tests may quote prohibited expressions only to define or verify blocks.
+
+**Allowed vs prohibited automated news matching scope**:
+
+| Scope | Decision |
+|---|---|
+| Manually curated related-event candidates for 3-5 demo issues | Allowed and remains the MVP path. PM/Data must approve the candidate text before it is seeded or displayed. |
+| Non-public candidate-discovery helper | Allowed only as an offline PM review aid if it does not call paid APIs without approval, does not write to the DB, does not change the public API, and does not display results to users. |
+| Automated candidate scoring, ranking, or confidence labels | Prohibited for MVP/v3. |
+| Scheduled news crawler or background matcher | Prohibited for MVP/v3. |
+| Automatically writing `related_events` rows from news/search output | Prohibited for MVP/v3. |
+| Displaying algorithmically matched news as related to an issue | Prohibited for MVP/v3 unless a future ADR and human approval redefine the scope. |
+| Any phrasing that states or implies the event caused the data movement | Prohibited. |
+
+**Maintained prohibitions**:
+
+- No free-form/open-ended AI analysis.
+- No causal claims, future-outcome predictions, or action-oriented language.
+- No automated public news-to-market matching in the product.
+- No wallet-level, participant-level, leaderboard, following, or copy-style
+  feature.
+- No accounts, saving/watchlist, notifications, weekly reports, team sharing,
+  chart export, or other P1/P2 feature pulled into MVP by this ADR.
+- No data-bearing screen without data-as-of timing and interpretation caution.
+- No new dependency, schema change, infrastructure/deployment change, paid
+  external API call, shared/prod database write, or existing migration edit.
+
+**Rationale**: v3 improves report clarity by separating recent movement,
+manual context candidate, and data-limit sections while preserving the
+template-first safety model. The field list is small enough for Day 5 follow-up
+implementation and explicit enough for Backend, Frontend, and Data/AI to work
+without re-opening policy scope.
+
+**Trade-offs**: v3 adds a public response-shape change and requires coordinated
+Backend, Frontend, and Data/AI updates. It also keeps automated news matching
+out of the public product, so context coverage remains narrower than a fully
+automated news system.
+
+**Consequences**:
+
+- `TASK-047` completes the prerequisite approval gate for v3 implementation.
+- Frontend, Backend, and Data/AI implementers may start v3 implementation only
+  from this ADR and must not expand beyond the approved field list.
+- `backend/API_CONTRACT.md`, backend schemas/tests, report prompt/schema,
+  frontend report rendering, fallback report sample, and copy lint rules need
+  coordinated follow-up updates.
+- Current v2 rows remain valid historical rows, but v3 UI/API work must serve
+  only current-version v3-compatible successful report rows.
+
+**Follow-up tasks and dependencies**:
+
+| Follow-up | Owner | Dependency | Scope boundary |
+|---|---|---|---|
+| Data/AI v3 prompt/schema/safety-filter update | Data/AI Implementer | ADR-032 | Implement only the fields and validation rules above; no free-form prompt expansion. |
+| Report API contract/schema update | Backend Implementer | ADR-032 and Data/AI schema constants | Expose only `report_version` plus the approved v3 `content` fields; no new endpoint or migration. |
+| Report UI rendering update | Frontend Implementer | Backend contract update or matching mock JSON | Render/hide only approved v3 fields and keep caution/data-as-of visible. |
+| Copy/safety lint pass | PM / Reviewer | Frontend/Data/AI changes complete | Must pass before demo or merge; policy-list hits are allowed only in lint docs/tests. |
+| Optional offline candidate-discovery helper | PM/Data only | Separate task and approval if paid API or DB write is involved | Non-public review aid only; cannot auto-seed or display matches. |
 
 ---
 

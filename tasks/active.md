@@ -16,10 +16,15 @@ Day 4 is closed. Allocation evidence is recorded in
 `reports/task-018-copy-lint.md`, and closeout evidence is recorded in
 `reports/day-4-closeout-plan.md`.
 
+`TASK-047` is complete. ADR-032 is now the prerequisite scope-lock for any v3
+AI report, public API shape, wording policy, or automated-news/context-candidate
+implementation work. Frontend, Backend, and Data/AI v3 implementation must read
+ADR-032 before starting and must not expand beyond its approved field list.
+
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
 
-No active implementation or closeout tasks remain after `TASK-045`.
+No active implementation, approval, or closeout tasks remain after `TASK-047`.
 
 Completed Day 1, Day 2, Day 3, and PM allocation tasks are archived in
 `tasks/completed.md`, including `TASK-038` for this Day 4 allocation,
@@ -33,6 +38,8 @@ scheduled/manual report batch), `TASK-043` (v2 issue-explainer report
 output structure), `TASK-044` (Korean issue display titles), `ISS-007`
 (v2 report/category-filter readiness), and `TASK-018` (final copy/wording
 lint). `TASK-045` records the PM closeout verification and Day 5 handoff.
+`TASK-047` records the v3 AI report policy/API/wording scope-lock and
+implementation prerequisite decision in ADR-032.
 
 ## Day 4 Handoff Notes
 
@@ -83,6 +90,9 @@ lint). `TASK-045` records the PM closeout verification and Day 5 handoff.
   Day 4 must pass the project wording lint before review.
 - **PM / Planner** completed `TASK-045`. Day 4 is closed and Day 5 starts from
   the closeout record in `reports/day-4-closeout-plan.md`.
+- **PM / Planner** completed `TASK-047`. ADR-032 locks the v3 report field
+  list, public API boundary, tightened wording criteria, manual-only context
+  candidate scope, and maintained prohibitions before v3 implementation starts.
 
 ## Active Task Details
 
