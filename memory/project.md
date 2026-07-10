@@ -19,8 +19,8 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 - **Version**: v0.7.0-day5-v3-integrated
 - **Phase**: Day 5 v3 integration review complete
-- **Next milestone**: PM closeout, final demo rehearsal, screenshot capture, and separately approved deployment/report refresh
-- **Overall health**: 🟢 Good — the ADR-033 v3 generator, API/read contract, and dynamic report UI are integrated on `review/TASK-053-v3-report-copy-lint`; copy, contract, full test/build, and 320px/375px Browser verification passed. The review branch still needs the normal project merge flow before `main` contains TASK-050 and the final TASK-053 fixes.
+- **Next milestone**: Review and merge draft PR #51, then PM closeout, final demo rehearsal, screenshot capture, and any separately approved deployment
+- **Overall health**: 🟢 Good — v3 runtime is on `main`, the scheduled batch configuration is restored, and fix-branch Actions run `29073226485` passed with 50 processed rows and 10 successful reports. Draft PR #51 is mergeable and clean; its prompt-alignment fix still needs the normal review/merge flow.
 
 ## Tech Summary
 
@@ -53,7 +53,7 @@ Future Signal/
 |---|---|
 | Frontend | Dashboard/detail/chart/fallback flows remain intact. TASK-051 replaces v2 report rendering with the exact ADR-033 evidence-first section order, one visible section at a time, null-only `external_context` hiding, runtime parsing, report data-as-of timing, and report-snapshot caution context. TASK-053 adds five-sentence parser enforcement, exact order/null regressions, copy alignment, and responsive Browser evidence. |
 | Backend | `/api/issues/{id}/report` serves only successful v3 rows whose eight-field content validates, whose linked metric supplies `data_as_of`, and whose timestamp is not later than generation. Legacy, failed, malformed, unlinked, and incompatible rows keep `not_yet_generated`. TASK-053 adds read-time five-sentence enforcement and deterministic fallback-test isolation. Existing issue/category/history behavior and DB schema remain unchanged. |
-| Data/AI | TASK-049 advances generation to `PROMPT_VERSION=v3`: three constrained prose slots plus deterministic candidate comparison, external context, check points, limitations, and exact caution copy. Safety and semantic checks cover prohibited wording, metric consistency, reviewed-candidate provenance, current public participant-data scope, conditional later-data scope, and the ADR-033 length/sentence contract. No v3 provider call or configured DB write was performed in TASK-053. |
+| Data/AI | TASK-049 advances generation to `PROMPT_VERSION=v3`: three constrained prose slots plus deterministic candidate comparison, external context, check points, limitations, and exact caution copy. ISS-010 aligned the fixed prompt with the frozen ADR-033 bounds/source scope and the approved Actions model configuration; the latest 10 stored v3 rows passed structural, wording-safety, and semantic validation. |
 | PM / Safety | P0 scope and ADR-033 remain locked. TASK-053 final integration copy/contract review passed with evidence in `reports/review-2026-07-10-task-053-v3-integration.md`; no prohibited feature, policy change, schema/dependency/infrastructure change, deployment, provider call, or configured DB write was introduced. |
 
 ## Recent Changes
@@ -104,6 +104,7 @@ Future Signal/
 | 2026-07-10 | `TASK-048` completed: ADR-033 supersedes ADR-032 for the v3 content/display contract, accepting the eight-field schema, Option A external context, exact caution matrix, evidence-first Frontend order, Unicode character bounds, and a maximum of five concise sentences per field without changing runtime v2 paths. |
 | 2026-07-10 | `TASK-052` completed: latest `origin/main` at `106af52` was confirmed, Day 5 v3 implementation was split into `TASK-049` Data/AI generation, `TASK-050` Backend API/read contract, `TASK-051` Frontend dynamic report cards, and `TASK-053` final integration copy/contract review, with allocation evidence recorded in `reports/day-5-v3-implementation-allocation.md`. |
 | 2026-07-10 | `TASK-053` completed on the Reviewer integration branch: TASK-049/050/051 were combined, ADR-033 sentence/semantic/copy gaps were closed, 198 Backend tests and all Frontend checks passed, and 320px/375px null/non-null context Browser QA passed. |
+| 2026-07-10 | `ISS-010` resolved the daily GitHub Actions failure: repository secrets/model configuration were restored without exposing values, the v3 prompt was aligned with existing ADR-033 constraints, and run `29073226485` passed with 50 processed, 0 failed, and 10 successful reports. Draft PR #51 contains the code/test changes. |
 
 ## Constraints
 

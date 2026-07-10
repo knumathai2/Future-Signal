@@ -103,6 +103,25 @@ def test_build_prompt_returns_fixed_system_prompt_verbatim():
     assert system_prompt == SYSTEM_PROMPT
 
 
+def test_build_prompt_states_every_adr_033_llm_field_length_bound():
+    system_prompt, user_prompt = build_prompt(_inputs())
+
+    assert "issue_overview 30-600 characters" in system_prompt
+    assert "current_data_reading 50-700" in system_prompt
+    assert "possible_outlook 60-700 characters" in system_prompt
+    assert "issue_overview: 30-600 characters" in user_prompt
+    assert "current_data_reading: 50-700 characters" in user_prompt
+    assert 'includes the exact Korean phrase\n  "공개 예측시장 참여자 데이터"' in user_prompt
+    assert "possible_outlook: 60-700 characters" in user_prompt
+
+
+def test_build_prompt_requires_the_safety_filter_approved_korean_source_compound():
+    system_prompt, _ = build_prompt(_inputs())
+
+    assert 'exact no-space compound\n  "공개 예측시장 참여자 데이터"' in system_prompt
+    assert 'Never write "예측 시장" with a space' in system_prompt
+
+
 def test_build_prompt_fills_only_the_named_slots():
     _, user_prompt = build_prompt(_inputs())
 
