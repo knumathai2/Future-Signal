@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Known Issues — Outlook Signals
 
-_Last updated: 2026-07-09_
+_Last updated: 2026-07-10_
 
 ## Active Bugs
 
@@ -24,6 +24,7 @@ _Last updated: 2026-07-09_
 | TD-007 | `backend/API_CONTRACT.md`'s Error shape section documents invalid `window`/`sort` as FastAPI's current `422` behavior rather than forcing the original `400` plan. | Low; frontend should code against `422`. Changing it to `400` would be a public behavior change beyond the TASK-010 conflict-resolution scope. | Leave documented as actual behavior unless PM/Frontend request a separate API-error normalization task. |
 | TD-009 | The live API/static backend fallback path can still return English sample issue titles while the frontend dummy fallback is Korean. | Demo language consistency risk if the backend fallback is used during presentation. | Add a precise Day 5 fallback/demo note if backend fallback data is used in presentation, or localize the backend sample in a separate copy task. |
 | TD-011 | Existing successful `ai_reports` rows in the configured development DB may still use the v1 5-section content shape after `TASK-043`. | Non-default or lower-ranked issue detail pages can still show `not_yet_generated` until v2 reports are generated for those issues. The default top-20 heat-sorted issues are now verified with v2 content. | Continue guarded scheduled/manual report generation as needed; AI-provider key use remains covered by ADR-022/ADR-027. |
+| TD-012 | Re-running report generation for a market with the same metric timestamp can leave multiple successful current-version `ai_reports` rows with identical `generated_at`; the API breaks ties by UUID, so a newly generated row may not be the row served. | Model refreshes can write successful rows that are not immediately visible for some issues, as seen during `TASK-046` when one high-ranked issue had a new `gpt-5.6-luna` row but still served an older current-version row. | Use a real generation timestamp, add an inserted-at field, or update the read ordering/regeneration logic in a follow-up backend/data task. Workaround: verify the served row per market and open an issue whose top current-version row is the refreshed model. |
 
 
 ## Resolved
