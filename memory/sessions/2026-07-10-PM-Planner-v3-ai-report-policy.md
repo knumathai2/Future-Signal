@@ -1,13 +1,11 @@
 <!--
-Purpose:        Current session state - context handoff among agents
-Owner:          Currently active agent
-Update Trigger: Read at session start; must update before session ends
+Purpose:        Archived session state - context handoff among agents
+Owner:          PM / Planner
+Update Trigger: Session ended on 2026-07-10
 Harness Version: 1.1
 -->
 
-# Current Session - Outlook Signals
-
-> After this session, copy this file to `memory/sessions/YYYY-MM-DD-[ROLE].md`.
+# Session Archive - PM Planner - v3 AI Report Policy
 
 ---
 
