@@ -523,6 +523,39 @@ TD-012.
 
 ---
 
+### ADR-036: Browser routes separate discovery, exploration, detail, and methodology
+
+- **Date**: 2026-07-10
+- **Status**: Accepted
+- **Decided by**: User / Frontend Implementer
+
+**Context**: The dashboard rendered the full issue set, a repeated weekly list,
+filters, and detail/notice state in one React-state flow. Detail and notice
+screens therefore remained at `/`, could not be shared or refreshed directly,
+and made the mobile discovery screen excessively long.
+**Decision**: Add the user-approved `react-router-dom@^7.18.0` dependency and
+split the browser surface into `/`, `/issues`, `/issues/:issueId`, and
+`/methodology`, with a client-side 404. Home shows one featured issue, four
+unique compact rows, and category summaries. `/issues` owns URL-backed search,
+category, 24-hour/7-day window, sorting, and 10-row numbered pagination. Detail
+core data, 30-day history, and the stored report load independently with request
+cancellation. Add scoped Vercel rewrites for `/issues`, `/issues/:path*`, and
+`/methodology` only, with the Vercel project root remaining `frontend/`.
+Use the approved short caution copy: “공개 데이터에 반영된 기대값의 변화이며,
+전체 대중의 판단을 대표하지 않아 해석에 주의가 필요합니다.”
+**Rationale**: This implements the existing Home → Issue List → Detail product
+flow, makes list/detail URLs shareable, answers the discovery question earlier,
+and preserves the read-only backend contract.
+**Trade-offs**: The frontend now owns client-side query normalization and
+pagination over up to 100 summary rows. The production host must serve
+`index.html` for the three approved SPA route patterns.
+**Consequences**: React Router and `frontend/vercel.json` are approved for this
+task. The existing backend API, database schema, collection pipeline, wording
+policy, and Vercel project root remain unchanged. No deployment is performed by
+TASK-054.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07
