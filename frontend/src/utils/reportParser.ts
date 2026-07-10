@@ -104,6 +104,12 @@ function unicodeCodePointLength(value: string): number {
   return Array.from(value.trim()).length;
 }
 
+/** Match the Backend's ADR-033 sentence-count rule. */
+function sentenceCount(value: string): number {
+  const matches = value.trim().match(/[.!?]+(?=\s|$)/g);
+  return matches?.length ?? 1;
+}
+
 const UTC_ISO_TIMESTAMP_PATTERN =
   /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?(Z|\+00:00)$/;
 
@@ -193,6 +199,9 @@ function validateContent(
           return null;
         }
       }
+      if (sentenceCount(value) > 5) {
+        return null;
+      }
       continue;
     }
 
@@ -210,6 +219,9 @@ function validateContent(
       if (codePoints < bounds.min || codePoints > bounds.max) {
         return null;
       }
+    }
+    if (sentenceCount(value) > 5) {
+      return null;
     }
   }
 

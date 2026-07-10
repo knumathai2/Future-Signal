@@ -28,7 +28,7 @@ export const CAUTION_COPY: Record<CautionLevel, CautionCopy> = {
     label: "높은 변동성 주의",
     detail:
       "짧은 기간의 큰 움직임이 관측되어 흐름이 일시적으로 흔들릴 수 있습니다. " +
-      "단일 구간만으로 해석을 확정하지 않아야 합니다.",
+      "단일 구간만으로 해석을 단정하지 않아야 합니다.",
     className: "border-accent bg-accent-soft text-ink",
     dotClassName: "bg-accent",
   },
