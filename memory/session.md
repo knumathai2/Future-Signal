@@ -15,8 +15,8 @@ Harness Version: 1.1
 
 - **Date**: 2026-07-11
 - **Agent Role**: PM / Planner
-- **Session Goal**: Archive v1-v6 constraints and prepare the positive-first, on-demand v7 issue briefing program without changing runtime behavior.
-- **Branch**: `pm/TASK-100-ai-contract-archive`
+- **Session Goal**: Finalize the approval-ready v7 writer and source-level contract without activating policy or changing runtime behavior.
+- **Branch**: `data-ai/TASK-101-v7-briefing-contract`
 
 ## Context Read
 
@@ -26,6 +26,13 @@ Harness Version: 1.1
 
 ## Work Completed
 
+- Prepared `reports/task-101-v7-briefing-contract.md` with the exact writer-owned
+  JSON shape, backend-owned fields, evidence-reference grammar, positive-first
+  prompt, A-D source levels, deterministic checks, conditional-verifier
+  triggers, blocker-versus-diagnostic matrix, and exact v6 supersession list.
+- Kept TASK-101 in proposed state because its AI/wording and source-publication
+  policy changes require explicit human approval. No active policy or runtime
+  file changed.
 - Completed TASK-100 by mapping v1-v6 active periods, ADRs, public/generation
   shapes, runtime surfaces, supersession state, permanent retention set, and
   separately gated cleanup candidates in
