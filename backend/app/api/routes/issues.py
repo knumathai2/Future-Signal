@@ -20,12 +20,15 @@ bundle and exposes honest idle/generating/fresh/stale/failure states. V1-v6
 rows remain audit-only. Static fallback data never fabricates a report.
 """
 
+import json
 import logging
+import time
 from collections.abc import Generator
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
+from fastapi.responses import StreamingResponse
 from pydantic import ValidationError
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -52,7 +55,12 @@ from app.core.on_demand_briefing import (
 )
 from app.core.on_demand_worker_launcher import launch_on_demand_worker
 from app.core.snapshot_metrics import as_utc_naive
-from app.db.models import AiReport, AiReportGenerationRequest, Market
+from app.db.models import (
+    AiReport,
+    AiReportGenerationBlock,
+    AiReportGenerationRequest,
+    Market,
+)
 from app.db.queries import (
     LiveIssue,
     LiveV4AiReport,
@@ -156,9 +164,7 @@ def _window_to_timedelta(window: str) -> timedelta:
     }[window]
 
 
-def _resolve_live(
-    db: Session | None, **query_options
-) -> tuple[list[LiveIssue], datetime] | None:
+def _resolve_live(db: Session | None, **query_options) -> tuple[list[LiveIssue], datetime] | None:
     """Returns `(live_issues, data_as_of)` from the DB, or `None` if the
     caller should fall back to the static sample dataset."""
     if db is None:
@@ -600,9 +606,7 @@ def _v8_public_report(
 ) -> V8IssueReportResponse:
     payload = reconstruct_v8_report(db, report)
     latest_event = latest_request_event(db, latest_request.id) if latest_request else None
-    cache_state = (
-        "fresh" if current_fingerprint == payload.input_fingerprint else "stale"
-    )
+    cache_state = "fresh" if current_fingerprint == payload.input_fingerprint else "stale"
     public_status = cache_state
     request_id = None
     request_error = None
@@ -641,9 +645,7 @@ def _v8_public_report(
 
 @router.get(
     "/api/issues/{issue_id}/report",
-    response_model=(
-        V8IssueReportResponse | ReportIdle | ReportGenerating | ReportFailed
-    ),
+    response_model=(V8IssueReportResponse | ReportIdle | ReportGenerating | ReportFailed),
 )
 def get_issue_report(
     issue_id: str, db: Session | None = Depends(_get_optional_db)
@@ -796,4 +798,110 @@ def get_generation_request_status(
         report_id=latest.report_id,
         error_code=latest.error_code,
         successor_request_id=_successor_request_id(latest.usage),
+    )
+
+
+def _sse_event(event: str, data: dict, *, event_id: int | None = None) -> str:
+    lines = []
+    if event_id is not None:
+        lines.append(f"id: {event_id}")
+    lines.append(f"event: {event}")
+    lines.append("data: " + json.dumps(data, ensure_ascii=False, separators=(",", ":")))
+    return "\n".join(lines) + "\n\n"
+
+
+@router.get("/api/issues/{issue_id}/report/requests/{request_id}/stream")
+def stream_generation_request(
+    issue_id: str,
+    request_id: UUID,
+    last_event_id: str | None = Header(default=None, alias="Last-Event-ID"),
+    db: Session | None = Depends(_get_optional_db),
+) -> StreamingResponse:
+    """Stream only append-only blocks that passed the active v8 validators."""
+    if db is None:
+        raise HTTPException(status_code=503, detail="Generation storage is unavailable.")
+    market_id = _parse_issue_uuid(issue_id)
+    if market_id is None:
+        raise HTTPException(status_code=404, detail="Unknown issue id.")
+    request = db.get(AiReportGenerationRequest, request_id)
+    if request is None or request.market_id != market_id:
+        raise HTTPException(status_code=404, detail="Unknown generation request id.")
+    try:
+        after_block_id = max(0, int(last_event_id or "0"))
+    except ValueError:
+        after_block_id = 0
+
+    def events() -> Generator[str, None, None]:
+        nonlocal after_block_id
+        last_status: tuple[str, int] | None = None
+        last_heartbeat = time.monotonic()
+        yield "retry: 1500\n\n"
+        while True:
+            db.rollback()
+            latest = latest_request_event(db, request_id)
+            if latest is None:
+                yield _sse_event(
+                    "generation_error",
+                    {"error_code": "request_state_unavailable"},
+                )
+                return
+            status_key = (latest.state, latest.attempt_number)
+            if status_key != last_status:
+                yield _sse_event(
+                    "status",
+                    {
+                        "state": latest.state,
+                        "attempt_number": latest.attempt_number,
+                        "updated_at": _as_utc(latest.recorded_at).isoformat(),
+                    },
+                )
+                last_status = status_key
+            if latest.state != "queued":
+                blocks = db.execute(
+                    select(AiReportGenerationBlock)
+                    .where(
+                        AiReportGenerationBlock.request_id == request_id,
+                        AiReportGenerationBlock.attempt_number == latest.attempt_number,
+                        AiReportGenerationBlock.id > after_block_id,
+                    )
+                    .order_by(AiReportGenerationBlock.sequence_number.asc())
+                ).scalars()
+                for block in blocks:
+                    after_block_id = block.id
+                    yield _sse_event(
+                        "block",
+                        {
+                            "sequence": block.sequence_number,
+                            "block_type": block.block_type,
+                            "payload": block.payload,
+                        },
+                        event_id=block.id,
+                    )
+            if latest.state == "succeeded":
+                yield _sse_event(
+                    "complete",
+                    {"report_id": str(latest.report_id)},
+                )
+                return
+            if latest.state == "failed":
+                yield _sse_event(
+                    "generation_error",
+                    {
+                        "error_code": latest.error_code,
+                        "successor_request_id": _successor_request_id(latest.usage),
+                    },
+                )
+                return
+            if time.monotonic() - last_heartbeat >= 15:
+                yield ": keep-alive\n\n"
+                last_heartbeat = time.monotonic()
+            time.sleep(0.25)
+
+    return StreamingResponse(
+        events(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "X-Accel-Buffering": "no",
+        },
     )

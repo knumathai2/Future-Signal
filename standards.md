@@ -57,8 +57,27 @@ Every user-facing string and every AI/template output must be checked against th
 **Prohibited — hard block on any occurrence:**
 `bet, buy, sell, trade, position, long, short, profit, win rate, odds, copy trader, follow this user, expert trader, best pick, recommended outcome, high-return opportunity, guaranteed, guaranteed prediction, signal to act, recommend, recommendation`
 
-**Korean v3 additions — hard block in UI, fallback strings, and AI/template output:**
-`베팅, 매수, 매도, 포지션, 롱, 숏, 수익, 승률, 배당, 추천, 보장, 확정, 따라하기, 고수, 전문 트레이더, 고수익, 기회`
+**Korean hard blocks — any active-v8 occurrence fails:**
+`베팅, 매수, 매도, 포지션, 롱, 숏, 수익, 승률, 배당, 따라하기, 고수, 전문 트레이더, 고수익`
+
+**Active-v8 contextual expressions — fail closed unless one approved context matches:**
+
+| Expression | Allowed without source evidence | Allowed with source evidence |
+|---|---|---|
+| `확정` | Explicit negation/limitation or `확정 여부` verification inquiry | Attributed sentence plus referenced source support containing `확정`/`confirmed` |
+| `보장` | Explicit negation/limitation such as `보장하지 않는다` | Attributed sentence plus referenced source support containing `보장`/`guarantee` |
+| `추천` | Explicit rejection such as `추천하지 않는다` | Institutional attribution plus referenced source support containing `추천`/`권고`/`recommend` |
+| `기회` | Explicit rejection such as `기회로 제시하지 않는다` | Procedural attribution plus referenced source support containing `기회`/`opportunity` |
+| `전망` | Explicit negation/limitation or `전망 여부` inquiry | Attributed sentence plus referenced source support containing `전망`/`outlook`/`forecast` |
+| `원인` | Existing candidate-not-cause/explicit-negation forms | Attributed sentence plus referenced source support containing `원인`/`cause` |
+
+Source-backed allowance requires both conditions in the same v8 section: an
+exact `source:*` evidence reference and visible attribution such as `공식 문서`,
+`기관`, `정부`, `위원회`, `보고서`, `발표`, `공지`, `밝혔다`, or `따르면`. A source
+reference alone never permits the expression. Headline and summary have no
+section evidence scope, so only the no-source negation/inquiry forms may pass.
+Ambiguous, predictive, outcome-asserting, or unsupported uses remain blocking.
+V1-v7 keep their historical flat filters for reconstructibility.
 
 **Use-carefully — only with a qualifying phrase attached, never standalone:**
 `signal, alert, watch, momentum, confidence, market activity, probability spike` — see UX Design §5.2 for the exact safe phrasing pattern for each.
@@ -102,6 +121,10 @@ Every user-facing string and every AI/template output must be checked against th
   annotation URL, publisher title/domain, non-empty excerpt, issue relevance,
   narrow supported claim, source-parent linkage, A-C attribution, and all
   conflict, conditional-verifier, wording, and no-causal-inference gates.
+- TASK-116 applies contextual wording only to active v8. It must run identically
+  before storage and during read-time reconstruction. Positive contextual terms
+  require same-section source support and attribution; explicit negation or
+  verification-inquiry forms remain source-free. Ambiguous uses fail closed.
 - Policy/lint docs and tests may quote prohibited expressions only to define or verify the blocking rule; demo-visible docs and product copy may not normalize those terms as user-facing language
 
 ## Documentation Standards

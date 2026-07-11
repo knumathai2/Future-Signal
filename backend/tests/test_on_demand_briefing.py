@@ -24,12 +24,14 @@ from app.core.on_demand_briefing import (
     claim_v8_request,
     enqueue_v8_request,
     process_v8_request,
+    reconstruct_v8_report,
     refresh_v7_context_for_market,
     run_pending_v8_requests,
     v8_input_fingerprint,
 )
 from app.db.models import (
     AiReport,
+    AiReportGenerationBlock,
     AiReportGenerationEvent,
     AiReportGenerationRequest,
     Base,
@@ -81,6 +83,7 @@ def db():
             AiReport.__table__,
             AiReportGenerationRequest.__table__,
             AiReportGenerationEvent.__table__,
+            AiReportGenerationBlock.__table__,
         ],
     )
     session = sessionmaker(bind=engine)()
@@ -169,9 +172,7 @@ def _valid_output(*, metric_ref: str = "metric:10") -> str:
                         "기관 공식 문서에 정해진 결정이 기록되는지가 핵심 확인 대상입니다."
                     ),
                     "items": [],
-                    "evidence_refs": [
-                        "market_definition:bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"
-                    ],
+                    "evidence_refs": ["market_definition:bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"],
                 },
                 {
                     "type": "recent_change",
@@ -198,6 +199,58 @@ class FakeLLM:
     def complete(self, _system, _user):
         self.calls += 1
         return self.response
+
+
+class FakeStreamingLLM:
+    def __init__(self, chunks: list[str]):
+        self.chunks = chunks
+        self.calls = 0
+
+    def stream(self, _system, _user):
+        self.calls += 1
+        yield from self.chunks
+
+
+class ObservingStreamingLLM:
+    def __init__(self, db, stream: str):
+        self.db = db
+        self.lines = stream.splitlines()
+        self.calls = 0
+        self.visible_counts: list[int] = []
+
+    def stream(self, _system, _user):
+        self.calls += 1
+        yield self.lines[0] + "\n"
+        self.visible_counts.append(self.db.query(AiReportGenerationBlock).count())
+        yield "\n".join(self.lines[1:])
+
+
+def _stream_lines(raw_output: str) -> str:
+    raw = json.loads(raw_output)
+    lines = [
+        json.dumps(
+            {
+                "kind": "headline_summary",
+                "headline": raw["headline"],
+                "summary": raw["summary"],
+            },
+            ensure_ascii=False,
+        )
+    ]
+    lines.extend(
+        json.dumps(
+            {"kind": "section", "index": index, "section": section},
+            ensure_ascii=False,
+        )
+        for index, section in enumerate(raw["sections"])
+    )
+    lines.append(
+        json.dumps(
+            {"kind": "complete", "section_count": len(raw["sections"])},
+            ensure_ascii=False,
+        )
+    )
+    return "\n".join(lines)
 
 
 def _add_context(db):
@@ -256,6 +309,35 @@ def test_input_fingerprint_is_stable_and_changes_with_metric_revision(db):
     changed = build_v8_input_bundle(db, MARKET_ID, now=NOW + timedelta(minutes=1))
     assert changed is not None
     assert v8_input_fingerprint(changed) != v8_input_fingerprint(first)
+
+
+def test_reconstruction_accepts_legacy_v8_policy_fingerprint(db):
+    queued = enqueue_v8_request(db, MARKET_ID, requested_by="user", now=NOW)
+    assert queued is not None
+    result = process_v8_request(
+        db,
+        queued.request_id,
+        FakeLLM(_valid_output()),
+        "fake/writer",
+        now=NOW + timedelta(seconds=1),
+    )
+    assert result.state == "succeeded"
+    report = db.query(AiReport).one()
+    bundle = build_v8_input_bundle(db, MARKET_ID, now=report.generated_at)
+    assert bundle is not None
+    content = dict(report.content)
+    content["policy_version"] = "v8-issue-centered-1"
+    content["input_schema_version"] = "v8-writer-input-1"
+    content["input_fingerprint"] = v8_input_fingerprint(
+        bundle,
+        policy_version="v8-issue-centered-1",
+        input_schema_version="v8-writer-input-1",
+    )
+    report.content = content
+    db.commit()
+
+    reconstructed = reconstruct_v8_report(db, report)
+    assert reconstructed.input_fingerprint == content["input_fingerprint"]
 
 
 def test_metric_evidence_includes_backend_owned_display_units(db):
@@ -359,6 +441,59 @@ def test_process_request_appends_v8_report_and_success_event(db):
     assert [event.state for event in events] == ["queued", "running", "succeeded"]
 
 
+def test_streaming_request_publishes_only_complete_validated_blocks(db):
+    queued = enqueue_v8_request(db, MARKET_ID, requested_by="user", now=NOW)
+    assert queued is not None
+    stream = _stream_lines(_valid_output())
+    client = ObservingStreamingLLM(db, stream)
+
+    result = process_v8_request(
+        db,
+        queued.request_id,
+        client,
+        "fake/streaming-writer",
+        now=NOW + timedelta(seconds=1),
+    )
+
+    assert result.state == "succeeded"
+    assert client.calls == 1
+    assert client.visible_counts == [1]
+    blocks = (
+        db.query(AiReportGenerationBlock).order_by(AiReportGenerationBlock.sequence_number).all()
+    )
+    assert [block.block_type for block in blocks] == [
+        "headline_summary",
+        "section",
+        "section",
+    ]
+    assert [block.sequence_number for block in blocks] == [0, 1, 2]
+    assert blocks[1].payload["section"]["type"] == "current_situation"
+    success = db.query(AiReportGenerationEvent).filter_by(state="succeeded").one()
+    assert success.usage["validated_block_count"] == 3
+    assert success.usage["first_validated_block_ms"] is not None
+
+
+def test_streaming_request_never_publishes_invalid_block(db):
+    queued = enqueue_v8_request(db, MARKET_ID, requested_by="user", now=NOW)
+    assert queued is not None
+    raw = json.loads(_valid_output())
+    raw["sections"][0]["content"] = "이 문장은 공개하면 안 되는 best pick 표현을 충분히 포함합니다."
+    stream = _stream_lines(json.dumps(raw, ensure_ascii=False))
+
+    result = process_v8_request(
+        db,
+        queued.request_id,
+        FakeStreamingLLM([stream]),
+        "fake/streaming-writer",
+        now=NOW + timedelta(seconds=1),
+    )
+
+    assert result.state == "failed"
+    assert result.reason_code == "banned_phrase:best pick"
+    blocks = db.query(AiReportGenerationBlock).all()
+    assert [block.block_type for block in blocks] == ["headline_summary"]
+
+
 def test_english_month_evidence_supports_ordinary_korean_numeric_month(db):
     rule = db.get(
         MarketResolutionRule,
@@ -459,6 +594,50 @@ def test_context_refresh_with_new_evidence_creates_successor_request(db):
     assert result.successor_request_id is not None
     assert db.query(AiReportGenerationRequest).count() == 2
     assert db.query(AiReport).count() == 0
+
+
+def test_failed_context_refresh_can_retry_with_stored_evidence_only(db):
+    queued = enqueue_v8_request(
+        db,
+        MARKET_ID,
+        requested_by="user",
+        context_refresh_requested=True,
+        now=NOW,
+    )
+    assert queued is not None
+
+    def fail_refresh(_session, _market_id, _now):
+        raise RuntimeError("simulated context refresh failure")
+
+    failed = process_v8_request(
+        db,
+        queued.request_id,
+        FakeLLM(_valid_output()),
+        "fake/writer",
+        now=NOW + timedelta(seconds=1),
+        context_refresher=fail_refresh,
+    )
+    assert failed.reason_code == "context_refresh_failed"
+
+    retry = enqueue_v8_request(
+        db,
+        MARKET_ID,
+        requested_by="user",
+        context_refresh_requested=False,
+        now=NOW + timedelta(seconds=2),
+    )
+    assert retry is not None and retry.state == "queued"
+    succeeded = process_v8_request(
+        db,
+        retry.request_id,
+        FakeLLM(_valid_output()),
+        "fake/writer",
+        now=NOW + timedelta(seconds=3),
+        context_refresher=fail_refresh,
+    )
+
+    assert succeeded.state == "succeeded"
+    assert db.query(AiReport).count() == 1
 
 
 def test_v7_context_sources_keep_level_claim_and_parent_refs(db):

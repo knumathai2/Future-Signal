@@ -16,7 +16,8 @@ vm.runInNewContext(
   { exports: parserModule.exports, module: parserModule, URL },
   { filename: parserUrl.pathname },
 );
-const { parseReportResponse } = parserModule.exports;
+const { parseGenerationStreamBlock, parseReportResponse } =
+  parserModule.exports;
 
 const requestId = "88888888-8888-4888-8888-888888888888";
 const fingerprint = "a".repeat(64);
@@ -136,6 +137,40 @@ const withSource = report({
   ],
 });
 assert.equal(parseReportResponse(withSource).status, "ready");
+
+const streamedHeader = {
+  sequence: 0,
+  block_type: "headline_summary",
+  payload: {
+    kind: "headline_summary",
+    headline: report().headline,
+    summary: report().summary,
+  },
+};
+const streamedSection = {
+  sequence: 1,
+  block_type: "section",
+  payload: {
+    kind: "section",
+    index: 0,
+    section: report().sections[0],
+  },
+};
+assert.equal(
+  parseGenerationStreamBlock(streamedHeader)?.block_type,
+  "headline_summary",
+);
+assert.equal(
+  parseGenerationStreamBlock(streamedSection)?.block_type,
+  "section",
+);
+assert.equal(
+  parseGenerationStreamBlock({
+    ...streamedSection,
+    payload: { ...streamedSection.payload, index: 1 },
+  }),
+  null,
+);
 
 for (const invalid of [
   { status: "idle", unexpected: true },

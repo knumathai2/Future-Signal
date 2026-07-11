@@ -21,7 +21,7 @@ historical v1-v6 archive followed by separately approved cleanup.
 | TASK-109 | Remove superseded v1-v6 runtime code after v7 acceptance | Reviewer / Implementers | Reviewer | `review/TASK-109-legacy-report-cleanup` | assigned |
 
 TASK-101~108 and the user-directed TASK-110~111 follow-ups are complete under the
-user’s approval of TASK-099 items 1-7.
+user's approval of TASK-099 items 1-7.
 TASK-112 is complete under the user's explicit approval of the v8 prompt,
 public API, Frontend, and policy transition. V7 code and stored rows remain;
 TASK-109 deletion is still separately gated.

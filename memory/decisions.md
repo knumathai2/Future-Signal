@@ -1805,3 +1805,101 @@ exclusion, data-as-of, last-good, and append-only behavior remain unchanged.
 No index, migration, dependency, infrastructure, deployment, production write,
 or request-state recovery change is included. ISS-017 stays open for orphaned
 queued-request recovery.
+
+---
+
+### ADR-058: Retry failed v8 generation with an append-only refresh preference
+
+- **Date**: 2026-07-11
+- **Status**: Accepted and implemented in TASK-115
+- **Decided by**: User request and Data/AI + Backend + Frontend diagnosis
+
+**Context**: The generate action always requested fresh public context. When
+the configured provider returned no standard citation annotations, the request
+failed before the writer. A separate real stored-evidence run then failed twice
+because the prompt referred to project wording rules abstractly and the writer
+repeated `확정`.
+
+**Decision**: Keep the initial public-context attempt and every existing
+publication blocker. Enumerate the already-binding Korean prohibited-expression
+list in the v8 prompt. When a request is in a failed state, let a new user retry
+append `context_refresh_requested=false` to the queued event's usage. The
+immutable request and fingerprint remain unchanged; claim processing uses the
+event-local preference for that attempt. The failed-state UI explicitly labels
+the stored-evidence retry.
+
+**Consequences**: Context failure remains visible and no unverified source is
+published, but it no longer permanently prevents a no-source briefing from
+validated stored definition/metric evidence. The third bounded development
+writer attempt succeeded after two safely rejected rows; total writer cost was
+USD 0.02658845. No schema, migration, dependency, API shape, infrastructure,
+deployment, production write, or wording-safety policy changed.
+
+---
+
+### ADR-059: Classify active-v8 wording by semantic role and source support
+
+- **Date**: 2026-07-11
+- **Status**: Accepted and implemented in TASK-116 ⚠️ HUMAN APPROVAL
+- **Decided by**: Explicit user approval; PM / Data-AI / Backend implementation
+
+**Context**: Flat substring blocking rejected safe limitations such as a
+statement that an outcome was not confirmed, while the same word could also be
+used as an unsupported result assertion. Other words such as guarantee,
+recommendation, opportunity, outlook, and cause have the same ambiguity.
+
+**Decision**: Keep transactional, financial-return, participant-following,
+outcome-endorsement, English, URL, future-outcome, and unsupported-causality
+blocks strict. For active v8 only, classify `확정`, `보장`, `추천`, `기회`, `전망`,
+and `원인` per sentence. Explicit negation/limitation and verification inquiry
+may pass without a source. Positive use requires a same-section `source:*`
+reference, a stored supported claim containing an approved same-strength
+marker, and visible attribution in the same sentence. Any missing condition
+fails closed.
+
+**Consequences**: Generation and read-time reconstruction share the classifier.
+The current policy/fingerprint advances to `v8-contextual-wording-1`; historical
+`v8-issue-centered-1` fingerprints remain reconstructible and are stale against
+the new current policy. V1-v7 validators remain historically strict. No schema,
+public API, dependency, infrastructure, deployment, provider, or database
+change is included.
+
+---
+
+### ADR-060: Stream only individually validated v8 template blocks
+
+- **Date**: 2026-07-11
+- **Status**: Accepted and implemented in TASK-117 ⚠️ HUMAN APPROVAL
+- **Decided by**: Explicit user approval after latency/guardrail review
+
+**Context**: The on-demand worker returned one complete JSON object, so the
+Frontend could show nothing authored until the full writer response, parse,
+validation, and storage completed. Raw token streaming would improve perceived
+latency but could expose text before evidence, source, wording, and future/
+relationship checks finished.
+
+**Decision**: Keep one provider call but change active v8 output to strict
+NDJSON: headline/summary, consecutive sections, then complete. Buffer arbitrary
+tokens and persist a block only after exact shape, accumulated order,
+evidence/source-parent, URL, and active wording validation. Rerun the complete
+v8 validator before the unchanged report success record. Store accepted blocks
+in append-only migration 005 and replay the active attempt through an
+issue-scoped SSE endpoint with `Last-Event-ID`; retain bounded status polling
+and last-known-good as fallbacks.
+
+**Consequences**: The first safe block can render before the full report while
+unvalidated current text never becomes public. A later failure removes partial
+UI and does not replace the previous full report. Terminal usage records first-
+block and total writer milliseconds for later measurement. The active input
+schema advances to `v8-writer-stream-input-1`; historical contextual and
+issue-centered v8 fingerprints remain reconstructible. No new dependency,
+provider evaluation, migration application, deployment, infrastructure, or
+production write is authorized or performed.
+
+**Post-implementation evidence**: A subsequent explicit approval applied
+migration 005 only to the configured `ENV=local` development database and
+authorized one stored-evidence writer call. The call produced six validated
+blocks and a fresh five-section report for USD 0.010567. Client timing was
+9.700 seconds to first content and 13.738 seconds to complete; worker timing was
+5.223 and 8.493 seconds respectively. The actual API and Browser reconstruction
+passed. This evidence does not authorize further calls or another environment.

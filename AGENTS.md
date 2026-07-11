@@ -66,7 +66,7 @@ Even if the user explicitly requests them, ask for confirmation first:
 - [ ] Committing directly to `main` / `master`
 
 **Product-safety constraints (from PRD / Service Design / UX Design — these are as binding as code rules)**
-- [ ] Using prohibited wording anywhere it could ship (UI copy, AI/template output, code comments that could leak to users, marketing text): `bet, buy, sell, trade, position, long, short, profit, win rate, odds, guaranteed, recommend, follow/copy trader, best pick, signal to act, high-return opportunity`. Full list: [`memory/glossary.md`](memory/glossary.md) and `standards.md`.
+- [ ] Using hard-block wording anywhere it could ship (UI copy, AI/template output, code comments that could leak to users, marketing text): `bet, buy, sell, trade, position, long, short, profit, win rate, odds, follow/copy trader, best pick, signal to act, high-return opportunity`. Contextual certainty, guarantee, institutional recommendation, procedural opportunity, attributed outlook, and attributed cause may ship only under TASK-116's deterministic negation/inquiry or exact source-support plus attribution rules. Full policy: [`memory/glossary.md`](memory/glossary.md) and `standards.md`.
 - [ ] Asserting a future outcome, asserting a cause of a market's change, or implying the product predicts real-world events
 - [ ] Exposing wallet-level or individual-participant browsable/searchable data — aggregate-only, per Service Design §8
 - [ ] Building unsupported or causal news-to-market matching. TASK-056 permits
@@ -134,6 +134,38 @@ development databases. It does not authorize deployment, production writes,
 new dependencies, existing-migration edits, unrelated infrastructure changes,
 or deletion of v1-v6 runtime. TASK-109 deletion requires a separate approval
 after v7 acceptance.
+
+### TASK-116 approved wording-policy boundary
+
+The user's 2026-07-11 approval authorizes replacing the flat active-v8 Korean
+word block for `확정`, `보장`, `추천`, `기회`, `전망`, and `원인` with deterministic
+context rules. Explicit negation/limitation and verification-inquiry uses may
+pass without external evidence. Positive uses require both a source reference
+whose stored supported claim contains an approved same-strength marker and an
+explicit attribution marker in the authored sentence. Ambiguous uses fail
+closed. English and financial/action hard blocks, future-outcome assertions,
+unsupported causality, URL/source-parent gates, and v1-v7 historical validators
+remain unchanged. This approval does not authorize schema/API/dependency/
+infrastructure/deployment changes, production writes, or provider calls.
+
+### TASK-117 approved validated-block streaming boundary
+
+The user's 2026-07-11 approval authorizes a single-call NDJSON v8 writer
+protocol, deterministic validation and append-only persistence of each complete
+headline/summary or section block, one SSE read endpoint with replay support,
+and progressive Frontend rendering with the existing polling and last-known-
+good fallbacks. It also authorizes append-only migration 005 and the related
+public API/output-contract changes in local implementation. It does not
+authorize applying the migration to any database, deployment, production
+writes, a new dependency, a paid provider evaluation, infrastructure mutation,
+or relaxation of any evidence, wording, source, timestamp, or caution gate.
+
+The user's subsequent 2026-07-11 approval authorizes applying migration 005 to
+the currently configured `ENV=local` development database and one stored-
+evidence-only writer evaluation for latency measurement. That approval was
+consumed by one migration application and one OpenRouter call costing USD
+0.010567. It does not authorize another provider call, another database,
+context research, deployment, infrastructure mutation, or production action.
 
 ---
 
