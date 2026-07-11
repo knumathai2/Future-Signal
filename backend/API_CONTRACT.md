@@ -145,36 +145,79 @@ rather than Technical Design §5's originally proposed `204` (HTTP `204 No
 Content` cannot carry a body per spec, so most clients would discard the
 hint). This is accepted as final, not an open item.
 
-## `GET /api/issues/{id}/report` — current strict v5 runtime
+## `GET /api/issues/{id}/report` — current strict v6 runtime
 
-The endpoint serves only a recent successful `prompt_version="v5"` row that can
-be reconstructed from its linked metric, latest snapshot at or before the
-metric, and exact same-episode verified candidates. Its top-level shape keeps
-`id`, `status`, `generated_at`, `data_as_of`, `episode_at`, `evidence_refs`, and
-`context_candidates`, with `report_version="v5"` and this exact content shape:
+The endpoint serves only a recent successful `prompt_version="v6"` row that can
+be reconstructed from its linked metric/snapshot, exact stored resolution-rule
+version, and same-episode verified candidates. Its exact top-level shape is:
 
 ```json
 {
-  "executive_summary": "...",
-  "current_data_interpretation": "...",
-  "conditional_scenarios": [{"title": "...", "narrative": "..."}],
-  "factors_to_check": [{"title": "...", "explanation": "..."}],
-  "signals_to_watch": [{"title": "...", "explanation": "..."}],
-  "evidence_synthesis": null,
+  "id": "7c2e1a90-0000-4000-8000-0000000000aa",
+  "status": "success",
+  "report_version": "v6",
+  "report_mode": "stable_without_evidence",
+  "generated_at": "2026-07-11T09:05:00Z",
+  "data_as_of": "2026-07-11T09:00:00Z",
+  "episode_at": "2026-07-11T09:00:00Z",
+  "observed_change": {
+    "metric_id": 123,
+    "window": "24h",
+    "current_value": 0.055,
+    "change_value": 0.0,
+    "significant": false,
+    "threshold": 0.05
+  },
+  "briefing": {
+    "mode": "stable_without_evidence",
+    "issue_explanation": {"text": "...", "basis": "general_scenario"},
+    "conditional_scenarios": [
+      {"title": "...", "text": "...", "basis": "general_scenario"}
+    ],
+    "materials_to_check": [
+      {
+        "scenario_index": 1,
+        "title": "...",
+        "text": "...",
+        "basis": "general_scenario"
+      }
+    ]
+  },
+  "resolution_reference": {
+    "status": "available",
+    "condition_text": "...",
+    "deadline": "2026-12-31T00:00:00Z",
+    "exclusions": [],
+    "source_url": null
+  },
+  "evidence_refs": ["metric:123"],
+  "context_candidates": [],
   "relationship_boundary": "...",
   "data_limitations": "...",
   "caution_note": "..."
 }
 ```
 
-`conditional_scenarios` contains three or four items; the two checklist arrays
-contain two to six items. `evidence_synthesis` is non-null exactly when the
-response has verified candidates. Candidate/source shape remains the strict
-stored-URL shape documented below. Read-time validation reruns schema, wording,
-number, evidence-reference, candidate, URL/domain, deterministic-copy, and
-timestamp checks. If the latest successful row fails, the reader tries earlier
-successful v5 rows and preserves the latest valid result. If none validates it
-returns `200 {"status":"not_yet_generated"}`. V1–v4 rows remain audit-only.
+`report_mode` is one of `change_with_evidence`, `change_without_evidence`,
+`stable_with_evidence`, or `stable_without_evidence`. `briefing` is a strict
+discriminated union and contains only the fields allowed for that mode.
+`observed_change`, `resolution_reference`, relationship boundary, limitations,
+and caution are deterministic. Verified blocks reference exact candidate IDs;
+general scenario blocks use `general_scenario` and are not current evidence.
+
+Read-time validation reruns mode selection, schema, wording, duplicate/rule
+leak, unsupported-current-fact, metric/snapshot/reference consistency,
+resolution-rule hash/content, candidate state/episode/expiry, source URL/domain,
+evidence-reference, deterministic-copy, and timestamp checks. If the latest
+successful row fails, the reader tries earlier successful v6 rows only. If none
+validates, it returns `200 {"status":"not_yet_generated"}`. V1–v5 rows remain
+audit-only.
+
+## Historical strict v5 runtime (superseded by v6)
+
+V5 used the fixed executive-summary/current-data/scenario/check/watch/evidence
+shape described by ADR-048. Those rows remain append-only audit history and
+cannot satisfy the v6 endpoint or its fallback.
 
 ## Historical strict v4 runtime (superseded by v5)
 

@@ -33,7 +33,14 @@ from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.db.models import DataCollectionLog, Market, MarketMetric, MarketOutcome, MarketSnapshot
+from app.db.models import (
+    DataCollectionLog,
+    Market,
+    MarketMetric,
+    MarketOutcome,
+    MarketResolutionRule,
+    MarketSnapshot,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -132,6 +139,41 @@ def ensure_tracked_outcome(
     db.add(outcome)
     db.flush()
     return outcome
+
+
+def ensure_resolution_rule(
+    db: Session,
+    market: Market,
+    normalized: dict[str, Any],
+) -> MarketResolutionRule | None:
+    """Append one new source-rule version and skip identical evidence."""
+    raw = normalized.get("resolution_rules")
+    if not isinstance(raw, dict) or not raw.get("rules_hash") or not raw.get("collected_at"):
+        return None
+    existing = db.execute(
+        select(MarketResolutionRule).where(
+            MarketResolutionRule.market_id == market.id,
+            MarketResolutionRule.rules_hash == raw["rules_hash"],
+        )
+    ).scalar_one_or_none()
+    if existing is not None:
+        return existing
+    rule = MarketResolutionRule(
+        id=uuid.uuid4(),
+        market_id=market.id,
+        condition_text=raw.get("condition_text"),
+        deadline=parse_iso_datetime(raw.get("deadline")),
+        exclusions=[str(value) for value in raw.get("exclusions", [])],
+        resolution_source=raw.get("resolution_source"),
+        source_description_hash=raw.get("source_description_hash"),
+        rules_hash=raw["rules_hash"],
+        collected_at=parse_iso_datetime(raw["collected_at"]),
+    )
+    if rule.collected_at is None:
+        return None
+    db.add(rule)
+    db.flush()
+    return rule
 
 
 @dataclass
@@ -405,6 +447,7 @@ def run_snapshot_and_metrics(
         try:
             market = get_or_create_market(db, normalized, run_timestamp)
             ensure_tracked_outcome(db, market, normalized)
+            ensure_resolution_rule(db, market, normalized)
             market_id = market.id
             db.commit()
         except SQLAlchemyError as exc:

@@ -95,6 +95,7 @@ class ConditionalScenarioOut(BaseModel):
 
     title: str = Field(strict=True, min_length=2, max_length=100)
     narrative: str = Field(strict=True, min_length=30, max_length=900)
+    basis: Literal["market_definition", "observed_data", "verified_context", "data_limitation"]
 
 
 class BriefingItemOut(BaseModel):
@@ -102,6 +103,7 @@ class BriefingItemOut(BaseModel):
 
     title: str = Field(strict=True, min_length=2, max_length=120)
     explanation: str = Field(strict=True, min_length=20, max_length=700)
+    basis: Literal["market_definition", "observed_data", "verified_context", "data_limitation"]
 
 
 class ReportContent(BaseModel):
@@ -114,7 +116,7 @@ class ReportContent(BaseModel):
 
     executive_summary: Annotated[str, Field(strict=True, min_length=80, max_length=1200)]
     current_data_interpretation: Annotated[str, Field(strict=True, min_length=50, max_length=1200)]
-    conditional_scenarios: list[ConditionalScenarioOut] = Field(min_length=3, max_length=4)
+    conditional_scenarios: list[ConditionalScenarioOut] = Field(min_length=1, max_length=4)
     factors_to_check: list[BriefingItemOut] = Field(min_length=2, max_length=6)
     signals_to_watch: list[BriefingItemOut] = Field(min_length=2, max_length=6)
     evidence_synthesis: Annotated[
@@ -188,6 +190,139 @@ class ContextCandidateOut(BaseModel):
     sources: list[ContextSourceOut] = Field(min_length=1)
 
 
+class V6MarketDefinitionBlockOut(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    text: str = Field(strict=True, min_length=30, max_length=900)
+    basis: Literal["market_definition"]
+
+
+class V6GeneralBlockOut(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    text: str = Field(strict=True, min_length=30, max_length=900)
+    basis: Literal["general_scenario"]
+
+
+class V6VerifiedBlockOut(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    text: str = Field(strict=True, min_length=30, max_length=1200)
+    basis: Literal["verified_context"]
+    candidate_ids: list[UUID] = Field(min_length=1, max_length=3)
+
+
+class V6GeneralScenarioOut(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    title: str = Field(strict=True, min_length=2, max_length=100)
+    text: str = Field(strict=True, min_length=30, max_length=900)
+    basis: Literal["general_scenario"]
+
+
+class V6VerifiedInterpretationOut(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    title: str = Field(strict=True, min_length=2, max_length=100)
+    text: str = Field(strict=True, min_length=30, max_length=900)
+    basis: Literal["verified_context"]
+    candidate_ids: list[UUID] = Field(min_length=1, max_length=3)
+
+
+class V6MaterialToCheckOut(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    scenario_index: int = Field(ge=1, le=4)
+    title: str = Field(strict=True, min_length=2, max_length=120)
+    text: str = Field(strict=True, min_length=20, max_length=700)
+    basis: Literal["general_scenario"]
+
+
+class V6ChangeWithEvidenceOut(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["change_with_evidence"]
+    verified_background: V6VerifiedBlockOut
+    conditional_interpretations: list[V6VerifiedInterpretationOut] = Field(
+        min_length=1, max_length=4
+    )
+
+
+class V6ChangeWithoutEvidenceOut(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["change_without_evidence"]
+    conditional_scenarios: list[V6GeneralScenarioOut] = Field(min_length=1, max_length=4)
+    materials_to_check: list[V6MaterialToCheckOut] = Field(min_length=1, max_length=8)
+
+
+class V6StableWithEvidenceOut(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["stable_with_evidence"]
+    issue_explanation: V6MarketDefinitionBlockOut
+    verified_background: V6VerifiedBlockOut
+    conditional_scenarios: list[V6GeneralScenarioOut] = Field(min_length=1, max_length=4)
+
+
+class V6StableWithoutEvidenceOut(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["stable_without_evidence"]
+    issue_explanation: V6GeneralBlockOut
+    conditional_scenarios: list[V6GeneralScenarioOut] = Field(min_length=1, max_length=4)
+    materials_to_check: list[V6MaterialToCheckOut] = Field(min_length=1, max_length=8)
+
+
+V6BriefingOut = Annotated[
+    V6ChangeWithEvidenceOut
+    | V6ChangeWithoutEvidenceOut
+    | V6StableWithEvidenceOut
+    | V6StableWithoutEvidenceOut,
+    Field(discriminator="mode"),
+]
+
+
+class V6ObservedChangeOut(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    metric_id: int
+    window: Literal["24h"]
+    current_value: float = Field(ge=0, le=1)
+    change_value: float | None
+    significant: bool
+    threshold: float = Field(ge=0, le=1)
+
+
+class V6ResolutionReferenceOut(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    status: Literal["available", "unavailable"]
+    condition_text: str | None
+    deadline: datetime | None
+    exclusions: list[str]
+    source_url: str | None
+
+    @model_validator(mode="after")
+    def validate_availability(self) -> "V6ResolutionReferenceOut":
+        if self.status == "available" and not self.condition_text:
+            raise ValueError("Available resolution reference requires condition text")
+        if self.status == "unavailable" and any(
+            (
+                self.condition_text,
+                self.deadline,
+                self.exclusions,
+                self.source_url,
+            )
+        ):
+            raise ValueError("Unavailable resolution reference cannot expose rule fields")
+        if self.source_url is not None:
+            parsed = urlparse(self.source_url)
+            if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+                raise ValueError("Resolution source URL must be absolute HTTP(S)")
+        return self
+
+
 class IssueReportResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -195,23 +330,42 @@ class IssueReportResponse(BaseModel):
     generated_at: datetime
     data_as_of: datetime
     episode_at: datetime
-    content: ReportContent
+    report_mode: Literal[
+        "change_with_evidence",
+        "change_without_evidence",
+        "stable_with_evidence",
+        "stable_without_evidence",
+    ]
+    observed_change: V6ObservedChangeOut
+    briefing: V6BriefingOut
+    resolution_reference: V6ResolutionReferenceOut
     evidence_refs: list[str] = Field(min_length=1, max_length=4)
     context_candidates: list[ContextCandidateOut] = Field(max_length=3)
+    relationship_boundary: str = Field(strict=True, min_length=50, max_length=500)
+    data_limitations: str = Field(strict=True, min_length=50, max_length=900)
+    caution_note: str = Field(strict=True, min_length=120, max_length=700)
     status: Literal["success"]
-    report_version: Literal["v5"]
+    report_version: Literal["v6"]
 
     @model_validator(mode="after")
     def validate_evidence_shape(self) -> "IssueReportResponse":
         candidate_refs = [f"candidate:{candidate.id}" for candidate in self.context_candidates]
         if not self.evidence_refs[0].startswith("metric:"):
-            raise ValueError("The first v5 evidence reference must identify a metric")
+            raise ValueError("The first v6 evidence reference must identify a metric")
         if self.evidence_refs[1:] != candidate_refs:
             raise ValueError("Candidate evidence references must match public candidates")
-        if (self.content.evidence_synthesis is None) != (not self.context_candidates):
-            raise ValueError("Evidence synthesis nullability must match candidate presence")
+        if self.report_mode != self.briefing.mode:
+            raise ValueError("Report mode must match the discriminated briefing mode")
+        has_evidence = self.report_mode.endswith("with_evidence")
+        if has_evidence != bool(self.context_candidates):
+            raise ValueError("Report mode evidence state must match public candidates")
+        has_change = self.report_mode.startswith("change_")
+        if has_change != self.observed_change.significant:
+            raise ValueError("Report mode change state must match observed change")
+        if self.evidence_refs[0] != f"metric:{self.observed_change.metric_id}":
+            raise ValueError("Observed metric ID must match the first evidence reference")
         if self.data_as_of > self.generated_at or self.episode_at > self.generated_at:
-            raise ValueError("V5 report timestamps cannot be later than generation")
+            raise ValueError("V6 report timestamps cannot be later than generation")
         return self
 
 

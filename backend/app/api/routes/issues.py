@@ -16,7 +16,7 @@ never become a silent, permanent substitute for live data - once TASK-008
 produces real rows the live path takes over automatically, no code change
 needed here. See reports/task-010-core-api-notes.md for detail.
 
-`/api/issues/{id}/report` serves only a reconstructed successful v5 evidence bundle
+`/api/issues/{id}/report` serves only a reconstructed successful v6 evidence bundle
 whose stored metric, episode, verified candidates, and citation sources all
 validate. Missing, legacy, failed, malformed, or mismatched bundles preserve
 the accepted `not_yet_generated` empty state. Static fallback data does not
@@ -33,13 +33,14 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.core.ai_report import (
+    ResolutionRulesInput,
     V4ContextSource,
     V4ReportInputs,
     V4VerifiedCandidateInput,
-    V5LLMFields,
-    V5StoredReportPayload,
-    assemble_v5_report_content,
-    run_v5_safety_and_semantic_checks,
+    V6StoredReportPayload,
+    build_recent_history_summary,
+    build_v6_stored_payload,
+    run_v6_safety_and_semantic_checks,
 )
 from app.core.category_taxonomy import category_matches
 from app.core.config import settings
@@ -51,7 +52,7 @@ from app.db.queries import (
     load_live_issues,
     load_related_events_for_market,
     load_signals_for_market,
-    load_successful_v5_reports,
+    load_successful_v6_reports,
 )
 from app.db.session import get_db
 from app.schemas.issues import (
@@ -257,16 +258,16 @@ def _issue_report_from_live(
     report = live_report.report
     metric = live_report.metric
     snapshot = live_report.snapshot
-    payload = V5StoredReportPayload.model_validate(report.content)
+    payload = V6StoredReportPayload.model_validate(report.content)
 
     if report.input_metrics_id != metric.id or metric.market_id != live_issue.market.id:
-        raise ValueError("V5 report metric does not belong to the requested issue")
+        raise ValueError("V6 report metric does not belong to the requested issue")
     if not _not_after(snapshot.captured_at, report.generated_at):
-        raise ValueError("V5 report data timestamp is later than generation")
+        raise ValueError("V6 report data timestamp is later than generation")
     if not _not_after(payload.episode_at, report.generated_at):
-        raise ValueError("V5 report episode is later than generation")
+        raise ValueError("V6 report episode is later than generation")
     if len(payload.context_candidate_ids) != len(set(payload.context_candidate_ids)):
-        raise ValueError("V5 candidate IDs must be unique")
+        raise ValueError("V6 candidate IDs must be unique")
 
     candidate_by_id = {candidate.id: candidate for candidate in live_report.candidates}
     candidate_inputs: list[V4VerifiedCandidateInput] = []
@@ -279,8 +280,10 @@ def _issue_report_from_live(
             or candidate.event_at is None
             or not _same_timestamp(candidate.episode_at, payload.episode_at)
             or not candidate.sources
+            or not _not_after(candidate.collected_at, report.generated_at)
+            or not _not_after(report.generated_at, candidate.expires_at)
         ):
-            raise ValueError("V5 candidate evidence is missing or not public")
+            raise ValueError("V6 candidate evidence is missing, expired, or not public")
         sources = [V4ContextSource.model_validate(source) for source in candidate.sources]
         candidate_inputs.append(
             V4VerifiedCandidateInput(
@@ -310,6 +313,23 @@ def _issue_report_from_live(
             )
         )
 
+    resolution_rules = None
+    if payload.resolution_rules is not None:
+        stored_rule = live_report.resolution_rule
+        if stored_rule is None:
+            raise ValueError("V6 stored resolution rule evidence is missing")
+        resolution_rules = ResolutionRulesInput(
+            condition_text=stored_rule.condition_text,
+            deadline=_as_utc(stored_rule.deadline) if stored_rule.deadline else None,
+            exclusions=list(stored_rule.exclusions or []),
+            resolution_source=stored_rule.resolution_source,
+            source_description_hash=stored_rule.source_description_hash,
+            rules_hash=stored_rule.rules_hash,
+            collected_at=_as_utc(stored_rule.collected_at),
+        )
+        if resolution_rules != payload.resolution_rules:
+            raise ValueError("V6 resolution rule does not match stored evidence")
+
     inputs = V4ReportInputs(
         market_id=live_issue.market.id,
         metric_id=metric.id,
@@ -329,27 +349,30 @@ def _issue_report_from_live(
         volume_24h=float(snapshot.volume_24h) if snapshot.volume_24h is not None else None,
         liquidity=float(snapshot.liquidity) if snapshot.liquidity is not None else None,
         context_candidates=candidate_inputs,
+        resolution_rules=resolution_rules,
+        value_24h_ago=(
+            float(live_report.reference_24h.price) if live_report.reference_24h else None
+        ),
+        value_24h_ago_at=(
+            _as_utc(live_report.reference_24h.captured_at) if live_report.reference_24h else None
+        ),
+        value_7d_ago=(float(live_report.reference_7d.price) if live_report.reference_7d else None),
+        value_7d_ago_at=(
+            _as_utc(live_report.reference_7d.captured_at) if live_report.reference_7d else None
+        ),
+        recent_history_summary=build_recent_history_summary(
+            [
+                (_as_utc(point.captured_at), float(point.price))
+                for point in (live_report.recent_history or [])
+            ]
+        ),
     )
-    llm_fields = V5LLMFields.model_validate(
-        payload.content.model_dump(
-            exclude={"relationship_boundary", "data_limitations", "caution_note"}
-        )
-    )
-    expected_content = assemble_v5_report_content(inputs, llm_fields)
-    validation = run_v5_safety_and_semantic_checks(payload, inputs, llm_fields)
-    if expected_content != payload.content:
-        expected_fields = expected_content.model_dump() if expected_content else {}
-        mismatched_fields = [
-            field
-            for field, stored_value in payload.content.model_dump().items()
-            if expected_fields.get(field) != stored_value
-        ]
-        raise ValueError(
-            "V5 deterministic content does not match stored evidence: "
-            + ",".join(mismatched_fields)
-        )
+    expected_payload = build_v6_stored_payload(inputs, payload.briefing)
+    validation = run_v6_safety_and_semantic_checks(payload, inputs, payload.briefing)
+    if expected_payload != payload:
+        raise ValueError("V6 deterministic content does not match stored evidence")
     if not validation.passed:
-        raise ValueError(f"V5 semantic check failed: {validation.rule}")
+        raise ValueError(f"V6 semantic check failed: {validation.rule}")
 
     return IssueReportResponse(
         id=str(report.id),
@@ -357,10 +380,16 @@ def _issue_report_from_live(
         data_as_of=_as_utc(snapshot.captured_at),
         episode_at=_as_utc(payload.episode_at),
         status="success",
-        report_version="v5",
-        content=payload.content.model_dump(),
+        report_version="v6",
+        report_mode=payload.report_mode,
+        observed_change=payload.observed_change.model_dump(),
+        briefing=payload.briefing.model_dump(),
+        resolution_reference=payload.resolution_reference.model_dump(),
         evidence_refs=payload.evidence_refs,
         context_candidates=candidate_outputs,
+        relationship_boundary=payload.relationship_boundary,
+        data_limitations=payload.data_limitations,
+        caution_note=payload.caution_note,
     )
 
 
@@ -497,7 +526,7 @@ def get_issue_report(
         if match is None:
             raise HTTPException(status_code=404, detail="Unknown issue id.")
         try:
-            live_reports = load_successful_v5_reports(db, match.market.id)
+            live_reports = load_successful_v6_reports(db, match.market.id)
         except SQLAlchemyError:
             logger.warning(
                 "FALLBACK: live report query failed, returning report empty state.",
@@ -512,7 +541,7 @@ def get_issue_report(
                 return _issue_report_from_live(live_report, match)
             except (ValidationError, ValueError):
                 logger.warning(
-                    "Live v5 report does not match its schema or stored evidence; "
+                    "Live v6 report does not match its schema or stored evidence; "
                     "trying the previous successful row.",
                     exc_info=True,
                 )

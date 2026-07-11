@@ -11,22 +11,41 @@ _Last updated: 2026-07-11_
 
 ## In Progress
 
-ADR-048 records the user's approval for the sequential TASK-075~081 richer
-narrative-summary and verified-source-link program. Existing evidence,
-wording, no-causality, fail-closed, local/development-only write, and USD 100
-program boundaries remain in force. Deployment and production writes remain
-excluded.
+The user-approved evidence-aware briefing objective is decomposed into
+TASK-092~098 below. Existing evidence, wording, no-causality, fail-closed,
+local/development-only write, and cumulative USD 100 program boundaries remain
+in force. Deployment and production writes remain excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| — | No tasks currently in progress; TASK-075~081 are complete | — | — | — | completed |
+| TASK-097 | Regenerate and evaluate v6 reports in development | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-097-v6-development-regeneration` | in_progress |
+| TASK-098 | Review the integrated v6 flow and leave the development UI ready for user review | Reviewer | Reviewer | `review/TASK-098-evidence-aware-briefing-integration` | assigned |
+
+
+TASK-092~098 must run in dependency order:
+
+1. TASK-092 completes the four-mode policy, deterministic decision rules,
+   section ownership, duplication rules, disclosure contract, and exact
+   approval boundary.
+2. TASK-093 starts only after TASK-092 and any required AI-policy approval.
+3. TASK-094 may start after TASK-092, but workflow/runtime configuration
+   changes remain separately approval-gated.
+4. TASK-095 starts only after TASK-093 and explicit public API approval.
+5. TASK-096 starts only after TASK-095.
+6. TASK-097 starts only after TASK-093~096 and may write only append-only local
+   or development records within the recorded cumulative budget.
+7. TASK-098 starts only after TASK-092~097 pass their own acceptance checks.
+
+Only one task may be `in_progress` at a time. Existing user worktree changes
+from the grounding/regeneration session must be preserved. No new dependency,
+schema migration, production write, deployment, or infrastructure mutation is
+authorized by this task list.
 
 Deployment and production writes remain outside the approved program.
 
-Exact dependencies, ownership, acceptance criteria, handoffs, and stop
-conditions are binding in
-`reports/task-075-narrative-summary-source-program.md`. Only one task may be
-`in_progress` at a time; each successor starts from the verified predecessor.
+The detailed TASK-092~098 acceptance criteria and stop conditions are binding
+in the user-provided goal objective and the TASK-092 contract report once
+accepted.
 
 ## Status Values
 

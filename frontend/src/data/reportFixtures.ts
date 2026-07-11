@@ -1,36 +1,10 @@
-/** Development-only v5 bundles for responsive/browser verification. */
+/** Development-only v6 bundles for responsive/browser verification. */
 import type {
-  IssueReportContent,
+  IssueReportBriefing,
   IssueReportContextCandidate,
+  IssueReportMode,
   IssueReportSuccessResponse,
 } from "../types/issue";
-
-const BASE_CONTENT: IssueReportContent = {
-  executive_summary:
-    "이 이슈는 공개 문서에 적힌 조건의 충족 여부를 정해진 기한 기준으로 살펴봅니다. 현재 공개 데이터에 반영된 기대값과 최근 비교 구간을 함께 읽되 현실의 결과를 뜻하는 것으로 해석하지 않습니다.",
-  current_data_interpretation:
-    "데이터 기준 시각에 공개 예측시장 참여자 데이터에 반영된 기대값은 43.2%입니다. 관찰된 비교값은 24시간 변화 -6.1퍼센트포인트, 7일 변화 -9.4퍼센트포인트입니다.",
-  conditional_scenarios: [
-    { title: "조건 확인", narrative: "만약 정해진 기준일까지 문서 조건이 확인된다면 해당 판정 문구와 함께 읽습니다." },
-    { title: "부분 확인", narrative: "만약 관련 자료가 공개되지만 조건 충족이 불분명한 경우 후속 문서를 확인합니다." },
-    { title: "조건 미확인", narrative: "만약 기준일까지 문서 조건이 확인되지 않는다면 미확인 상태로 구분합니다." },
-  ],
-  factors_to_check: [
-    { title: "판정 문서", explanation: "이슈의 조건을 명시한 공개 문서와 기준 시각을 확인합니다." },
-    { title: "데이터 비교", explanation: "현재 값과 24시간·7일 비교값을 같은 기준에서 확인합니다." },
-  ],
-  signals_to_watch: [
-    { title: "공식 자료", explanation: "조건과 직접 연결된 공식 문서의 공개 여부를 관찰합니다." },
-    { title: "후속 갱신", explanation: "공개 데이터의 이후 갱신 시각과 값 변화를 별도로 확인합니다." },
-  ],
-  evidence_synthesis: null,
-  relationship_boundary:
-    "관찰된 움직임은 공개 데이터에 기록된 흐름이며, 현실의 결과 또는 함께 제시된 공개 정보와의 관계를 입증하지 않습니다.",
-  data_limitations:
-    "공개 예측시장 참여자 데이터는 전체 대중의 판단을 대표하지 않습니다. 수치와 맥락은 해당 기준 시각에 저장된 근거 범위에서만 해석해야 합니다.",
-  caution_note:
-    "이 내용은 공개 예측시장 참여자 데이터에 나타난 흐름을 정리한 것이며, 전체 대중의 판단을 대표하거나 현실의 결과를 입증하지 않습니다. 24시간 변화 폭이 큰 구간은 단기 변동에 민감할 수 있으므로 다른 자료를 통해 독립적으로 확인해야 합니다.",
-};
 
 const CANDIDATES: IssueReportContextCandidate[] = [
   {
@@ -62,13 +36,6 @@ const CANDIDATES: IssueReportContextCandidate[] = [
         published_at: "2026-07-04T08:00:00Z",
         source_type: "independent_secondary",
       },
-      {
-        title: "브리핑 문서 요약",
-        url: "https://news.example.com/context/briefing",
-        domain: "news.example.com",
-        published_at: null,
-        source_type: "independent_secondary",
-      },
     ],
   },
   {
@@ -82,52 +49,212 @@ const CANDIDATES: IssueReportContextCandidate[] = [
         title: "후속 일정 문서",
         url: "https://example.gov/notices/follow-up",
         domain: "example.gov",
-        published_at: "2026-07-06T08:15:00Z",
+        published_at: null,
         source_type: "official",
       },
     ],
   },
 ];
 
+const scenario = {
+  title: "공개 협의 범위가 달라지는 경우",
+  text: "만약 공개 협의의 범위가 달라지는 경우 관련 문서가 다루는 상황을 일반적으로 구분해 살펴볼 수 있습니다.",
+  basis: "general_scenario" as const,
+};
+const material = {
+  scenario_index: 1,
+  title: "공개 문서 범위",
+  text: "공개 협의의 참여 범위와 후속 자료가 다루는 항목을 확인할 자료입니다.",
+  basis: "general_scenario" as const,
+};
+
+function verifiedBackground(candidates: IssueReportContextCandidate[]) {
+  return {
+    text: "공식 공개 자료에는 다자 협의 일정과 참여 범위가 기록되어 있으며 관찰 흐름과의 관계를 입증하지 않습니다.",
+    basis: "verified_context" as const,
+    candidate_ids: candidates.map((candidate) => candidate.id),
+  };
+}
+
+function briefing(
+  mode: IssueReportMode,
+  candidates: IssueReportContextCandidate[],
+): IssueReportBriefing {
+  if (mode === "change_with_evidence") {
+    return {
+      mode,
+      verified_background: verifiedBackground(candidates),
+      conditional_interpretations: [
+        {
+          title: "후속 자료가 같은 범위를 다루는 경우",
+          text: "만약 후속 공개 자료가 같은 협의 범위를 다루는 경우 자료에 기록된 범위를 조건부로 비교할 수 있습니다.",
+          basis: "verified_context",
+          candidate_ids: [candidates[0].id],
+        },
+      ],
+    };
+  }
+  if (mode === "change_without_evidence") {
+    return {
+      mode,
+      conditional_scenarios: [scenario],
+      materials_to_check: [material],
+    };
+  }
+  if (mode === "stable_with_evidence") {
+    return {
+      mode,
+      issue_explanation: {
+        text: "이 이슈는 공개 협의가 공적 기록에서 어떤 범위로 다뤄지는지를 살펴보는 항목입니다.",
+        basis: "market_definition",
+      },
+      verified_background: verifiedBackground(candidates),
+      conditional_scenarios: [scenario],
+    };
+  }
+  return {
+    mode,
+    issue_explanation: {
+      text: "이 이슈는 공개 협의의 여러 상황을 이해하기 위한 통상적인 구분을 다루는 항목입니다.",
+      basis: "general_scenario",
+    },
+    conditional_scenarios: [scenario],
+    materials_to_check: [material],
+  };
+}
+
 function fixture(
   id: string,
+  mode: IssueReportMode,
   candidates: IssueReportContextCandidate[],
 ): IssueReportSuccessResponse {
+  const significant = mode.startsWith("change_");
   return {
     id,
     status: "success",
-    report_version: "v5",
+    report_version: "v6",
+    report_mode: mode,
     generated_at: "2026-07-08T00:05:00Z",
     data_as_of: "2026-07-07T23:00:00Z",
     episode_at: "2026-07-07T23:00:00Z",
-    content: {
-      ...BASE_CONTENT,
-      evidence_synthesis:
-        candidates.length === 0
-          ? null
-          : "같은 검토 구간에 기록된 공개 정보 후보를 근거 범위 안에서 정리했습니다. " +
-            candidates.map((candidate) => candidate.summary).join(" "),
+    observed_change: {
+      metric_id: 1,
+      window: "24h",
+      current_value: 0.432,
+      change_value: significant ? -0.061 : -0.01,
+      significant,
+      threshold: 0.05,
+    },
+    briefing: briefing(mode, candidates),
+    resolution_reference: {
+      status: "available",
+      condition_text:
+        "공개 문서에 적힌 조건이 기준일까지 충족되는지를 판정합니다.",
+      deadline: "2026-12-31T00:00:00Z",
+      exclusions: ["임시 상태는 포함하지 않습니다."],
+      source_url: "https://example.gov/rules",
     },
     evidence_refs: [
       "metric:1",
       ...candidates.map((candidate) => `candidate:${candidate.id}`),
     ],
     context_candidates: candidates,
+    relationship_boundary:
+      "관찰된 움직임은 공개 데이터에 기록된 흐름이며 현실의 결과 또는 함께 제시된 공개 정보와의 관계를 입증하지 않습니다.",
+    data_limitations:
+      "공개 예측시장 참여자 데이터는 전체 대중의 판단을 대표하지 않습니다. 수치와 맥락은 해당 기준 시각에 저장된 근거 범위에서만 해석해야 합니다.",
+    caution_note:
+      "이 내용은 공개 예측시장 참여자 데이터에 나타난 흐름을 정리한 것이며 전체 대중의 판단을 대표하거나 현실의 결과를 입증하지 않습니다. 활동 수준과 변동에 따라 해석 범위가 달라질 수 있으므로 다른 자료를 통해 독립적으로 확인해야 합니다.",
   };
 }
 
-export const V5_FIXTURE_ZERO = fixture(
-  "77777777-7777-4777-8777-777777777770",
-  [],
-);
-export const V5_FIXTURE_ONE = fixture(
-  "77777777-7777-4777-8777-777777777771",
-  CANDIDATES.slice(0, 1),
-);
-export const V5_FIXTURE_THREE = fixture(
-  "77777777-7777-4777-8777-777777777773",
-  CANDIDATES,
-);
+function trumpStableNoEvidenceFixture(): IssueReportSuccessResponse {
+  return {
+    ...fixture(
+      "77777777-7777-4777-8777-777777777775",
+      "stable_without_evidence",
+      [],
+    ),
+    generated_at: "2026-07-11T07:00:00Z",
+    data_as_of: "2026-07-11T06:37:15.248359Z",
+    episode_at: "2026-07-11T06:37:15.248359Z",
+    observed_change: {
+      metric_id: 486,
+      window: "24h",
+      current_value: 0.055,
+      change_value: 0,
+      significant: false,
+      threshold: 0.05,
+    },
+    briefing: {
+      mode: "stable_without_evidence",
+      issue_explanation: {
+        text: "Trump 대통령직 변화 이슈를 이해하기 위한 일반적인 상황 구분을 다루는 항목입니다.",
+        basis: "general_scenario",
+      },
+      conditional_scenarios: [
+        {
+          title: "공식 기록의 범위가 달라지는 경우",
+          text: "만약 Trump 대통령직과 관련된 공식 기록의 범위가 달라지는 경우 문서가 다루는 상태를 일반적으로 구분해 살펴볼 수 있습니다.",
+          basis: "general_scenario",
+        },
+      ],
+      materials_to_check: [
+        {
+          scenario_index: 1,
+          title: "공식 기록의 문서 범위",
+          text: "대통령직 상태를 다루는 공식 기록의 문서 유형과 공개 주체를 확인할 자료입니다.",
+          basis: "general_scenario",
+        },
+      ],
+    },
+    resolution_reference: {
+      status: "available",
+      condition_text:
+        'This market will resolve to "Yes" if President of the United States Donald Trump announces he has resigned or will resign the presidency by December 31, 2026, 11:59 PM ET. Otherwise, this market will resolve to "No."',
+      deadline: "2026-12-31T00:00:00Z",
+      exclusions: [],
+      source_url: null,
+    },
+    evidence_refs: ["metric:486"],
+  };
+}
+
+const FIXTURES = new Map<string, IssueReportSuccessResponse>([
+  [
+    "v6-change-evidence",
+    fixture(
+      "77777777-7777-4777-8777-777777777771",
+      "change_with_evidence",
+      CANDIDATES.slice(0, 1),
+    ),
+  ],
+  [
+    "v6-change-no-evidence",
+    fixture(
+      "77777777-7777-4777-8777-777777777772",
+      "change_without_evidence",
+      [],
+    ),
+  ],
+  [
+    "v6-stable-evidence",
+    fixture(
+      "77777777-7777-4777-8777-777777777773",
+      "stable_with_evidence",
+      CANDIDATES,
+    ),
+  ],
+  [
+    "v6-stable-no-evidence",
+    fixture(
+      "77777777-7777-4777-8777-777777777774",
+      "stable_without_evidence",
+      [],
+    ),
+  ],
+  ["v6-trump-stable-no-evidence", trumpStableNoEvidenceFixture()],
+]);
 
 export function getDevelopmentReportFixture(
   name: string | null,
@@ -136,11 +263,7 @@ export function getDevelopmentReportFixture(
     typeof window === "undefined" ||
     (window.location.hostname !== "localhost" &&
       window.location.hostname !== "127.0.0.1")
-  ) {
+  )
     return null;
-  }
-  if (name === "v5-0") return V5_FIXTURE_ZERO;
-  if (name === "v5-1") return V5_FIXTURE_ONE;
-  if (name === "v5-3") return V5_FIXTURE_THREE;
-  return null;
+  return name ? (FIXTURES.get(name) ?? null) : null;
 }

@@ -13,10 +13,17 @@ Day 3 detail-chart readiness pass.
 
 from datetime import timedelta
 
+import pytest
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routes import issues as issues_routes
-from app.db.models import AiReport, ContextCandidate, Market, MarketSnapshot
+from app.db.models import (
+    AiReport,
+    ContextCandidate,
+    Market,
+    MarketResolutionRule,
+    MarketSnapshot,
+)
 from tests.conftest import (
     CONTEXT_CANDIDATE_ID,
     MARKET_ID,
@@ -30,6 +37,7 @@ from tests.conftest import (
     seed_basic_market,
     seed_market_without_metric,
     seed_v5_report,
+    seed_v6_report,
 )
 
 
@@ -312,7 +320,7 @@ def test_get_issue_report_query_failure_returns_not_yet_generated(
     def fail_query(*args, **kwargs):
         raise SQLAlchemyError("simulated report query failure")
 
-    monkeypatch.setattr(issues_routes, "load_successful_v5_reports", fail_query)
+    monkeypatch.setattr(issues_routes, "load_successful_v6_reports", fail_query)
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
@@ -786,9 +794,19 @@ def test_static_fallback_does_not_fabricate_v4_evidence(live_client):
     assert response.json() == {"status": "not_yet_generated"}
 
 
-def test_v5_report_serves_verified_candidate_and_exact_stored_source(live_client, db_session):
+def test_v5_row_is_audit_only_after_v6_activation(live_client, db_session):
     seed_basic_market(db_session)
-    report, candidate = seed_v5_report(db_session)
+    seed_v5_report(db_session, with_candidate=False)
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v6_report_serves_verified_candidate_and_exact_stored_source(live_client, db_session):
+    seed_basic_market(db_session)
+    report, candidate = seed_v6_report(db_session)
     assert candidate is not None
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
@@ -797,24 +815,22 @@ def test_v5_report_serves_verified_candidate_and_exact_stored_source(live_client
     body = response.json()
     assert body["id"] == str(report.id)
     assert body["status"] == "success"
-    assert body["report_version"] == "v5"
+    assert body["report_version"] == "v6"
+    assert body["report_mode"] == "change_with_evidence"
     assert body["data_as_of"].startswith("2026-07-08T09:00:00")
     assert body["episode_at"].startswith("2026-07-08T09:00:00")
     assert body["evidence_refs"] == [
         "metric:1",
         f"candidate:{CONTEXT_CANDIDATE_ID}",
     ]
-    assert set(body["content"]) == {
-        "executive_summary",
-        "current_data_interpretation",
-        "conditional_scenarios",
-        "factors_to_check",
-        "signals_to_watch",
-        "evidence_synthesis",
-        "relationship_boundary",
-        "data_limitations",
-        "caution_note",
+    assert set(body["briefing"]) == {
+        "mode",
+        "verified_background",
+        "conditional_interpretations",
     }
+    assert body["observed_change"]["current_value"] == 0.63
+    assert body["observed_change"]["change_value"] == 0.08
+    assert body["resolution_reference"]["status"] == "available"
     public_candidate = body["context_candidates"][0]
     assert public_candidate["id"] == str(candidate.id)
     assert public_candidate["title"] == candidate.event_title
@@ -832,41 +848,70 @@ def test_v5_report_serves_verified_candidate_and_exact_stored_source(live_client
     assert "content_hash" not in public_candidate["sources"][0]
 
 
-def test_v5_report_without_candidate_has_null_evidence_and_metric_ref_only(live_client, db_session):
+def test_v6_report_without_candidate_has_general_mode_and_metric_ref_only(live_client, db_session):
     seed_basic_market(db_session)
-    seed_v5_report(db_session, with_candidate=False)
+    seed_v6_report(db_session, with_candidate=False)
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "success"
-    assert body["content"]["evidence_synthesis"] is None
+    assert body["report_mode"] == "change_without_evidence"
+    assert body["briefing"]["mode"] == "change_without_evidence"
+    assert "verified_background" not in body["briefing"]
     assert body["context_candidates"] == []
     assert body["evidence_refs"] == ["metric:1"]
 
 
-def test_v5_invalid_latest_row_preserves_previous_valid_report(live_client, db_session):
+@pytest.mark.parametrize(
+    ("change_24h", "with_candidate", "expected_mode"),
+    [
+        (0.08, True, "change_with_evidence"),
+        (0.08, False, "change_without_evidence"),
+        (0.01, True, "stable_with_evidence"),
+        (0.01, False, "stable_without_evidence"),
+    ],
+)
+def test_v6_api_serves_all_four_reconstructed_modes(
+    live_client,
+    db_session,
+    change_24h,
+    with_candidate,
+    expected_mode,
+):
     seed_basic_market(db_session)
-    old_report, _ = seed_v5_report(
+    seed_v6_report(
+        db_session,
+        change_24h=change_24h,
+        with_candidate=with_candidate,
+    )
+
+    body = live_client.get(f"/api/issues/{MARKET_ID}/report").json()
+
+    assert body["status"] == "success"
+    assert body["report_mode"] == expected_mode
+    assert body["briefing"]["mode"] == expected_mode
+
+
+def test_v6_invalid_latest_row_preserves_previous_valid_v6_report(live_client, db_session):
+    seed_basic_market(db_session)
+    old_report, _ = seed_v6_report(
         db_session,
         report_id=REPORT_ID_OLD,
         generated_at=NOW + timedelta(minutes=2),
         with_candidate=False,
     )
-    latest, _ = seed_v5_report(
+    latest, _ = seed_v6_report(
         db_session,
         report_id=REPORT_ID_LATEST,
         generated_at=NOW + timedelta(minutes=5),
         with_candidate=False,
     )
     envelope = dict(latest.content)
-    content = dict(envelope["content"])
-    content["current_data_interpretation"] = (
-        "현재 값은 근거에 없는 99%로 기록됐습니다. 이 문장은 구조상 유효하지만 "
-        "저장 근거와 일치하지 않아 공개되면 안 됩니다."
-    )
-    envelope["content"] = content
+    observed = dict(envelope["observed_change"])
+    observed["current_value"] = 0.99
+    envelope["observed_change"] = observed
     latest.content = envelope
     db_session.commit()
 
@@ -876,9 +921,82 @@ def test_v5_invalid_latest_row_preserves_previous_valid_report(live_client, db_s
     assert response.json()["id"] == str(old_report.id)
 
 
+def test_v6_extra_briefing_field_is_not_exposed(live_client, db_session):
+    seed_basic_market(db_session)
+    report, _ = seed_v6_report(db_session, with_candidate=False)
+    envelope = dict(report.content)
+    briefing = dict(envelope["briefing"])
+    briefing["unexpected"] = "blocked"
+    envelope["briefing"] = briefing
+    report.content = envelope
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v6_basis_mismatch_is_not_exposed(live_client, db_session):
+    seed_basic_market(db_session)
+    report, _ = seed_v6_report(db_session, with_candidate=False)
+    envelope = dict(report.content)
+    briefing = dict(envelope["briefing"])
+    scenarios = [dict(item) for item in briefing["conditional_scenarios"]]
+    scenarios[0]["basis"] = "verified_context"
+    briefing["conditional_scenarios"] = scenarios
+    envelope["briefing"] = briefing
+    report.content = envelope
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v6_duplicate_body_is_not_exposed(live_client, db_session):
+    seed_basic_market(db_session)
+    report, _ = seed_v6_report(db_session, with_candidate=False)
+    envelope = dict(report.content)
+    briefing = dict(envelope["briefing"])
+    materials = [dict(item) for item in briefing["materials_to_check"]]
+    materials[0]["text"] = briefing["conditional_scenarios"][0]["text"]
+    briefing["materials_to_check"] = materials
+    envelope["briefing"] = briefing
+    report.content = envelope
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v6_resolution_rule_db_mismatch_is_not_exposed(live_client, db_session):
+    seed_basic_market(db_session)
+    seed_v6_report(db_session, with_candidate=False)
+    rule = db_session.query(MarketResolutionRule).one()
+    rule.condition_text = "Tampered stored condition"
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v6_expired_candidate_is_not_exposed(live_client, db_session):
+    seed_basic_market(db_session)
+    seed_v6_report(db_session)
+    candidate = db_session.get(ContextCandidate, CONTEXT_CANDIDATE_ID)
+    candidate.expires_at = NOW + timedelta(minutes=1)
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.json() == {"status": "not_yet_generated"}
+
+
 def test_v4_withheld_candidate_is_not_exposed(live_client, db_session):
     seed_basic_market(db_session)
-    seed_v5_report(db_session)
+    seed_v6_report(db_session)
     candidate = db_session.get(ContextCandidate, CONTEXT_CANDIDATE_ID)
     candidate.verification_state = "withheld"
     db_session.commit()
@@ -891,7 +1009,7 @@ def test_v4_withheld_candidate_is_not_exposed(live_client, db_session):
 
 def test_v4_candidate_without_public_source_is_not_exposed(live_client, db_session):
     seed_basic_market(db_session)
-    seed_v5_report(db_session)
+    seed_v6_report(db_session)
     candidate = db_session.get(ContextCandidate, CONTEXT_CANDIDATE_ID)
     candidate.sources = []
     db_session.commit()
@@ -904,7 +1022,7 @@ def test_v4_candidate_without_public_source_is_not_exposed(live_client, db_sessi
 
 def test_v4_candidate_episode_mismatch_is_not_exposed(live_client, db_session):
     seed_basic_market(db_session)
-    seed_v5_report(db_session)
+    seed_v6_report(db_session)
     candidate = db_session.get(ContextCandidate, CONTEXT_CANDIDATE_ID)
     candidate.episode_at = NOW - timedelta(hours=1)
     db_session.commit()
@@ -917,7 +1035,7 @@ def test_v4_candidate_episode_mismatch_is_not_exposed(live_client, db_session):
 
 def test_v4_missing_candidate_evidence_reference_is_not_exposed(live_client, db_session):
     seed_basic_market(db_session)
-    report, _ = seed_v5_report(db_session)
+    report, _ = seed_v6_report(db_session)
     content = dict(report.content)
     content["evidence_refs"] = ["metric:1"]
     report.content = content
@@ -931,7 +1049,7 @@ def test_v4_missing_candidate_evidence_reference_is_not_exposed(live_client, db_
 
 def test_v4_nonexistent_candidate_id_is_not_exposed(live_client, db_session):
     seed_basic_market(db_session)
-    report, _ = seed_v5_report(db_session)
+    report, _ = seed_v6_report(db_session)
     missing_id = "99999999-9999-4999-8999-999999999999"
     envelope = dict(report.content)
     envelope["context_candidate_ids"] = [missing_id]
@@ -947,14 +1065,11 @@ def test_v4_nonexistent_candidate_id_is_not_exposed(live_client, db_session):
 
 def test_v4_metric_content_mismatch_is_not_exposed(live_client, db_session):
     seed_basic_market(db_session)
-    report, _ = seed_v5_report(db_session, with_candidate=False)
+    report, _ = seed_v6_report(db_session, with_candidate=False)
     envelope = dict(report.content)
-    content = dict(envelope["content"])
-    content["current_data_interpretation"] = (
-        "현재 값은 저장된 metric과 다른 99%로 기록됐습니다. 이 문장은 구조상 "
-        "충분한 길이를 갖지만 저장 근거와 일치하지 않습니다."
-    )
-    envelope["content"] = content
+    observed = dict(envelope["observed_change"])
+    observed["change_value"] = 0.99
+    envelope["observed_change"] = observed
     report.content = envelope
     db_session.commit()
 
@@ -966,7 +1081,7 @@ def test_v4_metric_content_mismatch_is_not_exposed(live_client, db_session):
 
 def test_v4_source_with_unapproved_internal_field_is_not_exposed(live_client, db_session):
     seed_basic_market(db_session)
-    seed_v5_report(db_session)
+    seed_v6_report(db_session)
     candidate = db_session.get(ContextCandidate, CONTEXT_CANDIDATE_ID)
     source = dict(candidate.sources[0])
     source["source_excerpt"] = "internal text must not cross the public boundary"
@@ -981,7 +1096,7 @@ def test_v4_source_with_unapproved_internal_field_is_not_exposed(live_client, db
 
 def test_v4_source_url_domain_mismatch_is_not_exposed(live_client, db_session):
     seed_basic_market(db_session)
-    seed_v5_report(db_session)
+    seed_v6_report(db_session)
     candidate = db_session.get(ContextCandidate, CONTEXT_CANDIDATE_ID)
     source = dict(candidate.sources[0])
     source["url"] = "https://different.example/context"
@@ -996,7 +1111,7 @@ def test_v4_source_url_domain_mismatch_is_not_exposed(live_client, db_session):
 
 def test_v4_data_as_of_later_than_generated_at_is_not_exposed(live_client, db_session):
     seed_basic_market(db_session)
-    seed_v5_report(db_session, generated_at=NOW - timedelta(minutes=1))
+    seed_v6_report(db_session, generated_at=NOW - timedelta(minutes=1))
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
@@ -1004,23 +1119,29 @@ def test_v4_data_as_of_later_than_generated_at_is_not_exposed(live_client, db_se
     assert response.json() == {"status": "not_yet_generated"}
 
 
-def test_openapi_exposes_strict_v5_report_schema(live_client, db_session):
+def test_openapi_exposes_strict_v6_report_schema(live_client, db_session):
     schema = live_client.get("/openapi.json").json()
     report_schema = schema["components"]["schemas"]["IssueReportResponse"]
     properties = report_schema["properties"]
 
-    assert properties["report_version"]["const"] == "v5"
-    assert {"episode_at", "evidence_refs", "context_candidates"}.issubset(properties)
-    content_schema = schema["components"]["schemas"]["ReportContent"]
-    assert content_schema["additionalProperties"] is False
-    assert set(content_schema["properties"]) == {
-        "executive_summary",
-        "current_data_interpretation",
-        "conditional_scenarios",
-        "factors_to_check",
-        "signals_to_watch",
-        "evidence_synthesis",
-        "relationship_boundary",
-        "data_limitations",
-        "caution_note",
+    assert properties["report_version"]["const"] == "v6"
+    assert {
+        "report_mode",
+        "observed_change",
+        "briefing",
+        "resolution_reference",
+        "episode_at",
+        "evidence_refs",
+        "context_candidates",
+    }.issubset(properties)
+    assert len(properties["briefing"]["oneOf"]) == 4
+    observed_schema = schema["components"]["schemas"]["V6ObservedChangeOut"]
+    assert observed_schema["additionalProperties"] is False
+    assert set(observed_schema["properties"]) == {
+        "metric_id",
+        "window",
+        "current_value",
+        "change_value",
+        "significant",
+        "threshold",
     }

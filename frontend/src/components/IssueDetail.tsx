@@ -1,8 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { SiteHeader } from "./AppShell";
 import { CautionBadge } from "./CautionBadge";
-import { CAUTION_COPY } from "./cautionCopy";
 import { GlobalFooter, ShortCautionNotice } from "./InformationNotice";
 import { IssueReportCard } from "./IssueReportCard";
 import { IssueTrendChart } from "./IssueTrendChart";
@@ -33,52 +32,6 @@ type IssueDetailProps = {
 
 const CHART_WINDOWS: ChartWindow[] = ["24h", "7d", "30d"];
 
-function changeForWindow(
-  issue: Issue,
-  chartWindow: ChartWindow,
-): number | null | undefined {
-  if (chartWindow === "24h") {
-    return issue.change24h;
-  }
-
-  if (chartWindow === "7d") {
-    return issue.change7d;
-  }
-
-  return issue.change30d;
-}
-
-function buildSummary(issue: Issue, chartWindow: ChartWindow): string {
-  const change = changeForWindow(issue, chartWindow);
-  const movementSentence =
-    change === null || change === undefined || Number.isNaN(change)
-      ? `공개 데이터에 반영된 기대값은 ${windowLabel(
-          chartWindow,
-        )} 변화 계산에 필요한 기준 데이터가 충분하지 않습니다`
-      : `${
-          Math.abs(change) < 0.05
-            ? "공개 데이터에 반영된 기대값은 이전 관측값과 비슷한 수준으로 관측되었습니다"
-            : change > 0
-              ? "공개 데이터에 반영된 기대값은 상승 방향으로 관측되었습니다"
-              : "공개 데이터에 반영된 기대값은 하락 방향으로 관측되었습니다"
-        } (${formatPercentagePointChange(change)})`;
-  const marker = issue.inflectionPoints[0];
-  const markerSentence = marker
-    ? `저장된 이력의 기준선 통과 표시는 ${formatShortDate(
-        marker.timestamp,
-      )}에 있으며, 관측된 변화는 ${formatPercentagePointChange(marker.change)}입니다.`
-    : "저장된 이력에는 기준선 통과 표시가 없습니다.";
-  const relatedSentence = issue.relatedEventCandidates?.length
-    ? "관련 사건 후보는 맥락 확인용이며 원인으로 제시하지 않습니다."
-    : "이 이슈에는 관련 사건 후보가 등록되어 있지 않습니다.";
-
-  return `최근 ${windowLabel(
-    chartWindow,
-  )} 동안 ${movementSentence}. ${markerSentence} ${relatedSentence} ${
-    CAUTION_COPY[issue.cautionLevel].detail
-  }`;
-}
-
 export function IssueDetail({
   issue,
   dataStatus = "ready",
@@ -88,11 +41,6 @@ export function IssueDetail({
 }: IssueDetailProps) {
   const [chartWindow, setChartWindow] = useState<ChartWindow>("7d");
 
-  const summary = useMemo(
-    () => buildSummary(issue, chartWindow),
-    [issue, chartWindow],
-  );
-  const selectedWindowChange = changeForWindow(issue, chartWindow);
   const contextCandidates =
     reportState.status === "success"
       ? reportState.report.context_candidates
@@ -176,11 +124,6 @@ export function IssueDetail({
           <p className="mt-3 max-w-3xl text-sm leading-6 text-ink-soft">
             {issue.displaySubtitle ?? issue.description}
           </p>
-          {issue.resolutionCondition ? (
-            <p className="mt-2 max-w-3xl text-xs font-semibold leading-5 text-ink-faint">
-              기준 조건: {issue.resolutionCondition}
-            </p>
-          ) : null}
           {issue.sourceTitle && issue.sourceTitle !== issue.title ? (
             <p className="mt-1 max-w-3xl text-xs leading-5 text-ink-faint">
               원문 시장 질문: {issue.sourceTitle}
@@ -259,12 +202,6 @@ export function IssueDetail({
                 데이터 기준 시각: {formatDataTimestamp(issue.dataAsOf)}
               </span>
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-ink-soft">
-              <span>{windowLabel(chartWindow)} 선택 기간 관측 변화</span>
-              <span className="font-bold text-ink">
-                {formatPercentagePointChange(selectedWindowChange)}
-              </span>
-            </div>
             <p className="mt-2 text-xs leading-5 text-ink-faint">
               차트 표시는 공개 데이터의 관측 흐름과 5pp 기준선 통과 여부만
               보여주며, 관련 사건 후보를 원인으로 제시하지 않습니다.
@@ -335,7 +272,6 @@ export function IssueDetail({
         <IssueReportCard
           issueId={issue.id}
           reportState={reportState}
-          fallbackSummary={summary}
           issueDataAsOf={issue.dataAsOf}
         />
       </main>

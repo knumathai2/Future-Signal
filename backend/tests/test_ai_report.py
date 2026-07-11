@@ -22,6 +22,7 @@ from app.core.ai_report import (
     OpenAIReportClient,
     ReportContent,
     ReportPromptInputs,
+    ResolutionRulesInput,
     V4ContextSource,
     V4LLMFields,
     V4ReportInputs,
@@ -36,11 +37,14 @@ from app.core.ai_report import (
     build_openai_client,
     build_possible_drivers,
     build_prompt,
+    build_recent_history_summary,
     build_v4_prompt,
     build_v4_stored_payload,
+    build_v5_missing_fields,
     build_v5_prompt,
     build_v5_stored_payload,
     build_what_to_check,
+    determine_input_completeness,
     parse_llm_fields,
     parse_v4_llm_fields,
     parse_v5_llm_fields,
@@ -138,8 +142,8 @@ def _v4_inputs(*, with_context=True, **overrides) -> V4ReportInputs:
         "metric_id": 123,
         "episode_at": datetime(2026, 7, 11, 8, 0, tzinfo=UTC),
         "data_as_of": datetime(2026, 7, 11, 9, 0, tzinfo=UTC),
-        "title": "Will the documented condition be confirmed?",
-        "description": "Tracks whether the documented condition is confirmed.",
+        "title": "Will JD Vance win the US Presidential Election?",
+        "description": "Tracks whether JD Vance wins the documented election.",
         "category": "technology",
         "outcome_label": "Yes",
         "end_date": datetime(2026, 12, 31, tzinfo=UTC),
@@ -150,6 +154,15 @@ def _v4_inputs(*, with_context=True, **overrides) -> V4ReportInputs:
         "volume_24h": 1000.0,
         "liquidity": 2000.0,
         "context_candidates": candidates,
+        "resolution_rules": ResolutionRulesInput(
+            condition_text="The documented condition is recorded by the deadline.",
+            deadline=datetime(2026, 12, 31, tzinfo=UTC),
+            exclusions=[],
+            resolution_source=None,
+            source_description_hash="default-description-hash",
+            rules_hash="default-rules-hash",
+            collected_at=datetime(2026, 7, 11, 7, 0, tzinfo=UTC),
+        ),
     }
     values.update(overrides)
     return V4ReportInputs(**values)
@@ -171,7 +184,8 @@ def _v4_fields(**overrides) -> V4LLMFields:
 def _v5_fields(*, with_context=True, **overrides) -> V5LLMFields:
     values = {
         "executive_summary": (
-            "JD Vance의 미국 대통령 선거 당선 조건을 다루는 이슈입니다. 공개 데이터에 "
+            "Will JD Vance win the US Presidential Election? 질문의 문서 조건을 다루는 "
+            "이슈입니다. 공개 데이터에 "
             "저장된 현재 값과 최근 비교 구간의 움직임을 함께 읽되 현실의 결과로 해석하지 않습니다."
         ),
         "current_data_interpretation": (
@@ -181,6 +195,7 @@ def _v5_fields(*, with_context=True, **overrides) -> V5LLMFields:
         "conditional_scenarios": [
             {
                 "title": "조건 확인",
+                "basis": "market_definition",
                 "narrative": (
                     "만약 JD Vance의 당선 조건이 공식 선거 문서에서 확인된다면 "
                     "해당 판정 조건과 함께 읽습니다."
@@ -188,6 +203,7 @@ def _v5_fields(*, with_context=True, **overrides) -> V5LLMFields:
             },
             {
                 "title": "부분 확인",
+                "basis": "market_definition",
                 "narrative": (
                     "만약 JD Vance 관련 문서가 공개되지만 당선 조건을 충족하는지 "
                     "불분명한 경우 추가 문서를 확인합니다."
@@ -195,6 +211,7 @@ def _v5_fields(*, with_context=True, **overrides) -> V5LLMFields:
             },
             {
                 "title": "조건 미확인",
+                "basis": "market_definition",
                 "narrative": (
                     "만약 기준일까지 JD Vance의 당선 조건이 공식 문서에서 "
                     "확인되지 않는다면 미확인 상태로 구분합니다."
@@ -204,20 +221,24 @@ def _v5_fields(*, with_context=True, **overrides) -> V5LLMFields:
         "factors_to_check": [
             {
                 "title": "판정 문서",
+                "basis": "market_definition",
                 "explanation": "JD Vance와 선거 결과를 명시한 공식 문서의 조건을 확인합니다.",
             },
             {
                 "title": "기준 시각",
+                "basis": "market_definition",
                 "explanation": "문서가 이 이슈의 정해진 기준일 안에 공개됐는지 확인합니다.",
             },
         ],
         "signals_to_watch": [
             {
                 "title": "공식 문서 공개",
+                "basis": "market_definition",
                 "explanation": "JD Vance 관련 공식 선거 문서의 공개 여부를 관찰합니다.",
             },
             {
                 "title": "데이터 갱신",
+                "basis": "observed_data",
                 "explanation": "공개 예측시장 데이터의 이후 갱신 시각과 값을 별도로 확인합니다.",
             },
         ],
@@ -902,6 +923,15 @@ def test_v5_prompt_and_parser_use_exact_six_field_contract():
     inputs = _v4_inputs(
         title="Will JD Vance win the US Presidential Election?",
         description="Tracks whether JD Vance wins the documented election.",
+        resolution_rules=ResolutionRulesInput(
+            condition_text="JD Vance is recorded as the winner in the official result.",
+            deadline=datetime(2026, 12, 31, tzinfo=UTC),
+            exclusions=["An unofficial projection does not satisfy the condition."],
+            resolution_source="https://example.gov/elections/result",
+            source_description_hash="description-hash",
+            rules_hash="rules-hash",
+            collected_at=datetime(2026, 7, 11, 7, 0, tzinfo=UTC),
+        ),
     )
     system_prompt, user_prompt = build_v5_prompt(inputs)
 
@@ -910,6 +940,9 @@ def test_v5_prompt_and_parser_use_exact_six_field_contract():
     assert "verified_context_candidates" in user_prompt
     assert '"display_value_percent":63.0' in user_prompt
     assert '"display_change_24h_percentage_points":8.0' in user_prompt
+    assert '"condition_text":"JD Vance is recorded as the winner' in user_prompt
+    assert '"resolution_source":"https://example.gov/elections/result"' in user_prompt
+    assert '"input_completeness":"definition_complete"' in user_prompt
     raw = json.dumps(_v5_fields().model_dump(), ensure_ascii=False)
     assert parse_v5_llm_fields(raw) == _v5_fields()
     assert (
@@ -955,10 +988,12 @@ def test_v5_rejects_generic_or_duplicated_narrative():
         factors_to_check=[
             {
                 "title": "문서 확인",
+                "basis": "market_definition",
                 "explanation": "정해진 문서 조건을 이후 공개 자료에서 확인합니다.",
             },
             {
                 "title": "시각 확인",
+                "basis": "market_definition",
                 "explanation": "정해진 기준일 안의 공개 여부를 함께 확인합니다.",
             },
         ],
@@ -977,17 +1012,27 @@ def test_v5_rejects_generic_or_duplicated_narrative():
     duplicated = _v5_fields(
         with_context=False,
         factors_to_check=[
-            {"title": "공식 문서", "explanation": duplicate_text},
+            {
+                "title": "공식 문서",
+                "explanation": duplicate_text,
+                "basis": "market_definition",
+            },
             {
                 "title": "판정 조건",
                 "explanation": "JD Vance 선거 판정 조건을 공식 기록에서 확인합니다.",
+                "basis": "market_definition",
             },
         ],
         signals_to_watch=[
-            {"title": "공식 발표", "explanation": duplicate_text},
+            {
+                "title": "공식 발표",
+                "explanation": duplicate_text,
+                "basis": "market_definition",
+            },
             {
                 "title": "데이터 갱신",
                 "explanation": "JD Vance 관련 공개 데이터의 갱신을 확인합니다.",
+                "basis": "observed_data",
             },
         ],
     )
@@ -1047,3 +1092,274 @@ def test_v5_number_validation_handles_missing_change_window():
     payload = build_v5_stored_payload(inputs, content)
 
     assert run_v5_safety_and_semantic_checks(payload, inputs, fields).passed
+
+
+def test_v5_missing_definition_requires_one_limitation_scenario():
+    inputs = _v4_inputs(
+        with_context=False,
+        resolution_rules=None,
+        title="이번 회기 AI 감독 법안 통과",
+    )
+    one_scenario = [
+        {
+            "title": "판정 정의 부족",
+            "basis": "data_limitation",
+            "narrative": (
+                "만약 현재 제공된 자료만 사용한다면 세부 판정 조건이 없어 "
+                "구체적인 절차 경로를 구분할 수 없습니다."
+            ),
+        }
+    ]
+    fields = _v5_fields(
+        with_context=False,
+        executive_summary=(
+            "이번 회기 AI 감독 법안 통과는 저장된 질문과 공개 데이터 값만으로 살펴보는 "
+            "이슈입니다. 세부 판정 정의가 없어 현실의 결과를 뜻하지 않습니다."
+        ),
+        conditional_scenarios=one_scenario,
+        factors_to_check=[
+            {
+                "title": "정의 결손",
+                "explanation": "세부 판정 정의가 입력에 없어 구체적 절차를 구분할 수 없습니다.",
+                "basis": "data_limitation",
+            },
+            {
+                "title": "현재 관측값",
+                "explanation": "저장된 현재 값과 데이터 기준 시각만 분리해 확인합니다.",
+                "basis": "observed_data",
+            },
+        ],
+        signals_to_watch=[
+            {
+                "title": "정의 자료",
+                "explanation": "세부 판정 정의가 이후 입력에 포함되는지 확인합니다.",
+                "basis": "data_limitation",
+            },
+            {
+                "title": "데이터 갱신",
+                "explanation": "공개 예측시장 데이터의 이후 갱신 시각을 확인합니다.",
+                "basis": "observed_data",
+            },
+        ],
+    )
+    content = assemble_v5_report_content(inputs, fields)
+    payload = build_v5_stored_payload(inputs, content)
+
+    assert determine_input_completeness(inputs) == "definition_missing_no_context"
+    assert run_v5_safety_and_semantic_checks(payload, inputs, fields).passed
+
+    too_many = _v5_fields(
+        with_context=False,
+        executive_summary=fields.executive_summary,
+        factors_to_check=fields.factors_to_check,
+        signals_to_watch=fields.signals_to_watch,
+    )
+    too_many_content = assemble_v5_report_content(inputs, too_many)
+    too_many_payload = build_v5_stored_payload(inputs, too_many_content)
+    result = run_v5_safety_and_semantic_checks(too_many_payload, inputs, too_many)
+    assert result.rule == "scenario_count_evidence_mismatch"
+
+
+def test_v5_completeness_levels_are_deterministic():
+    complete = _v4_inputs()
+    partial = _v4_inputs(
+        resolution_rules=complete.resolution_rules.model_copy(update={"deadline": None})
+    )
+    missing_with_context = _v4_inputs(resolution_rules=None, with_context=True)
+    missing_without_context = _v4_inputs(resolution_rules=None, with_context=False)
+
+    assert determine_input_completeness(complete) == "definition_complete"
+    assert determine_input_completeness(partial) == "definition_partial"
+    assert determine_input_completeness(missing_with_context) == "definition_missing_with_context"
+    assert determine_input_completeness(missing_without_context) == "definition_missing_no_context"
+
+
+def test_v5_reference_values_are_paired_and_metric_consistent():
+    inputs = _v4_inputs(
+        value_24h_ago=0.55,
+        value_24h_ago_at=datetime(2026, 7, 10, 8, 0, tzinfo=UTC),
+        value_7d_ago=0.52,
+        value_7d_ago_at=datetime(2026, 7, 4, 8, 0, tzinfo=UTC),
+    )
+    _, user_prompt = build_v5_prompt(inputs)
+
+    assert '"value_24h_ago":0.55' in user_prompt
+    assert '"value_7d_ago":0.52' in user_prompt
+
+    with pytest.raises(ValueError, match="24h reference value and timestamp must be paired"):
+        _v4_inputs(value_24h_ago=0.55)
+    with pytest.raises(ValueError, match="24h reference value does not match stored change"):
+        _v4_inputs(
+            value_24h_ago=0.50,
+            value_24h_ago_at=datetime(2026, 7, 10, 8, 0, tzinfo=UTC),
+        )
+
+
+def test_v5_history_summary_and_missing_fields_are_deterministic():
+    summary = build_recent_history_summary(
+        [
+            (datetime(2026, 7, 11, 9, 0, tzinfo=UTC), 0.63),
+            (datetime(2026, 7, 10, 9, 0, tzinfo=UTC), 0.55),
+            (datetime(2026, 7, 11, 3, 0, tzinfo=UTC), 0.60),
+        ]
+    )
+    inputs = _v4_inputs(
+        recent_history_summary=summary,
+        value_24h_ago=0.55,
+        value_24h_ago_at=datetime(2026, 7, 10, 9, 0, tzinfo=UTC),
+        value_7d_ago=0.52,
+        value_7d_ago_at=datetime(2026, 7, 4, 9, 0, tzinfo=UTC),
+    )
+    _, user_prompt = build_v5_prompt(inputs)
+
+    assert summary is not None
+    assert summary.start_value == 0.55
+    assert summary.end_value == 0.63
+    assert summary.min_value == 0.55
+    assert summary.max_value == 0.63
+    assert summary.sample_count == 3
+    assert build_v5_missing_fields(inputs) == []
+    assert '"volume_24h":1000.0' in user_prompt
+    assert '"liquidity":2000.0' in user_prompt
+    assert '"sample_count":3' in user_prompt
+
+    missing = _v4_inputs(
+        resolution_rules=None,
+        change_24h=None,
+        change_7d=None,
+        volume_24h=None,
+        liquidity=None,
+        recent_history_summary=None,
+    )
+    assert build_v5_missing_fields(missing) == [
+        "market.resolution_rules.condition_text",
+        "observed_data.24h_reference",
+        "observed_data.7d_reference",
+        "observed_data.volume_24h",
+        "observed_data.liquidity",
+        "observed_data.recent_history_summary",
+    ]
+
+
+@pytest.mark.parametrize(
+    "executive_summary",
+    [
+            (
+                "JD Vance 관련 선거 문서 조건을 살펴보는 이슈입니다. 공개 데이터 값은 "
+                "현실의 결과를 뜻하지 않으며 저장된 근거 범위에서만 읽습니다. 세부 내용은 "
+                "입력에 포함된 문서 조건을 벗어나지 않습니다."
+            ),
+        (
+            "Will  JD Vance win the US Presidential Election? 질문의 문서 조건을 살펴봅니다. "
+            "공개 데이터 값은 현실의 결과를 뜻하지 않습니다."
+        ),
+        (
+            "Will JD Vance win the US Presidential Election? 질문과 "
+            "Will JD Vance win the US Presidential Election? 질문의 문서 조건을 함께 살펴봅니다. "
+            "공개 데이터 값은 현실의 결과를 뜻하지 않습니다."
+        ),
+    ],
+)
+def test_v5_requires_exact_market_title_once(executive_summary):
+    inputs = _v4_inputs(with_context=False)
+    fields = _v5_fields(with_context=False, executive_summary=executive_summary)
+    content = assemble_v5_report_content(inputs, fields)
+    payload = build_v5_stored_payload(inputs, content)
+
+    result = run_v5_safety_and_semantic_checks(payload, inputs, fields)
+
+    assert result.rule == "exact_title_occurrence_mismatch"
+    assert result.field == "executive_summary"
+
+
+def test_v5_basis_must_match_available_evidence():
+    inputs = _v4_inputs(with_context=False)
+    fields = _v5_fields(with_context=False)
+    invalid = fields.model_copy(
+        update={
+            "conditional_scenarios": [
+                fields.conditional_scenarios[0].model_copy(
+                    update={"basis": "verified_context"}
+                )
+            ]
+        }
+    )
+    content = assemble_v5_report_content(inputs, invalid)
+    payload = build_v5_stored_payload(inputs, content)
+
+    result = run_v5_safety_and_semantic_checks(payload, inputs, invalid)
+
+    assert result.rule == "basis_evidence_mismatch"
+
+
+@pytest.mark.parametrize(
+    ("title", "unsupported_text"),
+    [
+        (
+            "이번 회기 AI 감독 법안 통과",
+            "만약 위원회 표결 일정이 공개된다면 해당 절차를 기준으로 구분합니다.",
+        ),
+        (
+            "이번 분기 중앙은행 기준금리 경로",
+            "만약 FOMC 회의 자료가 공개된다면 해당 절차를 기준으로 구분합니다.",
+        ),
+        (
+            "미국과 이란의 휴전 협의 틀 마련",
+            "만약 중재자와 합의문이 공개된다면 해당 절차를 기준으로 구분합니다.",
+        ),
+    ],
+)
+def test_v5_title_only_cases_reject_unsupported_procedural_detail(
+    title, unsupported_text
+):
+    inputs = _v4_inputs(
+        title=title,
+        with_context=False,
+        resolution_rules=None,
+        change_24h=None,
+        change_7d=None,
+    )
+    fields = _v5_fields(
+        with_context=False,
+        executive_summary=(
+            f"{title} 질문과 저장된 현재 값만을 근거로 살펴보는 이슈입니다. 세부 판정 "
+            "정의가 없어 현실의 결과를 뜻하지 않으며 입력 범위 밖의 내용은 확인되지 않았습니다."
+        ),
+        conditional_scenarios=[
+            {
+                "title": "입력 밖 세부 절차",
+                "narrative": unsupported_text,
+                "basis": "data_limitation",
+            }
+        ],
+        factors_to_check=[
+            {
+                "title": "정의 결손",
+                "explanation": "세부 판정 정의가 입력에 없어 구체적 절차를 구분할 수 없습니다.",
+                "basis": "data_limitation",
+            },
+            {
+                "title": "현재 관측값",
+                "explanation": "저장된 현재 값과 데이터 기준 시각만 분리해 확인합니다.",
+                "basis": "observed_data",
+            },
+        ],
+        signals_to_watch=[
+            {
+                "title": "정의 자료",
+                "explanation": "세부 판정 정의가 이후 입력에 포함되는지 확인합니다.",
+                "basis": "data_limitation",
+            },
+            {
+                "title": "데이터 갱신",
+                "explanation": "공개 예측시장 데이터의 이후 갱신 시각을 확인합니다.",
+                "basis": "observed_data",
+            },
+        ],
+    )
+    content = assemble_v5_report_content(inputs, fields)
+    payload = build_v5_stored_payload(inputs, content)
+
+    result = run_v5_safety_and_semantic_checks(payload, inputs, fields)
+
+    assert result.rule == "unsupported_procedural_detail"
