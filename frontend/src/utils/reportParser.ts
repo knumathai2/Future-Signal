@@ -2,6 +2,7 @@
 import type {
   IssueReportLoadState,
   IssueReportResponse,
+  GenerationStreamBlock,
   V8IssueReportResponse,
   V8ReportSection,
   V8ReportSectionType,
@@ -201,6 +202,49 @@ function parseSection(raw: unknown): V8ReportSection | null {
     items: raw.items.map((item) => String(item).trim()),
     evidence_refs: raw.evidence_refs as string[],
   };
+}
+
+export function parseGenerationStreamBlock(
+  raw: unknown,
+): GenerationStreamBlock | null {
+  const outerKeys = new Set(["sequence", "block_type", "payload"]);
+  if (!record(raw) || !exact(raw, outerKeys) || !record(raw.payload))
+    return null;
+  if (
+    raw.sequence === 0 &&
+    raw.block_type === "headline_summary" &&
+    exact(raw.payload, new Set(["kind", "headline", "summary"])) &&
+    raw.payload.kind === "headline_summary"
+  ) {
+    const headline = text(raw.payload.headline, 10, 100);
+    const summary = text(raw.payload.summary, 100, 500);
+    return headline && summary
+      ? {
+          sequence: 0,
+          block_type: "headline_summary",
+          payload: { kind: "headline_summary", headline, summary },
+        }
+      : null;
+  }
+  if (
+    typeof raw.sequence !== "number" ||
+    !Number.isInteger(raw.sequence) ||
+    raw.sequence < 1 ||
+    raw.sequence > 6 ||
+    raw.block_type !== "section" ||
+    !exact(raw.payload, new Set(["kind", "index", "section"])) ||
+    raw.payload.kind !== "section" ||
+    raw.payload.index !== raw.sequence - 1
+  )
+    return null;
+  const section = parseSection(raw.payload.section);
+  return section
+    ? {
+        sequence: raw.sequence,
+        block_type: "section",
+        payload: { kind: "section", index: raw.payload.index, section },
+      }
+    : null;
 }
 
 function parseFull(raw: Record<string, unknown>): V8IssueReportResponse | null {

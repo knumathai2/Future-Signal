@@ -2,6 +2,14 @@
 
 FastAPI issue-data API + append-only v8 generation requests + batch collector.
 
+TASK-117 adds validated-block SSE delivery. The worker emits one NDJSON writer
+response, persists only complete blocks that pass the active v8 gates, and the
+API replays them from
+`GET /api/issues/{id}/report/requests/{request_id}/stream`. Migration 005 must
+exist in the target database before this path is enabled. It was subsequently
+applied only to the explicitly approved `ENV=local` development database;
+other environments remain separately gated.
+
 ## Setup
 
 Use Python 3.11 for local setup on macOS arm. The pinned Postgres binary driver may not install under the system Python 3.9 runtime on this machine.

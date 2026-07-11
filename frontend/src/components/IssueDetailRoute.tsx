@@ -8,14 +8,23 @@ import {
 import { SiteHeader } from "./AppShell";
 import { IssueDetail } from "./IssueDetail";
 import { staleDummyIssues } from "../data/dummyIssues";
-import { getDevelopmentReportFixture } from "../data/reportFixtures";
-import type { DataStatus, Issue, IssueReportLoadState } from "../types/issue";
+import {
+  getDevelopmentReportFixture,
+  getDevelopmentStreamingBriefingFixture,
+} from "../data/reportFixtures";
+import type {
+  DataStatus,
+  Issue,
+  IssueReportLoadState,
+  StreamingBriefingState,
+} from "../types/issue";
 import {
   fetchJson,
   HttpError,
   loadGenerationRequestStatus,
   loadIssueReport,
   requestIssueReport,
+  subscribeToGenerationStream,
 } from "../utils/api";
 import { focusRouteHeading } from "../utils/focus";
 import {
@@ -95,6 +104,10 @@ export function IssueDetailRoute() {
     const fixture = getDevelopmentReportFixture(reportFixtureName);
     return fixture ? parseReportResponse(fixture) : null;
   }, [reportFixtureName]);
+  const developmentStreamFixture = useMemo(
+    () => getDevelopmentStreamingBriefingFixture(reportFixtureName),
+    [reportFixtureName],
+  );
   const backTo = safeBackPath(
     (location.state as { from?: unknown } | null)?.from,
   );
@@ -111,6 +124,8 @@ export function IssueDetailRoute() {
   });
   const [generationPending, setGenerationPending] = useState(false);
   const [generationActionError, setGenerationActionError] = useState(false);
+  const [streamedBriefing, setStreamedBriefing] =
+    useState<StreamingBriefingState | null>(developmentStreamFixture);
 
   useEffect(() => {
     setApiDetail(null);
@@ -118,6 +133,7 @@ export function IssueDetailRoute() {
     setFallbackIssue(null);
     setHistoryStatus("loading");
     setReportState({ status: "loading" });
+    setStreamedBriefing(developmentStreamFixture);
     setGenerationPending(false);
     setGenerationActionError(false);
 
@@ -202,7 +218,7 @@ export function IssueDetailRoute() {
     }
 
     return () => controller.abort();
-  }, [developmentReportState, forcedStatus, issueId]);
+  }, [developmentReportState, developmentStreamFixture, forcedStatus, issueId]);
 
   const activeRequestId =
     reportState.status === "ready" &&
@@ -216,6 +232,8 @@ export function IssueDetailRoute() {
     let checking = false;
     let consecutiveFailures = 0;
     let interval = 0;
+    let pollingStarted = false;
+    let closeStream = () => {};
     const check = async () => {
       if (checking) return;
       checking = true;
@@ -229,6 +247,7 @@ export function IssueDetailRoute() {
         if (request.state === "succeeded" || request.state === "failed") {
           const next = await loadIssueReport(issueId, controller.signal);
           setReportState(next);
+          setStreamedBriefing(null);
           setGenerationPending(false);
         }
       } catch (error) {
@@ -244,10 +263,54 @@ export function IssueDetailRoute() {
         checking = false;
       }
     };
-    void check();
-    interval = window.setInterval(check, 1500);
+    const startPolling = () => {
+      if (pollingStarted) return;
+      pollingStarted = true;
+      void check();
+      interval = window.setInterval(check, 1500);
+    };
+    const finishStream = async () => {
+      try {
+        setReportState(await loadIssueReport(issueId, controller.signal));
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
+          console.error(error);
+          startPolling();
+          return;
+        }
+      }
+      setStreamedBriefing(null);
+      setGenerationPending(false);
+    };
+    closeStream = subscribeToGenerationStream(issueId, activeRequestId, {
+      onBlock: (block) => {
+        if (block.block_type === "headline_summary") {
+          setStreamedBriefing((current) => ({
+            headline: block.payload.headline,
+            summary: block.payload.summary,
+            sections: current?.sections ?? [],
+          }));
+          return;
+        }
+        setStreamedBriefing((current) => {
+          if (!current || block.payload.index !== current.sections.length)
+            return current;
+          return {
+            ...current,
+            sections: [...current.sections, block.payload.section],
+          };
+        });
+      },
+      onComplete: () => void finishStream(),
+      onGenerationError: () => {
+        setStreamedBriefing(null);
+        void finishStream();
+      },
+      onTransportError: startPolling,
+    });
     return () => {
       controller.abort();
+      closeStream();
       window.clearInterval(interval);
     };
   }, [activeRequestId, developmentReportState, issueId]);
@@ -256,6 +319,7 @@ export function IssueDetailRoute() {
     async (refreshContext: boolean) => {
       setGenerationPending(true);
       setGenerationActionError(false);
+      setStreamedBriefing(null);
       try {
         await requestIssueReport(issueId, refreshContext);
         setReportState(await loadIssueReport(issueId));
@@ -327,6 +391,7 @@ export function IssueDetailRoute() {
       onGenerateReport={handleGenerate}
       generationPending={generationPending}
       generationActionError={generationActionError}
+      streamedBriefing={streamedBriefing}
     />
   );
 }

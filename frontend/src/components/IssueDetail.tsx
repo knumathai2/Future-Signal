@@ -19,6 +19,7 @@ import type {
   DataStatus,
   Issue,
   IssueReportLoadState,
+  StreamingBriefingState,
 } from "../types/issue";
 import { focusRouteHeading } from "../utils/focus";
 
@@ -31,6 +32,7 @@ type IssueDetailProps = {
   onGenerateReport: (refreshContext: boolean) => Promise<void>;
   generationPending: boolean;
   generationActionError: boolean;
+  streamedBriefing: StreamingBriefingState | null;
 };
 
 const CHART_WINDOWS: ChartWindow[] = ["24h", "7d", "30d"];
@@ -44,6 +46,7 @@ export function IssueDetail({
   onGenerateReport,
   generationPending,
   generationActionError,
+  streamedBriefing,
 }: IssueDetailProps) {
   const [chartWindow, setChartWindow] = useState<ChartWindow>("7d");
 
@@ -271,6 +274,7 @@ export function IssueDetail({
           onGenerate={onGenerateReport}
           generationPending={generationPending}
           generationActionError={generationActionError}
+          streamedBriefing={streamedBriefing}
         />
       </main>
 

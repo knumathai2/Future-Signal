@@ -4,6 +4,7 @@ import type {
   IssueReportResponse,
   V8IssueReportResponse,
   V8ReportSource,
+  StreamingBriefingState,
 } from "../types/issue";
 import { formatDataTimestamp } from "../utils/format";
 
@@ -14,6 +15,7 @@ type IssueReportCardProps = {
   onGenerate: (refreshContext: boolean) => Promise<void>;
   generationPending: boolean;
   generationActionError: boolean;
+  streamedBriefing: StreamingBriefingState | null;
 };
 
 function isFullReport(
@@ -169,6 +171,47 @@ function BriefingContent({ report }: { report: V8IssueReportResponse }) {
   );
 }
 
+function StreamingBriefingContent({
+  briefing,
+}: {
+  briefing: StreamingBriefingState;
+}) {
+  return (
+    <div className="mt-5 space-y-5" aria-live="polite">
+      <div className="rounded-lg bg-paper px-4 py-4 sm:px-5">
+        <p className="text-[11px] font-bold text-ink-faint">
+          검증을 마친 내용부터 표시 중
+        </p>
+        <h3 className="mt-2 text-xl font-bold leading-8 text-ink">
+          {briefing.headline}
+        </h3>
+        <p className="mt-2 text-sm leading-7 text-ink-soft">
+          {briefing.summary}
+        </p>
+      </div>
+      {briefing.sections.map((section) => (
+        <section
+          key={`${section.type}-${section.title}`}
+          className="border-t border-line-soft pt-5"
+        >
+          <h3 className="text-base font-bold text-ink">{section.title}</h3>
+          {section.format === "paragraph" ? (
+            <p className="mt-2 break-words text-sm leading-7 text-ink-soft">
+              {section.content}
+            </p>
+          ) : (
+            <ul className="mt-2 list-disc space-y-2 pl-5 text-sm leading-7 text-ink-soft">
+              {section.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ))}
+    </div>
+  );
+}
+
 export function IssueReportCard({
   issueId,
   reportState,
@@ -176,6 +219,7 @@ export function IssueReportCard({
   onGenerate,
   generationPending,
   generationActionError,
+  streamedBriefing,
 }: IssueReportCardProps) {
   const response =
     reportState.status === "ready" ? reportState.response : undefined;
@@ -188,7 +232,12 @@ export function IssueReportCard({
     response?.status === "failed" ||
     response?.status === "stale" ||
     response?.status === "failed_with_last_good";
-  const actionLabel = report ? "브리핑 새로고침" : "AI 브리핑 생성";
+  const retryWithStoredEvidence = response?.status === "failed";
+  const actionLabel = retryWithStoredEvidence
+    ? "저장된 근거로 다시 생성"
+    : report
+      ? "브리핑 새로고침"
+      : "AI 브리핑 생성";
 
   return (
     <section
@@ -283,10 +332,14 @@ export function IssueReportCard({
             브리핑을 생성하고 있습니다
           </h3>
           <p className="mt-1 text-sm leading-6 text-ink-soft">
-            요청 상태를 확인하고 있습니다. 이 화면을 떠나도 요청 기록은
-            유지됩니다.
+            작성된 단락은 근거와 문구 검증을 통과한 뒤 순서대로 표시됩니다. 이
+            화면을 떠나도 요청 기록은 유지됩니다.
           </p>
         </div>
+      ) : null}
+
+      {isGenerating && streamedBriefing ? (
+        <StreamingBriefingContent briefing={streamedBriefing} />
       ) : null}
 
       {response?.status === "failed" ? (
@@ -320,11 +373,12 @@ export function IssueReportCard({
           <ActionButton
             label={actionLabel}
             pending={generationPending}
-            onGenerate={() => void onGenerate(true)}
+            onGenerate={() => void onGenerate(!retryWithStoredEvidence)}
           />
           <p className="text-xs leading-5 text-ink-faint">
-            확인 가능한 공개 자료를 새로 살핀 뒤 현재 근거 묶음으로 브리핑을
-            생성합니다.
+            {retryWithStoredEvidence
+              ? "이전 시도는 저장되지 않았습니다. 현재 저장된 근거만 사용해 다시 생성합니다."
+              : "확인 가능한 공개 자료를 새로 살핀 뒤 현재 근거 묶음으로 브리핑을 생성합니다."}
           </p>
         </div>
       ) : null}

@@ -1,6 +1,7 @@
 /** Development-only v8 bundles for responsive and browser verification. */
 import type {
   IssueReportResponse,
+  StreamingBriefingState,
   V8IssueReportResponse,
 } from "../types/issue";
 
@@ -112,6 +113,15 @@ const FIXTURES = new Map<string, IssueReportResponse>([
     },
   ],
   [
+    "v8-streaming",
+    {
+      status: "generating",
+      request_id: REQUEST_ID,
+      input_fingerprint: FINGERPRINT,
+      requested_at: "2026-07-11T09:10:00Z",
+    },
+  ],
+  [
     "v7-generating",
     {
       status: "generating",
@@ -153,4 +163,15 @@ export function getDevelopmentReportFixture(
   )
     return null;
   return name ? (FIXTURES.get(name) ?? null) : null;
+}
+
+export function getDevelopmentStreamingBriefingFixture(
+  name: string | null,
+): StreamingBriefingState | null {
+  if (name !== "v8-streaming") return null;
+  return {
+    headline: baseReport.headline,
+    summary: baseReport.summary,
+    sections: baseReport.sections,
+  };
 }

@@ -14,7 +14,8 @@ Copy is treated as a compliance surface, not just a design surface. Every string
 |---|---|
 | **Allowed** | Use freely. These describe observation, reading, and monitoring actions. |
 | **Use Carefully** | Allowed only with a qualifying phrase attached in the same string or immediately adjacent (see examples below) — never standalone. |
-| **Prohibited** | Never ship, in any context, including error states, placeholder/lorem text, internal debug labels that might leak to a user-facing build, or marketing copy. |
+| **Contextual** | Allowed only as explicit negation/verification inquiry or as a source-supported, visibly attributed fact under TASK-116. |
+| **Prohibited** | Never ship, including error states, placeholder/lorem text, internal debug labels that might leak to a user-facing build, or marketing copy. |
 
 ---
 
@@ -58,6 +59,25 @@ Copy is treated as a compliance surface, not just a design surface. Every string
 | Guaranteed prediction | Contradicts the entire epistemic stance of the product (nothing here is a guarantee of anything) |
 
 Any occurrence of these strings (including inside dynamically generated AI/template text) should hard-block release — treat this list as equivalent to a profanity filter, enforced automatically, not just documented as guidance.
+
+### 5.4 Contextual wording for active v8
+
+The Korean expressions `확정`, `보장`, `추천`, `기회`, `전망`, and `원인` are
+not inherently safe or unsafe. Active v8 evaluates their semantic role:
+
+- Explicit negation, limitation, or a verification inquiry may appear without
+  a source reference.
+- A positive factual use requires the same section to cite an exact accepted
+  source, that source's supported claim to contain a same-strength marker, and
+  the authored sentence to visibly attribute the statement.
+- A bare assertion, an outcome assertion, an unsupported source reference, or
+  an ambiguous use remains blocked.
+- Headline and summary have no section evidence scope, so they may use only the
+  source-free negation/inquiry forms.
+
+This exception does not apply to transactional, financial-return, participant-
+following, outcome-endorsement, or action-inducing hard blocks. V1-v7 retain
+their historical flat wording filters.
 
 ---
 
@@ -214,5 +234,21 @@ will be checked and then used with the current evidence bundle. Generating,
 failure, last-known-good, source-card, timestamp, and caution states remain
 unchanged; an empty accepted-source set is still shown explicitly rather than
 filled with unverified material.
+
+### 8.6 Validated-block progressive briefing
+
+During v8 generation, the report surface keeps the issue data-as-of time and
+interpretation caution visible. It receives only complete blocks that have
+passed backend structure, evidence, source, and wording validation and labels
+the partial surface `검증을 마친 내용부터 표시 중`. Headline/summary appears
+first, followed by each accepted section in order. Raw token fragments and an
+unvalidated current block never render.
+
+On a generation failure the partial surface is removed. If a complete earlier
+briefing exists, it remains visible as last-known-good; otherwise the neutral
+failure state remains. A broken SSE connection falls back to the bounded status
+poller without clearing already stored complete-report content. Mobile layout
+uses the same single-column report flow and live region without flashing,
+countdowns, or alert-style visual grammar.
 
 ---
