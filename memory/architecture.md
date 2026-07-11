@@ -68,6 +68,10 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 14. TASK-089 summarizes snapshots within the fixed seven-day metric window into
     deterministic start/end/min/max/sample fields and adds activity, liquidity,
     and explicit evidence gaps to writer input.
+15. TASK-090 adds a four-value basis to every authored scenario/check/watch
+    item. Generation, API reconstruction, and Frontend parsing validate both
+    shape and evidence availability before the UI renders an evidence-range
+    label.
 
 ## Design Decision Summary
 

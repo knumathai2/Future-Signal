@@ -67,14 +67,20 @@ export type CategorySummary = {
 export type IssueReportContent = {
   executive_summary: string;
   current_data_interpretation: string;
-  conditional_scenarios: Array<{ title: string; narrative: string }>;
-  factors_to_check: Array<{ title: string; explanation: string }>;
-  signals_to_watch: Array<{ title: string; explanation: string }>;
+  conditional_scenarios: Array<{ title: string; narrative: string; basis: ReportBasis }>;
+  factors_to_check: Array<{ title: string; explanation: string; basis: ReportBasis }>;
+  signals_to_watch: Array<{ title: string; explanation: string; basis: ReportBasis }>;
   evidence_synthesis: string | null;
   relationship_boundary: string;
   data_limitations: string;
   caution_note: string;
 };
+
+export type ReportBasis =
+  | "market_definition"
+  | "observed_data"
+  | "verified_context"
+  | "data_limitation";
 
 export type IssueReportContextSource = {
   title: string;

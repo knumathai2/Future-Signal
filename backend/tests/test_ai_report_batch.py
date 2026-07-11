@@ -255,12 +255,14 @@ VALID_V5_RESPONSE = {
     "conditional_scenarios": [
         {
             "title": "조건 확인",
+            "basis": "market_definition",
             "narrative": (
                 "만약 test issue 조건이 공식 문서에서 확인된다면 해당 판정 조건과 함께 읽습니다."
             ),
         },
         {
             "title": "부분 확인",
+            "basis": "market_definition",
             "narrative": (
                 "만약 test issue 관련 자료가 공개되지만 조건 충족이 "
                 "불분명한 경우 후속 문서를 확인합니다."
@@ -268,6 +270,7 @@ VALID_V5_RESPONSE = {
         },
         {
             "title": "조건 미확인",
+            "basis": "market_definition",
             "narrative": (
                 "만약 기준일까지 test issue 조건이 공식 문서에서 확인되지 않는다면 "
                 "미확인 상태로 구분합니다."
@@ -275,17 +278,27 @@ VALID_V5_RESPONSE = {
         },
     ],
     "factors_to_check": [
-        {"title": "판정 문서", "explanation": "test issue의 조건을 명시한 공식 문서를 확인합니다."},
-        {"title": "기준 시각", "explanation": "자료가 정해진 기준일 안에 공개됐는지 확인합니다."},
+        {
+            "title": "판정 문서",
+            "explanation": "test issue의 조건을 명시한 공식 문서를 확인합니다.",
+            "basis": "market_definition",
+        },
+        {
+            "title": "기준 시각",
+            "explanation": "자료가 정해진 기준일 안에 공개됐는지 확인합니다.",
+            "basis": "market_definition",
+        },
     ],
     "signals_to_watch": [
         {
             "title": "공식 자료",
             "explanation": "test issue 관련 공식 문서의 공개 여부를 관찰합니다.",
+            "basis": "market_definition",
         },
         {
             "title": "데이터 갱신",
             "explanation": "공개 예측시장 데이터의 이후 갱신을 별도로 확인합니다.",
+            "basis": "observed_data",
         },
     ],
     "evidence_synthesis": None,
@@ -1053,8 +1066,16 @@ def test_v5_generic_summary_is_filtered_and_not_stored(db):
         "최근 비교 구간을 함께 정리하지만 현실의 결과나 배경을 뜻하지 않습니다."
     )
     generic["factors_to_check"] = [
-        {"title": "문서 확인", "explanation": "정해진 문서 조건을 이후 공개 자료에서 확인합니다."},
-        {"title": "시각 확인", "explanation": "정해진 기준일 안의 공개 여부를 확인합니다."},
+        {
+            "title": "문서 확인",
+            "explanation": "정해진 문서 조건을 이후 공개 자료에서 확인합니다.",
+            "basis": "market_definition",
+        },
+        {
+            "title": "시각 확인",
+            "explanation": "정해진 기준일 안의 공개 여부를 확인합니다.",
+            "basis": "market_definition",
+        },
     ]
     client = FakeV4LLMClient([json.dumps(generic, ensure_ascii=False)])
 
