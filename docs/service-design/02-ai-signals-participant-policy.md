@@ -152,6 +152,21 @@ irreconstructible envelopes block publication. Style, section ordering,
 English terms, and moderate repetition are quality diagnostics. The exact
 contract is `reports/task-101-v7-briefing-contract.md`.
 
+### 6.12 Approved v8 issue-centered narrative contract
+
+TASK-112 keeps v7's evidence and source safety boundary but organizes authored
+content around the questions a general reader asks: what the issue is, what is
+currently confirmed, what changed recently, what the available material can
+and cannot support, which conditions matter, and what information would change
+the assessment. Numeric observations support that narrative instead of leading
+it. External context is integrated only where accepted source evidence supports
+it, and a limitations section may appear at most once.
+
+Every section still carries exact opaque evidence references. Source references
+still require their context parent, authored links remain blocked, prohibited
+language remains blocked, and the writer cannot infer a background for an
+observed change. V1-v7 rows remain append-only audit history.
+
 ---
 
 ## 7. Sudden Change Signal Design

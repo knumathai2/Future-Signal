@@ -92,6 +92,11 @@ Every user-facing string and every AI/template output must be checked against th
   unattributed level-C claims, or irreconstructible output block publication;
   ordinary style, ordering, English-term, and moderate-overlap findings are
   diagnostics rather than automatic rejection.
+- v8 keeps the v7 evidence/source publication blockers while requiring the
+  TASK-112 issue-centered envelope. `current_situation` and `recent_change`
+  are mandatory, section types are unique, limitations may appear once, and
+  the public UI must not repeat the deterministic limitations block when the
+  authored limitations section is present.
 - Policy/lint docs and tests may quote prohibited expressions only to define or verify the blocking rule; demo-visible docs and product copy may not normalize those terms as user-facing language
 
 ## Documentation Standards

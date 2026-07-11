@@ -195,4 +195,15 @@ and visible A/B/C level. Level C material is always attributed. Exact stored
 safe URLs alone are interactive. The presence of a source must not imply that
 it explains the observed movement.
 
+### 8.4 Approved v8 issue-centered briefing presentation
+
+V8 keeps the same request, cache, timestamp, caution, and source-card states but
+changes the authored reading order. The headline and summary begin with the
+issue and its currently confirmed situation. Sections then move through recent
+change, interpretation boundaries, key conditions, and later information to
+check. Section titles remain natural Korean rather than exposing internal data
+categories. If the writer supplies a `limitations` section, the UI does not
+repeat the deterministic data-limitations card; interpretation caution remains
+visible in every full report state.
+
 ---

@@ -1,6 +1,6 @@
 # Backend — Outlook Signals
 
-FastAPI issue-data API + append-only v7 generation requests + batch collector.
+FastAPI issue-data API + append-only v8 generation requests + batch collector.
 
 ## Setup
 
@@ -43,6 +43,21 @@ connection fails with an IPv6 routing error such as `No route to host`, switch
 uvicorn app.main:app --reload
 # http://127.0.0.1:8000/docs for OpenAPI docs
 ```
+
+In `ENV=local`, `ENV=dev`, or `ENV=development`, a successful queued
+`POST /api/issues/{id}/report/generate` automatically starts the existing
+worker as an isolated child process for that exact request. The API returns
+HTTP 202 without waiting for generation and never creates a provider client.
+If child-process startup fails, the committed request remains queued and can be
+recovered with the manual command below:
+
+```bash
+ENV=local ./.venv/bin/python -m app.core.on_demand_worker \
+  --confirm-local-dev-write
+```
+
+Production auto-start remains disabled until a separately approved worker
+deployment exists.
 
 ## Local/dev historical chart seed
 

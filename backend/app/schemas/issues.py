@@ -459,6 +459,52 @@ class V7IssueReportResponse(BaseModel):
     request_error_code: str | None = None
 
 
+class V8SectionOut(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    type: Literal[
+        "current_situation",
+        "recent_change",
+        "interpretation",
+        "key_conditions",
+        "what_to_watch",
+        "limitations",
+    ]
+    title: str = Field(min_length=2, max_length=100)
+    format: Literal["paragraph", "bullets"]
+    content: str | None = Field(default=None, min_length=30, max_length=1800)
+    items: list[str] = Field(default_factory=list, max_length=8)
+    evidence_refs: list[str] = Field(min_length=1, max_length=12)
+
+    @model_validator(mode="after")
+    def validate_format(self) -> "V8SectionOut":
+        if self.format == "paragraph" and (self.content is None or self.items):
+            raise ValueError("Paragraph section requires content only")
+        if self.format == "bullets" and (self.content is not None or not self.items):
+            raise ValueError("Bullet section requires items only")
+        return self
+
+
+class V8IssueReportResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    id: UUID
+    status: Literal["fresh", "stale", "generating", "failed_with_last_good"]
+    report_version: Literal["v8"]
+    headline: str = Field(min_length=10, max_length=100)
+    summary: str = Field(min_length=100, max_length=500)
+    sections: list[V8SectionOut] = Field(min_length=2, max_length=6)
+    sources: list[V7SourceOut] = Field(max_length=24)
+    generated_at: datetime
+    data_as_of: datetime
+    context_as_of: datetime | None
+    cache: V7CacheOut
+    data_limitations: str = Field(min_length=20, max_length=900)
+    caution_note: str = Field(min_length=20, max_length=900)
+    request_id: UUID | None = None
+    request_error_code: str | None = None
+
+
 class ReportIdle(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

@@ -1649,3 +1649,87 @@ data; the public source card shows only source metadata and supported claims.
 briefing state keeps data-as-of and caution visible. TASK-107 must verify the
 polling, last-good, cache, evidence, copy, and failure boundaries. TASK-109
 legacy deletion remains separately approval-gated.
+
+---
+
+### ADR-053: Request-scoped local/development worker auto-launch
+
+- **Date**: 2026-07-11
+- **Status**: Accepted and implemented in TASK-110
+- **Decided by**: User direction and Backend implementation
+
+**Context**: The v7 button and API created a durable queued request, but the
+only worker entrypoint was a manually invoked one-shot CLI. Without a separate
+worker invocation, frontend polling could observe `queued` indefinitely.
+
+**Decision**: After the API commits a queued request, launch the guarded worker
+CLI as a detached child process for that exact request ID. The API process does
+not construct a provider client, wait for generation, or perform report writes.
+The child claims the existing append-only lease and owns all provider and
+storage work. Spawn failure leaves the durable queued event unchanged for later
+recovery. Automatic launch is limited to local/development environments.
+
+**Consequences**: Button clicks now connect to the worker without a separate
+manual command in the approved development flow. Exact request targeting avoids
+an older FIFO row consuming the click-triggered one-shot run, and existing DB
+locking makes duplicate launches safe. Production worker deployment and
+infrastructure remain separately approval-gated.
+
+---
+
+### ADR-054: V7 numeric tokens are prompt-guided rather than publication-blocking
+
+- **Date**: 2026-07-11
+- **Status**: Accepted and implemented in TASK-111
+- **Decided by**: Explicit user direction
+
+**Context**: The first bounded v7 evaluation produced zero valid reports. Six
+of eight writer calls failed the section-local numeric subset check even after
+the input added backend display values and comparison-window evidence. The
+flexible-section writer could use a supplied date or metric while attaching a
+different section reference, causing the full report to be discarded despite
+otherwise valid structure and safety behavior.
+
+**Decision**: Remove numeric-token subset checks from v7 generation and
+read-time reconstruction. Keep strict JSON shape, exact evidence-reference
+existence, source-parent linkage, prohibited-language filtering, and authored-
+URL blocking. State those remaining hard gates directly in the system prompt,
+continue asking the writer to copy supplied display values rather than
+calculate replacements, and advance the fingerprinted policy identifier to
+`v7-positive-evidence-2`.
+
+**Consequences**: Numeric text no longer causes an automatic v7 rejection by
+itself. Evidence references remain visible and reconstructible, but the system
+does not deterministically prove that every authored number occurs in the
+referenced section evidence. One approved development regeneration succeeded,
+passed read-time reconstruction, and served as a fresh report. This single
+success does not constitute deployment approval, production-write approval,
+or separate approval to delete v1-v6 runtime.
+
+---
+
+### ADR-055: Activate the v8 issue-centered briefing contract
+
+- **Date**: 2026-07-11
+- **Status**: Accepted and implemented in TASK-112
+- **Decided by**: Explicit user approval of the attached issue-centered design
+
+**Context**: V7 safely linked evidence but organized sections around internal
+data categories. The resulting screen read like classified material rather
+than a coherent answer to what the issue is, what is currently confirmed, what
+changed, and what should be checked next.
+
+**Decision**: Preserve the v7 evidence/source controls and append-only runtime,
+but activate a v8 writer organized around `current_situation`,
+`recent_change`, `interpretation`, `key_conditions`, `what_to_watch`, and an
+optional `limitations` section. Require the first two types, prohibit repeated
+types, attach evidence at section level, and keep source-parent, safe-link,
+wording, caution, timestamp, cache, and last-good controls. New generation and
+public serving use the v8 prompt/policy/schema versions. V7 writer prompt,
+models, validators, and stored rows remain historical; no legacy deletion is
+authorized.
+
+**Consequences**: The public report and Frontend parser now accept v8 only.
+No schema migration is necessary. This approval does not authorize a provider
+call, database write, deployment, infrastructure change, dependency, or
+production action.

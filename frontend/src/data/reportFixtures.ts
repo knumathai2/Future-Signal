@@ -1,23 +1,23 @@
-/** Development-only v7 bundles for responsive and browser verification. */
+/** Development-only v8 bundles for responsive and browser verification. */
 import type {
   IssueReportResponse,
-  V7IssueReportResponse,
+  V8IssueReportResponse,
 } from "../types/issue";
 
 const ID = "77777777-7777-4777-8777-777777777777";
 const REQUEST_ID = "88888888-8888-4888-8888-888888888888";
 const FINGERPRINT = "a".repeat(64);
 
-const baseReport: V7IssueReportResponse = {
+const baseReport: V8IssueReportResponse = {
   id: ID,
   status: "fresh",
-  report_version: "v7",
+  report_version: "v8",
   headline: "공식 조건과 현재 공개 자료를 함께 살펴본 브리핑",
   summary:
-    "이 이슈의 공식 조건과 현재 저장된 공개 데이터가 각각 무엇을 보여주는지 근거 범위 안에서 구분해 정리합니다.",
+    "이 이슈는 저장된 설명에 따라 공식 조건이 충족되는지를 확인합니다. 현재 자료에는 기준 시각의 관찰값과 최근 비교값이 포함되어 있습니다. 최근 흐름은 이전보다 달라졌지만 실제 결과를 뜻하지 않으며, 제공된 근거 범위에서 현재 상황과 앞으로 확인할 조건을 함께 정리합니다.",
   sections: [
     {
-      type: "issue_overview",
+      type: "current_situation",
       title: "이슈의 기준",
       format: "paragraph",
       content:
@@ -26,7 +26,7 @@ const baseReport: V7IssueReportResponse = {
       evidence_refs: ["market_definition:fixture"],
     },
     {
-      type: "market_data",
+      type: "recent_change",
       title: "현재 공개 데이터",
       format: "bullets",
       content: null,
@@ -54,14 +54,14 @@ const baseReport: V7IssueReportResponse = {
   request_error_code: null,
 };
 
-const sourceReport: V7IssueReportResponse = {
+const sourceReport: V8IssueReportResponse = {
   ...baseReport,
   id: "77777777-7777-4777-8777-777777777778",
   context_as_of: "2026-07-11T08:30:00Z",
   sections: [
     ...baseReport.sections,
     {
-      type: "external_context",
+      type: "interpretation",
       title: "확인된 공개 자료",
       format: "paragraph",
       content:
@@ -96,8 +96,8 @@ const sourceReport: V7IssueReportResponse = {
 };
 
 const FIXTURES = new Map<string, IssueReportResponse>([
-  ["v7-fresh", baseReport],
-  ["v7-sources", sourceReport],
+  ["v8-fresh", baseReport],
+  ["v8-sources", sourceReport],
   [
     "v7-stale",
     {

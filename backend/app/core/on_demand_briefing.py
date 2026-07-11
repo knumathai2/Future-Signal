@@ -1,13 +1,12 @@
-"""TASK-104 cache-backed on-demand v7 briefing service.
+"""TASK-104 cache-backed on-demand v8 briefing service.
 
 The scheduled collector never imports or calls this module. API and approved
 development evaluation paths explicitly enqueue requests; a worker claims an
-append-only lease event and appends one v7 report plus an outcome event.
+append-only lease event and appends one v8 report plus an outcome event.
 """
 
 import hashlib
 import json
-import re
 import uuid
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
@@ -20,18 +19,18 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from app.core.ai_report import (
-    V7_INPUT_SCHEMA_VERSION,
-    V7_POLICY_VERSION,
-    V7_PROMPT_VERSION,
+    V8_INPUT_SCHEMA_VERSION,
+    V8_POLICY_VERSION,
+    V8_PROMPT_VERSION,
     LLMCallError,
     LLMClient,
     V7EvidenceItem,
-    V7WriterInputs,
-    V7WriterOutput,
+    V8WriterInputs,
+    V8WriterOutput,
     build_caution_note,
-    build_v7_prompt,
-    parse_v7_writer_output,
-    validate_v7_writer_output,
+    build_v8_prompt,
+    parse_v8_writer_output,
+    validate_v8_writer_output,
 )
 from app.core.context_policy_v7 import (
     ResearchClient,
@@ -55,11 +54,10 @@ from app.db.models import (
 DEFAULT_LEASE_DURATION = timedelta(minutes=5)
 DEFAULT_WRITER_COST_RESERVATION_USD = 0.5
 DEFAULT_PROGRAM_BUDGET_USD = 100.0
-V7_DATA_LIMITATIONS = (
+V8_DATA_LIMITATIONS = (
     "공개 데이터는 전체 대중을 대표하지 않으며 저장된 근거와 기준 시각 "
     "범위에서만 읽어야 합니다."
 )
-_NUMBER_PATTERN = re.compile(r"(?<![A-Za-z])[-+]?\d+(?:[.,:/-]\d+)*(?![A-Za-z])")
 
 
 class V7SourceRecord(BaseModel):
@@ -85,19 +83,19 @@ class V7SourceRecord(BaseModel):
         return self
 
 
-class V7StoredReportPayload(BaseModel):
+class V8StoredReportPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    report_version: Literal["v7"] = "v7"
+    report_version: Literal["v8"] = "v8"
     input_fingerprint: str = Field(min_length=64, max_length=64)
-    prompt_version: Literal["v7"] = V7_PROMPT_VERSION
-    policy_version: str = V7_POLICY_VERSION
-    input_schema_version: str = V7_INPUT_SCHEMA_VERSION
+    prompt_version: Literal["v8"] = V8_PROMPT_VERSION
+    policy_version: str = V8_POLICY_VERSION
+    input_schema_version: str = V8_INPUT_SCHEMA_VERSION
     metric_id: int
     definition_ref: str
     context_candidate_ids: list[uuid.UUID] = Field(max_length=8)
     evidence: list[V7EvidenceItem] = Field(min_length=2, max_length=60)
-    writer: V7WriterOutput
+    writer: V8WriterOutput
     sources: list[V7SourceRecord] = Field(max_length=24)
     data_as_of: datetime
     context_as_of: datetime | None
@@ -105,10 +103,10 @@ class V7StoredReportPayload(BaseModel):
     caution_note: str = Field(min_length=20, max_length=900)
 
 
-class V7InputBundle(BaseModel):
+class V8InputBundle(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    writer_inputs: V7WriterInputs
+    writer_inputs: V8WriterInputs
     metric_id: int
     definition_ref: str
     context_candidate_ids: list[uuid.UUID]
@@ -408,7 +406,7 @@ def _source_evidence(
     return evidence, records
 
 
-def build_v7_input_bundle(
+def build_v8_input_bundle(
     db: Session,
     market_id: uuid.UUID,
     *,
@@ -416,8 +414,8 @@ def build_v7_input_bundle(
     metric_id: int | None = None,
     context_candidate_ids: list[uuid.UUID] | None = None,
     definition_ref: str | None = None,
-) -> V7InputBundle | None:
-    """Reconstruct one exact v7 writer/evidence input from stored rows."""
+) -> V8InputBundle | None:
+    """Reconstruct one exact v8 writer/evidence input from stored rows."""
     market = db.get(Market, market_id)
     metric = (
         db.get(MarketMetric, metric_id)
@@ -534,7 +532,7 @@ def build_v7_input_bundle(
         context_times.append(_as_utc(row.collected_at))
 
     try:
-        writer_inputs = V7WriterInputs(
+        writer_inputs = V8WriterInputs(
             issue_id=market.id,
             title=market.title,
             category=market.category,
@@ -542,7 +540,7 @@ def build_v7_input_bundle(
         )
     except ValidationError:
         return None
-    return V7InputBundle(
+    return V8InputBundle(
         writer_inputs=writer_inputs,
         metric_id=metric.id,
         definition_ref=resolved_definition_ref,
@@ -554,16 +552,16 @@ def build_v7_input_bundle(
     )
 
 
-def v7_input_fingerprint(bundle: V7InputBundle) -> str:
+def v8_input_fingerprint(bundle: V8InputBundle) -> str:
     canonical = {
         "issue_id": str(bundle.writer_inputs.issue_id),
         "metric_id": bundle.metric_id,
         "definition_ref": bundle.definition_ref,
         "context_candidate_ids": [str(value) for value in bundle.context_candidate_ids],
         "evidence": [item.model_dump(mode="json") for item in bundle.writer_inputs.evidence],
-        "prompt_version": V7_PROMPT_VERSION,
-        "policy_version": V7_POLICY_VERSION,
-        "input_schema_version": V7_INPUT_SCHEMA_VERSION,
+        "prompt_version": V8_PROMPT_VERSION,
+        "policy_version": V8_POLICY_VERSION,
+        "input_schema_version": V8_INPUT_SCHEMA_VERSION,
     }
     encoded = json.dumps(canonical, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(encoded.encode()).hexdigest()
@@ -613,7 +611,7 @@ def _append_event(
     return event
 
 
-def enqueue_v7_request(
+def enqueue_v8_request(
     db: Session,
     market_id: uuid.UUID,
     *,
@@ -623,10 +621,10 @@ def enqueue_v7_request(
 ) -> EnqueueResult | None:
     """Create or join exactly one immutable market/fingerprint request."""
     requested_at = _as_utc(now or datetime.now(UTC))
-    bundle = build_v7_input_bundle(db, market_id, now=requested_at)
+    bundle = build_v8_input_bundle(db, market_id, now=requested_at)
     if bundle is None:
         return None
-    fingerprint = v7_input_fingerprint(bundle)
+    fingerprint = v8_input_fingerprint(bundle)
     existing = db.execute(
         select(AiReportGenerationRequest).where(
             AiReportGenerationRequest.market_id == market_id,
@@ -657,9 +655,9 @@ def enqueue_v7_request(
         id=uuid.uuid4(),
         market_id=market_id,
         input_fingerprint=fingerprint,
-        prompt_version=V7_PROMPT_VERSION,
-        policy_version=V7_POLICY_VERSION,
-        input_schema_version=V7_INPUT_SCHEMA_VERSION,
+        prompt_version=V8_PROMPT_VERSION,
+        policy_version=V8_POLICY_VERSION,
+        input_schema_version=V8_INPUT_SCHEMA_VERSION,
         requested_by=requested_by,
         context_refresh_requested=context_refresh_requested,
         input_evidence_refs=[item.ref for item in bundle.writer_inputs.evidence],
@@ -693,7 +691,7 @@ def enqueue_v7_request(
         )
 
 
-def claim_v7_request(
+def claim_v8_request(
     db: Session,
     request_id: uuid.UUID,
     *,
@@ -708,6 +706,8 @@ def claim_v7_request(
         .with_for_update()
     ).scalar_one_or_none()
     if request is None:
+        return None
+    if request.prompt_version != V8_PROMPT_VERSION:
         return None
     latest = latest_request_event(db, request_id)
     if latest is None or latest.state in {"succeeded", "failed"}:
@@ -755,54 +755,21 @@ def _writer_usage(client: LLMClient, start_index: int) -> dict:
     }
 
 
-def _specific_numbers(text: str) -> set[str]:
-    numbers = set(_NUMBER_PATTERN.findall(text))
-    month_numbers = {
-        "january": "1",
-        "february": "2",
-        "march": "3",
-        "april": "4",
-        "may": "5",
-        "june": "6",
-        "july": "7",
-        "august": "8",
-        "september": "9",
-        "october": "10",
-        "november": "11",
-        "december": "12",
-    }
-    lowered = text.casefold()
-    numbers.update(value for month, value in month_numbers.items() if month in lowered)
-    return numbers
-
-
-def _validate_section_numbers(output: V7WriterOutput, bundle: V7InputBundle) -> bool:
-    evidence = {item.ref: item.text for item in bundle.writer_inputs.evidence}
-    for section in output.sections:
-        supported = _specific_numbers(" ".join(evidence[ref] for ref in section.evidence_refs))
-        authored = _specific_numbers(
-            " ".join([section.title, section.content or "", *section.items])
-        )
-        if not authored.issubset(supported):
-            return False
-    return True
-
-
-def reconstruct_v7_report(
+def reconstruct_v8_report(
     db: Session,
     report: AiReport,
-) -> V7StoredReportPayload:
-    """Rebuild and validate one stored v7 report against generation-time rows."""
-    if report.status != "success" or report.prompt_version != V7_PROMPT_VERSION:
-        raise ValueError("not_a_successful_v7_report")
+) -> V8StoredReportPayload:
+    """Rebuild and validate one stored v8 report against generation-time rows."""
+    if report.status != "success" or report.prompt_version != V8_PROMPT_VERSION:
+        raise ValueError("not_a_successful_v8_report")
     try:
-        payload = V7StoredReportPayload.model_validate(report.content)
+        payload = V8StoredReportPayload.model_validate(report.content)
     except ValidationError as exc:
-        raise ValueError("invalid_v7_stored_payload") from exc
+        raise ValueError("invalid_v8_stored_payload") from exc
     if report.input_metrics_id != payload.metric_id:
-        raise ValueError("v7_metric_id_mismatch")
+        raise ValueError("v8_metric_id_mismatch")
     generated_at = _as_utc(report.generated_at)
-    bundle = build_v7_input_bundle(
+    bundle = build_v8_input_bundle(
         db,
         report.market_id,
         now=generated_at,
@@ -811,30 +778,28 @@ def reconstruct_v7_report(
         definition_ref=payload.definition_ref,
     )
     if bundle is None:
-        raise ValueError("v7_evidence_bundle_unavailable")
-    if v7_input_fingerprint(bundle) != payload.input_fingerprint:
-        raise ValueError("v7_input_fingerprint_mismatch")
+        raise ValueError("v8_evidence_bundle_unavailable")
+    if v8_input_fingerprint(bundle) != payload.input_fingerprint:
+        raise ValueError("v8_input_fingerprint_mismatch")
     if payload.definition_ref != bundle.definition_ref:
-        raise ValueError("v7_definition_ref_mismatch")
+        raise ValueError("v8_definition_ref_mismatch")
     if payload.evidence != bundle.writer_inputs.evidence:
-        raise ValueError("v7_evidence_snapshot_mismatch")
+        raise ValueError("v8_evidence_snapshot_mismatch")
     if payload.sources != bundle.sources:
-        raise ValueError("v7_source_snapshot_mismatch")
+        raise ValueError("v8_source_snapshot_mismatch")
     if payload.data_as_of != bundle.data_as_of or payload.context_as_of != bundle.context_as_of:
-        raise ValueError("v7_evidence_timestamp_mismatch")
+        raise ValueError("v8_evidence_timestamp_mismatch")
     if payload.data_as_of > generated_at or (
         payload.context_as_of is not None and payload.context_as_of > generated_at
     ):
-        raise ValueError("v7_evidence_after_generation")
-    validation = validate_v7_writer_output(payload.writer, bundle.writer_inputs)
+        raise ValueError("v8_evidence_after_generation")
+    validation = validate_v8_writer_output(payload.writer, bundle.writer_inputs)
     if not validation.passed:
-        raise ValueError(f"v7_writer_validation_failed:{validation.rule}")
-    if not _validate_section_numbers(payload.writer, bundle):
-        raise ValueError("v7_unsupported_number")
-    if payload.data_limitations != V7_DATA_LIMITATIONS:
-        raise ValueError("v7_data_limitations_mismatch")
+        raise ValueError(f"v8_writer_validation_failed:{validation.rule}")
+    if payload.data_limitations != V8_DATA_LIMITATIONS:
+        raise ValueError("v8_data_limitations_mismatch")
     if payload.caution_note != build_caution_note(bundle.confidence_level):
-        raise ValueError("v7_caution_mismatch")
+        raise ValueError("v8_caution_mismatch")
     return payload
 
 
@@ -860,7 +825,7 @@ def _fail_request(
     return ProcessResult(request_id=request_id, state="failed", reason_code=error_code)
 
 
-def process_v7_request(
+def process_v8_request(
     db: Session,
     request_id: uuid.UUID,
     llm_client: LLMClient,
@@ -873,7 +838,7 @@ def process_v7_request(
 ) -> ProcessResult:
     """Claim, optionally refresh context, generate once, validate, and append."""
     processed_at = _as_utc(now or datetime.now(UTC))
-    claimed = claim_v7_request(db, request_id, now=processed_at)
+    claimed = claim_v8_request(db, request_id, now=processed_at)
     if claimed is None:
         return ProcessResult(request_id=request_id, state="not_claimed")
     request, _lease_token, attempt = claimed
@@ -899,7 +864,7 @@ def process_v7_request(
                 error_code="context_refresh_failed",
             )
 
-    bundle = build_v7_input_bundle(db, request.market_id, now=processed_at)
+    bundle = build_v8_input_bundle(db, request.market_id, now=processed_at)
     if bundle is None:
         return _fail_request(
             db,
@@ -908,9 +873,9 @@ def process_v7_request(
             now=processed_at,
             error_code="input_bundle_unavailable",
         )
-    current_fingerprint = v7_input_fingerprint(bundle)
+    current_fingerprint = v8_input_fingerprint(bundle)
     if current_fingerprint != request.input_fingerprint:
-        successor = enqueue_v7_request(
+        successor = enqueue_v8_request(
             db,
             request.market_id,
             requested_by=request.requested_by,
@@ -941,7 +906,7 @@ def process_v7_request(
             error_code="budget_limit",
         )
 
-    system_prompt, user_prompt = build_v7_prompt(bundle.writer_inputs)
+    system_prompt, user_prompt = build_v8_prompt(bundle.writer_inputs)
     usage_records = getattr(llm_client, "usage_records", None)
     usage_start = len(usage_records) if isinstance(usage_records, list) else 0
     try:
@@ -956,7 +921,7 @@ def process_v7_request(
             usage=_writer_usage(llm_client, usage_start),
         )
     usage = _writer_usage(llm_client, usage_start)
-    output = parse_v7_writer_output(raw)
+    output = parse_v8_writer_output(raw)
     if output is None:
         return _fail_request(
             db,
@@ -966,7 +931,7 @@ def process_v7_request(
             error_code="writer_schema_failure",
             usage=usage,
         )
-    validation = validate_v7_writer_output(output, bundle.writer_inputs)
+    validation = validate_v8_writer_output(output, bundle.writer_inputs)
     if not validation.passed:
         return _fail_request(
             db,
@@ -974,15 +939,6 @@ def process_v7_request(
             attempt=attempt,
             now=processed_at,
             error_code=validation.rule or "writer_validation_failure",
-            usage=usage,
-        )
-    if not _validate_section_numbers(output, bundle):
-        return _fail_request(
-            db,
-            request_id,
-            attempt=attempt,
-            now=processed_at,
-            error_code="unsupported_number",
             usage=usage,
         )
 
@@ -996,7 +952,7 @@ def process_v7_request(
             error_code="unknown_confidence_level",
             usage=usage,
         )
-    payload = V7StoredReportPayload(
+    payload = V8StoredReportPayload(
         input_fingerprint=request.input_fingerprint,
         metric_id=bundle.metric_id,
         definition_ref=bundle.definition_ref,
@@ -1006,7 +962,7 @@ def process_v7_request(
         sources=bundle.sources,
         data_as_of=bundle.data_as_of,
         context_as_of=bundle.context_as_of,
-        data_limitations=V7_DATA_LIMITATIONS,
+        data_limitations=V8_DATA_LIMITATIONS,
         caution_note=caution,
     )
     report = AiReport(
@@ -1016,7 +972,7 @@ def process_v7_request(
         input_metrics_id=bundle.metric_id,
         content=payload.model_dump(mode="json"),
         model_used=model_name,
-        prompt_version=V7_PROMPT_VERSION,
+        prompt_version=V8_PROMPT_VERSION,
         status="success",
     )
     db.add(report)
@@ -1038,7 +994,7 @@ def process_v7_request(
     )
 
 
-def pending_v7_request_ids(
+def pending_v8_request_ids(
     db: Session,
     *,
     now: datetime | None = None,
@@ -1048,7 +1004,9 @@ def pending_v7_request_ids(
     reference = _as_utc(now or datetime.now(UTC))
     requests = list(
         db.execute(
-            select(AiReportGenerationRequest).order_by(
+            select(AiReportGenerationRequest)
+            .where(AiReportGenerationRequest.prompt_version == V8_PROMPT_VERSION)
+            .order_by(
                 AiReportGenerationRequest.requested_at.asc(),
                 AiReportGenerationRequest.id.asc(),
             )
@@ -1072,7 +1030,7 @@ def pending_v7_request_ids(
     return pending
 
 
-def run_pending_v7_requests(
+def run_pending_v8_requests(
     db: Session,
     llm_client: LLMClient,
     model_name: str,
@@ -1083,7 +1041,7 @@ def run_pending_v7_requests(
     """Process a bounded FIFO slice for a standalone recoverable worker."""
     reference = _as_utc(now or datetime.now(UTC))
     return [
-        process_v7_request(
+        process_v8_request(
             db,
             request_id,
             llm_client,
@@ -1091,6 +1049,6 @@ def run_pending_v7_requests(
             now=reference + timedelta(microseconds=index),
         )
         for index, request_id in enumerate(
-            pending_v7_request_ids(db, now=reference, limit=max_requests)
+            pending_v8_request_ids(db, now=reference, limit=max_requests)
         )
     ]

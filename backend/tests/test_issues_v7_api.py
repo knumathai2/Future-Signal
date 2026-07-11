@@ -4,7 +4,9 @@ import json
 from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from app.core.on_demand_briefing import build_v7_input_bundle, process_v7_request
+import pytest
+
+from app.core.on_demand_briefing import build_v8_input_bundle, process_v8_request
 from app.db.models import (
     AiReport,
     AiReportGenerationRequest,
@@ -13,6 +15,21 @@ from app.db.models import (
     MarketSnapshot,
 )
 from tests.conftest import MARKET_ID, NOW, seed_basic_market
+
+
+@pytest.fixture(autouse=True)
+def worker_launches(monkeypatch):
+    launches = []
+
+    def record_launch(request_id, *, env):
+        launches.append((request_id, env))
+        return True
+
+    monkeypatch.setattr(
+        "app.api.routes.issues.launch_on_demand_worker",
+        record_launch,
+    )
+    return launches
 
 
 class FakeLLM:
@@ -30,12 +47,14 @@ def _output(*, metric_id: int = 1) -> str:
         {
             "headline": "공식 조건과 현재 공개 자료를 함께 정리한 브리핑",
             "summary": (
-                "이 이슈의 공식 조건과 현재 저장된 공개 데이터가 각각 무엇을 "
-                "보여주는지 근거 범위 안에서 구분해 정리합니다."
+                "이 이슈는 저장된 설명에 따라 공식 조건이 충족되는지를 확인합니다. "
+                "현재 자료에는 기준 시각의 관찰값과 최근 비교값이 포함되어 있습니다. "
+                "최근 흐름은 이전보다 달라졌지만 실제 결과를 뜻하지 않으며, 제공된 "
+                "근거 범위에서 현재 상황과 앞으로 확인할 조건을 함께 정리합니다."
             ),
             "sections": [
                 {
-                    "type": "issue_overview",
+                    "type": "current_situation",
                     "title": "이슈의 기준",
                     "format": "paragraph",
                     "content": (
@@ -45,7 +64,7 @@ def _output(*, metric_id: int = 1) -> str:
                     "evidence_refs": [f"market_definition:market-{MARKET_ID}"],
                 },
                 {
-                    "type": "market_data",
+                    "type": "recent_change",
                     "title": "저장된 공개 데이터",
                     "format": "paragraph",
                     "content": (
@@ -72,7 +91,7 @@ def _enqueue(live_client, *, refresh_context=False):
 def _process(db_session, request_id: str, *, output=None):
     client = FakeLLM(output or _output())
     request = db_session.get(AiReportGenerationRequest, UUID(request_id))
-    result = process_v7_request(
+    result = process_v8_request(
         db_session,
         UUID(request_id),
         client,
@@ -164,13 +183,19 @@ def test_report_starts_idle_without_v7_request(live_client, db_session):
     assert response.json() == {"status": "idle"}
 
 
-def test_generate_joins_duplicate_and_status_endpoint_reports_queue(live_client, db_session):
+def test_generate_joins_duplicate_and_status_endpoint_reports_queue(
+    live_client, db_session, worker_launches
+):
     seed_basic_market(db_session)
     first = _enqueue(live_client)
     second = _enqueue(live_client)
     assert first["created"] is True
     assert second["created"] is False
     assert first["request_id"] == second["request_id"]
+    assert worker_launches == [
+        (UUID(first["request_id"]), "local"),
+        (UUID(first["request_id"]), "local"),
+    ]
 
     report = live_client.get(f"/api/issues/{MARKET_ID}/report").json()
     assert report["status"] == "generating"
@@ -184,7 +209,25 @@ def test_generate_joins_duplicate_and_status_endpoint_reports_queue(live_client,
     assert status_response.json()["attempt_number"] == 0
 
 
-def test_worker_result_is_served_as_fresh_v7(live_client, db_session):
+def test_generate_keeps_committed_queue_when_worker_spawn_fails(
+    live_client, db_session, monkeypatch
+):
+    seed_basic_market(db_session)
+    monkeypatch.setattr(
+        "app.api.routes.issues.launch_on_demand_worker",
+        lambda *_args, **_kwargs: False,
+    )
+
+    request = _enqueue(live_client)
+
+    status_response = live_client.get(
+        f"/api/issues/{MARKET_ID}/report/requests/{request['request_id']}"
+    )
+    assert status_response.status_code == 200
+    assert status_response.json()["state"] == "queued"
+
+
+def test_worker_result_is_served_as_fresh_v8(live_client, db_session):
     seed_basic_market(db_session)
     request = _enqueue(live_client)
     result, client = _process(db_session, request["request_id"])
@@ -195,11 +238,11 @@ def test_worker_result_is_served_as_fresh_v7(live_client, db_session):
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "fresh"
-    assert body["report_version"] == "v7"
+    assert body["report_version"] == "v8"
     assert body["headline"].startswith("공식 조건")
     assert [section["type"] for section in body["sections"]] == [
-        "issue_overview",
-        "market_data",
+        "current_situation",
+        "recent_change",
     ]
     assert body["sources"] == []
     assert body["cache"]["state"] == "fresh"
@@ -211,13 +254,13 @@ def test_v7_api_exposes_exact_level_claim_and_safe_source(live_client, db_sessio
     seed_basic_market(db_session)
     candidate_id = _add_context(db_session)
     request = _enqueue(live_client)
-    bundle = build_v7_input_bundle(db_session, MARKET_ID, now=datetime.now(UTC))
+    bundle = build_v8_input_bundle(db_session, MARKET_ID, now=datetime.now(UTC))
     assert bundle is not None
     source_item = next(item for item in bundle.writer_inputs.evidence if item.kind == "source")
     raw = json.loads(_output())
     raw["sections"].append(
         {
-            "type": "external_context",
+            "type": "interpretation",
             "title": "확인된 공식 자료",
             "format": "paragraph",
             "content": "기관이 공개한 공식 문서의 지원 문장을 출처와 함께 확인할 수 있습니다.",
@@ -268,7 +311,7 @@ def test_new_metric_marks_last_good_report_stale(live_client, db_session):
     assert body["cache"]["current_fingerprint"] != body["cache"]["input_fingerprint"]
 
 
-def test_failed_refresh_keeps_last_good_visible(live_client, db_session):
+def test_refresh_with_additional_writer_number_replaces_last_good(live_client, db_session):
     seed_basic_market(db_session)
     first = _enqueue(live_client)
     _process(db_session, first["request_id"])
@@ -281,13 +324,12 @@ def test_failed_refresh_keeps_last_good_visible(live_client, db_session):
         second["request_id"],
         output=json.dumps(invalid, ensure_ascii=False),
     )
-    assert result.state == "failed"
+    assert result.state == "succeeded"
 
     body = live_client.get(f"/api/issues/{MARKET_ID}/report").json()
-    assert body["status"] == "failed_with_last_good"
-    assert body["request_id"] == second["request_id"]
-    assert body["request_error_code"] == "unsupported_number"
-    assert db_session.query(AiReport).count() == 1
+    assert body["status"] == "fresh"
+    assert body["id"] == str(result.report_id)
+    assert db_session.query(AiReport).count() == 2
 
 
 def test_malformed_latest_v7_falls_back_to_previous_valid_row(live_client, db_session):
@@ -301,9 +343,9 @@ def test_malformed_latest_v7_falls_back_to_previous_valid_row(live_client, db_se
         market_id=MARKET_ID,
         generated_at=datetime.now(UTC) + timedelta(minutes=1),
         input_metrics_id=1,
-        content={"report_version": "v7", "unexpected": True},
+        content={"report_version": "v8", "unexpected": True},
         model_used="fake/writer",
-        prompt_version="v7",
+        prompt_version="v8",
         status="success",
     )
     db_session.add(bad_report)

@@ -1,19 +1,25 @@
-"""Guarded local/development CLI for pending v7 generation requests."""
+"""Guarded local/development CLI for pending v8 generation requests."""
 
 import argparse
 import logging
+from uuid import UUID
 
 from app.core.ai_report import build_openai_client
 from app.core.config import settings
 from app.core.historical_seed import ensure_local_dev_write_allowed
-from app.core.on_demand_briefing import run_pending_v7_requests
+from app.core.on_demand_briefing import process_v8_request, run_pending_v8_requests
 from app.core.scheduled_batch import ai_extra_headers_from_settings
 from app.db.session import get_session_factory
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Process pending on-demand v7 briefings.")
+    parser = argparse.ArgumentParser(description="Process pending on-demand v8 briefings.")
     parser.add_argument("--max-requests", type=int, default=10)
+    parser.add_argument(
+        "--request-id",
+        type=UUID,
+        help="Process only this generation request instead of scanning the pending queue.",
+    )
     parser.add_argument("--confirm-local-dev-write", action="store_true")
     return parser
 
@@ -34,12 +40,22 @@ def main() -> int:
     )
     session = get_session_factory()()
     try:
-        results = run_pending_v7_requests(
-            session,
-            client,
-            settings.openai_model,
-            max_requests=min(max(args.max_requests, 1), 50),
-        )
+        if args.request_id is not None:
+            results = [
+                process_v8_request(
+                    session,
+                    args.request_id,
+                    client,
+                    settings.openai_model,
+                )
+            ]
+        else:
+            results = run_pending_v8_requests(
+                session,
+                client,
+                settings.openai_model,
+                max_requests=min(max(args.max_requests, 1), 50),
+            )
     finally:
         session.close()
     logging.info(

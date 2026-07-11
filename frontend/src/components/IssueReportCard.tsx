@@ -2,8 +2,8 @@ import { ShortCautionNotice } from "./InformationNotice";
 import type {
   IssueReportLoadState,
   IssueReportResponse,
-  V7IssueReportResponse,
-  V7ReportSource,
+  V8IssueReportResponse,
+  V8ReportSource,
 } from "../types/issue";
 import { formatDataTimestamp } from "../utils/format";
 
@@ -18,11 +18,11 @@ type IssueReportCardProps = {
 
 function isFullReport(
   response: IssueReportResponse | undefined,
-): response is V7IssueReportResponse {
+): response is V8IssueReportResponse {
   return response !== undefined && "report_version" in response;
 }
 
-function sourceLevelLabel(level: V7ReportSource["source_level"]) {
+function sourceLevelLabel(level: V8ReportSource["source_level"]) {
   if (level === "A") return "A · 공식·1차 자료";
   if (level === "B") return "B · 주요 기관·보도 자료";
   return "C · 보조 공개 자료";
@@ -59,7 +59,7 @@ function ActionButton({
   );
 }
 
-function SourceCard({ source }: { source: V7ReportSource }) {
+function SourceCard({ source }: { source: V8ReportSource }) {
   return (
     <article className="rounded-lg border border-line-soft bg-paper px-4 py-4">
       <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-ink-faint">
@@ -94,7 +94,10 @@ function SourceCard({ source }: { source: V7ReportSource }) {
   );
 }
 
-function BriefingContent({ report }: { report: V7IssueReportResponse }) {
+function BriefingContent({ report }: { report: V8IssueReportResponse }) {
+  const hasAuthoredLimitations = report.sections.some(
+    (section) => section.type === "limitations",
+  );
   const citedSourceIds = new Set(
     report.sections.flatMap((section) =>
       section.evidence_refs.filter((ref) => ref.startsWith("source:")),
@@ -148,12 +151,14 @@ function BriefingContent({ report }: { report: V7IssueReportResponse }) {
         )}
       </section>
 
-      <section className="rounded-lg bg-paper px-4 py-4">
-        <h3 className="text-xs font-bold text-ink">데이터 한계</h3>
-        <p className="mt-2 text-sm leading-7 text-ink-soft">
-          {report.data_limitations}
-        </p>
-      </section>
+      {!hasAuthoredLimitations ? (
+        <section className="rounded-lg bg-paper px-4 py-4">
+          <h3 className="text-xs font-bold text-ink">데이터 한계</h3>
+          <p className="mt-2 text-sm leading-7 text-ink-soft">
+            {report.data_limitations}
+          </p>
+        </section>
+      ) : null}
       <section className="rounded-lg border border-line bg-accent-soft px-4 py-4">
         <h3 className="text-xs font-bold text-ink">해석상 주의사항</h3>
         <p className="mt-2 text-sm leading-7 text-ink-soft">

@@ -87,7 +87,12 @@ def test_v7_prompt_is_positive_first_and_exposes_exact_evidence_refs():
     assert "supplied comparison window" in system
     assert "current_value_percent" in system
     assert "calculating a new value" in system
-    assert payload["policy_version"] == "v7-positive-evidence-1"
+    assert "Follow the requested JSON structure exactly with no extra fields" in system
+    assert "one to twelve unique evidence references" in system
+    assert "include that source's `context:*` parent reference" in system
+    assert "Do not write a URL" in system
+    assert "추천, 보장, 확정" in system
+    assert payload["policy_version"] == "v7-positive-evidence-2"
     assert [item["ref"] for item in payload["evidence"]] == [
         "market_definition:rule-1",
         "metric:42",

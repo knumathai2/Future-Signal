@@ -14,18 +14,69 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: Data/AI Implementer / Reviewer
-- **Session Goal**: Complete TASK-099 through TASK-109 within the approved v7 boundary; TASK-108 is complete with v7 unaccepted and TASK-109 audit is next.
-- **Branch**: `data-ai/TASK-108-v7-development-evaluation`
+- **Agent Role**: Data/AI Implementer
+- **Session Goal**: Implement and activate the approved v8 issue-centered briefing contract while preserving v7 history.
+- **Branch**: `data-ai/TASK-112-v8-issue-centered`
 
 ## Context Read
 
-- Project constitution and PM role prompt
+- Project constitution and Backend implementation role prompt
 - PRD, Service Design, Technical Design, and UX Design indexes and relevant AI/report sections
 - Current project/session/task state, wording policy, glossary, architecture, active report code, API, batch, and validation paths
 
 ## Work Completed
 
+- Opened the running local Frontend at the development-only `v8-sources`
+  fixture route, verified the complete v8 issue briefing and visible source
+  attribution in the in-app browser, and left the rendered screen open for
+  user review. No code, database, provider, or deployment action occurred.
+- Completed TASK-112 under explicit user approval. Added the v8 issue-centered
+  prompt, input/output models, section-level evidence validation, unique
+  narrative section contract, and versioned fingerprint identifiers while
+  retaining the complete v7 writer implementation.
+- Activated v8 in the on-demand request, worker, stored-report reconstruction,
+  public API, TypeScript types, strict runtime parser, development fixtures,
+  and issue briefing UI. Authored limitations suppress the duplicate
+  deterministic limitations card while caution remains visible.
+- Added v8 tests and updated API/OpenAPI/service/Frontend regressions plus
+  Service, Technical, UX, policy, glossary, decision, and task documentation.
+  No provider call, database write, migration, dependency, infrastructure,
+  deployment, production action, or legacy deletion occurred.
+- Completed TASK-111 at the user's direction. Removed v7 numeric-token blocking
+  from generation and read-time reconstruction while retaining strict shape,
+  exact evidence refs, source-parent linkage, prohibited-language, and authored-
+  URL gates. Added the retained rules to the writer prompt and advanced the
+  fingerprinted policy to `v7-positive-evidence-2`.
+- Ran one approved development regeneration for the latest user market that had
+  failed numeric validation. The OpenRouter writer call succeeded on attempt
+  one for USD 0.011714 and stored report
+  `3480ee09-831c-4485-89ac-ef06af48d5d3`. Stored reconstruction and the actual
+  GET report API passed with HTTP 200, fresh cache, four sections, data-as-of,
+  and caution. Full Backend verification passes 446 tests, Ruff, and diff
+  checks. No context call, production write, deployment, infrastructure,
+  schema, dependency, or public response-shape change occurred.
+- Read-only diagnosis of the current v7 no-generation symptom found two
+  sequential failure layers. The pre-TASK-110 API path committed requests but
+  did not start the standalone worker, which matches one current user request
+  still at `queued` / attempt 0. A later user request did reach the worker and
+  configured provider, but failed closed at attempt 2 with
+  `unsupported_number`; the development database still has zero successful v7
+  reports. Focused worker/API/service verification passes 28 tests plus Ruff.
+  No provider call, database write, or product-code change was made during this
+  diagnosis.
+- Completed TASK-110: a queued generate POST now starts the guarded worker as
+  an isolated request-scoped child in local/development.
+- Added `--request-id` to the existing CLI so the click-triggered process
+  claims the exact committed request instead of consuming an older FIFO row.
+- Kept provider client construction, provider calls, validation, report writes,
+  and terminal event writes inside the child worker. Spawn failure preserves
+  the queued request and HTTP 202 response for manual recovery.
+- Added launcher, API integration, CLI routing, environment-guard, process
+  reaping, and spawn-failure tests. Full Backend verification passes 446 tests
+  and Ruff. The repository-wide format check still identifies 25 pre-existing
+  files; the new dedicated files pass formatting. No provider call, non-test
+  DB write, dependency, schema, infrastructure, deployment, or public response
+  shape changed.
 - Completed TASK-108 against the same two actual development issues and model
   as v6. Applied migration 004 only to the approved `ENV=local` development DB.
 - V6's final comparison was 2/2 successful calls for USD 0.007316. V7 made
@@ -427,3 +478,19 @@ Harness Version: 1.1
   preserved but the current HTTP API honestly returns `not_yet_generated`.
   TASK-097 is active again pending separate approval for one clean Trump call;
   TASK-098 is assigned.
+
+## 2026-07-11 live AI briefing diagnosis
+
+- Reproduced the user's current Chrome page for the U.S.–Russia nuclear-deal
+  issue and confirmed the briefing remains in the `generating` state.
+- Read-only development DB inspection found the matching request has remained
+  `queued` at attempt zero since 10:43:44 UTC and no on-demand worker is active.
+- Confirmed the status polling path calls the full live loader; concurrent API
+  reads materialize 33,588 snapshots on every request and timed out during the
+  reproduction. Recorded the combined orphaned-queue/polling issue as ISS-017.
+- No provider call, DB write, runtime restart, code fix, dependency, schema,
+  API-contract, infrastructure, or deployment change was made.
+- At the user's request, the orphaned U.S.–Russia request
+  `b1ec5edf-e676-4f5d-85f2-2dc518bda884` was then stopped before execution by
+  appending a local-development `failed / cancelled_by_user` event. No worker or
+  provider call was active, so the cancellation incurred no generation cost.

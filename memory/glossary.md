@@ -28,6 +28,7 @@ _Last updated: 2026-07-11_
 | Change episode | A v4 display unit connecting one observed metric interval, its metric evidence ID, any verified context-candidate IDs, source metadata, timing, and interpretation caution |
 | v4 evidence-grounded report | The TASK-056 seven-field structured report with metric/candidate evidence references; it excludes legacy v1-v3 rows, rejects unsupported values or context, and uses `context_summary=null` when no verified candidate exists |
 | Fail closed | Withhold a candidate or report from the public API whenever citation provenance, hard-gate verification, independent verification, evidence references, schema, timing, or safety validation is missing or inconsistent |
+| v8 issue-centered briefing | The TASK-112 report shape that preserves v7 evidence/source controls while organizing the narrative around current situation, recent change, interpretation, key conditions, later information, and optional limitations. |
 
 ## Abbreviations
 
