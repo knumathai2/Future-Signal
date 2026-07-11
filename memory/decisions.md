@@ -1805,3 +1805,32 @@ exclusion, data-as-of, last-good, and append-only behavior remain unchanged.
 No index, migration, dependency, infrastructure, deployment, production write,
 or request-state recovery change is included. ISS-017 stays open for orphaned
 queued-request recovery.
+
+---
+
+### ADR-058: Retry failed v8 generation with an append-only refresh preference
+
+- **Date**: 2026-07-11
+- **Status**: Accepted and implemented in TASK-115
+- **Decided by**: User request and Data/AI + Backend + Frontend diagnosis
+
+**Context**: The generate action always requested fresh public context. When
+the configured provider returned no standard citation annotations, the request
+failed before the writer. A separate real stored-evidence run then failed twice
+because the prompt referred to project wording rules abstractly and the writer
+repeated `확정`.
+
+**Decision**: Keep the initial public-context attempt and every existing
+publication blocker. Enumerate the already-binding Korean prohibited-expression
+list in the v8 prompt. When a request is in a failed state, let a new user retry
+append `context_refresh_requested=false` to the queued event's usage. The
+immutable request and fingerprint remain unchanged; claim processing uses the
+event-local preference for that attempt. The failed-state UI explicitly labels
+the stored-evidence retry.
+
+**Consequences**: Context failure remains visible and no unverified source is
+published, but it no longer permanently prevents a no-source briefing from
+validated stored definition/metric evidence. The third bounded development
+writer attempt succeeded after two safely rejected rows; total writer cost was
+USD 0.02658845. No schema, migration, dependency, API shape, infrastructure,
+deployment, production write, or wording-safety policy changed.

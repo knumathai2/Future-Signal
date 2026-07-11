@@ -106,6 +106,7 @@ child worker; that isolated worker performs provider calls and report writes.
 | Local/dev worker auto-launch | A queued POST spawns the guarded CLI for the exact request ID; API remains provider-free and spawn failure preserves queued recovery | 2026-07-11 (TASK-110, user-directed) |
 | V7 public API | Append-only generate POST, request polling, strict reconstructed fresh/stale/generating/failure/last-good GET; API never calls provider | 2026-07-11 (TASK-105, human-approved) |
 | API query scope | ID routes use primary-key/market/time/latest-row bounds; lists use portable latest-per-market window subqueries | 2026-07-11 (ADR-057 / TASK-114) |
+| V8 failed-request retry | Failed immutable requests may append a queued-event refresh preference and retry with stored evidence; prompt lists existing wording blockers explicitly | 2026-07-11 (ADR-058 / TASK-115) |
 | Evidence-aware briefing v6 | Four deterministic change/evidence modes, strict basis union, one-owner metric/rule display, and v6-only fallback | 2026-07-11 (ADR-050, human-approved and implemented) |
 
 ## V6 evidence-aware briefing implementation (TASK-092~098)
@@ -147,6 +148,12 @@ workflow, infrastructure, deployment, or production-write change is included.
   by the requested market and latest/time-window limits; lists/categories use
   `row_number()` latest-per-market subqueries compatible with SQLite and
   PostgreSQL instead of materializing accumulated history in Python.
+- TASK-115 preserves immutable request identity while allowing a failed retry
+  to append `context_refresh_requested=false` in queued-event usage. Claiming
+  the retry uses that event-local preference; initial requests still follow
+  their immutable refresh setting. The v8 prompt enumerates the existing
+  wording blockers so writer failures are less likely without relaxing the
+  validator.
 
 ## Implementation Status (2026-07-10 Day 5 v3 Integrated)
 

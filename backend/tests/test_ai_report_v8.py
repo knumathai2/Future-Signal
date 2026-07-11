@@ -97,6 +97,8 @@ def test_v8_prompt_centers_issue_flow_and_keeps_exact_evidence_bundle():
     assert "이슈입니다" in system
     assert "시장 수치나 데이터 종류를 중심으로 보고서를 구성하지 마십시오" in system
     assert "모든 문장에 참조를 붙이지 말고 섹션 단위로 연결합니다" in system
+    assert "특히 다음 금지 표현" in system
+    assert "확정" in system
     assert payload["policy_version"] == "v8-issue-centered-1"
     assert payload["allowed_section_types"] == [
         "current_situation",
