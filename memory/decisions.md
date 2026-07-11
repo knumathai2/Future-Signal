@@ -1583,3 +1583,46 @@ writer/research wiring, completeness-scaled scenarios, exact-title gate,
 no-source review, reference values, deterministic history summary, basis
 contract, and full integration audit. Migration 003 was not applied to any
 database, and no provider call, deployment, or non-test database write occurred.
+
+---
+
+### ADR-051: Positive-first, on-demand issue briefing direction
+
+- **Date**: 2026-07-11
+- **Status**: Proposed; documentation direction accepted, implementation gates remain
+- **Decided by**: User direction and PM planning
+
+**Context**: Collection-time report generation spends provider budget on
+unread issues and couples report failures and prompt revisions to the data
+pipeline. V3-v6 progressively added fixed modes, fields, prohibited-language
+rules, and quality gates that preserve evidence boundaries but also reject
+useful, natural issue briefing prose. The user requested positive-first prompt
+instructions, explicit button-triggered generation, broader and simpler
+context collection, flexible broad-section output, and historical archival of
+superseded contracts before later cleanup.
+
+**Proposed decision**: Separate market collection, external-context collection,
+and briefing generation. Let an explicit user request create or join an
+idempotent cache-backed generation job. Use a positive-first writer prompt and
+a flexible `sections[]` envelope with stable broad categories and evidence
+references. Collect context broadly, classify accepted sources by A-D level,
+and reserve an independent verifier call for ambiguity, conflict, or high-risk
+claims instead of requiring it universally. Keep evidence/shape violations as
+blocking checks and treat ordinary prose-quality preferences as diagnostics.
+
+**Historical transition**: Archive v1-v6 contracts with their active dates,
+ADRs, and supersession reasons. Preserve stored rows and audit history during
+v7 evaluation. Runtime deletion is a separate TASK-109 action after v7 user
+acceptance.
+
+**Approval boundary**: The user has approved documentation and execution
+preparation. This ADR does not yet amend the binding wording/safety policy,
+change the public API or schema, change scheduled workflow behavior, call a
+provider, write a non-test database, add a dependency, deploy, or delete
+legacy runtime code. Those approvals are grouped in
+`reports/task-099-on-demand-briefing-policy-reset.md`.
+
+**Consequences**: TASK-100~109 are prepared in dependency order. TASK-100 is a
+read-only/documentation inventory. Later implementation tasks start only after
+their recorded policy, schema, API, workflow, provider, and database gates are
+satisfied.
