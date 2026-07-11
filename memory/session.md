@@ -14,9 +14,9 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: Reviewer + Data/AI Implementer → PM / Planner
-- **Session Goal**: Complete the approved TASK-075~081 narrative-summary/source-link program and open actual development results for review.
-- **Branch**: `pm/TASK-081-summary-quality-review`
+- **Agent Role**: Data/AI Implementer
+- **Session Goal**: Execute the TASK-082~091 AI-report grounding program in dependency order.
+- **Branch**: `data-ai/TASK-082-grounding-contract`
 
 ## Context Read
 
@@ -24,6 +24,16 @@ Harness Version: 1.1
 - TASK-065 backfill, audit, API, wording, browser, and budget criteria
 
 ## Work Completed
+
+- Completed TASK-082 without changing product code or guarded contracts.
+- Fixed the resolution-rule provenance model, four evidence classes,
+  deterministic input-completeness levels, one-to-four scenario direction,
+  lightweight basis vocabulary, observed-data extension, and six evaluation
+  cases in `reports/task-082-grounding-contract.md`.
+- Recorded ADR-049 and moved TASK-082 to the completed ledger.
+- Stopped before TASK-083 implementation because its new append-only migration
+  requires explicit database-schema approval. Public API changes in TASK-085
+  and TASK-090 remain separately approval-gated.
 
 - Received explicit human approval for ADR-047 and resumed TASK-065. The narrow
   amendment replaces exact query-string membership only; all annotation,

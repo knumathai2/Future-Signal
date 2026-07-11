@@ -1490,3 +1490,36 @@ OpenRouter key without modifying `.env` or printing secrets. Live provider
 calls remain explicit batch-side side effects and still pass every generated
 summary through the strict schema parser and banned-phrase filter before
 storage.
+
+---
+
+### ADR-049: Evidence-completeness contract for grounded v5 reports
+
+- **Date**: 2026-07-11
+- **Status**: Accepted for staged implementation; schema and API gates remain pending
+- **Decided by**: User request and Data/AI analysis
+
+**Context**: The live collector preserves the market question but replaces the
+source resolution description with generic display copy. The v5 writer can
+therefore produce safe metric prose but lacks the condition, exclusions, and
+source anchors required for concrete issue-specific scenarios. Requiring three
+or four scenarios despite missing definition evidence produces repeated,
+low-information output.
+
+**Decision**: Separate `market_definition`, `observed_data`,
+`verified_context`, and `data_limitation` evidence. Add provenance-preserving
+`resolution_rules`, compute an input-completeness level before generation, and
+allow output richness to shrink with evidence availability. The intended public
+contract permits one to four scenarios and adds a bounded `basis` enum before
+any later claim-level reference expansion. Comparison values, history summaries,
+and consistency checks are deterministic backend responsibilities.
+
+**Approval boundary**: This decision fixes the staged design only. TASK-083's
+new append-only migration requires explicit database-schema approval before
+implementation. TASK-085 and TASK-090 require explicit public API approval.
+No development/production database write, deployment, or paid provider call is
+authorized by this ADR.
+
+**Consequences**: TASK-082 is complete. TASK-083 is the next task but remains at
+its approval gate. The full contract and evaluation matrix are recorded in
+`reports/task-082-grounding-contract.md`.
