@@ -142,6 +142,17 @@ def test_research_inputs_reject_non_domain_filters(domain):
         _inputs(allowed_domains=[domain])
 
 
+def test_research_inputs_and_candidates_require_timezone_aware_dates():
+    with pytest.raises(ValidationError, match="timezone"):
+        _inputs(episode_at=datetime(2026, 7, 11, 9, 0, 0))
+
+    content = _provider_content()
+    content = content.replace("2026-07-11T08:00:00Z", "2026-07-11T08:00:00")
+    client, _ = _client(_response(content=content))
+    with pytest.raises(ContextResearchError, match="invalid JSON"):
+        client.research(_inputs())
+
+
 def test_success_uses_server_tool_and_normalizes_only_annotation_citations():
     client, fake = _client(_response())
 

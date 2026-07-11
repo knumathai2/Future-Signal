@@ -108,6 +108,10 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
   searches/results, and converts only API citation annotations into normalized
   evidence. Candidate URLs must exactly match annotations; model-body URLs are
   ignored. Tests use fake transports only.
+- `TASK-059` adds deterministic canonical URL, date, entity, condition,
+  official/independent-source, duplicate-content, and wording gates followed by
+  one no-web verifier call using a different provider family. A model cannot
+  override a failed gate; only verified decisions may flow downstream.
 - `TASK-041` is complete: `build_prompt_inputs_for_market()` now selects the latest `market_snapshots` row with `captured_at <= market_metrics.computed_at`, matching the historical-seed `+1 microsecond` metric timestamp without fabricating values. Tests cover prompt-input construction, future-only snapshot rejection, and `run_ai_report_batch` inserting a `status=success` row with a fake `LLMClient`. Local/demo run notes live in `reports/task-041-report-generation-readiness.md`; OpenAI report calls are covered by ADR-022 and the provided-key clarification, while writes to the configured development DB remain separately approval-gated.
 - `TASK-042` is complete: `backend/app/core/scheduled_batch.py` is the combined scheduled/manual write path for data collection -> snapshot/metric generation -> expectation-shift signal detection -> AI report generation -> collection logging. It supports `--reports-only` for dev/demo report generation against each market's latest existing metric row. `.github/workflows/daily-batch.yml` runs the combined batch every 24h via GitHub Actions using `DATABASE_URL` and an approved AI provider key.
 - `ISS-010` restored the repository Actions secrets/model variable and aligned the three LLM-authored v3 prompt fields with ADR-033's existing bounds and scope checks. Branch run `29073226485` completed with 50 processed rows, no collection failures, and 10 successful v3 reports; the latest 10 stored rows passed structural, wording-safety, and semantic validation.

@@ -721,6 +721,40 @@ candidate drafts only.
 
 ---
 
+### ADR-041: Deterministic gates control publication before independent verification
+
+- **Date**: 2026-07-11
+- **Status**: Accepted
+- **Decided by**: Data/AI Implementer within ADR-038 policy approval
+
+**Context**: TASK-059 needed a reproducible publication boundary that could not
+be overridden by either the research model or verifier model.
+
+**Decision**: Canonicalize URLs and reject unsafe forms; require timezone-aware
+episode/event dates supported by citation text and compatible with the search
+window; require matched entities in both market metadata and evidence; require
+tracked-condition token support; reject unsupported English proper nouns,
+conflicting dates, relationship/result assertions, and missing annotations.
+Accept the deterministic source path only when one configured/resolution/
+government-family official source directly supports the candidate, or at least
+two distinct publisher families with distinct content hashes and normalized
+content directly support it. Verify at most five of at most eight rule-passing
+candidates in one call, using a different OpenRouter provider family with no
+web tool. Any disagreement, extra claim/date/name, missing candidate, malformed
+response, or unsafe summary remains non-public.
+
+**Rationale**: Model judgment is useful only after provenance and support are
+mechanically established. Provider-family separation and no-search verification
+reduce correlated generation and prevent the verifier from inventing new
+evidence.
+
+**Consequences**: TASK-060 may persist every decision for audit but may pass
+only `verification_state="verified"` candidates to v4 report generation. Hard
+failures are `rejected`; capacity or verifier failures are `withheld` or batch
+failures. Fixed-fixture decisions are deterministic.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07
