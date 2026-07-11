@@ -20,13 +20,13 @@ from app.core.context_research import (
     ResearchUsage,
 )
 from app.core.on_demand_briefing import (
-    build_v7_input_bundle,
-    claim_v7_request,
-    enqueue_v7_request,
-    process_v7_request,
+    build_v8_input_bundle,
+    claim_v8_request,
+    enqueue_v8_request,
+    process_v8_request,
     refresh_v7_context_for_market,
-    run_pending_v7_requests,
-    v7_input_fingerprint,
+    run_pending_v8_requests,
+    v8_input_fingerprint,
 )
 from app.db.models import (
     AiReport,
@@ -155,12 +155,14 @@ def _valid_output(*, metric_ref: str = "metric:10") -> str:
         {
             "headline": "공식 결정 조건과 현재 공개 자료 요약",
             "summary": (
-                "이 이슈의 공식 조건과 현재 저장된 공개 데이터가 각각 무엇을 "
-                "보여주는지 근거 범위 안에서 구분해 정리합니다."
+                "이 이슈는 공식 문서에 결정이 기록되는지를 확인합니다. 현재 저장된 "
+                "자료에는 기준 시각의 관찰값과 최근 비교값이 포함되어 있습니다. 최근 "
+                "흐름은 이전보다 달라졌지만 실제 결과를 뜻하지 않으며, 제공된 근거 "
+                "범위에서 현재 상황과 앞으로 확인할 조건을 함께 정리합니다."
             ),
             "sections": [
                 {
-                    "type": "issue_overview",
+                    "type": "current_situation",
                     "title": "이슈의 기준",
                     "format": "paragraph",
                     "content": (
@@ -172,7 +174,7 @@ def _valid_output(*, metric_ref: str = "metric:10") -> str:
                     ],
                 },
                 {
-                    "type": "market_data",
+                    "type": "recent_change",
                     "title": "저장된 공개 데이터",
                     "format": "paragraph",
                     "content": (
@@ -244,20 +246,20 @@ def _add_context(db):
 
 
 def test_input_fingerprint_is_stable_and_changes_with_metric_revision(db):
-    first = build_v7_input_bundle(db, MARKET_ID, now=NOW)
-    second = build_v7_input_bundle(db, MARKET_ID, now=NOW)
+    first = build_v8_input_bundle(db, MARKET_ID, now=NOW)
+    second = build_v8_input_bundle(db, MARKET_ID, now=NOW)
     assert first is not None and second is not None
-    assert v7_input_fingerprint(first) == v7_input_fingerprint(second)
+    assert v8_input_fingerprint(first) == v8_input_fingerprint(second)
 
     _add_metric(db, metric_id=11, captured_at=NOW + timedelta(minutes=1), price=0.61)
     db.commit()
-    changed = build_v7_input_bundle(db, MARKET_ID, now=NOW + timedelta(minutes=1))
+    changed = build_v8_input_bundle(db, MARKET_ID, now=NOW + timedelta(minutes=1))
     assert changed is not None
-    assert v7_input_fingerprint(changed) != v7_input_fingerprint(first)
+    assert v8_input_fingerprint(changed) != v8_input_fingerprint(first)
 
 
 def test_metric_evidence_includes_backend_owned_display_units(db):
-    bundle = build_v7_input_bundle(db, MARKET_ID, now=NOW)
+    bundle = build_v8_input_bundle(db, MARKET_ID, now=NOW)
     assert bundle is not None
     metric = next(item for item in bundle.writer_inputs.evidence if item.kind == "metric")
     values = json.loads(metric.text)
@@ -272,8 +274,8 @@ def test_metric_evidence_includes_backend_owned_display_units(db):
 
 
 def test_duplicate_enqueue_joins_one_request_and_one_queue_event(db):
-    first = enqueue_v7_request(db, MARKET_ID, requested_by="user", now=NOW)
-    second = enqueue_v7_request(db, MARKET_ID, requested_by="user", now=NOW)
+    first = enqueue_v8_request(db, MARKET_ID, requested_by="user", now=NOW)
+    second = enqueue_v8_request(db, MARKET_ID, requested_by="user", now=NOW)
     assert first is not None and second is not None
     assert first.created is True
     assert second.created is False
@@ -283,9 +285,9 @@ def test_duplicate_enqueue_joins_one_request_and_one_queue_event(db):
 
 
 def test_failed_same_fingerprint_requeues_and_succeeds_on_second_attempt(db):
-    first = enqueue_v7_request(db, MARKET_ID, requested_by="user", now=NOW)
+    first = enqueue_v8_request(db, MARKET_ID, requested_by="user", now=NOW)
     assert first is not None
-    failed = process_v7_request(
+    failed = process_v8_request(
         db,
         first.request_id,
         FakeLLM("not-json"),
@@ -294,7 +296,7 @@ def test_failed_same_fingerprint_requeues_and_succeeds_on_second_attempt(db):
     )
     assert failed.reason_code == "writer_schema_failure"
 
-    retry = enqueue_v7_request(
+    retry = enqueue_v8_request(
         db,
         MARKET_ID,
         requested_by="user",
@@ -305,7 +307,7 @@ def test_failed_same_fingerprint_requeues_and_succeeds_on_second_attempt(db):
     assert retry.request_id == first.request_id
     assert retry.state == "queued"
 
-    succeeded = process_v7_request(
+    succeeded = process_v8_request(
         db,
         retry.request_id,
         FakeLLM(_valid_output()),
@@ -328,20 +330,20 @@ def test_failed_same_fingerprint_requeues_and_succeeds_on_second_attempt(db):
 
 
 def test_nonexpired_lease_is_not_double_claimed_and_expired_lease_recovers(db):
-    queued = enqueue_v7_request(db, MARKET_ID, requested_by="user", now=NOW)
+    queued = enqueue_v8_request(db, MARKET_ID, requested_by="user", now=NOW)
     assert queued is not None
-    first = claim_v7_request(db, queued.request_id, now=NOW)
+    first = claim_v8_request(db, queued.request_id, now=NOW)
     assert first is not None and first[2] == 1
-    assert claim_v7_request(db, queued.request_id, now=NOW + timedelta(minutes=1)) is None
-    recovered = claim_v7_request(db, queued.request_id, now=NOW + timedelta(minutes=6))
+    assert claim_v8_request(db, queued.request_id, now=NOW + timedelta(minutes=1)) is None
+    recovered = claim_v8_request(db, queued.request_id, now=NOW + timedelta(minutes=6))
     assert recovered is not None and recovered[2] == 2
 
 
-def test_process_request_appends_v7_report_and_success_event(db):
-    queued = enqueue_v7_request(db, MARKET_ID, requested_by="user", now=NOW)
+def test_process_request_appends_v8_report_and_success_event(db):
+    queued = enqueue_v8_request(db, MARKET_ID, requested_by="user", now=NOW)
     assert queued is not None
     client = FakeLLM(_valid_output())
-    result = process_v7_request(
+    result = process_v8_request(
         db,
         queued.request_id,
         client,
@@ -351,7 +353,7 @@ def test_process_request_appends_v7_report_and_success_event(db):
     assert result.state == "succeeded"
     assert client.calls == 1
     report = db.query(AiReport).one()
-    assert report.prompt_version == "v7"
+    assert report.prompt_version == "v8"
     assert report.content["input_fingerprint"] == queued.input_fingerprint
     events = db.query(AiReportGenerationEvent).order_by(AiReportGenerationEvent.id).all()
     assert [event.state for event in events] == ["queued", "running", "succeeded"]
@@ -364,13 +366,13 @@ def test_english_month_evidence_supports_ordinary_korean_numeric_month(db):
     )
     rule.condition_text = "The condition is assessed on December 31, 2026."
     db.commit()
-    queued = enqueue_v7_request(db, MARKET_ID, requested_by="user", now=NOW)
+    queued = enqueue_v8_request(db, MARKET_ID, requested_by="user", now=NOW)
     assert queued is not None
     raw = json.loads(_valid_output())
     raw["sections"][0]["content"] = (
         "공식 문서는 2026년 12월 31일을 조건 판정 기준일로 제시하고 있습니다."
     )
-    result = process_v7_request(
+    result = process_v8_request(
         db,
         queued.request_id,
         FakeLLM(json.dumps(raw, ensure_ascii=False)),
@@ -380,10 +382,10 @@ def test_english_month_evidence_supports_ordinary_korean_numeric_month(db):
     assert result.state == "succeeded"
 
 
-def test_unsupported_number_fails_closed_without_deleting_last_good(db):
-    first = enqueue_v7_request(db, MARKET_ID, requested_by="user", now=NOW)
+def test_writer_number_not_present_in_evidence_is_not_a_blocker(db):
+    first = enqueue_v8_request(db, MARKET_ID, requested_by="user", now=NOW)
     assert first is not None
-    ok = process_v7_request(
+    ok = process_v8_request(
         db,
         first.request_id,
         FakeLLM(_valid_output()),
@@ -394,7 +396,7 @@ def test_unsupported_number_fails_closed_without_deleting_last_good(db):
 
     _add_metric(db, metric_id=11, captured_at=NOW + timedelta(minutes=1), price=0.61)
     db.commit()
-    second = enqueue_v7_request(
+    second = enqueue_v8_request(
         db,
         MARKET_ID,
         requested_by="user",
@@ -403,23 +405,23 @@ def test_unsupported_number_fails_closed_without_deleting_last_good(db):
     assert second is not None
     raw = json.loads(_valid_output(metric_ref="metric:11"))
     raw["sections"][1]["content"] += " 확인되지 않은 99라는 수치를 포함합니다."
-    failed = process_v7_request(
+    regenerated = process_v8_request(
         db,
         second.request_id,
         FakeLLM(json.dumps(raw, ensure_ascii=False)),
         "fake/writer",
         now=NOW + timedelta(minutes=1, seconds=1),
     )
-    assert failed.state == "failed"
-    assert failed.reason_code == "unsupported_number"
-    assert db.query(AiReport).count() == 1
+    assert regenerated.state == "succeeded"
+    assert regenerated.reason_code is None
+    assert db.query(AiReport).count() == 2
 
 
 def test_budget_reservation_blocks_before_provider_call(db):
-    queued = enqueue_v7_request(db, MARKET_ID, requested_by="user", now=NOW)
+    queued = enqueue_v8_request(db, MARKET_ID, requested_by="user", now=NOW)
     assert queued is not None
     client = FakeLLM(_valid_output())
-    result = process_v7_request(
+    result = process_v8_request(
         db,
         queued.request_id,
         client,
@@ -432,7 +434,7 @@ def test_budget_reservation_blocks_before_provider_call(db):
 
 
 def test_context_refresh_with_new_evidence_creates_successor_request(db):
-    queued = enqueue_v7_request(
+    queued = enqueue_v8_request(
         db,
         MARKET_ID,
         requested_by="user",
@@ -444,7 +446,7 @@ def test_context_refresh_with_new_evidence_creates_successor_request(db):
     def refresh(session, _market_id, _now):
         _add_context(session)
 
-    result = process_v7_request(
+    result = process_v8_request(
         db,
         queued.request_id,
         FakeLLM(_valid_output()),
@@ -461,7 +463,7 @@ def test_context_refresh_with_new_evidence_creates_successor_request(db):
 
 def test_v7_context_sources_keep_level_claim_and_parent_refs(db):
     candidate_id = _add_context(db)
-    bundle = build_v7_input_bundle(db, MARKET_ID, now=NOW)
+    bundle = build_v8_input_bundle(db, MARKET_ID, now=NOW)
     assert bundle is not None
     assert bundle.context_candidate_ids == [candidate_id]
     assert bundle.sources[0].source_level == "A"
@@ -520,10 +522,10 @@ def test_bounded_refresh_persists_v7_level_claims_and_run_audit(db):
 
 
 def test_standalone_worker_processes_bounded_pending_fifo(db):
-    queued = enqueue_v7_request(db, MARKET_ID, requested_by="user", now=NOW)
+    queued = enqueue_v8_request(db, MARKET_ID, requested_by="user", now=NOW)
     assert queued is not None
     client = FakeLLM(_valid_output())
-    results = run_pending_v7_requests(
+    results = run_pending_v8_requests(
         db,
         client,
         "fake/writer",

@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.14.0-v7-evaluation-failed
-- **Phase**: V7 on-demand implementation complete; development acceptance failed
-- **Next milestone**: Audit TASK-109 cleanup candidates without deletion; resolve ISS-016 before any legacy cleanup
-- **Overall health**: 🟡 TASK-099~108 are complete, but v7 produced 0 valid reports across 8 bounded development calls. Evidence/failure gates worked; legacy runtime must remain.
+- **Version**: v0.15.0-v8-issue-centered
+- **Phase**: V8 issue-centered on-demand briefing implemented; provider-free verification complete
+- **Next milestone**: Review v8 output quality with an explicitly approved development generation before any legacy cleanup
+- **Overall health**: 🟢 TASK-112 activates the approved v8 prompt/API/UI contract with no schema change; external generation and TASK-109 deletion remain separately gated.
 
 ## Tech Summary
 
@@ -63,6 +63,9 @@ Future Signal/
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | TASK-112 added and activated the v8 issue-centered prompt, typed output contract, on-demand fingerprint/service/API path, strict Frontend parser, and issue-flow presentation while preserving v7 source and stored rows. Provider-free Backend and Frontend verification passed; no migration, DB write, provider call, deployment, or legacy deletion occurred. |
+| 2026-07-11 | TASK-111 removed v7 numeric-token blocking while retaining structure/reference/source-parent/language/URL gates, advanced policy fingerprinting to v7-positive-evidence-2, and produced the first valid development v7 report in one approved call for USD 0.011714. Stored reconstruction and fresh API serving pass; Backend remains at 446 tests/Ruff. |
+| 2026-07-11 | TASK-110 connected queued report POSTs to a request-scoped local/dev child worker while preserving the provider-free API boundary. Backend passes 446 tests and Ruff. |
 | 2026-07-11 | TASK-108 applied migration 004 only to the approved development DB and compared the same two v6/v7 issues. V6 was 2/2 for USD 0.007316; v7 was 0/8 for USD 0.077962. ISS-016 blocks v7 acceptance and legacy deletion. Backend passes 440 tests. |
 | 2026-07-11 | TASK-105 activated POST generate, request polling, and strict v7 fresh/stale/generating/failure/last-good report reads with exact reconstruction. Backend passes 437 tests. |
 | 2026-07-11 | TASK-104 removed report calls from normal collection and added the tested v7 fingerprint/request/lease/context/worker/report service. Full Backend suite passes 428 tests. |

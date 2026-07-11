@@ -1,12 +1,12 @@
-/** Strict runtime parser for the ADR-051 v7 on-demand briefing contract. */
+/** Strict runtime parser for the issue-centered v8 on-demand briefing contract. */
 import type {
   IssueReportLoadState,
   IssueReportResponse,
-  V7IssueReportResponse,
-  V7ReportSection,
-  V7ReportSectionType,
-  V7ReportSource,
-  V7SupportedClaim,
+  V8IssueReportResponse,
+  V8ReportSection,
+  V8ReportSectionType,
+  V8ReportSource,
+  V8SupportedClaim,
 } from "../types/issue";
 
 const UUID =
@@ -14,13 +14,13 @@ const UUID =
 const SHA256 = /^[0-9a-f]{64}$/i;
 const UTC_TIMESTAMP =
   /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,6})?(?:Z|\+00:00)$/;
-const SECTION_TYPES = new Set<V7ReportSectionType>([
-  "issue_overview",
-  "current_context",
-  "market_data",
-  "external_context",
-  "uncertainties",
+const SECTION_TYPES = new Set<V8ReportSectionType>([
+  "current_situation",
+  "recent_change",
+  "interpretation",
+  "key_conditions",
   "what_to_watch",
+  "limitations",
 ]);
 const FULL_KEYS = new Set([
   "id",
@@ -73,7 +73,7 @@ function fingerprint(value: unknown): value is string {
   return typeof value === "string" && SHA256.test(value);
 }
 
-function parseClaim(raw: unknown): V7SupportedClaim | null {
+function parseClaim(raw: unknown): V8SupportedClaim | null {
   const keys = new Set(["ref", "text", "excerpt", "citation_id"]);
   if (!record(raw) || !exact(raw, keys)) return null;
   const ref = text(raw.ref, 3, 200);
@@ -85,7 +85,7 @@ function parseClaim(raw: unknown): V7SupportedClaim | null {
     : null;
 }
 
-function parseSource(raw: unknown, generatedAt: string): V7ReportSource | null {
+function parseSource(raw: unknown, generatedAt: string): V8ReportSource | null {
   const keys = new Set([
     "id",
     "context_ref",
@@ -145,12 +145,12 @@ function parseSource(raw: unknown, generatedAt: string): V7ReportSource | null {
     url: url.toString(),
     domain,
     source_level: raw.source_level as "A" | "B" | "C",
-    supported_claims: claims as V7SupportedClaim[],
+    supported_claims: claims as V8SupportedClaim[],
     retrieved_at: retrievedAt,
   };
 }
 
-function parseSection(raw: unknown): V7ReportSection | null {
+function parseSection(raw: unknown): V8ReportSection | null {
   const keys = new Set([
     "type",
     "title",
@@ -160,7 +160,7 @@ function parseSection(raw: unknown): V7ReportSection | null {
     "evidence_refs",
   ]);
   if (!record(raw) || !exact(raw, keys)) return null;
-  const sectionType = raw.type as V7ReportSectionType;
+  const sectionType = raw.type as V8ReportSectionType;
   const title = text(raw.title, 2, 100);
   if (
     !SECTION_TYPES.has(sectionType) ||
@@ -203,8 +203,8 @@ function parseSection(raw: unknown): V7ReportSection | null {
   };
 }
 
-function parseFull(raw: Record<string, unknown>): V7IssueReportResponse | null {
-  if (!exact(raw, FULL_KEYS) || raw.report_version !== "v7" || !uuid(raw.id))
+function parseFull(raw: Record<string, unknown>): V8IssueReportResponse | null {
+  if (!exact(raw, FULL_KEYS) || raw.report_version !== "v8" || !uuid(raw.id))
     return null;
   if (
     !["fresh", "stale", "generating", "failed_with_last_good"].includes(
@@ -212,8 +212,8 @@ function parseFull(raw: Record<string, unknown>): V7IssueReportResponse | null {
     )
   )
     return null;
-  const headline = text(raw.headline, 10, 120);
-  const summary = text(raw.summary, 40, 900);
+  const headline = text(raw.headline, 10, 100);
+  const summary = text(raw.summary, 100, 500);
   const generatedAt = timestamp(raw.generated_at);
   const dataAsOf = timestamp(raw.data_as_of);
   const contextAsOf =
@@ -232,7 +232,7 @@ function parseFull(raw: Record<string, unknown>): V7IssueReportResponse | null {
     !caution ||
     !Array.isArray(raw.sections) ||
     raw.sections.length < 2 ||
-    raw.sections.length > 8 ||
+    raw.sections.length > 6 ||
     !Array.isArray(raw.sources) ||
     raw.sources.length > 24 ||
     !record(raw.cache) ||
@@ -253,16 +253,15 @@ function parseFull(raw: Record<string, unknown>): V7IssueReportResponse | null {
     sources.some((source) => source === null)
   )
     return null;
-  const typedSections = sections as V7ReportSection[];
+  const typedSections = sections as V8ReportSection[];
   const types = typedSections.map((section) => section.type);
   if (
-    !types.some(
-      (type) => type === "issue_overview" || type === "current_context",
-    ) ||
-    types.filter((type) => type === "market_data").length > 1
+    !types.includes("current_situation") ||
+    !types.includes("recent_change") ||
+    new Set(types).size !== types.length
   )
     return null;
-  const typedSources = sources as V7ReportSource[];
+  const typedSources = sources as V8ReportSource[];
   const contextRefs = new Set(typedSources.map((source) => source.context_ref));
   for (const section of typedSections) {
     for (const ref of section.evidence_refs) {
@@ -290,7 +289,7 @@ function parseFull(raw: Record<string, unknown>): V7IssueReportResponse | null {
   )
     return null;
   return {
-    ...(raw as unknown as V7IssueReportResponse),
+    ...(raw as unknown as V8IssueReportResponse),
     headline,
     summary,
     sections: typedSections,

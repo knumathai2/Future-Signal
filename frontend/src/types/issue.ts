@@ -79,16 +79,16 @@ export type IssueReportContextCandidate = {
   }>;
 };
 
-export type V7ReportSectionType =
-  | "issue_overview"
-  | "current_context"
-  | "market_data"
-  | "external_context"
-  | "uncertainties"
-  | "what_to_watch";
+export type V8ReportSectionType =
+  | "current_situation"
+  | "recent_change"
+  | "interpretation"
+  | "key_conditions"
+  | "what_to_watch"
+  | "limitations";
 
-export type V7ReportSection = {
-  type: V7ReportSectionType;
+export type V8ReportSection = {
+  type: V8ReportSectionType;
   title: string;
   format: "paragraph" | "bullets";
   content: string | null;
@@ -96,14 +96,14 @@ export type V7ReportSection = {
   evidence_refs: string[];
 };
 
-export type V7SupportedClaim = {
+export type V8SupportedClaim = {
   ref: string;
   text: string;
   excerpt: string;
   citation_id: string;
 };
 
-export type V7ReportSource = {
+export type V8ReportSource = {
   id: string;
   context_ref: string;
   citation_id: string;
@@ -111,18 +111,18 @@ export type V7ReportSource = {
   url: string;
   domain: string;
   source_level: "A" | "B" | "C";
-  supported_claims: V7SupportedClaim[];
+  supported_claims: V8SupportedClaim[];
   retrieved_at: string;
 };
 
-export type V7IssueReportResponse = {
+export type V8IssueReportResponse = {
   id: string;
   status: "fresh" | "stale" | "generating" | "failed_with_last_good";
-  report_version: "v7";
+  report_version: "v8";
   headline: string;
   summary: string;
-  sections: V7ReportSection[];
-  sources: V7ReportSource[];
+  sections: V8ReportSection[];
+  sources: V8ReportSource[];
   generated_at: string;
   data_as_of: string;
   context_as_of: string | null;
@@ -138,7 +138,7 @@ export type V7IssueReportResponse = {
 };
 
 export type IssueReportResponse =
-  | V7IssueReportResponse
+  | V8IssueReportResponse
   | { status: "idle" }
   | {
       status: "generating";

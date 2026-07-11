@@ -2414,7 +2414,7 @@ def run_v6_safety_and_semantic_checks(
 # --------------------------------------------------------------------------
 
 V7_PROMPT_VERSION = "v7"
-V7_POLICY_VERSION = "v7-positive-evidence-1"
+V7_POLICY_VERSION = "v7-positive-evidence-2"
 V7_INPUT_SCHEMA_VERSION = "v7-writer-input-1"
 V7SectionType = Literal[
     "issue_overview",
@@ -2454,6 +2454,24 @@ Use natural, concrete Korean. Choose the number, order, titles, and paragraph
 or bullet presentation of sections according to the available evidence. Omit
 a category when no supplied evidence supports it. Return only the requested
 JSON object.
+
+Follow the requested JSON structure exactly with no extra fields. Return two
+to eight sections. Every section must use one allowed section type, a 2-100
+character title, either a 30-1800 character paragraph or one to eight bullet
+items of 15-500 characters each, and one to twelve unique evidence references.
+
+Use only exact evidence references supplied in the input. When a section uses
+a `source:*` reference, include that source's `context:*` parent reference in
+the same section. Do not write a URL in the headline, summary, section title,
+paragraph, or bullet text; source links are attached separately by the
+application.
+
+Do not use any of these expressions in authored text: bet, buy, sell, trade,
+position, long, short, profit, win rate, odds, copy trader, follow this user,
+expert trader, best pick, recommended outcome, high-return opportunity,
+guaranteed, guaranteed prediction, signal to act, recommend, recommendation,
+베팅, 매수, 매도, 포지션, 롱, 숏, 수익, 승률, 배당, 추천, 보장, 확정,
+따라하기, 고수, 전문 트레이더, 고수익, 기회.
 
 Express status and evidence sentences with 판정, 조건 충족 여부, 공식 결정,
 and 관찰 범위 as the status nouns. Prefer describing metric direction. When a
@@ -2635,6 +2653,234 @@ def validate_v7_writer_output(
                 return SafetyFilterResult(False, "source_parent_ref_missing", section.title)
 
     for text in _v7_authored_texts(output):
+        for phrase, pattern in zip(BANNED_PHRASES, _PHRASE_PATTERNS, strict=True):
+            if pattern.search(text):
+                return SafetyFilterResult(False, f"banned_phrase:{phrase}")
+        for phrase, pattern in zip(KOREAN_BANNED_SUBSTRINGS, _KOREAN_PHRASE_PATTERNS, strict=True):
+            if pattern.search(text):
+                return SafetyFilterResult(False, f"banned_phrase:{phrase}")
+        if _URL_PATTERN.search(text):
+            return SafetyFilterResult(False, "writer_added_url")
+    return SafetyFilterResult(True)
+
+
+# --------------------------------------------------------------------------
+# TASK-112 / v8 issue-centered narrative contract.
+# V7 remains intact above for audit/reconstruction compatibility. V8 keeps the
+# same opaque evidence records while changing the writer's organizing question
+# from data categories to the reader's issue-understanding flow.
+# --------------------------------------------------------------------------
+
+V8_PROMPT_VERSION = "v8"
+V8_POLICY_VERSION = "v8-issue-centered-1"
+V8_INPUT_SCHEMA_VERSION = "v8-writer-input-1"
+V8SectionType = Literal[
+    "current_situation",
+    "recent_change",
+    "interpretation",
+    "key_conditions",
+    "what_to_watch",
+    "limitations",
+]
+
+V8_SYSTEM_PROMPT = """\
+당신은 일반 사용자가 복잡한 이슈의 현재 상황을 빠르게 이해하도록 돕는
+한국어 이슈 브리핑 작성자입니다.
+
+입력으로 제공되는 자료는 이슈 정의, 관찰 데이터, 공개 자료, 확인되지 않은
+정보, 데이터 한계를 포함할 수 있습니다. 작성의 중심은 데이터가 아니라
+이슈입니다. 사용자가 브리핑을 읽은 뒤 다음 질문에 답할 수 있도록 작성하십시오.
+- 이 이슈는 무엇에 관한 것인가?
+- 지금까지 확인된 상황은 무엇인가?
+- 최근 무엇이 달라졌는가?
+- 현재 상황을 판단할 때 가장 중요한 조건은 무엇인가?
+- 앞으로 어떤 정보가 나오면 상황 판단이 달라질 수 있는가?
+
+시장 수치나 데이터 종류를 중심으로 보고서를 구성하지 마십시오. 먼저 이슈의
+현재 상황과 핵심 쟁점을 설명하고, 수치는 해당 설명을 뒷받침하는 보조 근거로
+사용하십시오.
+
+작성 원칙:
+1. 제목이나 첫 문단에서 이슈의 핵심 쟁점을 먼저 설명합니다.
+2. 시장 수치나 지표부터 시작하지 않습니다.
+3. 수치는 이슈의 현재 분위기나 변화 정도를 설명하는 보조 근거로만 사용합니다.
+4. 데이터 종류별로 내용을 나열하지 말고 하나의 자연스러운 이야기로 연결합니다.
+5. 같은 의미의 주의 문구와 데이터 한계를 여러 섹션에서 반복하지 않습니다.
+6. 현재 수치를 공식 결정, 실제 사건의 결과 또는 미래 가능성과 동일시하지 않습니다.
+7. 관찰된 변화와 그 변화의 배경을 구분합니다.
+8. 배경이 확인되지 않으면 "제공된 자료만으로는 변화의 배경을 확인하기 어렵습니다"라고
+   표현하고 추측하지 않습니다.
+9. 외부 공개 자료가 제공된 경우에만 현재 상황과 연결하여 설명합니다.
+10. 제공되지 않은 사실, 인물, 날짜, 수치, 사건, 관계, 배경 또는 결과를 만들지 않습니다.
+11. 근거가 부족한 섹션은 억지로 작성하지 말고 생략합니다.
+12. 일반 독자가 이해하기 쉬운 자연스럽고 간결한 한국어를 사용합니다.
+13. 내부 데이터 구조나 evidence, metric, ref 같은 구현 용어를 노출하지 않습니다.
+14. 같은 내용을 다른 표현으로 반복하지 않습니다.
+
+headline은 이슈의 현재 상태가 드러나는 짧은 제목으로 작성합니다. summary는
+이슈가 무엇인지, 현재 어떤 상황인지, 최근 관찰된 변화가 무엇인지를 2~4문장으로
+설명합니다. sections에는 입력 근거에 따라 필요한 섹션만 작성합니다. 섹션마다
+핵심 메시지를 먼저 제시하고 데이터는 뒤에서 뒷받침합니다. limitations는 전체
+해석에 반드시 필요한 중요한 한계가 있을 때만 한 번 작성합니다.
+
+지정된 JSON 구조만 반환하고 추가 필드를 만들지 마십시오. 두 개에서 여섯 개의
+섹션을 반환하십시오. 각 섹션은 허용된 유형 하나, 자연스러운 한국어 제목,
+paragraph 또는 bullets 형식, 그리고 해당 섹션 전체를 뒷받침하는 고유한 근거
+참조를 포함해야 합니다. 모든 문장에 참조를 붙이지 말고 섹션 단위로 연결합니다.
+
+입력에 제공된 정확한 근거 참조만 사용하십시오. source:* 참조를 사용하면 같은
+섹션에 그 출처의 context:* 상위 참조도 포함하십시오. 제목, 요약, 섹션 제목,
+문단 또는 항목에 URL을 쓰지 마십시오. 출처 링크는 애플리케이션이 별도로 붙입니다.
+
+작성 텍스트에는 프로젝트의 금칙 표현을 사용하지 마십시오. 사실, 출처, 참조,
+관계 또는 미래 결과를 만들어내지 마십시오. 독자에게 금융 또는 시장 행동을
+유도하지 마십시오. 입력 출처가 더 강한 관계를 명시적으로 뒷받침하지 않는 한
+관찰 시점의 겹침은 시점의 겹침으로만 다루십시오.
+"""
+
+
+class V8WriterInputs(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    issue_id: uuid.UUID
+    title: str = Field(min_length=1, max_length=500)
+    category: str = Field(min_length=1, max_length=120)
+    evidence: list[V7EvidenceItem] = Field(min_length=2, max_length=60)
+
+    @model_validator(mode="after")
+    def validate_evidence_bundle(self) -> "V8WriterInputs":
+        refs = [item.ref for item in self.evidence]
+        if len(refs) != len(set(refs)):
+            raise ValueError("V8 writer evidence refs must be unique")
+        ref_set = set(refs)
+        if not any(item.kind == "market_definition" for item in self.evidence):
+            raise ValueError("V8 writer inputs require market definition evidence")
+        if not any(item.kind == "metric" for item in self.evidence):
+            raise ValueError("V8 writer inputs require metric evidence")
+        if any(item.parent_ref not in ref_set for item in self.evidence if item.parent_ref):
+            raise ValueError("V8 source parent ref must exist in the same input bundle")
+        return self
+
+
+class V8WriterSection(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    type: V8SectionType
+    title: str = Field(min_length=2, max_length=100)
+    format: Literal["paragraph", "bullets"]
+    content: str | None = Field(default=None, min_length=30, max_length=1800)
+    items: list[str] = Field(default_factory=list, max_length=8)
+    evidence_refs: list[str] = Field(min_length=1, max_length=12)
+
+    @field_validator("items")
+    @classmethod
+    def validate_item_bounds(cls, values: list[str]) -> list[str]:
+        if any(not 15 <= len(value.strip()) <= 500 for value in values):
+            raise ValueError("V8 bullet items must be 15-500 characters")
+        return values
+
+    @model_validator(mode="after")
+    def validate_format_shape(self) -> "V8WriterSection":
+        if len(self.evidence_refs) != len(set(self.evidence_refs)):
+            raise ValueError("V8 section evidence refs must be unique")
+        if self.format == "paragraph" and (self.content is None or self.items):
+            raise ValueError("V8 paragraph section requires content and no items")
+        if self.format == "bullets" and (self.content is not None or not self.items):
+            raise ValueError("V8 bullet section requires items and null content")
+        return self
+
+
+class V8WriterOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    headline: str = Field(min_length=10, max_length=100)
+    summary: str = Field(min_length=100, max_length=500)
+    sections: list[V8WriterSection] = Field(min_length=2, max_length=6)
+
+    @model_validator(mode="after")
+    def validate_section_mix(self) -> "V8WriterOutput":
+        types = [section.type for section in self.sections]
+        if "current_situation" not in types:
+            raise ValueError("V8 output requires current_situation")
+        if "recent_change" not in types:
+            raise ValueError("V8 output requires recent_change")
+        if len(types) != len(set(types)):
+            raise ValueError("V8 section types must be unique")
+        return self
+
+
+_V8_WRITER_ADAPTER = TypeAdapter(V8WriterOutput)
+
+
+def build_v8_prompt(inputs: V8WriterInputs) -> tuple[str, str]:
+    """Build the approved issue-centered prompt over the existing evidence bundle."""
+    payload = {
+        "policy_version": V8_POLICY_VERSION,
+        "input_schema_version": V8_INPUT_SCHEMA_VERSION,
+        "issue": {
+            "id": str(inputs.issue_id),
+            "title": inputs.title,
+            "category": inputs.category,
+        },
+        "writing_goal": {
+            "primary_question": "현재 이 이슈는 어떤 상황이며, 앞으로 무엇을 확인해야 하는가?",
+            "audience": "관련 배경지식이 많지 않은 일반 사용자",
+            "tone": "중립적이고 설명적인 이슈 브리핑",
+        },
+        "preferred_narrative_order": [
+            "이슈의 핵심 쟁점",
+            "현재까지 확인된 상황",
+            "최근 관찰된 변화",
+            "현재 자료가 의미하는 범위",
+            "향후 판단을 바꿀 핵심 조건",
+        ],
+        "allowed_section_types": list(V8SectionType.__args__),
+        "required_output_shape": {
+            "headline": "10-100 character string",
+            "summary": "100-500 character string",
+            "sections": [
+                {
+                    "type": "one allowed section type",
+                    "title": "natural Korean section title",
+                    "format": "paragraph or bullets",
+                    "content": "paragraph text or null",
+                    "items": ["bullet text; empty for paragraph"],
+                    "evidence_refs": ["exact supplied ref"],
+                }
+            ],
+        },
+        "evidence": [item.model_dump(mode="json") for item in inputs.evidence],
+    }
+    return V8_SYSTEM_PROMPT, json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+
+
+def parse_v8_writer_output(raw_text: str) -> V8WriterOutput | None:
+    try:
+        return _V8_WRITER_ADAPTER.validate_json(raw_text)
+    except ValidationError:
+        return None
+
+
+def validate_v8_writer_output(
+    output: V8WriterOutput,
+    inputs: V8WriterInputs,
+) -> SafetyFilterResult:
+    """Apply the retained evidence, source-parent, link, and wording blockers."""
+    evidence_by_ref = {item.ref: item for item in inputs.evidence}
+    for section in output.sections:
+        for ref in section.evidence_refs:
+            if ref not in evidence_by_ref:
+                return SafetyFilterResult(False, "unknown_evidence_ref", section.title)
+            item = evidence_by_ref[ref]
+            if item.kind == "source" and item.parent_ref not in section.evidence_refs:
+                return SafetyFilterResult(False, "source_parent_ref_missing", section.title)
+
+    texts = [output.headline, output.summary]
+    for section in output.sections:
+        texts.extend([section.title, *(section.items)])
+        if section.content is not None:
+            texts.append(section.content)
+    for text in texts:
         for phrase, pattern in zip(BANNED_PHRASES, _PHRASE_PATTERNS, strict=True):
             if pattern.search(text):
                 return SafetyFilterResult(False, f"banned_phrase:{phrase}")

@@ -320,7 +320,7 @@ def test_get_issue_report_query_failure_returns_not_yet_generated(
     def fail_query(*args, **kwargs):
         raise SQLAlchemyError("simulated report query failure")
 
-    monkeypatch.setattr(issues_routes, "_latest_v7_reports", fail_query)
+    monkeypatch.setattr(issues_routes, "_latest_v8_reports", fail_query)
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
@@ -1084,12 +1084,12 @@ def test_v4_data_as_of_later_than_generated_at_is_not_exposed(live_client, db_se
     assert response.json() == {"status": "idle"}
 
 
-def test_openapi_exposes_strict_v7_report_and_request_schemas(live_client, db_session):
+def test_openapi_exposes_strict_v8_report_and_request_schemas(live_client, db_session):
     schema = live_client.get("/openapi.json").json()
-    report_schema = schema["components"]["schemas"]["V7IssueReportResponse"]
+    report_schema = schema["components"]["schemas"]["V8IssueReportResponse"]
     properties = report_schema["properties"]
 
-    assert properties["report_version"]["const"] == "v7"
+    assert properties["report_version"]["const"] == "v8"
     assert {
         "headline",
         "summary",

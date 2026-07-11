@@ -20,10 +20,16 @@ historical v1-v6 archive followed by separately approved cleanup.
 |----|------|-------|----------|--------|--------|
 | TASK-109 | Remove superseded v1-v6 runtime code after v7 acceptance | Reviewer / Implementers | Reviewer | `review/TASK-109-legacy-report-cleanup` | assigned |
 
-TASK-101~108 are complete under the user's approval of TASK-099 items 1-7.
-TASK-108 did not accept v7: eight bounded calls produced zero valid reports.
-TASK-109 may audit cleanup candidates but cannot delete legacy runtime without
-v7 acceptance and the user's separate deletion approval.
+TASK-101~108 and the user-directed TASK-110~111 follow-ups are complete under the
+user’s approval of TASK-099 items 1-7.
+TASK-112 is complete under the user's explicit approval of the v8 prompt,
+public API, Frontend, and policy transition. V7 code and stored rows remain;
+TASK-109 deletion is still separately gated.
+TASK-108 did not accept the first v7 policy after eight bounded calls produced
+zero valid reports. TASK-111 removed numeric-token blocking at the user's
+direction and produced the first valid development v7 report. TASK-109 may
+audit cleanup candidates but cannot delete legacy runtime without explicit v7
+acceptance and the user's separate deletion approval.
 
 Deployment and production writes remain outside the approved program.
 

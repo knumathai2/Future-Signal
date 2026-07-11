@@ -15,7 +15,7 @@ never become a silent, permanent substitute for live data - once TASK-008
 produces real rows the live path takes over automatically, no code change
 needed here. See reports/task-010-core-api-notes.md for detail.
 
-`/api/issues/{id}/report` serves only a reconstructed successful v7 evidence
+`/api/issues/{id}/report` serves only a reconstructed successful v8 evidence
 bundle and exposes honest idle/generating/fresh/stale/failure states. V1-v6
 rows remain audit-only. Static fallback data never fabricates a report.
 """
@@ -44,12 +44,13 @@ from app.core.ai_report import (
 from app.core.category_taxonomy import category_matches
 from app.core.config import settings
 from app.core.on_demand_briefing import (
-    build_v7_input_bundle,
-    enqueue_v7_request,
+    build_v8_input_bundle,
+    enqueue_v8_request,
     latest_request_event,
-    reconstruct_v7_report,
-    v7_input_fingerprint,
+    reconstruct_v8_report,
+    v8_input_fingerprint,
 )
+from app.core.on_demand_worker_launcher import launch_on_demand_worker
 from app.core.snapshot_metrics import as_utc_naive
 from app.db.models import AiReport, AiReportGenerationRequest
 from app.db.queries import (
@@ -78,7 +79,7 @@ from app.schemas.issues import (
     ReportGenerating,
     ReportIdle,
     SignalOut,
-    V7IssueReportResponse,
+    V8IssueReportResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -524,14 +525,14 @@ def _issue_exists(issue_id: str, db: Session | None) -> bool:
     return issue_id in _FALLBACK_ISSUES
 
 
-def _latest_v7_reports(db: Session, market_id: UUID) -> list[AiReport]:
+def _latest_v8_reports(db: Session, market_id: UUID) -> list[AiReport]:
     return list(
         db.execute(
             select(AiReport)
             .where(
                 AiReport.market_id == market_id,
                 AiReport.status == "success",
-                AiReport.prompt_version == "v7",
+                AiReport.prompt_version == "v8",
             )
             .order_by(AiReport.generated_at.desc(), AiReport.id.desc())
             .limit(20)
@@ -547,7 +548,10 @@ def _latest_generation_request(
 ) -> AiReportGenerationRequest | None:
     return db.execute(
         select(AiReportGenerationRequest)
-        .where(AiReportGenerationRequest.market_id == market_id)
+        .where(
+            AiReportGenerationRequest.market_id == market_id,
+            AiReportGenerationRequest.prompt_version == "v8",
+        )
         .order_by(
             AiReportGenerationRequest.requested_at.desc(),
             AiReportGenerationRequest.id.desc(),
@@ -566,14 +570,14 @@ def _successor_request_id(usage: dict | None) -> UUID | None:
         return None
 
 
-def _v7_public_report(
+def _v8_public_report(
     db: Session,
     report: AiReport,
     *,
     current_fingerprint: str | None,
     latest_request: AiReportGenerationRequest | None,
-) -> V7IssueReportResponse:
-    payload = reconstruct_v7_report(db, report)
+) -> V8IssueReportResponse:
+    payload = reconstruct_v8_report(db, report)
     latest_event = latest_request_event(db, latest_request.id) if latest_request else None
     cache_state = (
         "fresh" if current_fingerprint == payload.input_fingerprint else "stale"
@@ -591,10 +595,10 @@ def _v7_public_report(
             public_status = "failed_with_last_good"
             request_id = latest_request.id
             request_error = latest_event.error_code
-    return V7IssueReportResponse(
+    return V8IssueReportResponse(
         id=report.id,
         status=public_status,
-        report_version="v7",
+        report_version="v8",
         headline=payload.writer.headline,
         summary=payload.writer.summary,
         sections=[section.model_dump(mode="json") for section in payload.writer.sections],
@@ -617,12 +621,12 @@ def _v7_public_report(
 @router.get(
     "/api/issues/{issue_id}/report",
     response_model=(
-        V7IssueReportResponse | ReportIdle | ReportGenerating | ReportFailed
+        V8IssueReportResponse | ReportIdle | ReportGenerating | ReportFailed
     ),
 )
 def get_issue_report(
     issue_id: str, db: Session | None = Depends(_get_optional_db)
-) -> V7IssueReportResponse | ReportIdle | ReportGenerating | ReportFailed:
+) -> V8IssueReportResponse | ReportIdle | ReportGenerating | ReportFailed:
     live = _resolve_live(db)
     if live is not None and db is not None:
         live_issues, _ = live
@@ -630,15 +634,15 @@ def get_issue_report(
         if match is None:
             raise HTTPException(status_code=404, detail="Unknown issue id.")
         try:
-            reports = _latest_v7_reports(db, match.market.id)
+            reports = _latest_v8_reports(db, match.market.id)
             latest_request = _latest_generation_request(db, match.market.id)
-            current_bundle = build_v7_input_bundle(
+            current_bundle = build_v8_input_bundle(
                 db,
                 match.market.id,
                 now=datetime.now(UTC),
             )
             current_fingerprint = (
-                v7_input_fingerprint(current_bundle) if current_bundle is not None else None
+                v8_input_fingerprint(current_bundle) if current_bundle is not None else None
             )
         except SQLAlchemyError:
             logger.warning(
@@ -649,7 +653,7 @@ def get_issue_report(
 
         for report in reports:
             try:
-                return _v7_public_report(
+                return _v8_public_report(
                     db,
                     report,
                     current_fingerprint=current_fingerprint,
@@ -657,7 +661,7 @@ def get_issue_report(
                 )
             except (ValidationError, ValueError):
                 logger.warning(
-                    "Live v7 report does not match its schema or stored evidence; "
+                    "Live v8 report does not match its schema or stored evidence; "
                     "trying the previous successful row.",
                     exc_info=True,
                 )
@@ -709,7 +713,7 @@ def generate_issue_report(
     if match is None:
         raise HTTPException(status_code=404, detail="Unknown issue id.")
     try:
-        result = enqueue_v7_request(
+        result = enqueue_v8_request(
             db,
             match.market.id,
             requested_by="user",
@@ -720,6 +724,10 @@ def generate_issue_report(
         raise HTTPException(status_code=503, detail="Generation request failed.") from exc
     if result is None:
         raise HTTPException(status_code=409, detail="Current evidence bundle is unavailable.")
+    if result.state == "queued":
+        # Generation remains outside this API process. The child receives the
+        # committed request ID and owns the provider call plus report write.
+        launch_on_demand_worker(result.request_id, env=settings.env)
     request_status = "fresh" if result.state == "succeeded" else result.state
     return GenerationRequestResponse(
         request_id=result.request_id,

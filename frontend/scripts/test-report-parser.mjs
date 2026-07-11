@@ -25,13 +25,13 @@ function report(overrides = {}) {
   return {
     id: "77777777-7777-4777-8777-777777777777",
     status: "fresh",
-    report_version: "v7",
+    report_version: "v8",
     headline: "공식 조건과 현재 자료를 함께 정리한 브리핑",
     summary:
-      "이 이슈의 공식 조건과 현재 저장된 공개 데이터가 보여주는 범위를 구분해 정리합니다.",
+      "이 이슈는 저장된 설명에 따라 공식 조건이 충족되는지를 확인합니다. 현재 자료에는 기준 시각의 관찰값과 최근 비교값이 포함되어 있습니다. 최근 흐름은 이전보다 달라졌지만 실제 결과를 뜻하지 않으며, 제공된 근거 범위에서 현재 상황과 앞으로 확인할 조건을 함께 정리합니다.",
     sections: [
       {
-        type: "issue_overview",
+        type: "current_situation",
         title: "이슈의 기준",
         format: "paragraph",
         content:
@@ -40,7 +40,7 @@ function report(overrides = {}) {
         evidence_refs: ["market_definition:fixture"],
       },
       {
-        type: "market_data",
+        type: "recent_change",
         title: "현재 공개 데이터",
         format: "bullets",
         content: null,
@@ -125,7 +125,7 @@ const withSource = report({
   sections: [
     ...report().sections,
     {
-      type: "external_context",
+      type: "interpretation",
       title: "확인된 자료",
       format: "paragraph",
       content:
@@ -139,7 +139,7 @@ assert.equal(parseReportResponse(withSource).status, "ready");
 
 for (const invalid of [
   { status: "idle", unexpected: true },
-  report({ report_version: "v6" }),
+  report({ report_version: "v7" }),
   report({ data_as_of: "2026-07-11T10:00:00Z" }),
   report({ status: "generating", request_id: null }),
   report({ status: "fresh", request_id: requestId }),
@@ -161,4 +161,4 @@ for (const invalid of [
   assert.equal(parseReportResponse(invalid).status, "error");
 }
 
-console.log("v7 report parser regression checks passed");
+console.log("v8 report parser regression checks passed");
