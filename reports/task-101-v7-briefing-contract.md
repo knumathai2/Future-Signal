@@ -3,16 +3,16 @@
 Date: 2026-07-11  
 Owner: PM / Data-AI  
 Branch: `data-ai/TASK-101-v7-briefing-contract`  
-Status: Approval-ready proposal; not active
+Status: Approved and implemented
 
 ## 1. Scope and activation boundary
 
-This document finalizes the proposed writer, evidence, and source-level
-contract required before implementation. It does not amend the current
-constitution, active v6 policy, source-publication gate, API, schema, batch
-workflow, or provider configuration.
+This document finalizes the writer, evidence, and source-level contract. The
+user approved TASK-099 approval items 1-7 on 2026-07-11. TASK-101 activates the
+v7 AI/wording direction and provider-independent writer boundary; later tasks
+own the schema, source collector, service, API, and UI transitions.
 
-Activation requires explicit approval of TASK-099 approval items 1 and 2:
+The recorded approval includes TASK-099 items 1 and 2:
 
 1. replace the active negative-first v6 writer policy with the positive-first
    v7 evidence policy; and
@@ -242,5 +242,17 @@ After approval:
 5. keep v6 readers available until TASK-105 changes the public contract; and
 6. carry the blocker/diagnostic split into TASK-107 acceptance tests.
 
+## 9. Implementation result
+
+- Added `V7EvidenceItem`, `V7WriterInputs`, `V7WriterSection`, and
+  `V7WriterOutput` with strict extra-field, evidence-prefix, unique-ref,
+  source-parent, paragraph/list, section-count, and section-mix validation.
+- Added the positive-first `V7_SYSTEM_PROMPT`, exact evidence-bundle prompt
+  builder, strict parser, and structural/public-language validation.
+- Added eight v7 tests covering positive prompt direction, exact ref exposure,
+  flexible valid output, unknown refs, missing source parent, prohibited copy,
+  URL injection, extra fields, invalid format unions, and invalid input bundles.
+- Focused v6/v7 verification passes 35 tests; Ruff and diff checks pass.
+
 No provider call, database write, dependency, schema, API, workflow,
-infrastructure, deployment, or production action is authorized by this draft.
+infrastructure, deployment, or production action occurred in TASK-101.

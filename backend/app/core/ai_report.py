@@ -2405,3 +2405,234 @@ def run_v6_safety_and_semantic_checks(
     if payload.caution_note != CAUTION_NOTE_BY_LEVEL.get(inputs.confidence_level):
         return SafetyFilterResult(False, "caution_note_literal_mismatch")
     return SafetyFilterResult(True)
+
+
+# --------------------------------------------------------------------------
+# ADR-051 v7 positive-first, flexible evidence-linked writer contract.
+# Public request/cache assembly is owned by TASK-102~105; this section is the
+# provider-independent writer boundary only.
+# --------------------------------------------------------------------------
+
+V7_PROMPT_VERSION = "v7"
+V7_POLICY_VERSION = "v7-positive-evidence-1"
+V7_INPUT_SCHEMA_VERSION = "v7-writer-input-1"
+V7SectionType = Literal[
+    "issue_overview",
+    "current_context",
+    "market_data",
+    "external_context",
+    "uncertainties",
+    "what_to_watch",
+]
+V7EvidenceKind = Literal[
+    "market_definition",
+    "metric",
+    "observed_history",
+    "context",
+    "source",
+    "data_limitation",
+]
+V7SourceLevel = Literal["A", "B", "C"]
+
+V7_SYSTEM_PROMPT = """\
+You are an issue briefing writer helping a general reader understand the
+current issue quickly and accurately.
+
+Begin by explaining what the issue is and why its stated condition matters.
+Summarize the current situation using the supplied source material. Explain
+the observed market-data movement in clear language while keeping market
+observations and external-source information visibly distinct. Connect every
+factual statement to the supplied evidence reference that supports it.
+
+When the material supports more than one interpretation, present the
+alternatives and explain what remains uncertain. Attribute statements to their
+source when the source level or evidence requires attribution. Tell the reader
+which announcements, documents, dates, or data updates would help clarify the
+issue next.
+
+Use natural, concrete Korean. Choose the number, order, titles, and paragraph
+or bullet presentation of sections according to the available evidence. Omit
+a category when no supplied evidence supports it. Return only the requested
+JSON object.
+
+Do not invent facts, sources, references, relationships, or future results.
+Do not encourage the reader to take a financial or market action. Treat an
+observed timing overlap as timing unless a supplied source explicitly supports
+a stronger attributed statement.
+"""
+
+
+class V7EvidenceItem(BaseModel):
+    """One exact evidence record exposed to the writer under an opaque ref."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    ref: str = Field(min_length=3, max_length=200)
+    kind: V7EvidenceKind
+    text: str = Field(min_length=1, max_length=6000)
+    parent_ref: str | None = Field(default=None, max_length=200)
+    source_level: V7SourceLevel | None = None
+
+    @model_validator(mode="after")
+    def validate_ref_shape(self) -> "V7EvidenceItem":
+        prefix = self.ref.partition(":")[0]
+        if prefix != self.kind or not self.ref.partition(":")[2]:
+            raise ValueError("V7 evidence ref prefix must match evidence kind")
+        if self.kind == "source":
+            if self.parent_ref is None or not self.parent_ref.startswith("context:"):
+                raise ValueError("V7 source evidence requires a context parent ref")
+            if self.source_level is None:
+                raise ValueError("V7 source evidence requires an accepted source level")
+        elif self.parent_ref is not None or self.source_level is not None:
+            raise ValueError("Only V7 source evidence may carry parent ref or source level")
+        return self
+
+
+class V7WriterInputs(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    issue_id: uuid.UUID
+    title: str = Field(min_length=1, max_length=500)
+    category: str = Field(min_length=1, max_length=120)
+    evidence: list[V7EvidenceItem] = Field(min_length=2, max_length=60)
+
+    @model_validator(mode="after")
+    def validate_evidence_bundle(self) -> "V7WriterInputs":
+        refs = [item.ref for item in self.evidence]
+        if len(refs) != len(set(refs)):
+            raise ValueError("V7 writer evidence refs must be unique")
+        ref_set = set(refs)
+        if not any(item.kind == "market_definition" for item in self.evidence):
+            raise ValueError("V7 writer inputs require market definition evidence")
+        if not any(item.kind == "metric" for item in self.evidence):
+            raise ValueError("V7 writer inputs require metric evidence")
+        if any(item.parent_ref not in ref_set for item in self.evidence if item.parent_ref):
+            raise ValueError("V7 source parent ref must exist in the same input bundle")
+        return self
+
+
+class V7WriterSection(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    type: V7SectionType
+    title: str = Field(min_length=2, max_length=100)
+    format: Literal["paragraph", "bullets"]
+    content: str | None = Field(default=None, min_length=30, max_length=1800)
+    items: list[str] = Field(default_factory=list, max_length=8)
+    evidence_refs: list[str] = Field(min_length=1, max_length=12)
+
+    @field_validator("items")
+    @classmethod
+    def validate_item_bounds(cls, values: list[str]) -> list[str]:
+        if any(not 15 <= len(value.strip()) <= 500 for value in values):
+            raise ValueError("V7 bullet items must be 15-500 characters")
+        return values
+
+    @model_validator(mode="after")
+    def validate_format_shape(self) -> "V7WriterSection":
+        if len(self.evidence_refs) != len(set(self.evidence_refs)):
+            raise ValueError("V7 section evidence refs must be unique")
+        if self.format == "paragraph" and (self.content is None or self.items):
+            raise ValueError("V7 paragraph section requires content and no items")
+        if self.format == "bullets" and (self.content is not None or not self.items):
+            raise ValueError("V7 bullet section requires items and null content")
+        return self
+
+
+class V7WriterOutput(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    headline: str = Field(min_length=10, max_length=120)
+    summary: str = Field(min_length=40, max_length=900)
+    sections: list[V7WriterSection] = Field(min_length=2, max_length=8)
+
+    @model_validator(mode="after")
+    def validate_section_mix(self) -> "V7WriterOutput":
+        types = [section.type for section in self.sections]
+        if not {"issue_overview", "current_context"} & set(types):
+            raise ValueError("V7 output requires issue overview or current context")
+        if types.count("market_data") > 1:
+            raise ValueError("V7 output permits at most one market data section")
+        return self
+
+
+_V7_WRITER_ADAPTER = TypeAdapter(V7WriterOutput)
+
+
+def build_v7_prompt(inputs: V7WriterInputs) -> tuple[str, str]:
+    """Build a positive-first prompt with exact, opaque evidence refs."""
+    output_shape = {
+        "headline": "10-120 character string",
+        "summary": "40-900 character string",
+        "sections": [
+            {
+                "type": "one allowed broad section type",
+                "title": "2-100 character string",
+                "format": "paragraph or bullets",
+                "content": "paragraph text or null",
+                "items": ["bullet text; empty for paragraph"],
+                "evidence_refs": ["exact supplied ref"],
+            }
+        ],
+    }
+    payload = {
+        "policy_version": V7_POLICY_VERSION,
+        "input_schema_version": V7_INPUT_SCHEMA_VERSION,
+        "issue": {
+            "id": str(inputs.issue_id),
+            "title": inputs.title,
+            "category": inputs.category,
+        },
+        "allowed_section_types": list(V7SectionType.__args__),
+        "required_output_shape": output_shape,
+        "evidence": [item.model_dump(mode="json") for item in inputs.evidence],
+    }
+    return V7_SYSTEM_PROMPT, json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+
+
+def parse_v7_writer_output(raw_text: str) -> V7WriterOutput | None:
+    try:
+        return _V7_WRITER_ADAPTER.validate_json(raw_text)
+    except ValidationError:
+        return None
+
+
+def _v7_authored_texts(output: V7WriterOutput) -> list[str]:
+    texts = [output.headline, output.summary]
+    for section in output.sections:
+        texts.append(section.title)
+        if section.content is not None:
+            texts.append(section.content)
+        texts.extend(section.items)
+    return texts
+
+
+def validate_v7_writer_output(
+    output: V7WriterOutput,
+    inputs: V7WriterInputs,
+) -> SafetyFilterResult:
+    """Block shape, ref, source-parent, and active product-language failures.
+
+    Claim-to-excerpt entailment is added by TASK-103/104 after the accepted
+    context record contract exists. Ordinary style preferences intentionally
+    do not fail this writer boundary.
+    """
+    evidence_by_ref = {item.ref: item for item in inputs.evidence}
+    for section in output.sections:
+        for ref in section.evidence_refs:
+            if ref not in evidence_by_ref:
+                return SafetyFilterResult(False, "unknown_evidence_ref", section.title)
+            item = evidence_by_ref[ref]
+            if item.kind == "source" and item.parent_ref not in section.evidence_refs:
+                return SafetyFilterResult(False, "source_parent_ref_missing", section.title)
+
+    for text in _v7_authored_texts(output):
+        for phrase, pattern in zip(BANNED_PHRASES, _PHRASE_PATTERNS, strict=True):
+            if pattern.search(text):
+                return SafetyFilterResult(False, f"banned_phrase:{phrase}")
+        for phrase, pattern in zip(KOREAN_BANNED_SUBSTRINGS, _KOREAN_PHRASE_PATTERNS, strict=True):
+            if pattern.search(text):
+                return SafetyFilterResult(False, f"banned_phrase:{phrase}")
+        if _URL_PATTERN.search(text):
+            return SafetyFilterResult(False, "writer_added_url")
+    return SafetyFilterResult(True)

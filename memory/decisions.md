@@ -1589,7 +1589,7 @@ database, and no provider call, deployment, or non-test database write occurred.
 ### ADR-051: Positive-first, on-demand issue briefing direction
 
 - **Date**: 2026-07-11
-- **Status**: Proposed; documentation direction accepted, implementation gates remain
+- **Status**: Accepted; TASK-101 implementation active
 - **Decided by**: User direction and PM planning
 
 **Context**: Collection-time report generation spends provider budget on
@@ -1601,7 +1601,7 @@ instructions, explicit button-triggered generation, broader and simpler
 context collection, flexible broad-section output, and historical archival of
 superseded contracts before later cleanup.
 
-**Proposed decision**: Separate market collection, external-context collection,
+**Decision**: Separate market collection, external-context collection,
 and briefing generation. Let an explicit user request create or join an
 idempotent cache-backed generation job. Use a positive-first writer prompt and
 a flexible `sections[]` envelope with stable broad categories and evidence
@@ -1615,14 +1615,13 @@ ADRs, and supersession reasons. Preserve stored rows and audit history during
 v7 evaluation. Runtime deletion is a separate TASK-109 action after v7 user
 acceptance.
 
-**Approval boundary**: The user has approved documentation and execution
-preparation. This ADR does not yet amend the binding wording/safety policy,
-change the public API or schema, change scheduled workflow behavior, call a
-provider, write a non-test database, add a dependency, deploy, or delete
-legacy runtime code. Those approvals are grouped in
-`reports/task-099-on-demand-briefing-policy-reset.md`.
+**Approval boundary**: On 2026-07-11 the user approved TASK-099 approval items
+1-7: v7 AI/wording policy, A-C public source levels, append-only request/lease
+schema, on-demand API, scheduled-workflow separation, bounded provider calls,
+and append-only local/development writes. Deployment, production writes, new
+dependencies, and v1-v6 runtime deletion remain excluded. TASK-109 deletion
+requires separate approval after v7 acceptance.
 
-**Consequences**: TASK-100~109 are prepared in dependency order. TASK-100 is a
-read-only/documentation inventory. Later implementation tasks start only after
-their recorded policy, schema, API, workflow, provider, and database gates are
-satisfied.
+**Consequences**: TASK-100~108 proceed in dependency order under the approved
+boundary. TASK-109 may audit and propose cleanup but cannot delete legacy
+runtime until the separate acceptance and deletion gate is satisfied.

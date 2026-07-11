@@ -238,4 +238,23 @@ public API and AI-policy changes on 2026-07-11. Workflow/runtime configuration,
 deployment, production writes, new dependencies, and schema changes remain
 outside this approval.
 
+### 10.10 Approved v7 writer boundary (ADR-051)
+
+The v7 provider response is limited to `headline`, `summary`, and two-to-eight
+flexible sections. Each section has a broad type, title, paragraph-or-bullets
+shape, and exact opaque evidence references. Pydantic rejects extra fields,
+invalid presentation unions, duplicate references, unknown references, and a
+source reference without its parent context reference.
+
+The backend assembles request/report identifiers, observed metrics, context and
+source metadata, A-C source levels, supported claims, timestamps, cache state,
+data limitations, caution, and last-known-good behavior. Prompt, policy, and
+input-schema versions participate in the request fingerprint. Provider output
+cannot create or rewrite these fields.
+
+TASK-101 adds only the provider-independent writer boundary. TASK-102 adds the
+append-only request/lease schema; TASK-103 adds accepted-source and conditional
+verification behavior; TASK-104 connects the asynchronous generation service;
+TASK-105 activates the public request/status/cache/report contract.
+
 ---
