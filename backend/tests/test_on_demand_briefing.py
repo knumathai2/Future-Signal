@@ -267,6 +267,51 @@ def test_duplicate_enqueue_joins_one_request_and_one_queue_event(db):
     assert db.query(AiReportGenerationEvent).count() == 1
 
 
+def test_failed_same_fingerprint_requeues_and_succeeds_on_second_attempt(db):
+    first = enqueue_v7_request(db, MARKET_ID, requested_by="user", now=NOW)
+    assert first is not None
+    failed = process_v7_request(
+        db,
+        first.request_id,
+        FakeLLM("not-json"),
+        "fake/writer",
+        now=NOW + timedelta(seconds=1),
+    )
+    assert failed.reason_code == "writer_schema_failure"
+
+    retry = enqueue_v7_request(
+        db,
+        MARKET_ID,
+        requested_by="user",
+        now=NOW + timedelta(seconds=2),
+    )
+    assert retry is not None
+    assert retry.created is False
+    assert retry.request_id == first.request_id
+    assert retry.state == "queued"
+
+    succeeded = process_v7_request(
+        db,
+        retry.request_id,
+        FakeLLM(_valid_output()),
+        "fake/writer",
+        now=NOW + timedelta(seconds=3),
+    )
+    assert succeeded.state == "succeeded"
+    events = db.query(AiReportGenerationEvent).order_by(AiReportGenerationEvent.id).all()
+    assert [event.state for event in events] == [
+        "queued",
+        "running",
+        "failed",
+        "queued",
+        "running",
+        "succeeded",
+    ]
+    assert [event.attempt_number for event in events] == [0, 1, 1, 1, 2, 2]
+    assert db.query(AiReportGenerationRequest).count() == 1
+    assert db.query(AiReport).count() == 1
+
+
 def test_nonexpired_lease_is_not_double_claimed_and_expired_lease_recovers(db):
     queued = enqueue_v7_request(db, MARKET_ID, requested_by="user", now=NOW)
     assert queued is not None

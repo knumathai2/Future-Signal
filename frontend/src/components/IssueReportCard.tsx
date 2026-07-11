@@ -231,7 +231,7 @@ export function IssueReportCard({
           role="alert"
           className="mt-4 rounded-lg border border-line bg-paper px-4 py-3 text-sm leading-6 text-ink-soft"
         >
-          생성 요청을 기록하지 못했습니다. 잠시 후 다시 시도해 주세요.
+          브리핑 요청 상태를 확인하지 못했습니다. 잠시 후 다시 시도해 주세요.
         </p>
       ) : null}
 

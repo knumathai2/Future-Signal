@@ -214,6 +214,8 @@ export function IssueDetailRoute() {
     if (!activeRequestId || developmentReportState) return;
     const controller = new AbortController();
     let checking = false;
+    let consecutiveFailures = 0;
+    let interval = 0;
     const check = async () => {
       if (checking) return;
       checking = true;
@@ -223,20 +225,27 @@ export function IssueDetailRoute() {
           activeRequestId,
           controller.signal,
         );
+        consecutiveFailures = 0;
         if (request.state === "succeeded" || request.state === "failed") {
           const next = await loadIssueReport(issueId, controller.signal);
           setReportState(next);
           setGenerationPending(false);
         }
       } catch (error) {
-        if (!(error instanceof DOMException && error.name === "AbortError"))
+        if (!(error instanceof DOMException && error.name === "AbortError")) {
           console.error(error);
+          consecutiveFailures += 1;
+          if (consecutiveFailures >= 3) {
+            window.clearInterval(interval);
+            setGenerationActionError(true);
+          }
+        }
       } finally {
         checking = false;
       }
     };
     void check();
-    const interval = window.setInterval(check, 1500);
+    interval = window.setInterval(check, 1500);
     return () => {
       controller.abort();
       window.clearInterval(interval);

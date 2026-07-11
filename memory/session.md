@@ -14,9 +14,9 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: Frontend Implementer
-- **Session Goal**: Complete TASK-099 through TASK-109 within the approved v7 boundary; TASK-106 is complete and TASK-107 is next.
-- **Branch**: `frontend/TASK-106-on-demand-briefing-ui`
+- **Agent Role**: Reviewer
+- **Session Goal**: Complete TASK-099 through TASK-109 within the approved v7 boundary; TASK-107 is complete and TASK-108 is next.
+- **Branch**: `review/TASK-107-v7-integration-review`
 
 ## Context Read
 
@@ -26,6 +26,16 @@ Harness Version: 1.1
 
 ## Work Completed
 
+- Completed TASK-107 integration review across request creation, duplicate
+  join, lease/recovery, cache revisions, last-good, strict evidence/source
+  reconstruction, wording gates, budget/provider/validation failure, polling,
+  and core-detail isolation.
+- Fixed mixed UTC-format comparison in the v7 parser and bounded Frontend
+  polling after three consecutive status failures without discarding last-good.
+  Added same-fingerprint failure/requeue/attempt-two/success coverage.
+- V7 focused 38 tests, full Backend 438 tests, Ruff, all Frontend checks,
+  wording scan, Prettier, and diff checks pass. No external call or non-test
+  state change occurred. TASK-108 is next.
 - Completed TASK-106 with a strict v7 runtime parser, explicit generate/join
   button, issue-scoped request polling, flexible paragraph/list rendering, and
   idle/generating/fresh/stale/failed/failed-with-last-good UI states.
