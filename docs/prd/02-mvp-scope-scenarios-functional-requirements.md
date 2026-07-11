@@ -328,6 +328,23 @@ Help users understand the context around an inflection point.
 - Deployment, production writes, infrastructure changes, new dependencies,
   and unrelated schema/API changes remain outside this extension.
 
+#### Approved post-MVP v7 on-demand briefing extension (TASK-099~108)
+
+- Generate a briefing only after an explicit issue-detail request or approved
+  bounded development evaluation; normal data collection does not invoke the
+  report writer.
+- Reuse a fresh fingerprinted report, keep stale last-good content readable
+  during refresh, and join duplicate requests for the same input.
+- Use the positive-first flexible section contract while requiring exact
+  evidence references and deterministic reconstruction before publication.
+- Publish deterministically accepted A-C source levels with exact attribution
+  and supported claims; reserve independent verification for bounded conflict,
+  ambiguity, high-impact, relationship-language, and material level-C cases.
+- Keep honest data/context/generated timing and interpretation caution on the
+  report surface.
+- Deployment, production writes, new dependencies, infrastructure changes,
+  and v1-v6 runtime deletion remain outside this extension.
+
 ### 8.10 Data as-of timestamp and disclaimer text
 
 #### Requirements

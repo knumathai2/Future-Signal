@@ -18,7 +18,6 @@ historical v1-v6 archive followed by separately approved cleanup.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-101 | Finalize the positive-first v7 prompt, flexible section envelope, and A-D source-level policy | PM / Data-AI | Data/AI Implementer | `data-ai/TASK-101-v7-briefing-contract` | assigned |
 | TASK-102 | Design the append-only generation-request schema, worker lease, cache fingerprint, and recovery contract | Backend | Backend Implementer | `backend/TASK-102-on-demand-request-schema` | assigned |
 | TASK-103 | Implement broad context collection and lightweight evidence classification | Data/AI | Data/AI Implementer | `data-ai/TASK-103-broad-context-collection` | assigned |
 | TASK-104 | Separate briefing generation from normal collection and add the on-demand generation service | Backend / Data-AI | Backend Implementer | `backend/TASK-104-on-demand-generation-service` | assigned |
@@ -28,12 +27,11 @@ historical v1-v6 archive followed by separately approved cleanup.
 | TASK-108 | Run a bounded development v6-v7 quality and cost comparison | Data/AI / Reviewer | Data/AI Implementer | `data-ai/TASK-108-v7-development-evaluation` | assigned |
 | TASK-109 | Remove superseded v1-v6 runtime code after v7 acceptance | Reviewer / Implementers | Reviewer | `review/TASK-109-legacy-report-cleanup` | assigned |
 
-No v7 implementation task is currently in progress. TASK-100 archived the
-v1-v6 map without changing runtime behavior. TASK-101 now has an approval-ready
-contract in `reports/task-101-v7-briefing-contract.md` but requires explicit wording
-and AI-policy approval. TASK-102 requires schema approval. TASK-104 requires
-workflow/runtime approval. TASK-105 requires public API approval. TASK-103 and
-TASK-108 require bounded provider-call and local/development-write approval.
+TASK-101 is complete under the user's approval of TASK-099 items 1-7. TASK-102
+is next and may add the approved append-only request/lease migration. TASK-104
+may perform the approved workflow separation, TASK-105 may change the approved
+public report interface, and TASK-103/TASK-108 may use bounded provider calls
+and append-only local/development writes.
 
 Deployment and production writes remain outside the approved program.
 

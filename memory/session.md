@@ -26,13 +26,18 @@ Harness Version: 1.1
 
 ## Work Completed
 
+- Received explicit approval for TASK-099 items 1-7, excluding deployment,
+  production writes, new dependencies, and TASK-109 legacy deletion.
+- Completed TASK-101: activated ADR-051 policy documentation and added the
+  provider-independent v7 positive-first writer input/output, prompt, parser,
+  evidence/source-parent checks, and structural/public-language gates.
+- Added eight v7 regressions; focused v6/v7 verification passes 35 tests with
+  Ruff and diff checks clean. No provider, DB, schema, API, or workflow action
+  occurred in this task.
 - Prepared `reports/task-101-v7-briefing-contract.md` with the exact writer-owned
   JSON shape, backend-owned fields, evidence-reference grammar, positive-first
   prompt, A-D source levels, deterministic checks, conditional-verifier
   triggers, blocker-versus-diagnostic matrix, and exact v6 supersession list.
-- Kept TASK-101 in proposed state because its AI/wording and source-publication
-  policy changes require explicit human approval. No active policy or runtime
-  file changed.
 - Completed TASK-100 by mapping v1-v6 active periods, ADRs, public/generation
   shapes, runtime surfaces, supersession state, permanent retention set, and
   separately gated cleanup candidates in
