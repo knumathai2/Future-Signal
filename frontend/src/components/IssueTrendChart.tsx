@@ -8,7 +8,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { ChartWindow, Issue, IssueHistoryPoint } from "../types/issue";
+import type {
+  ChartWindow,
+  Issue,
+  IssueHistoryPoint,
+  IssueReportContextCandidate,
+} from "../types/issue";
 import {
   formatDataTimestamp,
   formatExpectationValue,
@@ -21,6 +26,7 @@ import { getWindowedHistory } from "../utils/history";
 type IssueTrendChartProps = {
   issue: Issue;
   windowKey: ChartWindow;
+  contextCandidates?: IssueReportContextCandidate[];
 };
 
 type TooltipPayload = {
@@ -77,7 +83,11 @@ function CustomTooltip({ active, label, payload }: TooltipProps) {
   );
 }
 
-export function IssueTrendChart({ issue, windowKey }: IssueTrendChartProps) {
+export function IssueTrendChart({
+  issue,
+  windowKey,
+  contextCandidates = [],
+}: IssueTrendChartProps) {
   const windowedHistory = useMemo(
     () => getWindowedHistory(issue.history, windowKey),
     [issue.history, windowKey],
@@ -120,6 +130,27 @@ export function IssueTrendChart({ issue, windowKey }: IssueTrendChartProps) {
       })
       .filter((point): point is NonNullable<typeof point> => point !== null);
   }, [issue.inflectionPoints, visibleHistory]);
+
+  const contextMarkerPoints = useMemo(() => {
+    if (visibleHistory.length === 0) {
+      return [];
+    }
+    const start = Date.parse(visibleHistory[0].timestamp);
+    const end = Date.parse(visibleHistory[visibleHistory.length - 1].timestamp);
+    return contextCandidates.flatMap((candidate) => {
+      const eventTime = Date.parse(candidate.event_at);
+      if (!Number.isFinite(eventTime) || eventTime < start || eventTime > end) {
+        return [];
+      }
+      const nearest = visibleHistory.reduce((closest, point) =>
+        Math.abs(Date.parse(point.timestamp) - eventTime) <
+        Math.abs(Date.parse(closest.timestamp) - eventTime)
+          ? point
+          : closest,
+      );
+      return [{ candidate, ...nearest }];
+    });
+  }, [contextCandidates, visibleHistory]);
 
   const domain = useMemo(() => {
     const values = visibleHistory.map((point) => point.value);
@@ -217,6 +248,19 @@ export function IssueTrendChart({ issue, windowKey }: IssueTrendChartProps) {
                 strokeWidth={2}
               />
             ))}
+            {contextMarkerPoints.map(({ candidate, timestamp, value }) => (
+              <ReferenceDot
+                key={candidate.id}
+                id={`candidate-marker-${candidate.id}`}
+                data-candidate-id={candidate.id}
+                x={timestamp}
+                y={value}
+                r={5}
+                fill="oklch(52% 0.13 45)"
+                stroke="oklch(99% 0.006 75)"
+                strokeWidth={2}
+              />
+            ))}
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -233,6 +277,30 @@ export function IssueTrendChart({ issue, windowKey }: IssueTrendChartProps) {
       <p className="mt-2 text-xs leading-5 text-ink-faint">
         데이터 기준 시각: {formatDataTimestamp(issue.dataAsOf)}
       </p>
+      {contextMarkerPoints.length > 0 ? (
+        <div className="mt-3 border-t border-line-soft pt-3">
+          <p className="text-xs font-bold text-ink">
+            같은 검토 구간의 공개 정보 표시
+          </p>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {contextMarkerPoints.map(({ candidate }) => (
+              <li key={candidate.id}>
+                <a
+                  href={`#context-candidate-${candidate.id}`}
+                  data-candidate-id={candidate.id}
+                  className="inline-flex min-h-11 items-center rounded-full border border-line px-3 text-xs font-semibold text-accent hover:border-accent"
+                >
+                  {formatShortDate(candidate.event_at)} · {candidate.title}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-2 text-[11px] leading-5 text-ink-faint">
+            공개 정보 표시는 날짜를 차트의 가장 가까운 관측 지점에 연결한
+            것이며, 관찰된 변화와의 관계를 뜻하지 않습니다.
+          </p>
+        </div>
+      ) : null}
     </div>
   );
 }

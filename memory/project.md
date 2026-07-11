@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Project: Outlook Signals
 
-_Last updated: 2026-07-10_
+_Last updated: 2026-07-11_
 
 ## Summary
 
@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.8.0-day5-technical-mvp-complete
-- **Phase**: Day 5 technical MVP closed on PR #53
-- **Next milestone**: Review and merge PR #53; optionally resume deployment (`TASK-020`), presentation operations (`TASK-021`), or the approval-gated automated-context program (`TASK-056` onward)
-- **Overall health**: 🟢 Good — PR #53 merges the latest `main`, resolves its ES2020 Frontend build blocker, and passes the complete Frontend build path plus 200 Backend tests and Ruff. Deployment and final presentation assets are explicitly deferred rather than recorded as complete.
+- **Version**: v0.9.0-v4-context-program-complete
+- **Phase**: Approved post-MVP v4 automated-context program complete
+- **Next milestone**: Separate human decision for deployment or optional TASK-066+ stretch work
+- **Overall health**: 🟢 Verified — TASK-056~065 are complete. The 50-target development backfill completed 46 distinct issues, strict v4/API/browser audits passed, and DB-recorded spend is USD 3.00263875. Deployment and production writes remain excluded.
 
 ## Tech Summary
 
@@ -51,15 +51,24 @@ Future Signal/
 
 | Area | Current state |
 |---|---|
-| Frontend | TASK-051/TASK-053 provide the ADR-033 report UI and parser enforcement. TASK-054 adds routed Home/list/detail/methodology information architecture, a real-history featured chart, ranked summaries, and responsive verification. PR #53 replaces two ES2022-only `.at()` reads with ES2020-compatible index access so typecheck and production build pass without configuration or behavior changes. |
-| Backend | `/api/issues/{id}/report` serves only successful v3 rows whose eight-field content validates, whose linked metric supplies `data_as_of`, and whose timestamp is not later than generation. Legacy, failed, malformed, unlinked, and incompatible rows keep `not_yet_generated`. TASK-053 adds read-time five-sentence enforcement and deterministic fallback-test isolation. Existing issue/category/history behavior and DB schema remain unchanged. |
-| Data/AI | TASK-049 advances generation to `PROMPT_VERSION=v3`: three constrained prose slots plus deterministic candidate comparison, external context, check points, limitations, and exact caution copy. ISS-010 aligned the fixed prompt with the frozen ADR-033 bounds/source scope and the approved Actions model configuration; the latest 10 stored v3 rows passed structural, wording-safety, and semantic validation. |
-| PM / Safety | P0 scope and ADR-033 remain locked. ADR-037 closes the technical MVP milestone while keeping deployment and presentation operations visible as deferred work. TASK-055's automated-context program remains backlog-only behind its existing approval gates. |
+| Frontend | TASK-063 replaces the v3 step navigator with a strict v4 change-episode card. It validates the full evidence bundle, conditionally renders zero to three candidate/source cards, links exact candidate IDs to chart markers, keeps secure external links/timing/caution, and passes 320px/375px/desktop QA. Existing routed Home/list/detail/methodology information architecture remains intact. |
+| Backend | TASK-062 activates the strict v4 report read contract and returns only reconstructed, evidence-consistent bundles with verified same-episode candidates and approved source fields. Legacy/failed/malformed/mismatched rows remain audit-only. TASK-057's append-only migration was applied to the approved development DB during TASK-065; production remains untouched. |
+| Data/AI | TASK-058/059 provide bounded annotation-only research and deterministic/independent verification. TASK-060 connects them between signals and reports, and TASK-061 adds strict evidence-linked v4 generation with deterministic metric/context fields, same-episode verified candidates, writer-cost accounting, and last-known-good failure isolation. |
+| PM / Safety | The v3 MVP remains frozen. ADR-038 activates TASK-056~065 with verified-only automated context, strict evidence links, a cumulative USD 100 OpenRouter cap, and local/development-only writes. Deployment and production DB writes remain separate gates. |
+| v4 program | TASK-056~065 are complete. Migration 002 exists only in the approved development DB. ADR-047 permits bounded provider query reformulation with normalized market-metadata overlap while every evidence/publication gate remains unchanged. Fifty backfill targets yielded 46 completed distinct issues, seven rejected candidates, zero public candidates, and 14 successful v4 rows across 13 issues. |
 
 ## Recent Changes
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | TASK-065 complete: 50-target development backfill, 46 distinct completed issues, query/result maxima 5/26, zero public candidates after strict gates, 13 successful v4 issue reports with zero safety/evidence mismatch, five live no-candidate and five local fixture candidate Browser flows, and USD 3.00263875 recorded spend. |
+| 2026-07-11 | ADR-047 human-approved: bounded query reformulation may replace exact-string membership when normalized market topic/entity overlap passes; all annotation, independent-verification, and publication gates remain unchanged. TASK-065 resumed. |
+| 2026-07-11 | Historical TASK-065 checkpoint: development migration applied; 16 bounded preflight runs across five issues recorded USD 0.778926. Bulk backfill paused until the later ADR-047 approval recorded above. |
+| 2026-07-11 | TASK-064 approved after fixing UTC normalization in the SQLite local writer path; full integration/adversarial review reached 311 Backend tests and all Frontend/Browser checks. |
+| 2026-07-11 | TASK-063 completed: strict v4 parser, one-card change episode, candidate/source cards, chart-ID linkage, responsive and state Browser QA. |
+| 2026-07-11 | TASK-062 completed: strict v4 read-time reconstruction, verified-only candidate/source output, legacy/malformed gating, OpenAPI contract, and 309-test Backend verification. |
+| 2026-07-11 | TASK-061 completed: strict seven-field evidence-grounded v4 generation, same-episode metric/candidate references, writer budget accounting, and failure-preserving storage passed the 298-test Backend suite. |
+| 2026-07-11 | ADR-038 accepted and TASK-056~065 activated; TASK-056 policy/contract documentation completed without provider calls or DB writes. |
 | 2026-07-07 | AI Development Harness v1.1 initial setup (Standard tier) |
 | 2026-07-07 | PRD rescoped to v1.1 (hackathon-narrowed from broader "global issue outlook platform" concept) |
 | 2026-07-07 | Service Design, Technical Design, UX Design written as companion specs to PRD |

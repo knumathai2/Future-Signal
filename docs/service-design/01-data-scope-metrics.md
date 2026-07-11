@@ -5,7 +5,7 @@ Date: 2026-07-07
 Companion to: [PRD](../prd/README.md) (Outlook Signals — 5-day hackathon PRD, v1.1)
 Purpose: Define the Polymarket data collection plan, analysis metrics, AI I/O contract, sudden-change signal rules, and participant-analysis policy that underlie the product. Written to convert directly into engineering tickets and a Phase-2 PRD.
 
-Assumption: this document does not replace PRD. Where the hackathon PRD already made a decision (binary markets only, 30–50 markets, template-first summaries, no auto news-matching, no accounts), this document treats that as a hard constraint for MVP and marks anything beyond it as Phase 2+.
+Assumption: this document does not replace PRD. Where the hackathon PRD already made a decision (binary markets only, 30–50 markets, template-first summaries, no auto context matching, no accounts), this document treats that as a hard constraint for the frozen v3 MVP. ADR-038 is the narrow post-MVP exception for TASK-056~065.
 
 ---
 
@@ -76,7 +76,7 @@ Explicitly out of MVP, with reasoning:
 | Wallet-level trade history / individual positions | Core ethical boundary of this product (Section 8); also legally sensitive if it drifts toward "trading signal" territory |
 | Open interest | Not cleanly exposed by Polymarket; not worth custom derivation for MVP |
 | Multi-outcome markets | Doesn't reduce to a single change-% line; adds a whole second UI/metric model for a hackathon timeline |
-| Any external news/event data via automated matching | Explicitly excluded in PRD to avoid implying causality; only 3–5 manually curated event candidates for the demo |
+| Unverified, source-less, or causal external event matching | Excluded. The only automated exception is ADR-038's citation-backed, independently verified, fail-closed v4 context-candidate path. |
 | Any personally identifying data about traders | Out of scope entirely — the product analyzes markets, not people |
 
 ---

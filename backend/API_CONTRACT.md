@@ -1,6 +1,8 @@
 # API Contract — Outlook Signals
 
-_Status: Implemented v3 runtime contract as defined by ADR-033.
+_Status: Implemented strict v4 runtime contract as defined by ADR-038 and
+ADR-043. TASK-062 validates stored metric, episode, verified-candidate,
+citation-source, and timing integrity before serving a report.
 The runtime shapes are backed by Pydantic schemas
 (`app/schemas/issues.py`, `app/schemas/health.py`) and routes
 (`app/api/routes/`). Legacy v1 and v2 report contents are gated out
@@ -11,13 +13,14 @@ paths use `issues` / `signals` / `reports` / `categories` — never `markets`,
 `bets`, `trades`, `positions`, or `profits` (enforced by
 `tests/test_issues_contract.py::test_public_paths_never_use_market_terminal_vocabulary`).
 
-**Current implementation state** (TASK-010/TASK-039): issue and history routes
+**Current implementation state** (TASK-010/TASK-062): issue and history routes
 read from Postgres via `app/db/session.py::get_db()` when `DATABASE_URL` is
 set and live `market_snapshots` data exists. The report route reads the latest
-successful stored `ai_reports` row in live mode and otherwise preserves the
-accepted empty state. TASK-002's schema is still unapplied to any
-shared/production database. Response shapes did not change from the earlier
-mock-only draft.
+successful stored `prompt_version="v4"` evidence bundle in live mode and
+otherwise preserves the accepted empty state. Static fallback data never
+fabricates a v4 report. Migration `002_context_candidates.sql` remains
+unapplied pending the separately guarded TASK-065 local/development run; no
+production database write is approved.
 
 ## `GET /api/health`
 
@@ -100,17 +103,14 @@ separate calls — done here).
 
 `404` if `id` is unknown.
 
-## `GET /api/issues/{id}/report` — current runtime contract (v3)
+## Historical v3 report runtime — no longer served
 
-Latest AI report. Content is fixed template slots only — never free-form
+Before TASK-062, the latest AI report used fixed v3 template slots
 (ADR-003, updated by ADR-033) — and must pass the banned-phrase filter before
 storage.
-When live data is available, the API serves the latest `status="success"`
-`ai_reports` row for the issue where `prompt_version="v3"`. Failed rows
-and legacy prompt-version rows (v1, v2) are retained in storage but are NOT returned
-from this endpoint (they are gated out and treated as `not_yet_generated`). Stored
-content that does not match the v3 schema, has no linked metric computed_at timestamp,
-or has `data_as_of > generated_at` is treated as not yet generated rather than partially served.
+Rows using prompt versions v1 through v3 remain append-only audit history but
+are never returned by the current endpoint. The example below is retained only
+as historical contract documentation.
 
 ```json
 {
@@ -144,6 +144,87 @@ Per ADR-008, this returns `200` with `{"status": "not_yet_generated"}`
 rather than Technical Design §5's originally proposed `204` (HTTP `204 No
 Content` cannot carry a body per spec, so most clients would discard the
 hint). This is accepted as final, not an open item.
+
+## `GET /api/issues/{id}/report` — current strict v4 runtime
+
+The path remains `GET /api/issues/{id}/report`; no new public endpoint was
+added. The endpoint serves only the latest
+successful `prompt_version="v4"` row whose seven-field content, metric
+evidence, verified candidates, stored citation sources, episode linkage, and
+timing all validate. Legacy v1-v3, failed, malformed, withheld/rejected,
+unknown-evidence, source-mismatched, and `data_as_of > generated_at` rows are
+treated as `not_yet_generated`.
+
+```json
+{
+  "id": "7c2e1a90-0000-4000-8000-0000000000aa",
+  "status": "success",
+  "report_version": "v4",
+  "generated_at": "2026-07-11T09:05:00Z",
+  "data_as_of": "2026-07-11T09:00:00Z",
+  "episode_at": "2026-07-11T08:00:00Z",
+  "content": {
+    "issue_overview": "...",
+    "observed_change": "...",
+    "context_summary": null,
+    "relationship_boundary": "...",
+    "what_to_check": "...",
+    "data_limitations": "...",
+    "caution_note": "..."
+  },
+  "evidence_refs": ["metric:123"],
+  "context_candidates": []
+}
+```
+
+`content` has exactly the seven keys above. Only `context_summary` is nullable;
+all other keys are required non-empty strings. If it is non-null, at least one
+`candidate:<uuid>` must appear in `evidence_refs`, resolve to the same market
+and compatible episode, have `verification_state="verified"`, and have at
+least one stored public citation source. Every metric sentence must be
+supported by a `metric:<id>` reference and match its stored values.
+
+A public context candidate has exactly this shape:
+
+```json
+{
+  "id": "8b441a56-0000-4000-8000-0000000000bb",
+  "title": "...",
+  "event_at": "2026-07-11T07:30:00Z",
+  "summary": "...",
+  "sources": [
+    {
+      "title": "...",
+      "url": "https://example.gov/source",
+      "domain": "example.gov",
+      "published_at": "2026-07-11T07:00:00Z",
+      "source_type": "official"
+    }
+  ]
+}
+```
+
+`source_type` is `official` or `independent_secondary`; `published_at` alone
+may be null. URL/title/domain values must equal stored values derived from
+OpenRouter API `url_citation` annotations. Internal verification scores,
+source excerpts, model output, query text, usage cost, withheld/rejected
+candidates, and secrets are never returned.
+
+When no verified candidate exists, `context_summary` is JSON `null`,
+`context_candidates` is an empty array, and `evidence_refs` contains metric
+references only. The API does not generate a candidate-absence sentence.
+Unknown issue remains `404`; missing valid v4 content remains the accepted
+`200 {"status":"not_yet_generated"}` response.
+
+The read path reconstructs the deterministic v4 fields from the linked metric,
+latest snapshot at or before that metric, and the exact same-episode verified
+candidate rows. It rejects a bundle if reconstructed content differs, if the
+metric or candidate reference list is missing/reordered/unknown, if a candidate
+is not verified, if its episode differs, if its source list is empty or fails
+the strict stored citation schema, or if `data_as_of`/`episode_at` is later than
+`generated_at`. Source URL hostname and public `domain` must also match. The
+API returns no internal citation ID, canonical URL, content hash, verification
+score, query, excerpt, model output, or provider-usage field.
 
 ## Legacy v2 report contract (Superseded by v3)
 

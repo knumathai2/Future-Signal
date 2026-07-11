@@ -118,3 +118,11 @@ Recommended build sequence (compatible with PRD's 5-day plan, §14):
 3. Write the DB migration and share the generated FastAPI OpenAPI doc with the Frontend role immediately, so mock-JSON frontend work matches the real contract from the start.
 4. Implement Section 6 steps 1–4 (fetch through snapshot storage) first and get one full successful batch run before writing any metric/signal/AI code — everything downstream depends on this working.
 5. Once this document, PRD, Service Design, and UX Design are all in hand, they're sufficient to write actual sprint tickets directly from Section 12's task tables — no further planning document should be needed before implementation starts.
+
+### 17.1 Approved post-MVP execution
+
+ADR-038 activates TASK-056~065 as the only approved automated-context program.
+The binding sequence, file ownership, tests, handoffs, and stop conditions are
+in `reports/task-055-automated-context-execution-plan.md`. No successor starts
+before its dependency passes. Deployment, production-database writes, new
+dependencies, and infrastructure changes are not authorized by this program.

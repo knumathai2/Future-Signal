@@ -123,4 +123,23 @@ At hackathon scale (30–50 markets, a handful of collection runs per day, 5 day
 **Build now**: `markets`, `market_outcomes`, `market_snapshots`, `market_metrics`, `issue_signals`, `ai_reports`, `related_events`, `data_collection_logs`.
 **Defer**: `users`, `watchlists`, and any wallet/participant-level table (explicitly excluded per Service Design §8 — no such table should exist even in a "not yet exposed via API" form, since the schema itself is a policy signal for future contributors).
 
+### 4.13 Approved v4 automated-context extension (TASK-057)
+
+ADR-038 authorizes only a new append-only
+`backend/migrations/002_context_candidates.sql`; the accepted initial migration
+must not be edited. It adds:
+
+- `context_candidates`: UUID id, market FK, episode/event timing, neutral
+  summary, JSONB citation sources, constrained verification state
+  (`verified`/`withheld`/`rejected`), internal verification score, research and
+  verifier model IDs, policy version, unique evidence hash, collection timing,
+  and expiry timing.
+- `context_collection_runs`: UUID id, market FK, episode and run timing,
+  constrained status (`success`/`partial`/`failed`/`no_candidate`), query/result/
+  accepted counts, JSONB model usage, and secret-free JSONB errors.
+
+Indexes cover market/episode/state lookup. The migration must document FK
+delete behavior and duplicate evidence-hash handling. Existing
+`related_events`, `ai_reports`, and legacy rows remain unchanged.
+
 ---

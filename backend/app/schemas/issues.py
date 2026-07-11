@@ -7,8 +7,10 @@ executable draft of that contract, not a new design.
 import re
 from datetime import datetime
 from typing import Annotated, Literal
+from urllib.parse import urlparse
+from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 ConfidenceLevel = Literal[
     "sufficient",
@@ -88,63 +90,21 @@ class IssueHistoryResponse(BaseModel):
 
 
 class ReportContent(BaseModel):
-    """Fixed template slots only - never free-form (ADR-003 / ADR-033).
-
-    `extra="forbid"` is load-bearing: the LLM response must
-    parse into exactly these 8 fields, nothing more/fewer - a response with
-    an extra field fails validation and is treated as a malformed-schema
-    failure, not silently trimmed.
-    """
+    """Strict seven-field public v4 content (ADR-038 / ADR-043)."""
 
     model_config = ConfigDict(
         extra="forbid",
         str_strip_whitespace=True,
     )
 
-    issue_overview: Annotated[
-        str,
-        Field(
-            strict=True,
-            min_length=30,
-            max_length=600,
-            description="What the issue is and the condition being tracked.",
-        ),
-    ]
-    current_data_reading: Annotated[
-        str,
-        Field(
-            strict=True,
-            min_length=50,
-            max_length=700,
-            description="Values and movement currently observed in public data.",
-        ),
-    ]
-    possible_outlook: Annotated[
-        str,
-        Field(
-            strict=True,
-            min_length=60,
-            max_length=700,
-            description="Conditional developments without a real-world forecast.",
-        ),
-    ]
-    possible_drivers: Annotated[
-        str,
-        Field(
-            strict=True,
-            min_length=80,
-            max_length=700,
-            description="Reviewed context candidates to compare without causation.",
-        ),
-    ]
-    external_context: Annotated[
+    issue_overview: Annotated[str, Field(strict=True, min_length=30, max_length=600)]
+    observed_change: Annotated[str, Field(strict=True, min_length=50, max_length=900)]
+    context_summary: Annotated[
         str | None,
-        Field(
-            strict=True,
-            min_length=40,
-            max_length=700,
-            description="Manually reviewed external context narrative.",
-        ),
+        Field(default=..., strict=True, min_length=40, max_length=1800),
+    ]
+    relationship_boundary: Annotated[
+        str, Field(strict=True, min_length=50, max_length=500)
     ]
     what_to_check: Annotated[
         str,
@@ -152,16 +112,14 @@ class ReportContent(BaseModel):
             strict=True,
             min_length=30,
             max_length=600,
-            description="Facts, dates, criteria, and sources needing verification.",
         ),
     ]
     data_limitations: Annotated[
         str,
         Field(
             strict=True,
-            min_length=80,
-            max_length=700,
-            description="Activity, volatility, history, and representativeness limits.",
+            min_length=50,
+            max_length=900,
         ),
     ]
     caution_note: Annotated[
@@ -170,26 +128,76 @@ class ReportContent(BaseModel):
             strict=True,
             min_length=120,
             max_length=700,
-            description="Mandatory report-level interpretation caution.",
         ),
     ]
 
     @field_validator("*")
     @classmethod
     def limit_sentence_count(cls, value: str | None) -> str | None:
-        """Reject stored content outside ADR-033's 1-5 sentence limit."""
+        """Reject stored content outside the v4 one-to-five sentence limit."""
         if value is not None and _sentence_count(value) > 5:
             raise ValueError("Report fields must contain at most five sentences.")
         return value
 
 
+class ContextSourceOut(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    title: str = Field(strict=True, min_length=1)
+    url: str = Field(strict=True, min_length=1)
+    domain: str = Field(strict=True, min_length=1)
+    published_at: datetime | None
+    source_type: Literal["official", "independent_secondary"]
+
+    @model_validator(mode="after")
+    def validate_annotation_url(self) -> "ContextSourceOut":
+        parsed = urlparse(self.url)
+        if (
+            parsed.scheme not in {"http", "https"}
+            or not parsed.hostname
+            or parsed.username is not None
+            or parsed.password is not None
+            or parsed.hostname.lower() != self.domain.lower().rstrip(".")
+        ):
+            raise ValueError("Public source URL and domain must match stored citation data")
+        return self
+
+
+class ContextCandidateOut(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    id: UUID
+    title: str = Field(strict=True, min_length=1)
+    event_at: datetime
+    summary: str = Field(strict=True, min_length=1)
+    sources: list[ContextSourceOut] = Field(min_length=1)
+
+
 class IssueReportResponse(BaseModel):
-    id: str
+    model_config = ConfigDict(extra="forbid")
+
+    id: UUID
     generated_at: datetime
     data_as_of: datetime
+    episode_at: datetime
     content: ReportContent
+    evidence_refs: list[str] = Field(min_length=1, max_length=4)
+    context_candidates: list[ContextCandidateOut] = Field(max_length=3)
     status: Literal["success"]
-    report_version: Literal["v3"]
+    report_version: Literal["v4"]
+
+    @model_validator(mode="after")
+    def validate_evidence_shape(self) -> "IssueReportResponse":
+        candidate_refs = [f"candidate:{candidate.id}" for candidate in self.context_candidates]
+        if not self.evidence_refs[0].startswith("metric:"):
+            raise ValueError("The first v4 evidence reference must identify a metric")
+        if self.evidence_refs[1:] != candidate_refs:
+            raise ValueError("Candidate evidence references must match public candidates")
+        if (self.content.context_summary is None) != (not self.context_candidates):
+            raise ValueError("Context summary nullability must match candidate presence")
+        if self.data_as_of > self.generated_at or self.episode_at > self.generated_at:
+            raise ValueError("V4 report timestamps cannot be later than generation")
+        return self
 
 
 class ReportNotYetGenerated(BaseModel):

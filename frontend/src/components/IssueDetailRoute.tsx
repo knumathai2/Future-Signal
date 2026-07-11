@@ -8,6 +8,7 @@ import {
 import { SiteHeader } from "./AppShell";
 import { IssueDetail } from "./IssueDetail";
 import { staleDummyIssues } from "../data/dummyIssues";
+import { getDevelopmentReportFixture } from "../data/reportFixtures";
 import type { DataStatus, Issue, IssueReportLoadState } from "../types/issue";
 import { fetchJson, HttpError, loadIssueReport } from "../utils/api";
 import { focusRouteHeading } from "../utils/focus";
@@ -17,6 +18,7 @@ import {
   mapApiIssueDetailToFrontendIssue,
 } from "../utils/format";
 import { parseForcedStatus } from "../utils/routeState";
+import { parseReportResponse } from "../utils/reportParser";
 
 type HistoryStatus = "loading" | "ready" | "error";
 
@@ -78,6 +80,11 @@ export function IssueDetailRoute() {
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const forcedStatus = parseForcedStatus(searchParams);
+  const reportFixtureName = searchParams.get("report");
+  const developmentReportState = useMemo<IssueReportLoadState | null>(() => {
+    const fixture = getDevelopmentReportFixture(reportFixtureName);
+    return fixture ? parseReportResponse(fixture) : null;
+  }, [reportFixtureName]);
   const backTo = safeBackPath(
     (location.state as { from?: unknown } | null)?.from,
   );
@@ -114,7 +121,7 @@ export function IssueDetailRoute() {
             staleDummyIssues[0],
         );
         setHistoryStatus("ready");
-        setReportState({ status: "error" });
+        setReportState(developmentReportState ?? { status: "error" });
       } else if (forcedStatus === "empty") {
         setHistoryStatus("error");
         setReportState({ status: "not_yet_generated" });
@@ -167,17 +174,21 @@ export function IssueDetailRoute() {
         setHistoryStatus("error");
       });
 
-    loadIssueReport(issueId, controller.signal)
-      .then(setReportState)
-      .catch((error) => {
-        if (error instanceof DOMException && error.name === "AbortError") {
-          return;
-        }
-        setReportState({ status: "error" });
-      });
+    if (developmentReportState) {
+      setReportState(developmentReportState);
+    } else {
+      loadIssueReport(issueId, controller.signal)
+        .then(setReportState)
+        .catch((error) => {
+          if (error instanceof DOMException && error.name === "AbortError") {
+            return;
+          }
+          setReportState({ status: "error" });
+        });
+    }
 
     return () => controller.abort();
-  }, [forcedStatus, issueId]);
+  }, [developmentReportState, forcedStatus, issueId]);
 
   const issue = useMemo(() => {
     if (fallbackIssue) {

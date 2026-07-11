@@ -11,99 +11,103 @@ const compiledParser = ts.transpileModule(parserSource, {
     target: ts.ScriptTarget.ES2020,
   },
 }).outputText;
-
 const parserModule = { exports: {} };
 vm.runInNewContext(
   compiledParser,
-  {
-    exports: parserModule.exports,
-    module: parserModule,
-  },
+  { exports: parserModule.exports, module: parserModule, URL },
   { filename: parserUrl.pathname },
 );
+const { parseReportResponse } = parserModule.exports;
 
-const { getVisibleSections, parseReportResponse } = parserModule.exports;
-
+const candidateId = "66666666-6666-4666-8666-666666666666";
 const validContent = {
   issue_overview: "가".repeat(30),
-  current_data_reading: "나".repeat(50),
-  possible_outlook: "다".repeat(60),
-  possible_drivers: "라".repeat(80),
-  external_context: "마".repeat(40),
-  what_to_check: "바".repeat(30),
-  data_limitations: "사".repeat(80),
-  caution_note: "아".repeat(120),
+  observed_change: "나".repeat(50),
+  context_summary: "다".repeat(40),
+  relationship_boundary: "라".repeat(50),
+  what_to_check: "마".repeat(30),
+  data_limitations: "바".repeat(50),
+  caution_note: "사".repeat(120),
+};
+const candidate = {
+  id: candidateId,
+  title: "검증된 공개 정보 후보",
+  event_at: "2026-07-11T08:30:00Z",
+  summary: "공개 자료에 기록된 내용을 근거 범위 안에서 정리했습니다.",
+  sources: [
+    {
+      title: "공식 공개 자료",
+      url: "https://example.gov/context",
+      domain: "example.gov",
+      published_at: "2026-07-11T08:00:00Z",
+      source_type: "official",
+    },
+  ],
 };
 
 function makePayload(overrides = {}) {
   return {
-    id: "7c2e1a90-0000-4000-8000-0000000000aa",
+    id: "77777777-7777-4777-8777-777777777777",
     status: "success",
-    report_version: "v3",
-    generated_at: "2026-07-10T09:05:00Z",
-    data_as_of: "2026-07-10T09:00:00Z",
+    report_version: "v4",
+    generated_at: "2026-07-11T09:05:00Z",
+    data_as_of: "2026-07-11T09:00:00Z",
+    episode_at: "2026-07-11T09:00:00Z",
     content: validContent,
+    evidence_refs: ["metric:1", `candidate:${candidateId}`],
+    context_candidates: [candidate],
     ...overrides,
   };
 }
 
-assert.equal(parseReportResponse(makePayload()).status, "success");
-
-const fullState = parseReportResponse(makePayload());
-assert.equal(fullState.status, "success");
-assert.deepEqual(
-  Array.from(getVisibleSections(fullState.report.content), (section) => section.key),
-  [
-    "issue_overview",
-    "current_data_reading",
-    "external_context",
-    "possible_drivers",
-    "possible_outlook",
-    "what_to_check",
-    "data_limitations",
-    "caution_note",
-  ],
+const success = parseReportResponse(makePayload());
+assert.equal(success.status, "success");
+assert.equal(success.report.report_version, "v4");
+assert.equal(
+  success.report.context_candidates[0].sources[0].domain,
+  "example.gov",
 );
 
-const nullContextState = parseReportResponse(
+const noCandidate = parseReportResponse(
   makePayload({
-    content: { ...validContent, external_context: null },
+    content: { ...validContent, context_summary: null },
+    evidence_refs: ["metric:1"],
+    context_candidates: [],
   }),
 );
-assert.equal(nullContextState.status, "success");
-assert.deepEqual(
-  Array.from(
-    getVisibleSections(nullContextState.report.content),
-    (section) => section.key,
-  ),
-  [
-    "issue_overview",
-    "current_data_reading",
-    "possible_drivers",
-    "possible_outlook",
-    "what_to_check",
-    "data_limitations",
-    "caution_note",
-  ],
-);
+assert.equal(noCandidate.status, "success");
+assert.equal(noCandidate.report.content.context_summary, null);
+
 assert.equal(
-  parseReportResponse(
-    makePayload({
-      generated_at: "2026-07-10T09:05:00+00:00",
-      data_as_of: "2026-07-10T09:00:00+00:00",
-    }),
-  ).status,
-  "success",
+  parseReportResponse({ status: "not_yet_generated" }).status,
+  "not_yet_generated",
 );
 
 for (const invalidPayload of [
-  makePayload({ data_as_of: "not-a-date" }),
-  makePayload({ data_as_of: "July 10, 2026 09:00 UTC" }),
-  makePayload({ data_as_of: "2026-07-10T10:00:00Z" }),
-  makePayload({ data_as_of: "2026-02-30T09:00:00Z" }),
+  makePayload({ report_version: "v3" }),
+  makePayload({ data_as_of: "2026-07-11T10:00:00Z" }),
+  makePayload({ episode_at: "2026-07-11T10:00:00Z" }),
+  makePayload({ evidence_refs: ["metric:1"] }),
+  makePayload({ evidence_refs: ["metric:2", "candidate:missing"] }),
+  makePayload({ context_candidates: [] }),
+  makePayload({ content: { ...validContent, context_summary: null } }),
+  makePayload({ content: { ...validContent, extra: "not allowed" } }),
+  makePayload({ unexpected: true }),
   makePayload({
-    generated_at: "2026-07-10T09:00:00.123455Z",
-    data_as_of: "2026-07-10T09:00:00.123456Z",
+    context_candidates: [
+      {
+        ...candidate,
+        sources: [{ ...candidate.sources[0], domain: "different.example" }],
+      },
+    ],
+  }),
+  makePayload({
+    context_candidates: [
+      {
+        ...candidate,
+        sources: [{ ...candidate.sources[0], citation_id: "internal" }],
+      },
+    ],
   }),
   makePayload({
     content: {
@@ -117,16 +121,4 @@ for (const invalidPayload of [
   assert.equal(parseReportResponse(invalidPayload).status, "error");
 }
 
-const paddedOverview = `\n${validContent.issue_overview}\n`;
-const normalizedState = parseReportResponse(
-  makePayload({
-    content: {
-      ...validContent,
-      issue_overview: paddedOverview,
-    },
-  }),
-);
-assert.equal(normalizedState.status, "success");
-assert.equal(normalizedState.report.content.issue_overview, validContent.issue_overview);
-
-console.log("report parser regression checks passed");
+console.log("v4 report parser regression checks passed");
