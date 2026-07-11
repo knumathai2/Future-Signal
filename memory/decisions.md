@@ -69,6 +69,15 @@ existing cumulative USD 100 program ceiling. Deployment, production writes,
 infrastructure changes, new dependencies, unrelated schema/API changes, and
 existing-migration edits remain outside approval.
 
+**2026-07-11 user-format amendment**: The user supplied three target examples
+covering geopolitical, monetary-policy, and legislation issues. V5 adopts their
+shared reading order: executive summary, current-data interpretation, three to
+four conditional scenarios, factors to check, observable follow-up materials,
+verified sources, and caution. Wording that implies a cause, assigns unsupported
+future likelihood, or suggests an action is rewritten as conditional observation
+without reducing the desired depth. The exact reference contract is recorded in
+`reports/task-077-ai-summary-reference-format.md`.
+
 ---
 
 ### ADR-001: AI Development Harness v1.1 Adoption

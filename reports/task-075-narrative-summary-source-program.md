@@ -32,15 +32,17 @@ _작성일: 2026-07-11 · 상태: TASK-075 활성_
 새 보고서는 사용자가 원문 질문과 여러 수치를 따로 읽지 않아도 되도록 다음을
 자연스러운 한국어로 정리한다.
 
-1. `executive_summary`: 3~5문장의 한눈에 보는 요약
-2. `issue_context`: 대상, 조건, 기준일을 포함한 이슈 설명
-3. `change_interpretation`: 저장된 현재 값과 24시간/7일 변화의 중립적 해설
-4. `evidence_synthesis`: 검증된 공개 정보가 있을 때만 작성하는 근거 종합
-5. `open_questions`: 확인되지 않은 부분
-6. `what_to_watch`: 이후 확인할 공식 자료와 데이터 갱신 항목
+1. `executive_summary`: 현재 값과 이슈 의미를 설명하는 핵심 요약
+2. `current_data_interpretation`: 저장된 값과 24시간/7일 변화의 중립적 해설
+3. `conditional_scenarios[]`: 3~4개의 제목 있는 조건부 전개
+4. `factors_to_check[]`: 기대값과 함께 확인할 구체적 요인
+5. `signals_to_watch[]`: 이후 확인할 공식 자료와 검증 가능한 상태 변화
+6. `evidence_synthesis`: 검증된 공개 정보가 있을 때만 작성하는 근거 종합
 
 `relationship_boundary`, `data_limitations`, `caution_note`는 결정적 규칙으로 조립해
 항상 표시한다. 숫자·날짜·고유명사·출처 주장은 저장된 근거에서만 가져온다.
+상세 문장 구조와 품질 기준은
+`reports/task-077-ai-summary-reference-format.md`를 따른다.
 
 ### 2.2 자유도와 차단 기준
 
