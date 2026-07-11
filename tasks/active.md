@@ -19,7 +19,7 @@ excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-079 | Implement AI issue briefing and verified-source detail UI | Frontend | Frontend Implementer | `frontend/TASK-079-ai-summary-source-ui` | in_progress |
+| TASK-080 | Regenerate development v5 reports and run integration/browser QA | Reviewer + Data/AI | Reviewer | `review/TASK-080-narrative-summary-integration` | in_progress |
 
 Exact dependencies, ownership, acceptance criteria, handoffs, and stop
 conditions are binding in
