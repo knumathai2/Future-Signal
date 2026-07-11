@@ -19,8 +19,8 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 - **Version**: v0.13.0-v6-baseline-v7-planning
 - **Phase**: V6 baseline preserved; on-demand v7 program awaiting implementation approvals
-- **Next milestone**: Implement TASK-102 append-only on-demand request/lease storage
-- **Overall health**: 🟢 TASK-099~101 are complete. ADR-051 and the tested v7 writer boundary are active; v6 remains the public baseline until TASK-105.
+- **Next milestone**: Implement TASK-103 broad context collection and A-D classification
+- **Overall health**: 🟢 TASK-099~102 are complete. The v7 writer and append-only request/event schema pass focused tests; v6 remains the public baseline until TASK-105.
 
 ## Tech Summary
 
@@ -63,6 +63,7 @@ Future Signal/
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | TASK-102 added unapplied migration 004 and tested immutable request plus append-only lease/outcome event models. Earlier migrations remain untouched. |
 | 2026-07-11 | TASK-101 activated the approved positive-first v7 writer/source policy and added strict flexible writer models, opaque evidence refs, parser, validation, and tests. No provider, database, schema, API, or workflow action occurred. |
 | 2026-07-11 | TASK-100 archived the v1-v6 contract map, separated permanent evidence/safety invariants from version-specific shape/style rules, and recorded the retention and separately approved cleanup boundary. No runtime or external state changed. |
 | 2026-07-11 | TASK-099 defined the proposed positive-first, user-requested, cache-backed v7 briefing direction and TASK-100~109 execution sequence. Implementation gates remain pending. |

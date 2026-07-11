@@ -26,6 +26,12 @@ Harness Version: 1.1
 
 ## Work Completed
 
+- Completed TASK-102 with additive migration 004, immutable fingerprinted
+  request identities, append-only queued/running/succeeded/failed events,
+  bounded lease/recovery semantics, report FK, safe error/usage fields, and
+  matching ORM models.
+- Ten schema/ORM regressions pass with Ruff and diff checks. Migrations 001-003
+  remain untouched and migration 004 was not applied to a database.
 - Received explicit approval for TASK-099 items 1-7, excluding deployment,
   production writes, new dependencies, and TASK-109 legacy deletion.
 - Completed TASK-101: activated ADR-051 policy documentation and added the
