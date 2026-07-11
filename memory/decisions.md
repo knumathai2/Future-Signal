@@ -664,6 +664,32 @@ the cumulative USD 100 limit. Deployment remains a separate approval gate.
 
 ---
 
+### ADR-039: Context evidence duplicates are episode-scoped and market deletion cascades
+
+- **Date**: 2026-07-11
+- **Status**: Accepted
+- **Decided by**: Backend Implementer within ADR-038 schema approval
+
+**Context**: TASK-057 required a deterministic duplicate-evidence rule and
+documented delete behavior for the two append-only v4 context tables.
+
+**Decision**: Enforce uniqueness on
+`(market_id, episode_at, evidence_hash)`. A duplicate insert is an idempotent
+skip: callers keep the existing row and never update it. The same citation
+bundle may support a different market or a different episode. Both new tables
+use `ON DELETE CASCADE` from `markets`, matching the lifecycle of all existing
+market-owned tables in `001_initial_schema.sql`.
+
+**Rationale**: Episode-scoped uniqueness prevents duplicate batch writes while
+preserving legitimate reuse across issues or later episodes. Consistent cascade
+behavior avoids orphaned audit rows and matches the accepted initial schema.
+
+**Consequences**: TASK-060 must catch duplicate-integrity errors as skips, not
+rewrite candidates. A parent-market delete removes its candidate and run rows;
+normal batch paths remain strictly insert-only.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07

@@ -17,8 +17,7 @@ Deployment and production-database writes remain excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-057 | Add automated-context storage schema | Backend Implementer | Backend Implementer | `backend/TASK-057-context-schema` | in_progress |
-| TASK-058 | Build OpenRouter web-research client | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-058-context-research` | assigned |
+| TASK-058 | Build OpenRouter web-research client | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-058-context-research` | in_progress |
 | TASK-059 | Build deterministic and independent-AI verification | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-059-context-verification` | assigned |
 | TASK-060 | Connect context research to the scheduled batch | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-060-context-batch` | assigned |
 | TASK-061 | Generate evidence-grounded v4 reports | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-061-evidence-report-v4` | assigned |
