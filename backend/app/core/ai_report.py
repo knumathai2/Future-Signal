@@ -1404,6 +1404,7 @@ def _v5_uses_only_evidence_numbers(fields: V5LLMFields, inputs: V4ReportInputs) 
                 str(inputs.change_24h * 100),
                 str(inputs.change_7d),
                 str(inputs.change_7d * 100),
+                "24 7",
                 *(
                     f"{candidate.title} {candidate.event_at.isoformat()} "
                     f"{candidate.neutral_summary} "

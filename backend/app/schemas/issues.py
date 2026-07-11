@@ -4,6 +4,7 @@ Field names mirror the example JSON already agreed in
 ../../docs/tech-design/03-api-and-batch-pipeline.md §5 - this module is the
 executable draft of that contract, not a new design.
 """
+
 import re
 from datetime import datetime
 from typing import Annotated, Literal
@@ -89,31 +90,38 @@ class IssueHistoryResponse(BaseModel):
     points: list[HistoryPoint]
 
 
+class ConditionalScenarioOut(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    title: str = Field(strict=True, min_length=2, max_length=100)
+    narrative: str = Field(strict=True, min_length=30, max_length=900)
+
+
+class BriefingItemOut(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    title: str = Field(strict=True, min_length=2, max_length=120)
+    explanation: str = Field(strict=True, min_length=20, max_length=700)
+
+
 class ReportContent(BaseModel):
-    """Strict seven-field public v4 content (ADR-038 / ADR-043)."""
+    """Strict public v5 content (ADR-048)."""
 
     model_config = ConfigDict(
         extra="forbid",
         str_strip_whitespace=True,
     )
 
-    issue_overview: Annotated[str, Field(strict=True, min_length=30, max_length=600)]
-    observed_change: Annotated[str, Field(strict=True, min_length=50, max_length=900)]
-    context_summary: Annotated[
+    executive_summary: Annotated[str, Field(strict=True, min_length=80, max_length=1200)]
+    current_data_interpretation: Annotated[str, Field(strict=True, min_length=50, max_length=1200)]
+    conditional_scenarios: list[ConditionalScenarioOut] = Field(min_length=3, max_length=4)
+    factors_to_check: list[BriefingItemOut] = Field(min_length=2, max_length=6)
+    signals_to_watch: list[BriefingItemOut] = Field(min_length=2, max_length=6)
+    evidence_synthesis: Annotated[
         str | None,
-        Field(default=..., strict=True, min_length=40, max_length=1800),
+        Field(default=..., strict=True, min_length=50, max_length=1800),
     ]
-    relationship_boundary: Annotated[
-        str, Field(strict=True, min_length=50, max_length=500)
-    ]
-    what_to_check: Annotated[
-        str,
-        Field(
-            strict=True,
-            min_length=30,
-            max_length=600,
-        ),
-    ]
+    relationship_boundary: Annotated[str, Field(strict=True, min_length=50, max_length=500)]
     data_limitations: Annotated[
         str,
         Field(
@@ -131,10 +139,17 @@ class ReportContent(BaseModel):
         ),
     ]
 
-    @field_validator("*")
+    @field_validator(
+        "executive_summary",
+        "current_data_interpretation",
+        "evidence_synthesis",
+        "relationship_boundary",
+        "data_limitations",
+        "caution_note",
+    )
     @classmethod
     def limit_sentence_count(cls, value: str | None) -> str | None:
-        """Reject stored content outside the v4 one-to-five sentence limit."""
+        """Reject stored prose outside the v5 one-to-five sentence limit."""
         if value is not None and _sentence_count(value) > 5:
             raise ValueError("Report fields must contain at most five sentences.")
         return value
@@ -184,19 +199,19 @@ class IssueReportResponse(BaseModel):
     evidence_refs: list[str] = Field(min_length=1, max_length=4)
     context_candidates: list[ContextCandidateOut] = Field(max_length=3)
     status: Literal["success"]
-    report_version: Literal["v4"]
+    report_version: Literal["v5"]
 
     @model_validator(mode="after")
     def validate_evidence_shape(self) -> "IssueReportResponse":
         candidate_refs = [f"candidate:{candidate.id}" for candidate in self.context_candidates]
         if not self.evidence_refs[0].startswith("metric:"):
-            raise ValueError("The first v4 evidence reference must identify a metric")
+            raise ValueError("The first v5 evidence reference must identify a metric")
         if self.evidence_refs[1:] != candidate_refs:
             raise ValueError("Candidate evidence references must match public candidates")
-        if (self.content.context_summary is None) != (not self.context_candidates):
-            raise ValueError("Context summary nullability must match candidate presence")
+        if (self.content.evidence_synthesis is None) != (not self.context_candidates):
+            raise ValueError("Evidence synthesis nullability must match candidate presence")
         if self.data_as_of > self.generated_at or self.episode_at > self.generated_at:
-            raise ValueError("V4 report timestamps cannot be later than generation")
+            raise ValueError("V5 report timestamps cannot be later than generation")
         return self
 
 

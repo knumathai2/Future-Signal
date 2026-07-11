@@ -7,6 +7,7 @@ TASK-010's constraint against applying migrations.py/001_initial_schema.sql
 to any shared or production database - the override only affects the
 "sqlite" dialect used here and never touches the real Postgres path.
 """
+
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -26,8 +27,11 @@ from app.core.ai_report import (
     V4LLMFields,
     V4ReportInputs,
     V4VerifiedCandidateInput,
+    V5LLMFields,
     assemble_v4_report_content,
+    assemble_v5_report_content,
     build_v4_stored_payload,
+    build_v5_stored_payload,
 )
 from app.db.models import (
     AiReport,
@@ -381,5 +385,107 @@ def seed_v4_report(
         status=status,
     )
     db_session.add(report)
+    db_session.commit()
+    return report, candidate
+
+
+def seed_v5_report(
+    db_session,
+    *,
+    report_id: uuid.UUID = REPORT_ID_LATEST,
+    generated_at: datetime = NOW + timedelta(minutes=5),
+    with_candidate: bool = True,
+) -> tuple[AiReport, ContextCandidate | None]:
+    report, candidate = seed_v4_report(
+        db_session,
+        report_id=report_id,
+        generated_at=generated_at,
+        with_candidate=with_candidate,
+    )
+    candidate_inputs = []
+    if candidate is not None:
+        candidate_inputs = [
+            V4VerifiedCandidateInput(
+                id=candidate.id,
+                title=candidate.event_title,
+                event_at=candidate.event_at,
+                neutral_summary=candidate.neutral_summary,
+                sources=[V4ContextSource.model_validate(source) for source in candidate.sources],
+            )
+        ]
+    inputs = V4ReportInputs(
+        market_id=MARKET_ID,
+        metric_id=1,
+        episode_at=NOW,
+        data_as_of=NOW,
+        title="Will the test issue resolve Yes?",
+        description="A seeded test issue.",
+        category="technology",
+        outcome_label="Yes",
+        end_date=NOW + timedelta(days=30),
+        current_value=0.63,
+        change_24h=0.08,
+        change_7d=0.11,
+        confidence_level="sufficient",
+        volume_24h=1000,
+        liquidity=2000,
+        context_candidates=candidate_inputs,
+    )
+    fields = V5LLMFields(
+        executive_summary=(
+            "test issue가 정해진 기준일까지 문서 조건을 충족하는지 다루는 이슈입니다. "
+            "현재 공개 데이터와 최근 움직임은 현실의 결과를 뜻하지 않습니다."
+        ),
+        current_data_interpretation=(
+            "현재 값 63.0%와 24시간 8.0%포인트, 7일 11.0%포인트 변화가 저장되었습니다. "
+            "이 수치는 공개 예측시장 참여자 데이터의 관찰값입니다."
+        ),
+        conditional_scenarios=[
+            {
+                "title": "조건 확인",
+                "narrative": (
+                    "만약 test issue 조건이 문서에서 확인된다면 판정 조건과 함께 읽습니다."
+                ),
+            },
+            {
+                "title": "부분 확인",
+                "narrative": "만약 test issue 자료가 불완전한 경우 후속 문서를 추가로 확인합니다.",
+            },
+            {
+                "title": "조건 미확인",
+                "narrative": "만약 test issue 조건이 확인되지 않는다면 미확인 상태로 구분합니다.",
+            },
+        ],
+        factors_to_check=[
+            {
+                "title": "판정 문서",
+                "explanation": "test issue의 조건이 적힌 공식 문서를 확인합니다.",
+            },
+            {
+                "title": "기준 시각",
+                "explanation": "자료가 정해진 기준일 안에 공개됐는지 확인합니다.",
+            },
+        ],
+        signals_to_watch=[
+            {
+                "title": "공식 자료",
+                "explanation": "test issue 관련 공식 자료의 공개 여부를 관찰합니다.",
+            },
+            {
+                "title": "데이터 갱신",
+                "explanation": "공개 예측시장 데이터의 이후 갱신을 확인합니다.",
+            },
+        ],
+        evidence_synthesis=(
+            "검증된 공식 자료에는 test issue 관련 공지가 기록되어 있습니다. "
+            "이 자료와 관찰된 움직임 사이의 관계는 확인되지 않았습니다."
+            if with_candidate
+            else None
+        ),
+    )
+    content = assemble_v5_report_content(inputs, fields)
+    assert content is not None
+    report.content = build_v5_stored_payload(inputs, content).model_dump(mode="json")
+    report.prompt_version = "v5"
     db_session.commit()
     return report, candidate
