@@ -507,3 +507,31 @@ Not bugs, but unresolved decisions that can affect later demo or product work:
   - Resolve the requested market directly and replace full-table latest-row
     materialization with bounded per-market/latest-row SQL for status and issue
     reads. Add polling/load regressions before changing runtime behavior.
+
+### ISS-018: Configured v8 research model returns no standard citation annotations
+
+- **Severity**: High
+- **Found**: 2026-07-11 during TASK-113 development evaluation
+- **Status**: Open
+- **Evidence**:
+  - The approved U.S.-Russia nuclear-agreement evaluation reached OpenRouter
+    successfully after live request-shape fixes.
+  - Server-tool calls could complete without searching; `tool_choice=required`
+    did not produce a search for the configured model.
+  - The bounded compatibility plugin performed two searches according to the
+    current usage field but returned `annotations=null`.
+  - Exact annotation provenance is mandatory, so eight evaluation attempts
+    stored zero candidates and no new briefing.
+- **Accounting note**:
+  - Three persisted failure-usage rows record USD 0.22190440 and two direct
+    diagnostics record USD 0.11140620.
+  - Earlier successful responses occurred before TASK-113 added failed-call
+    usage persistence, so USD 0.33331060 is the reconstructible minimum rather
+    than a complete evaluation total.
+- **Fix direction**:
+  - Obtain explicit approval before changing the research model/provider
+    configuration.
+  - Evaluate one model that demonstrably returns OpenRouter
+    `url_citation` annotations, then rerun the same issue and compare source
+    acceptance and briefing quality.
+  - Keep body URLs rejected and retain the exact-excerpt publication boundary.

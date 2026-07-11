@@ -206,4 +206,13 @@ categories. If the writer supplies a `limitations` section, the UI does not
 repeat the deterministic data-limitations card; interpretation caution remains
 visible in every full report state.
 
+### 8.5 V8 source-refresh action
+
+TASK-113 makes the existing briefing action request a bounded public-source
+refresh before writing. The adjacent copy states that available public material
+will be checked and then used with the current evidence bundle. Generating,
+failure, last-known-good, source-card, timestamp, and caution states remain
+unchanged; an empty accepted-source set is still shown explicitly rather than
+filled with unverified material.
+
 ---

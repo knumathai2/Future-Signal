@@ -33,12 +33,16 @@ from app.core.ai_report import (
     validate_v8_writer_output,
 )
 from app.core.context_policy_v7 import (
+    V8_CONTEXT_POLICY_VERSION,
     ResearchClient,
     V7ConditionalVerifier,
     V7SupportedClaim,
-    collect_v7_context,
+    collect_v8_context,
 )
-from app.core.context_research_batch import ContextResearchTarget, build_research_inputs
+from app.core.context_research_batch import (
+    ContextResearchTarget,
+    build_research_inputs,
+)
 from app.db.models import (
     AiReport,
     AiReportGenerationEvent,
@@ -183,7 +187,9 @@ def _v7_context_rows(
     statement = select(ContextCandidate).where(
         ContextCandidate.market_id == market_id,
         ContextCandidate.verification_state == "verified",
-        ContextCandidate.policy_version == "v7-source-level-1",
+        ContextCandidate.policy_version.in_(
+            ("v7-source-level-1", V8_CONTEXT_POLICY_VERSION)
+        ),
         ContextCandidate.collected_at <= now,
         ContextCandidate.expires_at >= now,
     )
@@ -212,7 +218,7 @@ def _v7_context_rows(
     )
 
 
-def refresh_v7_context_for_market(
+def refresh_v8_context_for_market(
     db: Session,
     market_id: uuid.UUID,
     now: datetime,
@@ -220,8 +226,10 @@ def refresh_v7_context_for_market(
     research_client: ResearchClient,
     verifier: V7ConditionalVerifier | None = None,
     established_domains: set[str] | None = None,
+    budget_usd: float = DEFAULT_PROGRAM_BUDGET_USD,
+    cost_reservation_usd: float = 2.0,
 ) -> list[ContextCandidate]:
-    """Run one bounded v7 refresh and append candidate/run audit rows."""
+    """Run one bounded v8 refresh and append candidate/run audit rows."""
     started_at = _as_utc(now)
     metric = _latest_metric(db, market_id)
     if metric is None:
@@ -237,13 +245,19 @@ def refresh_v7_context_for_market(
     if inputs is None:
         raise ValueError("research_inputs_unavailable")
     try:
-        result = collect_v7_context(
+        if _recorded_context_spend(db) + cost_reservation_usd > min(
+            budget_usd, DEFAULT_PROGRAM_BUDGET_USD
+        ):
+            raise ValueError("context_budget_limit")
+        result = collect_v8_context(
             inputs,
             research_client,
             established_domains=established_domains,
             verifier=verifier,
         )
     except Exception as exc:
+        failed_usage = getattr(research_client, "last_usage", None)
+        failed_queries = getattr(research_client, "last_queries", None)
         db.add(
             ContextCollectionRun(
                 id=uuid.uuid4(),
@@ -252,11 +266,20 @@ def refresh_v7_context_for_market(
                 started_at=started_at,
                 finished_at=started_at,
                 status="failed",
-                query_count=0,
+                query_count=len(failed_queries) if isinstance(failed_queries, list) else 0,
                 result_count=0,
                 accepted_count=0,
-                model_usage={"policy_version": "v7-source-level-1"},
-                error_detail={"reason_code": type(exc).__name__},
+                model_usage={
+                    "policy_version": V8_CONTEXT_POLICY_VERSION,
+                    "research_model": getattr(research_client, "model", None),
+                    "research_input_tokens": getattr(failed_usage, "input_tokens", 0),
+                    "research_output_tokens": getattr(failed_usage, "output_tokens", 0),
+                    "web_searches": getattr(failed_usage, "web_search_requests", 0),
+                    "research_cost_usd": getattr(failed_usage, "cost_usd", None),
+                },
+                error_detail={
+                    "reason_code": str(exc)[:160] or type(exc).__name__,
+                },
             )
         )
         db.commit()
@@ -342,12 +365,31 @@ def refresh_v7_context_for_market(
                 "output_tokens": usage.output_tokens,
                 "web_searches": usage.web_search_requests,
                 "cost_usd": usage.cost_usd,
+                "research_cost_usd": usage.cost_usd,
             },
             error_detail=None,
         )
     )
     db.commit()
     return rows
+
+
+# Historical import compatibility; active v8 callers use the name above.
+refresh_v7_context_for_market = refresh_v8_context_for_market
+
+
+def _recorded_context_spend(db: Session) -> float:
+    """Sum context costs from the append-only context run audit."""
+    total = 0.0
+    for usage in db.execute(select(ContextCollectionRun.model_usage)).scalars():
+        if not isinstance(usage, dict):
+            continue
+        values = [
+            usage.get("research_cost_usd", usage.get("cost_usd")),
+            usage.get("verifier_cost_usd"),
+        ]
+        total += sum(float(value) for value in values if isinstance(value, int | float))
+    return round(total, 8)
 
 
 def _source_evidence(
@@ -561,6 +603,7 @@ def v8_input_fingerprint(bundle: V8InputBundle) -> str:
         "evidence": [item.model_dump(mode="json") for item in bundle.writer_inputs.evidence],
         "prompt_version": V8_PROMPT_VERSION,
         "policy_version": V8_POLICY_VERSION,
+        "context_policy_version": V8_CONTEXT_POLICY_VERSION,
         "input_schema_version": V8_INPUT_SCHEMA_VERSION,
     }
     encoded = json.dumps(canonical, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
@@ -1037,6 +1080,7 @@ def run_pending_v8_requests(
     *,
     now: datetime | None = None,
     max_requests: int = 10,
+    context_refresher: Callable[[Session, uuid.UUID, datetime], None] | None = None,
 ) -> list[ProcessResult]:
     """Process a bounded FIFO slice for a standalone recoverable worker."""
     reference = _as_utc(now or datetime.now(UTC))
@@ -1047,6 +1091,7 @@ def run_pending_v8_requests(
             llm_client,
             model_name,
             now=reference + timedelta(microseconds=index),
+            context_refresher=context_refresher,
         )
         for index, request_id in enumerate(
             pending_v8_request_ids(db, now=reference, limit=max_requests)

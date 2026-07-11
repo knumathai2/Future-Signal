@@ -8,13 +8,15 @@ or override deterministic failures.
 
 import json
 import re
+import unicodedata
 from collections.abc import Mapping
 from datetime import timedelta
 from typing import Any, Literal, Protocol
 
-from openai import OpenAIError
+from openai import OpenAI, OpenAIError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
 
+from app.core.config import OPENROUTER_BASE_URL, Settings
 from app.core.context_research import (
     ContextResearchResult,
     NormalizedCitation,
@@ -24,6 +26,7 @@ from app.core.context_research import (
 )
 
 V7_CONTEXT_POLICY_VERSION = "v7-source-level-1"
+V8_CONTEXT_POLICY_VERSION = "v8-source-level-2"
 V7SourceLevel = Literal["A", "B", "C", "D"]
 
 _WORD_PATTERN = re.compile(r"[A-Za-z0-9가-힣]+")
@@ -43,6 +46,42 @@ _STOPWORDS = {
     "the",
     "to",
     "will",
+}
+_ALIAS_PHRASE_PATTERNS = (
+    (re.compile(r"\bu\.?\s*s\.?\s*a?\.?\b", re.IGNORECASE), " unitedstates "),
+    (re.compile(r"\bunited\s+states(?:\s+of\s+america)?\b", re.IGNORECASE), " unitedstates "),
+    (re.compile(r"미\s*[·ㆍ・/\-]\s*러"), " unitedstates russia "),
+    (re.compile(r"미국"), " unitedstates "),
+    (re.compile(r"러시아"), " russia "),
+    (re.compile(r"핵\s*(?:무기\s*)?(?:합의|협정)"), " nuclear agreement "),
+    (re.compile(r"핵\s*협상"), " nuclear negotiation "),
+)
+_TOKEN_ALIASES = {
+    "america": "unitedstates",
+    "american": "unitedstates",
+    "americans": "unitedstates",
+    "russian": "russia",
+    "russians": "russia",
+    "atomic": "nuclear",
+    "accord": "agreement",
+    "accords": "agreement",
+    "agreements": "agreement",
+    "deal": "agreement",
+    "deals": "agreement",
+    "talk": "negotiation",
+    "talks": "negotiation",
+    "negotiations": "negotiation",
+}
+_SLOW_CONTEXT_TOKENS = {
+    "agreement",
+    "diplomacy",
+    "election",
+    "legislation",
+    "negotiation",
+    "nuclear",
+    "policy",
+    "regulation",
+    "treaty",
 }
 _DISALLOWED_DOMAINS = {
     "polymarket.com",
@@ -169,15 +208,50 @@ def broaden_v7_research_inputs(
     )
 
 
+def _v8_lookback_days(inputs: ResearchInputs) -> int:
+    """Choose a bounded issue horizon without treating every topic as breaking news."""
+    topic_tokens = _tokens(
+        inputs.title,
+        inputs.description,
+        inputs.category,
+        inputs.tracked_condition,
+    )
+    if topic_tokens & _SLOW_CONTEXT_TOKENS:
+        return 180
+    if inputs.end_date is not None:
+        horizon = inputs.end_date - inputs.search_window_end
+        if horizon >= timedelta(days=60):
+            return 180
+    return 90
+
+
+def broaden_v8_research_inputs(inputs: ResearchInputs) -> ResearchInputs:
+    """Expand v8 research to a 90- or 180-day issue-specific review horizon."""
+    lookback_days = _v8_lookback_days(inputs)
+    broad_start = min(
+        inputs.search_window_start,
+        inputs.search_window_end - timedelta(days=lookback_days),
+    )
+    return inputs.model_copy(
+        update={
+            "search_window_start": broad_start,
+            "inflection_at": None,
+        }
+    )
+
+
 class _ChatTransport(Protocol):
     @property
     def chat(self) -> Any: ...
 
 
 def _tokens(*values: str) -> set[str]:
+    text = unicodedata.normalize("NFKC", " ".join(values)).casefold()
+    for pattern, replacement in _ALIAS_PHRASE_PATTERNS:
+        text = pattern.sub(replacement, text)
     return {
-        token
-        for token in _WORD_PATTERN.findall(" ".join(values).casefold())
+        _TOKEN_ALIASES.get(token, token)
+        for token in _WORD_PATTERN.findall(text)
         if len(token) >= 3 and token not in _STOPWORDS
     }
 
@@ -214,18 +288,51 @@ def _source_level(
 def _claim_for_source(
     candidate: ResearchCandidateDraft,
     citation: NormalizedCitation,
+    inputs: ResearchInputs,
 ) -> V7SupportedClaim | None:
-    # A title can establish topical relevance, but only the stored excerpt can
-    # support a public factual claim.
-    evidence_tokens = _tokens(citation.content_excerpt)
-    claim_text = candidate.matched_condition.strip() or candidate.title.strip()
-    claim_tokens = _tokens(claim_text, *candidate.matched_entities)
-    overlap = evidence_tokens & claim_tokens
-    if not overlap:
+    """Build a narrow claim after issue and candidate relevance both pass.
+
+    The title can help establish relevance, but the stored excerpt remains the
+    factual evidence. If aliases connect the excerpt to the issue but not to
+    the provider's exact wording, the excerpt itself becomes the public claim.
+    """
+    excerpt_tokens = _tokens(citation.content_excerpt)
+    source_tokens = excerpt_tokens | _tokens(citation.title)
+    candidate_tokens = _tokens(
+        candidate.title,
+        candidate.matched_condition,
+        *candidate.matched_entities,
+    )
+    claim_tokens = _tokens(candidate.matched_condition or candidate.title)
+    market_tokens = _tokens(
+        inputs.title,
+        inputs.description,
+        inputs.category,
+        inputs.tracked_condition,
+    )
+    entity_tokens = _tokens(*candidate.matched_entities)
+    candidate_overlap = source_tokens & candidate_tokens
+    market_overlap = source_tokens & market_tokens
+    entity_overlap = source_tokens & entity_tokens
+    excerpt_topic_overlap = excerpt_tokens & (candidate_tokens | market_tokens)
+    relevant = bool(excerpt_topic_overlap) and (
+        len(candidate_overlap) >= 2
+        or (bool(entity_overlap) and len(market_overlap) >= 2)
+    )
+    if not relevant:
+        return None
+
+    direct_excerpt_overlap = excerpt_tokens & (claim_tokens - entity_tokens)
+    claim_text = (
+        candidate.matched_condition.strip() or candidate.title.strip()
+        if len(direct_excerpt_overlap) >= 2
+        else citation.content_excerpt.strip()
+    )
+    if not claim_text:
         return None
     return V7SupportedClaim(
         ref=f"claim:{candidate.candidate_key}:{citation.citation_id.partition(':')[2][:16]}",
-        text=claim_text,
+        text=claim_text[:1200],
         excerpt=citation.content_excerpt,
         citation_id=citation.citation_id,
     )
@@ -251,7 +358,7 @@ def classify_v7_candidate(
         if citation is None:
             continue
         level = _source_level(citation, inputs, established)
-        claim = _claim_for_source(candidate, citation) if level != "D" else None
+        claim = _claim_for_source(candidate, citation, inputs) if level != "D" else None
         if level == "D":
             reason = "source_rejected"
         elif claim is None:
@@ -351,9 +458,16 @@ def apply_v7_conditional_verifier(
 class OpenRouterV7ConditionalVerifier:
     """No-search strict verifier for only the candidates routed by policy."""
 
-    def __init__(self, client: _ChatTransport, model: str) -> None:
+    def __init__(
+        self,
+        client: _ChatTransport,
+        model: str,
+        *,
+        extra_headers: dict[str, str] | None = None,
+    ) -> None:
         self._client = client
         self.model = model
+        self._extra_headers = extra_headers or {}
 
     def verify(self, candidate: V7ClassifiedCandidate) -> V7VerifierDecision:
         evidence = [
@@ -391,6 +505,8 @@ class OpenRouterV7ConditionalVerifier:
             "temperature": 0,
             "timeout": 30,
         }
+        if self._extra_headers:
+            kwargs["extra_headers"] = self._extra_headers
         try:
             response = self._client.chat.completions.create(**kwargs)
         except (OpenAIError, TimeoutError) as exc:
@@ -405,10 +521,47 @@ class OpenRouterV7ConditionalVerifier:
             raise V7ContextPolicyError("Conditional verifier returned invalid JSON") from exc
 
 
+def build_v8_conditional_verifier_from_settings(
+    app_settings: Settings,
+) -> OpenRouterV7ConditionalVerifier | None:
+    """Build the optional independent v8 verifier without exposing configuration."""
+    if not app_settings.context_verifier_model:
+        return None
+    key = app_settings.openrouter_api_key
+    if not key and app_settings.openai_api_key and app_settings.openai_api_key.startswith("sk-or-"):
+        key = app_settings.openai_api_key
+    if not key:
+        raise V7ContextPolicyError("OpenRouter API key is not configured")
+    headers: dict[str, str] = {}
+    if app_settings.openrouter_http_referer:
+        headers["HTTP-Referer"] = app_settings.openrouter_http_referer
+    if app_settings.openrouter_app_title:
+        headers["X-OpenRouter-Title"] = app_settings.openrouter_app_title
+    return OpenRouterV7ConditionalVerifier(
+        OpenAI(api_key=key, base_url=OPENROUTER_BASE_URL),
+        app_settings.context_verifier_model,
+        extra_headers=headers,
+    )
+
+
 class V7ContextCollectionResult(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     policy_version: Literal["v7-source-level-1"] = V7_CONTEXT_POLICY_VERSION
+    research_model: str
+    queries: list[str]
+    candidates: list[V7ClassifiedCandidate]
+    usage: ResearchUsage
+
+    @property
+    def accepted(self) -> list[V7ClassifiedCandidate]:
+        return [candidate for candidate in self.candidates if candidate.state == "accepted"]
+
+
+class V8ContextCollectionResult(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    policy_version: Literal["v8-source-level-2"] = V8_CONTEXT_POLICY_VERSION
     research_model: str
     queries: list[str]
     candidates: list[V7ClassifiedCandidate]
@@ -451,6 +604,45 @@ def collect_v7_context(
             )
         )
     return V7ContextCollectionResult(
+        research_model=research.model,
+        queries=research.queries,
+        candidates=candidates,
+        usage=research.usage,
+    )
+
+
+def collect_v8_context(
+    inputs: ResearchInputs,
+    research_client: ResearchClient,
+    *,
+    established_domains: set[str] | None = None,
+    verifier: V7ConditionalVerifier | None = None,
+    material_candidate_keys: set[str] | None = None,
+    conflicting_citation_ids: set[str] | None = None,
+) -> V8ContextCollectionResult:
+    """Collect wider v8 issue context while preserving exact-source blockers."""
+    research_inputs = broaden_v8_research_inputs(inputs)
+    research = research_client.research(research_inputs)
+    citations = {citation.citation_id: citation for citation in research.citations}
+    material_keys = material_candidate_keys or set()
+    candidates = []
+    for draft in research.candidates:
+        classified = classify_v7_candidate(
+            draft,
+            citations,
+            research_inputs,
+            established_domains=established_domains,
+            material_to_summary=draft.candidate_key in material_keys,
+            conflicting_citation_ids=conflicting_citation_ids,
+        )
+        candidates.append(
+            apply_v7_conditional_verifier(
+                classified,
+                verifier,
+                research_model=research.model,
+            )
+        )
+    return V8ContextCollectionResult(
         research_model=research.model,
         queries=research.queries,
         candidates=candidates,
