@@ -278,9 +278,10 @@ sentence summary, and two-to-six uniquely typed sections. `current_situation`
 and `recent_change` are required because definition and metric evidence are
 always present. References are attached at section level rather than requiring
 sentence-by-sentence assembly. V7 prompt/models remain in source for historical
-reconstruction; new generation and public serving use `prompt_version="v8"`,
+reconstruction. The initial v8 contract used `prompt_version="v8"`,
 `policy_version="v8-issue-centered-1"`, and
-`input_schema_version="v8-writer-input-1"`.
+`input_schema_version="v8-writer-input-1"`; later active policies retain those
+rows as last-known-good history.
 
 ### 10.12 V8 wider source discovery with narrow excerpt claims (TASK-113)
 
@@ -316,5 +317,42 @@ The request sets server-tool choice to `required`; a response with zero search
 usage and no annotations triggers the one bounded compatibility attempt using
 OpenRouter's always-on web plugin. Both paths normalize only `url_citation`
 annotations; a second response without annotations still fails closed.
+
+### 10.13 Active-v8 contextual wording validation (TASK-116)
+
+The active writer policy is `v8-contextual-wording-1`. Transactional,
+financial-return, participant-following, outcome-endorsement, English, URL,
+future-outcome, and unsupported-causality blockers remain deterministic.
+
+Six Korean expressions use an evidence-aware classifier: `확정`, `보장`,
+`추천`, `기회`, `전망`, and `원인`. Each authored sentence is checked separately.
+Explicit negation/limitation and verification-inquiry patterns pass without a
+source. Positive uses require a same-section `source:*` record, a supported
+claim containing an approved semantic-strength marker, and visible attribution
+in the same sentence. A missing condition fails closed. Generation and
+`reconstruct_v8_report()` call the identical validator.
+
+The policy version changes the current request fingerprint. Read-time
+reconstruction accepts the historical `v8-issue-centered-1` fingerprint so
+previous valid v8 rows remain last-known-good but become stale relative to the
+new policy. No schema or public response change is required.
+
+### 10.14 Validated-block writer transport (TASK-117)
+
+The active v8 input schema is `v8-writer-stream-input-1`. The existing
+OpenAI-compatible client makes one streaming Chat Completions request without
+JSON-object response mode and yields arbitrary text chunks. The worker buffers
+those chunks until newline boundaries and accepts only strict NDJSON objects:
+one headline/summary block, consecutive uniquely typed sections, and a final
+count object.
+
+Each complete authored block passes exact Pydantic shape validation, evidence
+and source-parent checks, URL and wording filters, and accumulated section
+order/uniqueness checks before an append-only block row commits. The final
+object constructs the normal `V8WriterOutput` and reruns the complete validator
+before the unchanged `ai_reports` success row and request outcome are stored.
+Provider usage plus first-validated-block and total-writer milliseconds are
+recorded on the terminal request event. A non-streaming client is retained only
+as a compatibility path and publishes blocks after the full output validates.
 
 ---

@@ -107,6 +107,7 @@ child worker; that isolated worker performs provider calls and report writes.
 | V7 public API | Append-only generate POST, request polling, strict reconstructed fresh/stale/generating/failure/last-good GET; API never calls provider | 2026-07-11 (TASK-105, human-approved) |
 | API query scope | ID routes use primary-key/market/time/latest-row bounds; lists use portable latest-per-market window subqueries | 2026-07-11 (ADR-057 / TASK-114) |
 | V8 failed-request retry | Failed immutable requests may append a queued-event refresh preference and retry with stored evidence; prompt lists existing wording blockers explicitly | 2026-07-11 (ADR-058 / TASK-115) |
+| Active-v8 wording validation | Sentence-level hard/negation/inquiry/source-supported-attribution classifier with legacy fingerprint reconstruction | 2026-07-11 (ADR-059 / TASK-116) |
 | Evidence-aware briefing v6 | Four deterministic change/evidence modes, strict basis union, one-owner metric/rule display, and v6-only fallback | 2026-07-11 (ADR-050, human-approved and implemented) |
 
 ## V6 evidence-aware briefing implementation (TASK-092~098)
@@ -154,6 +155,13 @@ workflow, infrastructure, deployment, or production-write change is included.
   their immutable refresh setting. The v8 prompt enumerates the existing
   wording blockers so writer failures are less likely without relaxing the
   validator.
+- TASK-116 activates `v8-contextual-wording-1`. The active validator evaluates
+  each authored sentence with its exact section evidence scope. Positive
+  certainty/guarantee/recommendation/opportunity/outlook/cause wording requires
+  an exact source ref, same-strength supported-claim marker, and visible
+  attribution; negative/limitation/inquiry forms may pass source-free. Legacy
+  v8 fingerprints reconstruct independently and appear stale under the new
+  current fingerprint.
 
 ## Implementation Status (2026-07-10 Day 5 v3 Integrated)
 
@@ -248,3 +256,11 @@ workflow, infrastructure, deployment, or production-write change is included.
   approval handling, and presentation polish. Any shared or production schema
   application, non-project paid external AI call, public API shape change,
   deployment, or infrastructure change remains separately approval-gated.
+- `TASK-117` adds no queue or WebSocket infrastructure. The existing child
+  worker performs one NDJSON streaming writer call, validates and commits each
+  complete block to append-only `ai_report_generation_blocks`, and the FastAPI
+  SSE read path replays active-attempt rows with `Last-Event-ID`. The final
+  `ai_reports` envelope and request success/failure event remain authoritative;
+  polling and last-known-good remain fallbacks. Migration 005 was subsequently
+  applied only to the approved `ENV=local` development database; any other
+  database remains separately gated.

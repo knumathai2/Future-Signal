@@ -14,9 +14,9 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: Data/AI Implementer with Backend/Frontend integration
-- **Session Goal**: Restore live chart access and make failed v8 generation safely retryable.
-- **Branch**: `data-ai/TASK-115-v8-generation-retry`
+- **Agent Role**: PM / Planner with Backend, Data/AI, and Frontend implementation
+- **Session Goal**: Complete contextual wording and validated-block briefing streaming.
+- **Branch**: `backend/TASK-117-validated-block-streaming`
 
 ## Context Read
 
@@ -26,6 +26,65 @@ Harness Version: 1.1
 
 ## Work Completed
 
+- Completed TASK-117 after explicit user approval for the append-only schema,
+  public SSE API, and active v8 output-contract changes. Added strict one-call
+  NDJSON headline/summary, section, and complete objects while retaining the
+  normal full report envelope.
+- Added per-block exact shape, consecutive order, unique type, evidence,
+  source-parent, authored-URL, contextual wording, and retained safety checks.
+  Only accepted blocks commit to the new append-only table; final report
+  validation still gates `ai_reports` and request success.
+- Added SSE active-attempt replay, `Last-Event-ID`, keep-alive, terminal state,
+  and strict Frontend stream parsing. The UI progressively renders accepted
+  blocks, clears partial content on generation failure, and falls back to the
+  existing bounded poller on transport failure while preserving last-good.
+- Advanced the active input schema to `v8-writer-stream-input-1`, retained old
+  contextual and issue-centered fingerprints for reconstruction, and recorded
+  first-block/total writer timing on terminal events.
+- Verification passed with 488 Backend tests, Ruff, Frontend typecheck/lint/
+  parser/build, desktop and 390×844 Browser QA with zero console warnings or
+  errors, copy scan, and diff checks. Migration 005 was not applied. No
+  provider call, database write, dependency, infrastructure, deployment,
+  production action, or legacy deletion occurred.
+- Under the user's subsequent explicit approval, applied migration 005 only to
+  the configured `ENV=local` development database and verified the new table,
+  six constraints, and three indexes. No other database was touched.
+- Ran exactly one stored-evidence-only OpenRouter writer evaluation on the
+  Israeli-parliament issue. It succeeded on attempt one with six validated
+  blocks and five authored sections for USD 0.010567. Client timing was 9.700
+  seconds to first content versus 13.738 seconds to complete; worker timing was
+  5.223 versus 8.493 seconds.
+- Confirmed the fresh v8 response through the actual API and DB-backed Browser
+  page with data-as-of, caution, all five sections, explicit no-source state,
+  and zero console warnings/errors. No context research, second writer call,
+  deployment, infrastructure change, production action, dependency, or legacy
+  deletion occurred.
+
+- Completed TASK-116 after explicit user approval to change the wording/safety
+  policy. Replaced the active-v8 flat Korean block with four deterministic
+  outcomes: hard block, explicit negation/limitation, verification inquiry, or
+  source-supported visible attribution. Ambiguous cases fail closed.
+- Kept financial/action terms and all English hard blocks unconditional.
+  Contextualized only `확정`, `보장`, `추천`, `기회`, `전망`, and `원인` for active
+  v8; v1-v7 historical validators remain unchanged.
+- Positive contextual use requires the same authored section to reference a
+  `source:*` evidence item, that stored supported claim to contain an approved
+  same-strength Korean/English marker, and the sentence itself to attribute the
+  statement to an official document, institution, government, committee,
+  report, announcement, notice, or equivalent visible source form.
+- Added sentence-level adversarial coverage for unsupported assertions,
+  negation, verification inquiries, attribution without semantic support,
+  supported certainty, institutional recommendation, procedural opportunity,
+  guarantee, outlook, cause, and future-outcome assertions.
+- Activated `v8-contextual-wording-1` in request fingerprints. Reconstruction
+  accepts the prior `v8-issue-centered-1` fingerprint, so existing valid v8
+  reports remain visible as stale last-known-good. The real development report
+  was confirmed through the API in that state.
+- Updated AGENTS, standards, glossary, Service/Technical/UX Design, architecture,
+  project/session memory, ADR, task ledger, and implementation report. Full
+  verification passed with 482 Backend tests and Ruff. No provider call,
+  database write, schema, migration, public API, dependency, infrastructure,
+  deployment, or production action occurred.
 - Diagnosed the user's screenshot in the existing Chrome tab. The page was the
   static `ai-oversight-bill` fallback route and every request showed `Failed to
   fetch` because the Frontend dev server was stopped. Restarted Frontend on

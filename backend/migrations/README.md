@@ -35,6 +35,15 @@ carry either an exact report FK or a safe error code. The user approved local
 and development application under TASK-099 items 1-7. Production application
 and deployment remain prohibited without separate approval.
 
+`005_ai_report_generation_blocks.sql` is the ADR-060/TASK-117 append-only
+validated-block extension. It stores only complete headline/summary or section
+objects that passed the active v8 validators, uniquely ordered by request,
+attempt, and sequence. The user subsequently approved and completed application
+to the currently configured `ENV=local` development database on 2026-07-11;
+table, constraint, and index verification passed. Any other database,
+production application, and deployment remain prohibited without separate
+approval.
+
 Once approved, running it against a real Postgres instance is:
 
 ```bash
@@ -58,6 +67,13 @@ And, after its predecessors, migration 004:
 
 ```bash
 psql "$DATABASE_URL" -f migrations/004_ai_report_generation_requests.sql
+```
+
+Migration 005 must be applied only after a separate environment-specific
+approval:
+
+```bash
+psql "$DATABASE_URL" -f migrations/005_ai_report_generation_blocks.sql
 ```
 
 `psql` expects a plain Postgres URL such as `postgresql://...`; if local API

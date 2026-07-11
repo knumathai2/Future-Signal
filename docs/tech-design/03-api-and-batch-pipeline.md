@@ -21,6 +21,7 @@ JSON, versionless for hackathon (`/api/...` prefix is enough, no `/v1` needed ye
 | `/api/issues/:id/report` | GET | V8 idle/generating/fresh/stale/failure state and latest valid report | — | `ai_reports`, generation requests/events, evidence tables | **P0** |
 | `/api/issues/:id/report/generate` | POST | Create or join a fingerprinted generation request; no provider call | `refresh_context` | generation requests/events, evidence tables | **P0 v8** |
 | `/api/issues/:id/report/requests/:request_id` | GET | Poll append-only request/lease/outcome state | — | generation requests/events | **P0 v8** |
+| `/api/issues/:id/report/requests/:request_id/stream` | GET | Replay and follow only validated v8 blocks as SSE | `Last-Event-ID` header | generation requests/events/blocks | **P0 v8** |
 | `/api/categories` | GET | List of categories for filter UI | — | `markets` (distinct) | **P1** |
 | `/api/search` | GET | Simple title search | `q` | `markets` (ILIKE) | **P2** |
 | `/api/watchlist` | GET/POST/DELETE | Phase 2 only | `market_id` | `watchlists` | **Excluded from MVP** |

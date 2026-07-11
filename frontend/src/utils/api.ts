@@ -1,9 +1,13 @@
 import type {
   GenerationRequestResponse,
   GenerationRequestStatusResponse,
+  GenerationStreamBlock,
   IssueReportLoadState,
 } from "../types/issue";
-import { parseReportResponse } from "./reportParser";
+import {
+  parseGenerationStreamBlock,
+  parseReportResponse,
+} from "./reportParser";
 
 export class HttpError extends Error {
   status: number;
@@ -82,4 +86,51 @@ export async function loadGenerationRequestStatus(
     "Failed to load generation request status",
     signal,
   );
+}
+
+type GenerationStreamHandlers = {
+  onBlock: (block: GenerationStreamBlock) => void;
+  onComplete: () => void;
+  onGenerationError: () => void;
+  onTransportError: () => void;
+};
+
+/** Subscribe to validated append-only blocks; callers own the polling fallback. */
+export function subscribeToGenerationStream(
+  issueId: string,
+  requestId: string,
+  handlers: GenerationStreamHandlers,
+): () => void {
+  const source = new EventSource(
+    `/api/issues/${encodeURIComponent(issueId)}/report/requests/${encodeURIComponent(requestId)}/stream`,
+  );
+  const block = (event: Event) => {
+    try {
+      const parsed = parseGenerationStreamBlock(
+        JSON.parse((event as MessageEvent<string>).data),
+      );
+      if (!parsed) throw new Error("Invalid generation stream block");
+      handlers.onBlock(parsed);
+    } catch (error) {
+      console.error(error);
+      source.close();
+      handlers.onTransportError();
+    }
+  };
+  const complete = () => {
+    source.close();
+    handlers.onComplete();
+  };
+  const generationError = () => {
+    source.close();
+    handlers.onGenerationError();
+  };
+  source.addEventListener("block", block);
+  source.addEventListener("complete", complete);
+  source.addEventListener("generation_error", generationError);
+  source.onerror = () => {
+    source.close();
+    handlers.onTransportError();
+  };
+  return () => source.close();
 }

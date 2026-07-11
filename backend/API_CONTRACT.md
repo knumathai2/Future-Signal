@@ -227,6 +227,21 @@ Returns the latest append-only state (`queued`, `running`, `succeeded`, or
 `failed`), attempt number, request/update times, fingerprint, report/error, and
 optional successor request. The request must belong to the issue.
 
+## `GET /api/issues/{id}/report/requests/{request_id}/stream`
+
+Returns `text/event-stream` for the issue-scoped immutable request. The stream
+replays only `ai_report_generation_blocks` rows from the active attempt and
+then follows new rows until the request succeeds or fails. Supported event
+types are `status`, `block`, `complete`, and `generation_error`; comments are
+used only as connection keep-alives.
+
+Each `block` carries its database event ID, consecutive sequence, block type,
+and strict validated payload. Clients may send `Last-Event-ID` to resume after
+the last received block. A terminal success is emitted only after the complete
+v8 output is revalidated and stored in `ai_reports`. A terminal failure never
+includes unvalidated model text. The existing status endpoint remains the
+transport fallback.
+
 ## Historical strict v6 runtime (superseded by v7)
 
 The endpoint serves only a recent successful `prompt_version="v6"` row that can

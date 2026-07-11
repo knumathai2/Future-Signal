@@ -187,6 +187,38 @@ not the requested JSON body, v8 ignores body links and creates narrow
 annotation-only candidates from the citation title, URL, and excerpt before
 running the same relevance and publication gates.
 
+### 6.11 Active-v8 contextual wording policy (TASK-116)
+
+Active v8 no longer treats every Korean occurrence of `확정`, `보장`, `추천`,
+`기회`, `전망`, and `원인` as equivalent. Explicit negation, limitation, and
+verification-inquiry uses may pass without source evidence. A positive use is
+allowed only inside a section that references an accepted source whose stored
+supported claim contains an approved same-strength marker, and only when the
+authored sentence visibly attributes the statement to that source or
+institution. Unsupported, ambiguous, predictive, outcome-asserting, and
+action-inducing uses fail closed.
+
+Financial/action wording remains an unconditional block. Headline and summary
+have no section evidence scope and therefore may use only source-free safe
+forms. The same classifier runs before storage and during API reconstruction;
+v1-v7 retain their historical flat filters.
+
+### 6.15 Validated-block streaming contract (TASK-117)
+
+V8 may deliver a briefing progressively only at complete template-block
+boundaries. One provider request emits NDJSON in this order: one
+`headline_summary` object, two-to-six consecutively indexed `section` objects,
+and one `complete` object. Arbitrary token chunks are never public output.
+
+Before a block is persisted or delivered, the backend validates its exact
+shape, section order and uniqueness, evidence references, source-parent links,
+authored URLs, contextual wording, and all retained future/relationship and
+financial/action language gates. The final object reruns the full-report
+validator and required-section checks. A failed block is never persisted; any
+earlier individually valid blocks from that attempt remain audit-only and the
+Frontend removes them when the request fails. The previous complete valid
+briefing remains the last-known-good public fallback.
+
 ---
 
 ## 7. Sudden Change Signal Design

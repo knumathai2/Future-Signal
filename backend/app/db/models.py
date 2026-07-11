@@ -6,11 +6,12 @@ remains local/development-only until a guarded application step is explicitly
 run. Production application still requires separate approval.
 
 Append-only rule (Technical Design §4.10): market_snapshots, market_metrics,
-issue_signals, ai_reports, context candidates/runs, resolution rules, and v7
-generation requests/events are insert-only.
+issue_signals, ai_reports, context candidates/runs, resolution rules, and v8
+generation requests/events/validated blocks are insert-only.
 Only markets.last_seen_at/status are ever updated in place. Do not add
 update/upsert helpers for the append-only tables.
 """
+
 import uuid
 from datetime import datetime
 
@@ -365,3 +366,42 @@ class AiReportGenerationEvent(Base):
     )
     error_code: Mapped[str | None] = mapped_column(Text)
     usage: Mapped[dict] = mapped_column(JSONB, default=dict)
+
+
+class AiReportGenerationBlock(Base):
+    """Append-only, publication-safe writer block for one request attempt."""
+
+    __tablename__ = "ai_report_generation_blocks"
+    __table_args__ = (
+        CheckConstraint(
+            "attempt_number >= 1 AND sequence_number >= 0",
+            name="ck_ai_report_generation_blocks_nonnegative",
+        ),
+        CheckConstraint(
+            "block_type IN ('headline_summary', 'section')",
+            name="ck_ai_report_generation_blocks_type",
+        ),
+        UniqueConstraint(
+            "request_id",
+            "attempt_number",
+            "sequence_number",
+            name="uq_ai_report_generation_blocks_request_attempt_sequence",
+        ),
+        Index(
+            "idx_ai_report_generation_blocks_request_attempt_sequence",
+            "request_id",
+            "attempt_number",
+            "sequence_number",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    request_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("ai_report_generation_requests.id", ondelete="CASCADE"),
+    )
+    attempt_number: Mapped[int] = mapped_column(Integer)
+    sequence_number: Mapped[int] = mapped_column(Integer)
+    block_type: Mapped[str] = mapped_column(Text)
+    payload: Mapped[dict] = mapped_column(JSONB)
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

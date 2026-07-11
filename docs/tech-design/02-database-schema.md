@@ -163,4 +163,14 @@ It then appends exactly one success or failure event. No request/event row is
 updated in place. Evidence or prompt revisions create a new fingerprint and
 therefore a new immutable request.
 
+### 4.15 Approved validated-block extension (TASK-117)
+
+Append-only migration `005_ai_report_generation_blocks.sql` adds
+`ai_report_generation_blocks`. Each row belongs to one immutable generation
+request and attempt and stores a unique consecutive sequence number, a
+`headline_summary` or `section` type, the already-validated JSON object, and
+its recorded time. The table has no update path. A request/attempt/sequence
+unique constraint makes replay deterministic, and request deletion cascades
+only as part of the existing market/request lifecycle.
+
 ---

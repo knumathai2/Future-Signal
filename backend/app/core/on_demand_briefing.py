@@ -7,8 +7,9 @@ append-only lease event and appends one v8 report plus an outcome event.
 
 import hashlib
 import json
+import time
 import uuid
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from datetime import UTC, datetime, timedelta
 from typing import Literal
 from urllib.parse import urlparse
@@ -25,11 +26,17 @@ from app.core.ai_report import (
     LLMCallError,
     LLMClient,
     V7EvidenceItem,
+    V8StreamCompleteBlock,
+    V8StreamHeadlineBlock,
+    V8StreamSectionBlock,
     V8WriterInputs,
     V8WriterOutput,
     build_caution_note,
     build_v8_prompt,
+    build_v8_stream_prompt,
+    parse_v8_stream_line,
     parse_v8_writer_output,
+    validate_v8_stream_block,
     validate_v8_writer_output,
 )
 from app.core.context_policy_v7 import (
@@ -45,6 +52,7 @@ from app.core.context_research_batch import (
 )
 from app.db.models import (
     AiReport,
+    AiReportGenerationBlock,
     AiReportGenerationEvent,
     AiReportGenerationRequest,
     ContextCandidate,
@@ -59,8 +67,7 @@ DEFAULT_LEASE_DURATION = timedelta(minutes=5)
 DEFAULT_WRITER_COST_RESERVATION_USD = 0.5
 DEFAULT_PROGRAM_BUDGET_USD = 100.0
 V8_DATA_LIMITATIONS = (
-    "공개 데이터는 전체 대중을 대표하지 않으며 저장된 근거와 기준 시각 "
-    "범위에서만 읽어야 합니다."
+    "공개 데이터는 전체 대중을 대표하지 않으며 저장된 근거와 기준 시각 " "범위에서만 읽어야 합니다."
 )
 
 
@@ -137,6 +144,14 @@ class ProcessResult(BaseModel):
     successor_request_id: uuid.UUID | None = None
 
 
+class V8StreamError(Exception):
+    """A safe reason code for malformed or invalid streamed writer output."""
+
+    def __init__(self, code: str) -> None:
+        super().__init__(code)
+        self.code = code
+
+
 def _as_utc(value: datetime) -> datetime:
     if value.tzinfo is None or value.utcoffset() is None:
         return value.replace(tzinfo=UTC)
@@ -187,9 +202,7 @@ def _v7_context_rows(
     statement = select(ContextCandidate).where(
         ContextCandidate.market_id == market_id,
         ContextCandidate.verification_state == "verified",
-        ContextCandidate.policy_version.in_(
-            ("v7-source-level-1", V8_CONTEXT_POLICY_VERSION)
-        ),
+        ContextCandidate.policy_version.in_(("v7-source-level-1", V8_CONTEXT_POLICY_VERSION)),
         ContextCandidate.collected_at <= now,
         ContextCandidate.expires_at >= now,
     )
@@ -197,15 +210,11 @@ def _v7_context_rows(
         if not candidate_ids:
             return []
         rows = list(
-            db.execute(statement.where(ContextCandidate.id.in_(candidate_ids)))
-            .scalars()
-            .all()
+            db.execute(statement.where(ContextCandidate.id.in_(candidate_ids))).scalars().all()
         )
         rows_by_id = {row.id: row for row in rows}
         return [
-            rows_by_id[candidate_id]
-            for candidate_id in candidate_ids
-            if candidate_id in rows_by_id
+            rows_by_id[candidate_id] for candidate_id in candidate_ids if candidate_id in rows_by_id
         ]
     return list(
         db.execute(
@@ -287,9 +296,7 @@ def refresh_v8_context_for_market(
 
     rows: list[ContextCandidate] = []
     for candidate in result.candidates:
-        source_payload = [
-            source.model_dump(mode="json") for source in candidate.sources
-        ]
+        source_payload = [source.model_dump(mode="json") for source in candidate.sources]
         canonical = json.dumps(
             {
                 "candidate_key": candidate.candidate_key,
@@ -322,9 +329,7 @@ def refresh_v8_context_for_market(
             ),
             sources=source_payload,
             verification_state=state,
-            verification_score_internal={"verified": 1.0, "withheld": 0.5, "rejected": 0.0}[
-                state
-            ],
+            verification_score_internal={"verified": 1.0, "withheld": 0.5, "rejected": 0.0}[state],
             research_model=result.research_model,
             verifier_model=(
                 verifier.model
@@ -460,9 +465,7 @@ def build_v8_input_bundle(
     """Reconstruct one exact v8 writer/evidence input from stored rows."""
     market = db.get(Market, market_id)
     metric = (
-        db.get(MarketMetric, metric_id)
-        if metric_id is not None
-        else _latest_metric(db, market_id)
+        db.get(MarketMetric, metric_id) if metric_id is not None else _latest_metric(db, market_id)
     )
     if market is None or metric is None:
         return None
@@ -594,7 +597,12 @@ def build_v8_input_bundle(
     )
 
 
-def v8_input_fingerprint(bundle: V8InputBundle) -> str:
+def v8_input_fingerprint(
+    bundle: V8InputBundle,
+    *,
+    policy_version: str = V8_POLICY_VERSION,
+    input_schema_version: str = V8_INPUT_SCHEMA_VERSION,
+) -> str:
     canonical = {
         "issue_id": str(bundle.writer_inputs.issue_id),
         "metric_id": bundle.metric_id,
@@ -602,9 +610,9 @@ def v8_input_fingerprint(bundle: V8InputBundle) -> str:
         "context_candidate_ids": [str(value) for value in bundle.context_candidate_ids],
         "evidence": [item.model_dump(mode="json") for item in bundle.writer_inputs.evidence],
         "prompt_version": V8_PROMPT_VERSION,
-        "policy_version": V8_POLICY_VERSION,
+        "policy_version": policy_version,
         "context_policy_version": V8_CONTEXT_POLICY_VERSION,
-        "input_schema_version": V8_INPUT_SCHEMA_VERSION,
+        "input_schema_version": input_schema_version,
     }
     encoded = json.dumps(canonical, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(encoded.encode()).hexdigest()
@@ -804,6 +812,132 @@ def _writer_usage(client: LLMClient, start_index: int) -> dict:
     }
 
 
+def _append_validated_block(
+    db: Session,
+    request_id: uuid.UUID,
+    *,
+    attempt: int,
+    sequence: int,
+    block_type: Literal["headline_summary", "section"],
+    payload: dict,
+    now: datetime,
+) -> AiReportGenerationBlock:
+    block = AiReportGenerationBlock(
+        request_id=request_id,
+        attempt_number=attempt,
+        sequence_number=sequence,
+        block_type=block_type,
+        payload=payload,
+        recorded_at=now,
+    )
+    db.add(block)
+    db.flush([block])
+    db.commit()
+    return block
+
+
+def _consume_v8_stream(
+    chunks: Iterable[str],
+    inputs: V8WriterInputs,
+    publish: Callable[[int, Literal["headline_summary", "section"], dict], None],
+) -> V8WriterOutput:
+    """Buffer arbitrary token chunks, validate complete lines, then publish."""
+    buffer = ""
+    headline: V8StreamHeadlineBlock | None = None
+    sections = []
+    complete_seen = False
+
+    def consume_line(raw_line: str) -> None:
+        nonlocal headline, complete_seen
+        line = raw_line.strip()
+        if not line:
+            return
+        if complete_seen:
+            raise V8StreamError("writer_stream_after_complete")
+        if len(line) > 20_000:
+            raise V8StreamError("writer_stream_block_too_large")
+        block = parse_v8_stream_line(line)
+        if block is None:
+            raise V8StreamError("writer_stream_schema_failure")
+        if isinstance(block, V8StreamHeadlineBlock):
+            if headline is not None or sections:
+                raise V8StreamError("writer_stream_headline_order")
+            validation = validate_v8_stream_block(block, inputs, sections)
+            if not validation.passed:
+                raise V8StreamError(validation.rule or "writer_stream_validation_failure")
+            headline = block
+            publish(0, "headline_summary", block.model_dump(mode="json"))
+            return
+        if isinstance(block, V8StreamSectionBlock):
+            if headline is None:
+                raise V8StreamError("writer_stream_section_before_headline")
+            validation = validate_v8_stream_block(block, inputs, sections)
+            if not validation.passed:
+                raise V8StreamError(validation.rule or "writer_stream_validation_failure")
+            sections.append(block.section)
+            publish(block.index + 1, "section", block.model_dump(mode="json"))
+            return
+        if not isinstance(block, V8StreamCompleteBlock) or headline is None:
+            raise V8StreamError("writer_stream_complete_order")
+        if block.section_count != len(sections):
+            raise V8StreamError("writer_stream_section_count")
+        try:
+            output = V8WriterOutput(
+                headline=headline.headline,
+                summary=headline.summary,
+                sections=sections,
+            )
+        except ValidationError as exc:
+            raise V8StreamError("writer_stream_incomplete_report") from exc
+        validation = validate_v8_writer_output(output, inputs)
+        if not validation.passed:
+            raise V8StreamError(validation.rule or "writer_stream_validation_failure")
+        complete_seen = True
+
+    for chunk in chunks:
+        if not isinstance(chunk, str):
+            raise V8StreamError("writer_stream_non_text_chunk")
+        buffer += chunk
+        while "\n" in buffer:
+            line, buffer = buffer.split("\n", 1)
+            consume_line(line)
+    if buffer.strip():
+        consume_line(buffer)
+    if not complete_seen or headline is None:
+        raise V8StreamError("writer_stream_missing_complete")
+    return V8WriterOutput(
+        headline=headline.headline,
+        summary=headline.summary,
+        sections=sections,
+    )
+
+
+def _publish_complete_output_blocks(
+    output: V8WriterOutput,
+    publish: Callable[[int, Literal["headline_summary", "section"], dict], None],
+) -> None:
+    """Compatibility path for non-streaming test/legacy clients."""
+    publish(
+        0,
+        "headline_summary",
+        V8StreamHeadlineBlock(
+            kind="headline_summary",
+            headline=output.headline,
+            summary=output.summary,
+        ).model_dump(mode="json"),
+    )
+    for index, section in enumerate(output.sections):
+        publish(
+            index + 1,
+            "section",
+            V8StreamSectionBlock(
+                kind="section",
+                index=index,
+                section=section,
+            ).model_dump(mode="json"),
+        )
+
+
 def reconstruct_v8_report(
     db: Session,
     report: AiReport,
@@ -828,7 +962,21 @@ def reconstruct_v8_report(
     )
     if bundle is None:
         raise ValueError("v8_evidence_bundle_unavailable")
-    if v8_input_fingerprint(bundle) != payload.input_fingerprint:
+    supported_versions = (
+        (V8_POLICY_VERSION, V8_INPUT_SCHEMA_VERSION),
+        ("v8-contextual-wording-1", "v8-writer-input-1"),
+        ("v8-issue-centered-1", "v8-writer-input-1"),
+    )
+    payload_versions = (payload.policy_version, payload.input_schema_version)
+    if (
+        payload_versions not in supported_versions
+        or v8_input_fingerprint(
+            bundle,
+            policy_version=payload.policy_version,
+            input_schema_version=payload.input_schema_version,
+        )
+        != payload.input_fingerprint
+    ):
         raise ValueError("v8_input_fingerprint_mismatch")
     if payload.definition_ref != bundle.definition_ref:
         raise ValueError("v8_definition_ref_mismatch")
@@ -955,41 +1103,84 @@ def process_v8_request(
             error_code="budget_limit",
         )
 
-    system_prompt, user_prompt = build_v8_prompt(bundle.writer_inputs)
     usage_records = getattr(llm_client, "usage_records", None)
     usage_start = len(usage_records) if isinstance(usage_records, list) else 0
+    writer_started = time.perf_counter()
+    first_block_ms: int | None = None
+
+    def publish(sequence: int, block_type: Literal["headline_summary", "section"], payload: dict):
+        nonlocal first_block_ms
+        if first_block_ms is None:
+            first_block_ms = round((time.perf_counter() - writer_started) * 1000)
+        _append_validated_block(
+            db,
+            request_id,
+            attempt=attempt,
+            sequence=sequence,
+            block_type=block_type,
+            payload=payload,
+            now=processed_at + timedelta(microseconds=sequence + 1),
+        )
+
+    stream_method = getattr(llm_client, "stream", None)
     try:
-        raw = llm_client.complete(system_prompt, user_prompt)
+        if callable(stream_method):
+            system_prompt, user_prompt = build_v8_stream_prompt(bundle.writer_inputs)
+            output = _consume_v8_stream(
+                stream_method(system_prompt, user_prompt),
+                bundle.writer_inputs,
+                publish,
+            )
+        else:
+            system_prompt, user_prompt = build_v8_prompt(bundle.writer_inputs)
+            raw = llm_client.complete(system_prompt, user_prompt)
+            output = parse_v8_writer_output(raw)
+            if output is None:
+                raise V8StreamError("writer_schema_failure")
+            validation = validate_v8_writer_output(output, bundle.writer_inputs)
+            if not validation.passed:
+                raise V8StreamError(validation.rule or "writer_validation_failure")
+            _publish_complete_output_blocks(output, publish)
     except LLMCallError:
+        usage = _writer_usage(llm_client, usage_start)
+        usage.update(
+            {
+                "first_validated_block_ms": first_block_ms,
+                "writer_elapsed_ms": round((time.perf_counter() - writer_started) * 1000),
+            }
+        )
         return _fail_request(
             db,
             request_id,
             attempt=attempt,
             now=processed_at,
             error_code="writer_provider_failure",
-            usage=_writer_usage(llm_client, usage_start),
+            usage=usage,
+        )
+    except V8StreamError as exc:
+        usage = _writer_usage(llm_client, usage_start)
+        usage.update(
+            {
+                "first_validated_block_ms": first_block_ms,
+                "writer_elapsed_ms": round((time.perf_counter() - writer_started) * 1000),
+            }
+        )
+        return _fail_request(
+            db,
+            request_id,
+            attempt=attempt,
+            now=processed_at,
+            error_code=exc.code,
+            usage=usage,
         )
     usage = _writer_usage(llm_client, usage_start)
-    output = parse_v8_writer_output(raw)
-    if output is None:
-        return _fail_request(
-            db,
-            request_id,
-            attempt=attempt,
-            now=processed_at,
-            error_code="writer_schema_failure",
-            usage=usage,
-        )
-    validation = validate_v8_writer_output(output, bundle.writer_inputs)
-    if not validation.passed:
-        return _fail_request(
-            db,
-            request_id,
-            attempt=attempt,
-            now=processed_at,
-            error_code=validation.rule or "writer_validation_failure",
-            usage=usage,
-        )
+    usage.update(
+        {
+            "first_validated_block_ms": first_block_ms,
+            "writer_elapsed_ms": round((time.perf_counter() - writer_started) * 1000),
+            "validated_block_count": len(output.sections) + 1,
+        }
+    )
 
     caution = build_caution_note(bundle.confidence_level)
     if caution is None:
