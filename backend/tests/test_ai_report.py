@@ -42,6 +42,7 @@ from app.core.ai_report import (
     build_v5_prompt,
     build_v5_stored_payload,
     build_what_to_check,
+    determine_input_completeness,
     parse_llm_fields,
     parse_v4_llm_fields,
     parse_v5_llm_fields,
@@ -151,6 +152,15 @@ def _v4_inputs(*, with_context=True, **overrides) -> V4ReportInputs:
         "volume_24h": 1000.0,
         "liquidity": 2000.0,
         "context_candidates": candidates,
+        "resolution_rules": ResolutionRulesInput(
+            condition_text="The documented condition is recorded by the deadline.",
+            deadline=datetime(2026, 12, 31, tzinfo=UTC),
+            exclusions=[],
+            resolution_source=None,
+            source_description_hash="default-description-hash",
+            rules_hash="default-rules-hash",
+            collected_at=datetime(2026, 7, 11, 7, 0, tzinfo=UTC),
+        ),
     }
     values.update(overrides)
     return V4ReportInputs(**values)
@@ -922,6 +932,7 @@ def test_v5_prompt_and_parser_use_exact_six_field_contract():
     assert '"display_change_24h_percentage_points":8.0' in user_prompt
     assert '"condition_text":"JD Vance is recorded as the winner' in user_prompt
     assert '"resolution_source":"https://example.gov/elections/result"' in user_prompt
+    assert '"input_completeness":"definition_complete"' in user_prompt
     raw = json.dumps(_v5_fields().model_dump(), ensure_ascii=False)
     assert parse_v5_llm_fields(raw) == _v5_fields()
     assert (
@@ -1059,3 +1070,56 @@ def test_v5_number_validation_handles_missing_change_window():
     payload = build_v5_stored_payload(inputs, content)
 
     assert run_v5_safety_and_semantic_checks(payload, inputs, fields).passed
+
+
+def test_v5_missing_definition_requires_one_limitation_scenario():
+    inputs = _v4_inputs(
+        with_context=False,
+        resolution_rules=None,
+        title="이번 회기 AI 감독 법안 통과",
+    )
+    one_scenario = [
+        {
+            "title": "판정 정의 부족",
+            "narrative": (
+                "만약 현재 제공된 자료만 사용한다면 세부 판정 조건이 없어 "
+                "구체적인 절차 경로를 구분할 수 없습니다."
+            ),
+        }
+    ]
+    fields = _v5_fields(
+        with_context=False,
+        executive_summary=(
+            "이번 회기 AI 감독 법안 통과는 저장된 질문과 공개 데이터 값만으로 살펴보는 "
+            "이슈입니다. 세부 판정 정의가 없어 현실의 결과를 뜻하지 않습니다."
+        ),
+        conditional_scenarios=one_scenario,
+    )
+    content = assemble_v5_report_content(inputs, fields)
+    payload = build_v5_stored_payload(inputs, content)
+
+    assert determine_input_completeness(inputs) == "definition_missing_no_context"
+    assert run_v5_safety_and_semantic_checks(payload, inputs, fields).passed
+
+    too_many = _v5_fields(
+        with_context=False,
+        executive_summary=fields.executive_summary,
+    )
+    too_many_content = assemble_v5_report_content(inputs, too_many)
+    too_many_payload = build_v5_stored_payload(inputs, too_many_content)
+    result = run_v5_safety_and_semantic_checks(too_many_payload, inputs, too_many)
+    assert result.rule == "scenario_count_evidence_mismatch"
+
+
+def test_v5_completeness_levels_are_deterministic():
+    complete = _v4_inputs()
+    partial = _v4_inputs(
+        resolution_rules=complete.resolution_rules.model_copy(update={"deadline": None})
+    )
+    missing_with_context = _v4_inputs(resolution_rules=None, with_context=True)
+    missing_without_context = _v4_inputs(resolution_rules=None, with_context=False)
+
+    assert determine_input_completeness(complete) == "definition_complete"
+    assert determine_input_completeness(partial) == "definition_partial"
+    assert determine_input_completeness(missing_with_context) == "definition_missing_with_context"
+    assert determine_input_completeness(missing_without_context) == "definition_missing_no_context"

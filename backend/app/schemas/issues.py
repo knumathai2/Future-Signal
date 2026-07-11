@@ -114,7 +114,7 @@ class ReportContent(BaseModel):
 
     executive_summary: Annotated[str, Field(strict=True, min_length=80, max_length=1200)]
     current_data_interpretation: Annotated[str, Field(strict=True, min_length=50, max_length=1200)]
-    conditional_scenarios: list[ConditionalScenarioOut] = Field(min_length=3, max_length=4)
+    conditional_scenarios: list[ConditionalScenarioOut] = Field(min_length=1, max_length=4)
     factors_to_check: list[BriefingItemOut] = Field(min_length=2, max_length=6)
     signals_to_watch: list[BriefingItemOut] = Field(min_length=2, max_length=6)
     evidence_synthesis: Annotated[

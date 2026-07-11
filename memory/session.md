@@ -16,7 +16,7 @@ Harness Version: 1.1
 - **Date**: 2026-07-11
 - **Agent Role**: Data/AI Implementer
 - **Session Goal**: Execute the TASK-082~091 AI-report grounding program in dependency order.
-- **Branch**: `data-ai/TASK-084-resolution-rules-input`
+- **Branch**: `data-ai/TASK-085-evidence-scaled-scenarios`
 
 ## Context Read
 
@@ -24,6 +24,12 @@ Harness Version: 1.1
 - TASK-065 backfill, audit, API, wording, browser, and budget criteria
 
 ## Work Completed
+
+- Completed TASK-085: deterministic definition completeness now controls a
+  one-to-four scenario contract across generation, API, and Frontend parsing.
+- Missing definition plus no verified context requires exactly one limitation
+  scenario; overfilled output fails semantic validation.
+- Verified 188 Backend tests, Ruff, Frontend typecheck, and parser regression.
 
 - Completed TASK-084: the v5 writer and research stages now consume the latest
   stored resolution evidence while display description remains non-authoritative.
