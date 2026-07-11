@@ -41,7 +41,7 @@ function HistoryPreview({ points }: { points: IssueHistoryPoint[] }) {
   const lineColor =
     first && last && last.value < first.value
       ? "oklch(48% 0.075 245)"
-      : "oklch(52% 0.13 45)";
+      : "#b84416";
   const values = points.map((point) => point.value);
   const minimum = Math.min(...values);
   const maximum = Math.max(...values);

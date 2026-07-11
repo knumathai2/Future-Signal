@@ -178,6 +178,34 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
 - **Safety**: Data-as-of and a short caution stay in the same viewport as the
   change. The detailed relationship boundary states that timing does not
   establish a relationship with the observed movement.
+
+### 3.11 Four-part issue detail navigation (TASK-118)
+
+- **Purpose**: Replace the long single-column detail reading path with four
+  question-led tabs: `개요`, `AI 이슈 브리핑`, `관련 자료`, and `해석 안내`.
+- **Overview**: Shows issue identity, the reflected expectation value, observed
+  change, caution, data-as-of time, chart, and a compact set of items to check.
+- **AI issue briefing**: Preserves the existing explicit generation action,
+  loading/generating/fresh/stale/failure/last-good states, validated-block
+  rendering, source cards, timestamps, and caution.
+- **Related materials**: Separates dated candidate material from accepted v8
+  sources. Dated items may be placed at the nearest chart observation only
+  with a visible statement that timing does not establish a relationship.
+- **Interpretation guide**: Explains the reflected expectation value, percent
+  versus percentage points, activity/liquidity, inflection markers, refresh
+  timing, and interpretation limits, with a link to the full methodology.
+- **Shared context**: Every non-overview tab starts with issue identity, current
+  reflected expectation value, seven-day observed change, caution badge, and
+  data-as-of time. No tab may become a number-bearing surface without them.
+- **Navigation**: The active tab is deep-linkable through the `tab` query
+  parameter, preserves unrelated query parameters, supports Arrow/Home/End
+  keyboard navigation, and uses a horizontally scrollable tab rail at narrow
+  widths without causing page-level overflow.
+- **Visual emphasis**: Use warm terracotta only for the active tab, current
+  reflected expectation value, chart line/markers, timeline numbers, and the
+  primary briefing action or summary edge. Use muted blue for comparison
+  values regardless of direction; direction continues to rely on sign and
+  wording rather than gain/loss color semantics.
 - **Responsive acceptance**: No horizontal overflow at 320px, 375px, or desktop.
 
 ---
