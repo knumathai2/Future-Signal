@@ -26,6 +26,12 @@ Harness Version: 1.1
 
 ## Work Completed
 
+- Completed TASK-103 with a separate v7 30-day broad context path, A-D source
+  classification, exact excerpt-backed supported claims, conditional verifier
+  triggers, independent-provider/no-search verification, and fail-closed
+  handling. Historical v4 behavior remains unchanged.
+- Combined new v7 plus existing research/verifier coverage passes 71 tests;
+  Ruff and diff checks pass. No live provider or DB call occurred.
 - Completed TASK-102 with additive migration 004, immutable fingerprinted
   request identities, append-only queued/running/succeeded/failed events,
   bounded lease/recovery semantics, report FK, safe error/usage fields, and
