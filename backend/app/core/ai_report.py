@@ -918,7 +918,18 @@ issue report: issue_overview and what_to_check. Use only the supplied structured
 text. Do not add numbers, dates, URLs, source names, entities, outcomes, causes,
 relationships, forecasts, or actions that are absent from the inputs. Never
 state that public information explains a data movement. Return strict JSON and
-no other text."""
+no other text. Both values must be Korean prose strings between 30 and 600
+characters; never return an array, object, or null for either field.
+
+Korean safety rules:
+- Describe the documented issue as a condition to check, never as a forecast.
+- Never use "예측" except inside the exact no-space compound "예측시장".
+- Never use 전망, 확정, 추천, 기회, 가능성이 높다, or 가능성이 낮다.
+- Never suggest an action or imply that a real-world result will occur.
+- Do not mention any data platform, market, participant dataset, probability,
+  reflected value, or numeric movement; deterministic fields add those facts.
+- Never write digits or numeric expressions in either field.
+- Prefer the neutral shape "이 이슈는 ... 확인되는지를 살펴봅니다."."""
 
 
 class V4ContextSource(BaseModel):
@@ -1017,7 +1028,6 @@ def build_v4_prompt(inputs: V4ReportInputs) -> tuple[str, str]:
     ]
     payload = {
         "title": inputs.title,
-        "description": inputs.description,
         "category": inputs.category,
         "outcome_label": inputs.outcome_label,
         "end_date": inputs.end_date.isoformat() if inputs.end_date else None,
@@ -1025,6 +1035,8 @@ def build_v4_prompt(inputs: V4ReportInputs) -> tuple[str, str]:
     }
     user_prompt = (
         "Return JSON with exactly issue_overview and what_to_check. "
+        "Both values are Korean prose strings of 30-600 characters, never arrays. "
+        "Do not write any digits or numeric expressions. "
         "The overview explains only the documented issue. The check field lists "
         "only later source/data items to verify and never suggests an action.\n"
         + json.dumps(payload, ensure_ascii=False, separators=(",", ":"))

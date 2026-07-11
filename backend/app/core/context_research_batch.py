@@ -8,6 +8,7 @@ completed state.
 
 import logging
 import uuid
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Protocol
@@ -301,15 +302,26 @@ def _run_log_usage(
     *,
     failed_usage: ResearchUsage | None = None,
     failed_model: str | None = None,
+    failed_queries: list[str] | None = None,
+    decision_counts: dict[str, int] | None = None,
+    decision_reason_codes: list[str] | None = None,
 ) -> dict:
     usage = research.usage if research is not None else failed_usage
     research_model = research.model if research is not None else failed_model
     if usage is None:
-        return {"verifier_model": verifier.model}
+        return {
+            "verifier_model": verifier.model,
+            "reported_queries": failed_queries or [],
+            "decision_counts": decision_counts or {},
+            "decision_reason_codes": decision_reason_codes or [],
+        }
     verifier_usage = verifier.last_usage
     return {
         "research_model": research_model,
         "verifier_model": verifier.model,
+        "reported_queries": research.queries if research is not None else failed_queries or [],
+        "decision_counts": decision_counts or {},
+        "decision_reason_codes": decision_reason_codes or [],
         "research_input_tokens": usage.input_tokens,
         "research_output_tokens": usage.output_tokens,
         "verifier_input_tokens": verifier_usage.input_tokens,
@@ -335,6 +347,17 @@ def _record_failed_run(
     if not isinstance(failed_usage, ResearchUsage):
         failed_usage = None
     failed_model = getattr(research_service, "model", None)
+    failed_queries = getattr(research_service, "last_queries", None)
+    if not isinstance(failed_queries, list) or not all(
+        isinstance(query, str) for query in failed_queries
+    ):
+        failed_queries = []
+    reported_queries = research.queries if research is not None else failed_queries
+    usage_query_count = (
+        research.usage.web_search_requests
+        if research is not None
+        else failed_usage.web_search_requests if failed_usage is not None else 0
+    )
     db.add(
         ContextCollectionRun(
             id=uuid.uuid4(),
@@ -343,11 +366,7 @@ def _record_failed_run(
             started_at=started_at,
             finished_at=finished_at,
             status="failed",
-            query_count=(
-                research.usage.web_search_requests
-                if research
-                else failed_usage.web_search_requests if failed_usage else 0
-            ),
+            query_count=max(usage_query_count, len(reported_queries)),
             result_count=len(research.citations) if research else 0,
             accepted_count=0,
             model_usage=_run_log_usage(
@@ -355,6 +374,7 @@ def _record_failed_run(
                 verifier,
                 failed_usage=failed_usage,
                 failed_model=failed_model if isinstance(failed_model, str) else None,
+                failed_queries=failed_queries,
             ),
             error_detail={"type": error_type},
         )
@@ -424,6 +444,7 @@ def run_context_research_batch(
     budget_usd: float = APPROVED_BUDGET_USD,
     cost_reservation_usd: float = DEFAULT_COST_RESERVATION_USD,
     max_targets: int | None = None,
+    target_offset: int = 0,
     clock=lambda: datetime.now(UTC),
 ) -> list[ContextResearchOutcome]:
     """Research, verify, and store each selected market in isolation."""
@@ -435,6 +456,8 @@ def run_context_research_batch(
         change_threshold=change_threshold,
         staleness=staleness,
     )
+    offset = max(target_offset, 0)
+    targets = targets[offset:]
     if max_targets is not None:
         targets = targets[: max(max_targets, 0)]
     outcomes: list[ContextResearchOutcome] = []
@@ -466,6 +489,12 @@ def run_context_research_batch(
             research = research_client.research(inputs)
             verification = verify_research_result(inputs, research, verifier)
             decisions = _public_limited_decisions(verification.decisions)
+            decision_counts = dict(
+                Counter(decision.verification_state for decision in decisions)
+            )
+            decision_reason_codes = sorted(
+                {decision.reason_code for decision in decisions}
+            )
             candidate_by_key = {
                 candidate.candidate_key: candidate for candidate in research.candidates
             }
@@ -496,10 +525,18 @@ def run_context_research_batch(
                     started_at=started_at,
                     finished_at=finished_at,
                     status=status,
-                    query_count=research.usage.web_search_requests,
+                    query_count=max(
+                        research.usage.web_search_requests,
+                        len(research.queries),
+                    ),
                     result_count=len(research.citations),
                     accepted_count=len(public_ids),
-                    model_usage=_run_log_usage(research, verifier),
+                    model_usage=_run_log_usage(
+                        research,
+                        verifier,
+                        decision_counts=decision_counts,
+                        decision_reason_codes=decision_reason_codes,
+                    ),
                     error_detail=None,
                 )
             )

@@ -220,6 +220,8 @@ def run_scheduled_batch(
     context_verifier: IndependentVerifierClient | None = None,
     context_backfill: bool = False,
     context_max_markets: int | None = None,
+    context_offset: int = 0,
+    v4_reports_from_stored_context: bool = False,
     reports_only: bool = False,
     record_log: bool = True,
 ) -> ScheduledBatchResult:
@@ -264,11 +266,14 @@ def run_scheduled_batch(
                 budget_usd=settings.context_budget_usd,
                 cost_reservation_usd=settings.context_cost_reservation_usd,
                 max_targets=context_max_markets,
+                target_offset=context_offset,
             )
         else:
             result.context_outcomes = []
 
-        use_v4_reports = context_research_client is not None and context_verifier is not None
+        use_v4_reports = (
+            context_research_client is not None and context_verifier is not None
+        ) or v4_reports_from_stored_context
         failed_context_market_ids = {
             outcome.market_id
             for outcome in result.context_outcomes or []
@@ -356,6 +361,17 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="Cap context research targets for one guarded local/dev run.",
     )
     parser.add_argument(
+        "--context-offset",
+        type=int,
+        default=0,
+        help="Skip this many deterministic context targets before applying the cap.",
+    )
+    parser.add_argument(
+        "--v4-reports-from-stored-context",
+        action="store_true",
+        help="Generate v4 reports from stored verified/no-candidate context without research.",
+    )
+    parser.add_argument(
         "--confirm-local-dev-write",
         action="store_true",
         help="Required before this command writes to the configured local/dev DB.",
@@ -411,7 +427,7 @@ def main() -> int:
 
     context_research_client = None
     context_verifier = None
-    if not args.skip_context_research:
+    if not args.skip_context_research and not args.v4_reports_from_stored_context:
         try:
             context_research_client = build_context_research_client_from_settings(settings)
             context_verifier = build_independent_verifier_from_settings(settings)
@@ -429,6 +445,8 @@ def main() -> int:
             context_verifier=context_verifier,
             context_backfill=args.context_backfill,
             context_max_markets=args.context_max_markets,
+            context_offset=args.context_offset,
+            v4_reports_from_stored_context=args.v4_reports_from_stored_context,
             reports_only=args.reports_only,
         )
     finally:

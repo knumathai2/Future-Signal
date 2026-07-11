@@ -1,6 +1,6 @@
 # TASK-065 — Local/development backfill preflight
 
-_Date: 2026-07-11 · Status: Blocked at the approved query-policy boundary_
+_Date: 2026-07-11 · Status: Resolved by human-approved ADR-047; see `task-065-context-backfill-evaluation.md`_
 
 ## Completed safely
 
@@ -63,9 +63,9 @@ The client correctly rejects all three. Across five sampled issues this left no
 verified candidate, so the required 30+ completed research runs, URL audit, five
 candidate→summary→source demos, and incremental-batch proof cannot be claimed.
 
-## Approval needed to continue
+## Approved resolution
 
-Recommended narrow policy amendment:
+The user approved this narrow policy amendment before execution resumed:
 
 1. Keep deterministic metadata-derived query suggestions, maximum one to six
    tool calls, maximum 30 annotations, and all existing candidate hard gates.
@@ -77,5 +77,7 @@ Recommended narrow policy amendment:
 4. Continue treating only API `url_citation` annotations as evidence; model
    body URLs, names, dates, metrics, and unsupported claims remain rejected.
 
-This changes the approved query policy and therefore requires explicit human
-approval under `AGENTS.md`. Deployment and production writes remain excluded.
+ADR-047 records the explicit human approval required by `AGENTS.md`. The final
+50-target execution and audits are in
+`reports/task-065-context-backfill-evaluation.md`. Deployment and production
+writes remain excluded.

@@ -719,7 +719,12 @@ def test_v4_prompt_and_parser_are_strict_two_field_contract():
     assert "issue_overview" in user_prompt
     assert "what_to_check" in user_prompt
     assert "observed_change" not in user_prompt
+    assert '"description"' not in user_prompt
+    assert "never arrays" in user_prompt
+    assert "Do not write any digits" in user_prompt
     assert "Never" in system_prompt
+    assert "never return an array" in system_prompt
+    assert 'Never use "예측" except' in system_prompt
     raw = json.dumps(_v4_fields().model_dump(), ensure_ascii=False)
     assert parse_v4_llm_fields(raw) == _v4_fields()
     assert parse_v4_llm_fields(json.dumps({**_v4_fields().model_dump(), "extra": "x"})) is None
