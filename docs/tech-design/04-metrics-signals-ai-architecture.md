@@ -165,4 +165,43 @@ When no verified candidate exists, `context_summary` is JSON `null`; the model
 must not generate a narrative about candidate absence. V1-v3 rows remain as
 audit history and are excluded from the v4 public response.
 
+### 10.8 Approved v5 structured-narrative architecture (ADR-048)
+
+V5 keeps the existing append-only `ai_reports.content` JSONB storage and does
+not require a schema migration. Generation receives a typed evidence bundle and
+returns exactly six model-authored fields:
+
+```json
+{
+  "executive_summary": "...",
+  "current_data_interpretation": "...",
+  "conditional_scenarios": [{"title": "...", "narrative": "..."}],
+  "factors_to_check": [{"title": "...", "explanation": "..."}],
+  "signals_to_watch": [{"title": "...", "explanation": "..."}],
+  "evidence_synthesis": null
+}
+```
+
+`conditional_scenarios` contains three or four distinct conditional items.
+Every authored number must match the supplied metric/market/evidence values;
+generic lead text, non-conditional scenarios, and market/forecast-page sources
+fail before storage.
+
+The stored envelope also carries the episode, metric ID, verified candidate
+IDs, and ordered evidence references. Deterministic builders add
+`relationship_boundary`, `data_limitations`, and `caution_note`. Generation and
+read paths independently reconstruct structured evidence and reject any
+numeric, temporal, entity, source, or field mismatch.
+
+Quality validation adds issue-specificity, cross-field duplication, Korean
+sentence completion, and unsupported-claim checks to the existing strict schema
+and wording filters. A failed v5 row is audit-only; the latest valid v5 row
+remains public. Older versions remain audit history and cannot satisfy the v5
+response contract.
+
+Public source metadata continues to come only from stored verified candidates.
+The frontend opens the exact stored URL with safe external-link attributes. A
+zero-candidate report is valid but cannot contain `evidence_synthesis` prose or
+source links.
+
 ---

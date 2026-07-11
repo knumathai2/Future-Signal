@@ -16,12 +16,13 @@ never become a silent, permanent substitute for live data - once TASK-008
 produces real rows the live path takes over automatically, no code change
 needed here. See reports/task-010-core-api-notes.md for detail.
 
-`/api/issues/{id}/report` serves only a latest successful v4 evidence bundle
+`/api/issues/{id}/report` serves only a reconstructed successful v5 evidence bundle
 whose stored metric, episode, verified candidates, and citation sources all
 validate. Missing, legacy, failed, malformed, or mismatched bundles preserve
 the accepted `not_yet_generated` empty state. Static fallback data does not
 fabricate a v4 report.
 """
+
 import logging
 from collections.abc import Generator
 from datetime import UTC, datetime, timedelta
@@ -33,12 +34,12 @@ from sqlalchemy.orm import Session
 
 from app.core.ai_report import (
     V4ContextSource,
-    V4LLMFields,
     V4ReportInputs,
-    V4StoredReportPayload,
     V4VerifiedCandidateInput,
-    assemble_v4_report_content,
-    run_v4_safety_and_semantic_checks,
+    V5LLMFields,
+    V5StoredReportPayload,
+    assemble_v5_report_content,
+    run_v5_safety_and_semantic_checks,
 )
 from app.core.category_taxonomy import category_matches
 from app.core.config import settings
@@ -47,10 +48,10 @@ from app.db.queries import (
     LiveIssue,
     LiveV4AiReport,
     load_history_points,
-    load_latest_successful_v4_report,
     load_live_issues,
     load_related_events_for_market,
     load_signals_for_market,
+    load_successful_v5_reports,
 )
 from app.db.session import get_db
 from app.schemas.issues import (
@@ -80,8 +81,7 @@ _FALLBACK_ISSUES: dict[str, IssueDetail] = {
         id="b3f1c2a4-0000-4000-8000-000000000001",
         title="Will the proposed climate accord be ratified by December 2026?",
         description=(
-            "Tracks reflected expectation on ratification of the "
-            "multilateral climate accord."
+            "Tracks reflected expectation on ratification of the multilateral climate accord."
         ),
         category="environment",
         status="active",
@@ -145,9 +145,7 @@ def _resolve_live(db: Session | None) -> tuple[list[LiveIssue], datetime] | None
     """Returns `(live_issues, data_as_of)` from the DB, or `None` if the
     caller should fall back to the static sample dataset."""
     if db is None:
-        logger.warning(
-            "FALLBACK: DATABASE_URL is not set, serving static sample issue data."
-        )
+        logger.warning("FALLBACK: DATABASE_URL is not set, serving static sample issue data.")
         return None
     try:
         result = load_live_issues(db)
@@ -259,16 +257,16 @@ def _issue_report_from_live(
     report = live_report.report
     metric = live_report.metric
     snapshot = live_report.snapshot
-    payload = V4StoredReportPayload.model_validate(report.content)
+    payload = V5StoredReportPayload.model_validate(report.content)
 
     if report.input_metrics_id != metric.id or metric.market_id != live_issue.market.id:
-        raise ValueError("V4 report metric does not belong to the requested issue")
+        raise ValueError("V5 report metric does not belong to the requested issue")
     if not _not_after(snapshot.captured_at, report.generated_at):
-        raise ValueError("V4 report data timestamp is later than generation")
+        raise ValueError("V5 report data timestamp is later than generation")
     if not _not_after(payload.episode_at, report.generated_at):
-        raise ValueError("V4 report episode is later than generation")
+        raise ValueError("V5 report episode is later than generation")
     if len(payload.context_candidate_ids) != len(set(payload.context_candidate_ids)):
-        raise ValueError("V4 candidate IDs must be unique")
+        raise ValueError("V5 candidate IDs must be unique")
 
     candidate_by_id = {candidate.id: candidate for candidate in live_report.candidates}
     candidate_inputs: list[V4VerifiedCandidateInput] = []
@@ -282,7 +280,7 @@ def _issue_report_from_live(
             or not _same_timestamp(candidate.episode_at, payload.episode_at)
             or not candidate.sources
         ):
-            raise ValueError("V4 candidate evidence is missing or not public")
+            raise ValueError("V5 candidate evidence is missing or not public")
         sources = [V4ContextSource.model_validate(source) for source in candidate.sources]
         candidate_inputs.append(
             V4VerifiedCandidateInput(
@@ -322,9 +320,7 @@ def _issue_report_from_live(
         category=live_issue.market.category,
         outcome_label=live_issue.outcome_label,
         end_date=(
-            _as_utc(live_issue.market.end_date)
-            if live_issue.market.end_date is not None
-            else None
+            _as_utc(live_issue.market.end_date) if live_issue.market.end_date is not None else None
         ),
         current_value=float(snapshot.price),
         change_24h=float(metric.change_24h) if metric.change_24h is not None else None,
@@ -334,12 +330,13 @@ def _issue_report_from_live(
         liquidity=float(snapshot.liquidity) if snapshot.liquidity is not None else None,
         context_candidates=candidate_inputs,
     )
-    llm_fields = V4LLMFields(
-        issue_overview=payload.content.issue_overview,
-        what_to_check=payload.content.what_to_check,
+    llm_fields = V5LLMFields.model_validate(
+        payload.content.model_dump(
+            exclude={"relationship_boundary", "data_limitations", "caution_note"}
+        )
     )
-    expected_content = assemble_v4_report_content(inputs, llm_fields)
-    validation = run_v4_safety_and_semantic_checks(payload, inputs, llm_fields)
+    expected_content = assemble_v5_report_content(inputs, llm_fields)
+    validation = run_v5_safety_and_semantic_checks(payload, inputs, llm_fields)
     if expected_content != payload.content:
         expected_fields = expected_content.model_dump() if expected_content else {}
         mismatched_fields = [
@@ -348,11 +345,11 @@ def _issue_report_from_live(
             if expected_fields.get(field) != stored_value
         ]
         raise ValueError(
-            "V4 deterministic content does not match stored evidence: "
+            "V5 deterministic content does not match stored evidence: "
             + ",".join(mismatched_fields)
         )
     if not validation.passed:
-        raise ValueError(f"V4 semantic check failed: {validation.rule}")
+        raise ValueError(f"V5 semantic check failed: {validation.rule}")
 
     return IssueReportResponse(
         id=str(report.id),
@@ -360,7 +357,7 @@ def _issue_report_from_live(
         data_as_of=_as_utc(snapshot.captured_at),
         episode_at=_as_utc(payload.episode_at),
         status="success",
-        report_version="v4",
+        report_version="v5",
         content=payload.content.model_dump(),
         evidence_refs=payload.evidence_refs,
         context_candidates=candidate_outputs,
@@ -500,25 +497,26 @@ def get_issue_report(
         if match is None:
             raise HTTPException(status_code=404, detail="Unknown issue id.")
         try:
-            live_report = load_latest_successful_v4_report(db, match.market.id)
+            live_reports = load_successful_v5_reports(db, match.market.id)
         except SQLAlchemyError:
             logger.warning(
                 "FALLBACK: live report query failed, returning report empty state.",
                 exc_info=True,
             )
             return ReportNotYetGenerated(status="not_yet_generated")
-        if live_report is None:
+        if not live_reports:
             return ReportNotYetGenerated(status="not_yet_generated")
 
-        try:
-            return _issue_report_from_live(live_report, match)
-        except (ValidationError, ValueError):
-            logger.warning(
-                "Live v4 report does not match its schema or stored evidence; "
-                "returning report empty state.",
-                exc_info=True,
-            )
-            return ReportNotYetGenerated(status="not_yet_generated")
+        for live_report in live_reports:
+            try:
+                return _issue_report_from_live(live_report, match)
+            except (ValidationError, ValueError):
+                logger.warning(
+                    "Live v5 report does not match its schema or stored evidence; "
+                    "trying the previous successful row.",
+                    exc_info=True,
+                )
+        return ReportNotYetGenerated(status="not_yet_generated")
 
     if issue_id not in _FALLBACK_ISSUES:
         raise HTTPException(status_code=404, detail="Unknown issue id.")

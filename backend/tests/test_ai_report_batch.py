@@ -26,6 +26,7 @@ from app.core.ai_report import (
     POSSIBLE_DRIVERS_WITH_CANDIDATE,
     PROMPT_VERSION,
     V4_PROMPT_VERSION,
+    V5_PROMPT_VERSION,
     LLMCallError,
     LLMReportFields,
     LLMUsage,
@@ -39,6 +40,7 @@ from app.core.ai_report_batch import (
     generate_report_for_market,
     run_ai_report_batch,
     run_v4_ai_report_batch,
+    run_v5_ai_report_batch,
     select_markets_for_regeneration,
 )
 from app.core.historical_seed import metric_timestamp_for_seed
@@ -220,12 +222,58 @@ class FakeLLMClient:
 
 
 VALID_V4_RESPONSE = {
-    "issue_overview": (
-        "이 이슈는 문서에 적힌 조건이 정해진 기준 안에서 확인되는지를 살펴봅니다."
-    ),
+    "issue_overview": ("이 이슈는 문서에 적힌 조건이 정해진 기준 안에서 확인되는지를 살펴봅니다."),
     "what_to_check": (
         "게시된 조건 문구와 이후 공개되는 자료 및 데이터 갱신 내용을 추가로 확인해야 합니다."
     ),
+}
+
+VALID_V5_RESPONSE = {
+    "executive_summary": (
+        "test issue의 문서 조건을 정해진 기준일까지 확인하는 이슈입니다. 저장된 현재 값과 "
+        "최근 비교 구간의 움직임을 함께 정리하지만 현실의 결과나 배경을 뜻하지 않습니다."
+    ),
+    "current_data_interpretation": (
+        "저장된 현재 값과 최근 비교값은 참여자 데이터의 관찰 흐름을 보여줍니다. "
+        "이 움직임만으로 현실의 결과나 배경을 판단할 수 없습니다."
+    ),
+    "conditional_scenarios": [
+        {
+            "title": "조건 확인",
+            "narrative": (
+                "만약 test issue 조건이 공식 문서에서 확인된다면 해당 판정 조건과 함께 읽습니다."
+            ),
+        },
+        {
+            "title": "부분 확인",
+            "narrative": (
+                "만약 test issue 관련 자료가 공개되지만 조건 충족이 "
+                "불분명한 경우 후속 문서를 확인합니다."
+            ),
+        },
+        {
+            "title": "조건 미확인",
+            "narrative": (
+                "만약 기준일까지 test issue 조건이 공식 문서에서 확인되지 않는다면 "
+                "미확인 상태로 구분합니다."
+            ),
+        },
+    ],
+    "factors_to_check": [
+        {"title": "판정 문서", "explanation": "test issue의 조건을 명시한 공식 문서를 확인합니다."},
+        {"title": "기준 시각", "explanation": "자료가 정해진 기준일 안에 공개됐는지 확인합니다."},
+    ],
+    "signals_to_watch": [
+        {
+            "title": "공식 자료",
+            "explanation": "test issue 관련 공식 문서의 공개 여부를 관찰합니다.",
+        },
+        {
+            "title": "데이터 갱신",
+            "explanation": "공개 예측시장 데이터의 이후 갱신을 별도로 확인합니다.",
+        },
+    ],
+    "evidence_synthesis": None,
 }
 
 
@@ -947,6 +995,40 @@ def test_v4_no_candidate_stores_null_context_without_absence_narrative(db):
     assert row.content["content"]["context_summary"] is None
     assert row.content["context_candidate_ids"] == []
     assert row.content["evidence_refs"] == [f"metric:{metric.id}"]
+
+
+def test_v5_no_candidate_stores_narrative_and_metric_evidence(db):
+    _, metric, _ = _seed_v4_metric_state(db, with_context=False)
+    client = FakeV4LLMClient([json.dumps(VALID_V5_RESPONSE, ensure_ascii=False)])
+
+    outcomes = run_v5_ai_report_batch(db, NOW, client, "openai/writer")
+
+    assert outcomes[0].status == "success"
+    row = db.query(AiReport).one()
+    assert row.prompt_version == V5_PROMPT_VERSION
+    assert row.content["evidence_refs"] == [f"metric:{metric.id}"]
+    assert row.content["content"]["evidence_synthesis"] is None
+    assert "test issue" in row.content["content"]["executive_summary"]
+
+
+def test_v5_generic_summary_is_filtered_and_not_stored(db):
+    _seed_v4_metric_state(db, with_context=False)
+    generic = dict(VALID_V5_RESPONSE)
+    generic["executive_summary"] = (
+        "이 항목은 문서 조건을 기준일까지 확인하는 일반적인 이슈입니다. 저장된 현재 값과 "
+        "최근 비교 구간을 함께 정리하지만 현실의 결과나 배경을 뜻하지 않습니다."
+    )
+    generic["factors_to_check"] = [
+        {"title": "문서 확인", "explanation": "정해진 문서 조건을 이후 공개 자료에서 확인합니다."},
+        {"title": "시각 확인", "explanation": "정해진 기준일 안의 공개 여부를 확인합니다."},
+    ]
+    client = FakeV4LLMClient([json.dumps(generic, ensure_ascii=False)])
+
+    outcomes = run_v5_ai_report_batch(db, NOW, client, "openai/writer")
+
+    assert outcomes[0].status == "filtered"
+    assert outcomes[0].reason == "executive_summary:generic_summary"
+    assert db.query(AiReport).count() == 0
 
 
 def test_v4_malformed_fields_retry_once_then_store_failed_audit_row(db):

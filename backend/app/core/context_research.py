@@ -36,12 +36,15 @@ _QUERY_SCOPE_STOPWORDS = frozenset(
         "data",
         "evidence",
         "expected",
+        "interpret",
+        "interpretation",
         "latest",
         "market",
         "news",
         "official",
         "prediction",
         "question",
+        "reflected",
         "result",
         "results",
         "source",
@@ -50,6 +53,8 @@ _QUERY_SCOPE_STOPWORDS = frozenset(
         "this",
         "tracked",
         "tracks",
+        "outcome",
+        "yes",
         "update",
         "updates",
         "whether",
@@ -82,6 +87,8 @@ Market listing, price, forecast, and mirror pages are not context candidates.
 Before returning an empty candidate list, inspect the cited annotations for a
 qualifying external public update. Return at most 30 candidates; later
 deterministic verification will apply a stricter gate."""
+
+_ENTITY_PHRASE_PATTERN = re.compile(r"\b(?:[A-Z][A-Za-z0-9&.'-]+(?:\s+|$)){1,5}", flags=re.UNICODE)
 
 
 class ContextResearchError(RuntimeError):
@@ -231,16 +238,46 @@ def build_search_queries(
     start = inputs.search_window_start.date().isoformat()
     end = inputs.search_window_end.date().isoformat()
     end_date = inputs.end_date.date().isoformat() if inputs.end_date else None
+    entity_phrases = []
+    for value in _ENTITY_PHRASE_PATTERN.findall(inputs.title):
+        words = value.split()
+        if words and words[0].casefold() in {"will", "would", "does", "did", "tracks"}:
+            words = words[1:]
+        entity_phrases.append(" ".join(words).strip(" ."))
+    entity_phrases = list(
+        dict.fromkeys(
+            value
+            for value in entity_phrases
+            if len(value) >= 3 and value.casefold() not in {"will", "would", "does", "did", "the"}
+        )
+    )
+    entity_phrases.sort(key=lambda value: (-len(value.split()), -len(value)))
+    primary_entity = entity_phrases[0] if entity_phrases else inputs.title
+    title_tokens = _normalized_scope_tokens(inputs.title)
+    tracked_tokens = _normalized_scope_tokens(inputs.tracked_condition)
+    scoped_condition = inputs.tracked_condition if title_tokens & tracked_tokens else inputs.title
+    condition_terms = " ".join(
+        sorted(_normalized_scope_tokens(scoped_condition), key=lambda item: (-len(item), item))[:4]
+    )
     candidates = [
         f'"{inputs.title}" {start} {end}',
-        f'"{inputs.title}" "{inputs.tracked_condition}"',
-        f'"{inputs.description}" {inputs.category}',
-        f'"{inputs.title}" official update',
-        f'"{inputs.title}" {end_date}' if end_date else "",
+        f'"{primary_entity}" "{scoped_condition}" {start} {end}',
+        f'"{primary_entity}" {condition_terms} official announcement document',
     ]
+    candidates.extend(
+        f'"{entity}" {condition_terms} {start} {end}' for entity in entity_phrases[1:3]
+    )
+    for domain in inputs.allowed_domains:
+        candidates.append(f'site:{domain} "{primary_entity}" {condition_terms}')
     if inputs.resolution_source:
         resolution_domain = urlparse(inputs.resolution_source).hostname or ""
-        candidates.append(f'site:{resolution_domain} "{inputs.title}"')
+        candidates.append(f'site:{resolution_domain} "{primary_entity}" {condition_terms}')
+    candidates.extend(
+        [
+            f'"{primary_entity}" {inputs.category} {start} {end}',
+            f'"{inputs.title}" {end_date}' if end_date else "",
+        ]
+    )
 
     queries: list[str] = []
     for query in candidates:
@@ -259,10 +296,7 @@ def _normalized_scope_tokens(*values: str) -> set[str]:
         token
         for token in _TOKEN_PATTERN.findall(text)
         if token not in _QUERY_SCOPE_STOPWORDS
-        and (
-            (token.isdigit() and len(token) >= 4)
-            or (not token.isdigit() and len(token) >= 3)
-        )
+        and ((token.isdigit() and len(token) >= 4) or (not token.isdigit() and len(token) >= 3))
     }
 
 
@@ -447,11 +481,7 @@ class OpenRouterContextResearchClient:
             "response_format": {"type": "json_object"},
             "temperature": 0,
             "timeout": 45,
-            "extra_body": {
-                "tools": [
-                    {"type": "openrouter:web_search", "parameters": parameters}
-                ]
-            },
+            "extra_body": {"tools": [{"type": "openrouter:web_search", "parameters": parameters}]},
         }
         if self._extra_headers:
             kwargs["extra_headers"] = self._extra_headers
@@ -483,9 +513,7 @@ class OpenRouterContextResearchClient:
         if len(raw_output.queries) > self._max_search_queries:
             raise ContextResearchError("OpenRouter exceeded the reported-query limit")
         if not all(_query_has_metadata_overlap(query, inputs) for query in raw_output.queries):
-            raise ContextResearchError(
-                "OpenRouter reported a query outside market metadata scope"
-            )
+            raise ContextResearchError("OpenRouter reported a query outside market metadata scope")
 
         if usage.web_search_requests > self._max_search_queries:
             raise ContextResearchError("OpenRouter exceeded the search-query limit")
