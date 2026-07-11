@@ -1,4 +1,8 @@
-import type { IssueReportLoadState } from "../types/issue";
+import type {
+  GenerationRequestResponse,
+  GenerationRequestStatusResponse,
+  IssueReportLoadState,
+} from "../types/issue";
 import { parseReportResponse } from "./reportParser";
 
 export class HttpError extends Error {
@@ -45,4 +49,37 @@ export async function loadIssueReport(
     console.error(error);
     return { status: "error" };
   }
+}
+
+/** Append or join one v7 generation request. Provider work never runs here. */
+export async function requestIssueReport(
+  issueId: string,
+  refreshContext = false,
+  signal?: AbortSignal,
+): Promise<GenerationRequestResponse> {
+  const response = await fetch(
+    `/api/issues/${encodeURIComponent(issueId)}/report/generate`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_context: refreshContext }),
+      signal,
+    },
+  );
+  if (!response.ok)
+    throw new HttpError("Failed to request issue report", response.status);
+  return (await response.json()) as GenerationRequestResponse;
+}
+
+/** Read the append-only request state used by the detail-route poller. */
+export async function loadGenerationRequestStatus(
+  issueId: string,
+  requestId: string,
+  signal?: AbortSignal,
+): Promise<GenerationRequestStatusResponse> {
+  return fetchJson<GenerationRequestStatusResponse>(
+    `/api/issues/${encodeURIComponent(issueId)}/report/requests/${encodeURIComponent(requestId)}`,
+    "Failed to load generation request status",
+    signal,
+  );
 }

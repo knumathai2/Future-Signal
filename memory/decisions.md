@@ -1625,3 +1625,27 @@ requires separate approval after v7 acceptance.
 **Consequences**: TASK-100~108 proceed in dependency order under the approved
 boundary. TASK-109 may audit and propose cleanup but cannot delete legacy
 runtime until the separate acceptance and deletion gate is satisfied.
+
+---
+
+### ADR-052: Preserve last-good content across v7 request states
+
+- **Date**: 2026-07-11
+- **Status**: Accepted and implemented in TASK-106
+- **Decided by**: Frontend implementation of the approved ADR-051 API contract
+
+**Context**: The v7 report API may return a minimal request state when no valid
+report exists or a full report carrying a newer generating/failed request. A
+single loading replacement would unnecessarily hide already validated content.
+
+**Decision**: Mirror the public API state directly. Minimal idle, generating,
+and failed responses render state-only panels. Full generating and
+failed-with-last-good responses keep the valid report visible with an explicit
+status notice. Stale and failed-with-last-good results offer the same
+idempotent generate/join action. Internal source excerpts remain validation
+data; the public source card shows only source metadata and supported claims.
+
+**Consequences**: Core issue data never waits for briefing generation. Every
+briefing state keeps data-as-of and caution visible. TASK-107 must verify the
+polling, last-good, cache, evidence, copy, and failure boundaries. TASK-109
+legacy deletion remains separately approval-gated.

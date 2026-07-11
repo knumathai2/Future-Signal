@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Link,
   useLocation,
@@ -10,7 +10,13 @@ import { IssueDetail } from "./IssueDetail";
 import { staleDummyIssues } from "../data/dummyIssues";
 import { getDevelopmentReportFixture } from "../data/reportFixtures";
 import type { DataStatus, Issue, IssueReportLoadState } from "../types/issue";
-import { fetchJson, HttpError, loadIssueReport } from "../utils/api";
+import {
+  fetchJson,
+  HttpError,
+  loadGenerationRequestStatus,
+  loadIssueReport,
+  requestIssueReport,
+} from "../utils/api";
 import { focusRouteHeading } from "../utils/focus";
 import {
   type ApiIssueDetail,
@@ -83,7 +89,8 @@ export function IssueDetailRoute() {
   const reportFixtureName = searchParams.get("report");
   const developmentReportState = useMemo<IssueReportLoadState | null>(() => {
     if (reportFixtureName === "loading") return { status: "loading" };
-    if (reportFixtureName === "empty") return { status: "not_yet_generated" };
+    if (reportFixtureName === "empty")
+      return { status: "ready", response: { status: "idle" } };
     if (reportFixtureName === "error") return { status: "error" };
     const fixture = getDevelopmentReportFixture(reportFixtureName);
     return fixture ? parseReportResponse(fixture) : null;
@@ -102,6 +109,8 @@ export function IssueDetailRoute() {
   const [reportState, setReportState] = useState<IssueReportLoadState>({
     status: "loading",
   });
+  const [generationPending, setGenerationPending] = useState(false);
+  const [generationActionError, setGenerationActionError] = useState(false);
 
   useEffect(() => {
     setApiDetail(null);
@@ -109,11 +118,13 @@ export function IssueDetailRoute() {
     setFallbackIssue(null);
     setHistoryStatus("loading");
     setReportState({ status: "loading" });
+    setGenerationPending(false);
+    setGenerationActionError(false);
 
     if (!issueId) {
       setDetailStatus("empty");
       setHistoryStatus("error");
-      setReportState({ status: "not_yet_generated" });
+      setReportState({ status: "ready", response: { status: "idle" } });
       return;
     }
 
@@ -127,7 +138,7 @@ export function IssueDetailRoute() {
         setReportState(developmentReportState ?? { status: "error" });
       } else if (forcedStatus === "empty") {
         setHistoryStatus("error");
-        setReportState({ status: "not_yet_generated" });
+        setReportState({ status: "ready", response: { status: "idle" } });
       }
       setDetailStatus(forcedStatus);
       return;
@@ -193,6 +204,62 @@ export function IssueDetailRoute() {
     return () => controller.abort();
   }, [developmentReportState, forcedStatus, issueId]);
 
+  const activeRequestId =
+    reportState.status === "ready" &&
+    reportState.response.status === "generating"
+      ? reportState.response.request_id
+      : null;
+
+  useEffect(() => {
+    if (!activeRequestId || developmentReportState) return;
+    const controller = new AbortController();
+    let checking = false;
+    const check = async () => {
+      if (checking) return;
+      checking = true;
+      try {
+        const request = await loadGenerationRequestStatus(
+          issueId,
+          activeRequestId,
+          controller.signal,
+        );
+        if (request.state === "succeeded" || request.state === "failed") {
+          const next = await loadIssueReport(issueId, controller.signal);
+          setReportState(next);
+          setGenerationPending(false);
+        }
+      } catch (error) {
+        if (!(error instanceof DOMException && error.name === "AbortError"))
+          console.error(error);
+      } finally {
+        checking = false;
+      }
+    };
+    void check();
+    const interval = window.setInterval(check, 1500);
+    return () => {
+      controller.abort();
+      window.clearInterval(interval);
+    };
+  }, [activeRequestId, developmentReportState, issueId]);
+
+  const handleGenerate = useCallback(
+    async (refreshContext: boolean) => {
+      setGenerationPending(true);
+      setGenerationActionError(false);
+      try {
+        await requestIssueReport(issueId, refreshContext);
+        setReportState(await loadIssueReport(issueId));
+      } catch (error) {
+        console.error(error);
+        setGenerationActionError(true);
+      } finally {
+        setGenerationPending(false);
+      }
+    },
+    [issueId],
+  );
+
   const issue = useMemo(() => {
     if (fallbackIssue) {
       return fallbackIssue;
@@ -248,6 +315,9 @@ export function IssueDetailRoute() {
       reportState={reportState}
       historyStatus={historyStatus}
       backTo={backTo}
+      onGenerateReport={handleGenerate}
+      generationPending={generationPending}
+      generationActionError={generationActionError}
     />
   );
 }
