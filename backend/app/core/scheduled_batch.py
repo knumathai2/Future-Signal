@@ -65,6 +65,8 @@ class ScheduledBatchResult:
     markets_processed: int = 0
     markets_failed: int = 0
     signals_inserted: int = 0
+    context_requested: bool = False
+    context_reason_code: str | None = None
     context_outcomes: list[ContextResearchOutcome] | None = None
     report_outcomes: list[ReportOutcome] | None = None
     error: str | None = None
@@ -76,9 +78,7 @@ class ScheduledBatchResult:
     @property
     def reports_failed_or_filtered(self) -> int:
         return sum(
-            1
-            for outcome in self.report_outcomes or []
-            if outcome.status in {"failed", "filtered"}
+            1 for outcome in self.report_outcomes or [] if outcome.status in {"failed", "filtered"}
         )
 
     @property
@@ -140,10 +140,10 @@ def record_scheduled_batch_log(db: Session, result: ScheduledBatchResult) -> Non
             error_detail={
                 "reports_only": result.reports_only,
                 "normalized_count": result.normalized_count,
-                "run_timestamp": result.run_timestamp.isoformat()
-                if result.run_timestamp
-                else None,
+                "run_timestamp": result.run_timestamp.isoformat() if result.run_timestamp else None,
                 "signals_inserted": result.signals_inserted,
+                "context_requested": result.context_requested,
+                "context_reason_code": result.context_reason_code,
                 "context_success": result.context_success,
                 "context_failed": result.context_failed,
                 "context_candidates_accepted": result.context_candidates_accepted,
@@ -218,6 +218,8 @@ def run_scheduled_batch(
     model_name: str,
     context_research_client: OpenRouterContextResearchClient | None = None,
     context_verifier: IndependentVerifierClient | None = None,
+    context_requested: bool = False,
+    context_configuration_error: str | None = None,
     context_backfill: bool = False,
     context_max_markets: int | None = None,
     context_offset: int = 0,
@@ -225,7 +227,12 @@ def run_scheduled_batch(
     reports_only: bool = False,
     record_log: bool = True,
 ) -> ScheduledBatchResult:
-    result = ScheduledBatchResult(run_started_at=datetime.now(UTC), reports_only=reports_only)
+    result = ScheduledBatchResult(
+        run_started_at=datetime.now(UTC),
+        reports_only=reports_only,
+        context_requested=context_requested,
+        context_reason_code=context_configuration_error,
+    )
 
     try:
         if reports_only:
@@ -249,6 +256,16 @@ def run_scheduled_batch(
                 result.signals_inserted = len(signals)
 
         if (
+            context_requested
+            and context_configuration_error is None
+            and (context_research_client is None or context_verifier is None)
+        ):
+            result.context_reason_code = "context_client_pair_incomplete"
+
+        if result.context_reason_code and context_requested:
+            result.error = f"context_configuration_failed:{result.context_reason_code}"
+            result.context_outcomes = []
+        elif (
             context_research_client is not None
             and context_verifier is not None
             and result.run_timestamp is not None
@@ -402,6 +419,25 @@ def ai_extra_headers_from_settings() -> dict[str, str]:
     return headers
 
 
+def build_requested_context_clients(
+    settings_obj: Any,
+) -> tuple[
+    OpenRouterContextResearchClient | None,
+    IndependentVerifierClient | None,
+    str | None,
+]:
+    """Build the mandatory client pair or return one secret-free reason code."""
+    try:
+        research_client = build_context_research_client_from_settings(settings_obj)
+    except Exception:
+        return None, None, "context_research_client_unavailable"
+    try:
+        verifier = build_independent_verifier_from_settings(settings_obj)
+    except Exception:
+        return None, None, "context_verifier_unavailable"
+    return research_client, verifier, None
+
+
 def main() -> int:
     from app.db.session import get_session_factory
 
@@ -427,12 +463,19 @@ def main() -> int:
 
     context_research_client = None
     context_verifier = None
-    if not args.skip_context_research and not args.v4_reports_from_stored_context:
-        try:
-            context_research_client = build_context_research_client_from_settings(settings)
-            context_verifier = build_independent_verifier_from_settings(settings)
-        except Exception as exc:
-            logger.info("Skipping context research: %s", type(exc).__name__)
+    context_requested = not args.skip_context_research and not args.v4_reports_from_stored_context
+    context_configuration_error = None
+    if context_requested:
+        (
+            context_research_client,
+            context_verifier,
+            context_configuration_error,
+        ) = build_requested_context_clients(settings)
+        if context_configuration_error:
+            logger.error(
+                "Context research configuration failed: %s",
+                context_configuration_error,
+            )
 
     session = get_session_factory()()
     try:
@@ -443,6 +486,8 @@ def main() -> int:
             model_name=settings.openai_model,
             context_research_client=context_research_client,
             context_verifier=context_verifier,
+            context_requested=context_requested,
+            context_configuration_error=context_configuration_error,
             context_backfill=args.context_backfill,
             context_max_markets=args.context_max_markets,
             context_offset=args.context_offset,
@@ -454,13 +499,14 @@ def main() -> int:
 
     logger.info(
         "Scheduled batch complete: processed=%s failed=%s signals=%s reports_success=%s "
-        "context_success=%s context_failed=%s reports_skipped=%s error=%s",
+        "context_success=%s context_failed=%s context_reason=%s reports_skipped=%s error=%s",
         result.markets_processed,
         result.markets_failed,
         result.signals_inserted,
         result.reports_success,
         result.context_success,
         result.context_failed,
+        result.context_reason_code,
         result.reports_skipped,
         result.error,
     )

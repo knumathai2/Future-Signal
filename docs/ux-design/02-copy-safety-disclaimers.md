@@ -152,4 +152,30 @@ Every AI summary retains report/data/episode timing and the interpretation
 caution in the same report surface. Internal model names, scores, reasoning,
 rejected URLs, and verification prompts remain non-public.
 
+### 8.2 Approved v6 evidence-aware briefing presentation (ADR-050)
+
+V6 renders only the sections allowed by the backend-selected report mode. A
+significant change with verified material reads as observed change, verified
+background, conditional interpretation, and exact source links. A significant
+change without verified material replaces the background region with a compact
+fixed absence state and general conditional scenarios. Stable modes begin with
+an issue explanation and never style the stable value as an important movement.
+
+General explanations and scenarios carry a visible and accessible notice with
+this meaning: `현재 상황을 입증하는 검증 자료가 아니라 일반적인 시나리오
+설명입니다.` Verified background uses a separate visual label. No-evidence
+modes do not reserve an empty source-card region or provide unverified links.
+
+The current value and change summary appear once in one observed-change region;
+AI prose cannot repeat them. Exact resolution conditions, dates, exclusions,
+and source reference move to `판정 기준 보기`, collapsed by default. The
+control must support keyboard operation, `aria-expanded`, and visible focus.
+Data-as-of timing and interpretation caution remain in the report viewport.
+
+The strict frontend parser rejects unknown modes, extra or missing fields,
+invalid evidence bases, source mismatches, and duplicated deterministic data.
+Exact stored links alone open in a new tab with safe external-link attributes.
+The user approved the v6 public API and AI-policy contract in
+`reports/task-092-evidence-aware-briefing-policy.md` on 2026-07-11.
+
 ---

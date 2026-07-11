@@ -80,6 +80,59 @@ without reducing the desired depth. The exact reference contract is recorded in
 
 ---
 
+### ADR-050: Select v6 briefing structure from change and verified-evidence state
+
+- **Date**: 2026-07-11
+- **Status**: Accepted ⚠️ HUMAN APPROVAL
+- **Decided by**: User (human), PM / Planner
+
+**Context**: The current v5 report can repeat the same metric and market
+resolution content in its summary, current-data interpretation, scenarios, and
+check cards. When verified public material is absent, its fixed six-field shape
+also creates large low-information sections instead of adapting to the actual
+evidence level.
+
+**Decision**: Select one of four v6 modes from two deterministic facts: whether
+the latest linked metric meets the existing 24-hour ±5pp
+`expectation_shift` rule, and whether at least one same-episode candidate passes
+the strict verified-source read contract. Each mode has an exact authored-field
+allowlist and typed evidence bases. General scenarios are permitted only as
+clearly labelled non-current explanations; they cannot add unsupported recent
+facts, person states, concrete procedures, causal assertions, likelihood ranks,
+outcome assertions, or action prompts. Current metric data and resolution rules
+are deterministic and each has one display owner; rules move to a collapsed
+`판정 기준 보기` reference region.
+
+**Rationale**: Information structure should follow available evidence rather
+than requiring every issue to fill the same cards. Reusing the existing signal
+threshold and verified-candidate gates keeps mode selection reproducible and
+prevents the model from deciding how strong its own evidence is.
+
+**Trade-offs**: V6 replaces the current public report shape, adds a new evidence
+basis, and requires discriminated Backend/Frontend validation. Strict duplicate
+and rule-leak checks will reject some otherwise readable generations. General
+scenario copy remains intentionally limited when no attributable source exists.
+
+**Approval boundary**: The product behavior and proposed exact contract are in
+`reports/task-092-evidence-aware-briefing-policy.md`. No schema change or new
+dependency is proposed. TASK-093 and TASK-095 runtime implementation require
+explicit approval of (1) the bounded general-scenario AI-policy change and (2)
+the v5-to-v6 public report API change. Workflow/runtime configuration changes,
+deployment, production writes, existing-migration edits, and wording-policy
+changes remain separate gates.
+
+**Approval follow-up (2026-07-11)**: The user explicitly approved both the
+bounded general-scenario AI-policy change and the exact v5-to-v6 public report
+API contract. TASK-093 and TASK-095 may implement those approved scopes in
+dependency order. This approval does not include workflow/runtime
+configuration, deployment, production writes, schema changes, new dependencies,
+existing-migration edits, or wording-policy changes.
+
+**Consequences**: TASK-092 is complete and TASK-093 is active. TASK-094~098
+remain dependency-gated in `tasks/active.md`.
+
+---
+
 ### ADR-001: AI Development Harness v1.1 Adoption
 
 - **Date**: 2026-07-07

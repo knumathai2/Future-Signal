@@ -8,6 +8,7 @@ to any shared or production database - the override only affects the
 "sqlite" dialect used here and never touches the real Postgres path.
 """
 
+import json
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -33,6 +34,9 @@ from app.core.ai_report import (
     assemble_v5_report_content,
     build_v4_stored_payload,
     build_v5_stored_payload,
+    build_v6_stored_payload,
+    determine_v6_report_mode,
+    parse_v6_briefing,
 )
 from app.db.models import (
     AiReport,
@@ -128,7 +132,7 @@ def seed_basic_market(db_session) -> None:
         Market(
             id=MARKET_ID,
             polymarket_condition_id="cond-1",
-            title="Will the test issue resolve Yes?",
+            title="Will Test issue resolve Yes?",
             description="A seeded test issue.",
             category="technology",
             outcome_type="binary",
@@ -353,7 +357,7 @@ def seed_v4_report(
         metric_id=1,
         episode_at=NOW,
         data_as_of=NOW,
-        title="Will the test issue resolve Yes?",
+        title="Will Test issue resolve Yes?",
         description="A seeded test issue.",
         category="technology",
         outcome_label="Yes",
@@ -516,5 +520,150 @@ def seed_v5_report(
     assert content is not None
     report.content = build_v5_stored_payload(inputs, content).model_dump(mode="json")
     report.prompt_version = "v5"
+    db_session.commit()
+    return report, candidate
+
+
+def seed_v6_report(
+    db_session,
+    *,
+    report_id: uuid.UUID = REPORT_ID_LATEST,
+    generated_at: datetime = NOW + timedelta(minutes=5),
+    with_candidate: bool = True,
+    change_24h: float = 0.08,
+) -> tuple[AiReport, ContextCandidate | None]:
+    """Seed one strict v6 envelope plus its exact stored rule evidence."""
+    report, candidate = seed_v4_report(
+        db_session,
+        report_id=report_id,
+        generated_at=generated_at,
+        with_candidate=with_candidate,
+    )
+    metric = db_session.get(MarketMetric, 1)
+    metric.change_24h = change_24h
+    candidate_inputs = []
+    if candidate is not None:
+        candidate_inputs = [
+            V4VerifiedCandidateInput(
+                id=candidate.id,
+                title=candidate.event_title,
+                event_at=candidate.event_at,
+                neutral_summary=candidate.neutral_summary,
+                sources=[V4ContextSource.model_validate(source) for source in candidate.sources],
+            )
+        ]
+    rules = ResolutionRulesInput(
+        condition_text="The documented test condition is recorded by the deadline.",
+        deadline=NOW + timedelta(days=30),
+        exclusions=[],
+        resolution_source=None,
+        source_description_hash="test-description-hash",
+        rules_hash="test-rules-hash",
+        collected_at=NOW - timedelta(minutes=10),
+    )
+    if db_session.query(MarketResolutionRule).count() == 0:
+        db_session.add(
+            MarketResolutionRule(
+                id=uuid.uuid4(),
+                market_id=MARKET_ID,
+                condition_text=rules.condition_text,
+                deadline=rules.deadline,
+                exclusions=rules.exclusions,
+                resolution_source=rules.resolution_source,
+                source_description_hash=rules.source_description_hash,
+                rules_hash=rules.rules_hash,
+                collected_at=rules.collected_at,
+            )
+        )
+    inputs = V4ReportInputs(
+        market_id=MARKET_ID,
+        metric_id=1,
+        episode_at=NOW,
+        data_as_of=NOW,
+        title="Will the test issue resolve Yes?",
+        description="A seeded test issue.",
+        category="technology",
+        outcome_label="Yes",
+        end_date=NOW + timedelta(days=30),
+        current_value=0.63,
+        change_24h=change_24h,
+        change_7d=0.11,
+        confidence_level="sufficient",
+        volume_24h=1000,
+        liquidity=2000,
+        context_candidates=candidate_inputs,
+        resolution_rules=rules,
+    )
+    mode = determine_v6_report_mode(inputs)
+    scenario = {
+        "title": "문서 범위가 달라지는 경우",
+        "text": (
+            "만약 Test 항목을 다루는 공개 문서의 범위가 달라지는 경우 일반적인 "
+            "상황 구분에 따라 내용을 살펴볼 수 있습니다."
+        ),
+        "basis": "general_scenario",
+    }
+    verified = {
+        "text": (
+            "Official 자료는 Test 항목과 관련된 공개 배경을 담고 있으며, "
+            "관찰된 흐름과의 관계를 입증하지 않습니다."
+        ),
+        "basis": "verified_context",
+        "candidate_ids": [str(CONTEXT_CANDIDATE_ID)],
+    }
+    material = {
+        "scenario_index": 1,
+        "title": "공개 문서 범위",
+        "text": "Test 항목을 다루는 공식 공개 문서의 범위를 확인할 자료입니다.",
+        "basis": "general_scenario",
+    }
+    if mode == "change_with_evidence":
+        raw = {
+            "mode": mode,
+            "verified_background": verified,
+            "conditional_interpretations": [
+                {
+                    "title": "자료 범위가 이어지는 경우",
+                    "text": (
+                        "만약 Official 후속 자료가 같은 Test 항목을 다루는 "
+                        "경우 공개 배경의 범위를 조건부로 비교할 수 있습니다."
+                    ),
+                    "basis": "verified_context",
+                    "candidate_ids": [str(CONTEXT_CANDIDATE_ID)],
+                }
+            ],
+        }
+    elif mode == "change_without_evidence":
+        raw = {
+            "mode": mode,
+            "conditional_scenarios": [scenario],
+            "materials_to_check": [material],
+        }
+    elif mode == "stable_with_evidence":
+        raw = {
+            "mode": mode,
+            "issue_explanation": {
+                "text": "이 이슈는 Test 항목이 공적 기록에서 다뤄지는 범위를 살펴봅니다.",
+                "basis": "market_definition",
+            },
+            "verified_background": verified,
+            "conditional_scenarios": [scenario],
+        }
+    else:
+        raw = {
+            "mode": mode,
+            "issue_explanation": {
+                "text": "이 이슈는 Test 항목을 이해하기 위한 일반적인 상황 구분을 다룹니다.",
+                "basis": "general_scenario",
+            },
+            "conditional_scenarios": [scenario],
+            "materials_to_check": [material],
+        }
+    briefing = parse_v6_briefing(json.dumps(raw, ensure_ascii=False), mode)
+    assert briefing is not None
+    payload = build_v6_stored_payload(inputs, briefing)
+    assert payload is not None
+    report.content = payload.model_dump(mode="json")
+    report.prompt_version = "v6"
     db_session.commit()
     return report, candidate

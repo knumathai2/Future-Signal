@@ -5,8 +5,10 @@ and no OpenAI network call is touched by this suite.
 """
 
 import json
+import sys
 import uuid
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 
 import pytest
 from sqlalchemy import BigInteger, create_engine
@@ -18,7 +20,11 @@ from sqlalchemy.pool import StaticPool
 
 from app.core.ai_report_batch import ReportOutcome
 from app.core.context_research_batch import ContextResearchOutcome
-from app.core.scheduled_batch import build_arg_parser, run_scheduled_batch
+from app.core.scheduled_batch import (
+    build_arg_parser,
+    build_requested_context_clients,
+    run_scheduled_batch,
+)
 from app.db.models import (
     AiReport,
     Base,
@@ -447,3 +453,109 @@ def test_context_failure_marks_combined_log_partial_without_blocking_reports(db,
     log = db.query(DataCollectionLog).one()
     assert log.status == "scheduled_batch_partial"
     assert log.error_detail["context_failed"] == 1
+
+
+def test_requested_context_with_missing_verifier_is_an_explicit_failed_run(db):
+    result = run_scheduled_batch(
+        db,
+        normalized_markets=[_normalized()],
+        llm_client=None,
+        model_name="openai/writer",
+        context_research_client=object(),
+        context_verifier=None,
+        context_requested=True,
+    )
+
+    assert result.markets_processed == 1
+    assert result.context_success == 0
+    assert result.context_failed == 0
+    assert result.context_reason_code == "context_client_pair_incomplete"
+    assert result.error == "context_configuration_failed:context_client_pair_incomplete"
+    log = db.query(DataCollectionLog).one()
+    assert log.status == "scheduled_batch_failed"
+    assert log.error_detail["context_requested"] is True
+    assert log.error_detail["context_reason_code"] == "context_client_pair_incomplete"
+
+
+def test_explicit_context_skip_remains_a_normal_success(db):
+    result = run_scheduled_batch(
+        db,
+        normalized_markets=[_normalized()],
+        llm_client=None,
+        model_name="openai/writer",
+        context_requested=False,
+    )
+
+    assert result.error is None
+    assert result.context_requested is False
+    assert result.context_reason_code is None
+    assert db.query(DataCollectionLog).one().status == "scheduled_batch_success"
+
+
+def test_context_client_builder_returns_safe_missing_verifier_reason(monkeypatch):
+    import app.core.scheduled_batch as scheduled_batch
+
+    monkeypatch.setattr(
+        scheduled_batch,
+        "build_context_research_client_from_settings",
+        lambda _settings: object(),
+    )
+
+    def missing_verifier(_settings):
+        raise RuntimeError("sensitive provider detail must not be returned")
+
+    monkeypatch.setattr(
+        scheduled_batch,
+        "build_independent_verifier_from_settings",
+        missing_verifier,
+    )
+
+    research, verifier, reason = build_requested_context_clients(object())
+
+    assert research is None
+    assert verifier is None
+    assert reason == "context_verifier_unavailable"
+    assert "sensitive" not in reason
+
+
+def test_cli_missing_verifier_returns_failure_and_records_reason(db, monkeypatch):
+    import app.core.scheduled_batch as scheduled_batch
+    import app.db.session as db_session
+
+    monkeypatch.setattr(
+        scheduled_batch,
+        "settings",
+        SimpleNamespace(
+            env="local",
+            database_url="postgresql://configured-but-not-read",
+            openai_model="openai/writer",
+        ),
+    )
+    monkeypatch.setattr(
+        scheduled_batch,
+        "ensure_local_dev_write_allowed",
+        lambda *_args, **_kwargs: None,
+    )
+    monkeypatch.setattr(
+        scheduled_batch,
+        "normalized_markets_from_args",
+        lambda _args: [_normalized()],
+    )
+    monkeypatch.setattr(
+        scheduled_batch,
+        "build_requested_context_clients",
+        lambda _settings: (None, None, "context_verifier_unavailable"),
+    )
+    monkeypatch.setattr(db_session, "get_session_factory", lambda: lambda: db)
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["scheduled_batch", "--skip-ai-reports", "--confirm-local-dev-write"],
+    )
+
+    exit_code = scheduled_batch.main()
+
+    assert exit_code == 1
+    log = db.query(DataCollectionLog).one()
+    assert log.status == "scheduled_batch_failed"
+    assert log.error_detail["context_reason_code"] == "context_verifier_unavailable"

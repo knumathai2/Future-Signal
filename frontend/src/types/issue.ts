@@ -64,23 +64,95 @@ export type CategorySummary = {
   averageChange: number | null;
 };
 
-export type IssueReportContent = {
-  executive_summary: string;
-  current_data_interpretation: string;
-  conditional_scenarios: Array<{ title: string; narrative: string; basis: ReportBasis }>;
-  factors_to_check: Array<{ title: string; explanation: string; basis: ReportBasis }>;
-  signals_to_watch: Array<{ title: string; explanation: string; basis: ReportBasis }>;
-  evidence_synthesis: string | null;
-  relationship_boundary: string;
-  data_limitations: string;
-  caution_note: string;
-};
-
 export type ReportBasis =
   | "market_definition"
   | "observed_data"
   | "verified_context"
+  | "general_scenario"
   | "data_limitation";
+
+export type IssueReportMode =
+  | "change_with_evidence"
+  | "change_without_evidence"
+  | "stable_with_evidence"
+  | "stable_without_evidence";
+
+export type MarketDefinitionBlock = {
+  text: string;
+  basis: "market_definition";
+};
+
+export type GeneralBlock = {
+  text: string;
+  basis: "general_scenario";
+};
+
+export type VerifiedBlock = {
+  text: string;
+  basis: "verified_context";
+  candidate_ids: string[];
+};
+
+export type GeneralScenario = {
+  title: string;
+  text: string;
+  basis: "general_scenario";
+};
+
+export type VerifiedInterpretation = {
+  title: string;
+  text: string;
+  basis: "verified_context";
+  candidate_ids: string[];
+};
+
+export type MaterialToCheck = {
+  scenario_index: number;
+  title: string;
+  text: string;
+  basis: "general_scenario";
+};
+
+export type IssueReportBriefing =
+  | {
+      mode: "change_with_evidence";
+      verified_background: VerifiedBlock;
+      conditional_interpretations: VerifiedInterpretation[];
+    }
+  | {
+      mode: "change_without_evidence";
+      conditional_scenarios: GeneralScenario[];
+      materials_to_check: MaterialToCheck[];
+    }
+  | {
+      mode: "stable_with_evidence";
+      issue_explanation: MarketDefinitionBlock;
+      verified_background: VerifiedBlock;
+      conditional_scenarios: GeneralScenario[];
+    }
+  | {
+      mode: "stable_without_evidence";
+      issue_explanation: GeneralBlock;
+      conditional_scenarios: GeneralScenario[];
+      materials_to_check: MaterialToCheck[];
+    };
+
+export type IssueReportObservedChange = {
+  metric_id: number;
+  window: "24h";
+  current_value: number;
+  change_value: number | null;
+  significant: boolean;
+  threshold: number;
+};
+
+export type IssueReportResolutionReference = {
+  status: "available" | "unavailable";
+  condition_text: string | null;
+  deadline: string | null;
+  exclusions: string[];
+  source_url: string | null;
+};
 
 export type IssueReportContextSource = {
   title: string;
@@ -101,13 +173,19 @@ export type IssueReportContextCandidate = {
 export type IssueReportSuccessResponse = {
   id: string;
   status: "success";
-  report_version: "v5";
+  report_version: "v6";
+  report_mode: IssueReportMode;
   generated_at: string;
   data_as_of: string;
   episode_at: string;
-  content: IssueReportContent;
+  observed_change: IssueReportObservedChange;
+  briefing: IssueReportBriefing;
+  resolution_reference: IssueReportResolutionReference;
   evidence_refs: string[];
   context_candidates: IssueReportContextCandidate[];
+  relationship_boundary: string;
+  data_limitations: string;
+  caution_note: string;
 };
 
 export type IssueReportNotYetGeneratedResponse = {
