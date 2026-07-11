@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Project: Outlook Signals
 
-_Last updated: 2026-07-10_
+_Last updated: 2026-07-11_
 
 ## Summary
 
@@ -18,9 +18,9 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 ## Current State
 
 - **Version**: v0.8.0-day5-technical-mvp-complete
-- **Phase**: Day 5 technical MVP closed on PR #53
-- **Next milestone**: Review and merge PR #53; optionally resume deployment (`TASK-020`), presentation operations (`TASK-021`), or the approval-gated automated-context program (`TASK-056` onward)
-- **Overall health**: 🟢 Good — PR #53 merges the latest `main`, resolves its ES2020 Frontend build blocker, and passes the complete Frontend build path plus 200 Backend tests and Ruff. Deployment and final presentation assets are explicitly deferred rather than recorded as complete.
+- **Phase**: Approved post-MVP v4 automated-context program
+- **Next milestone**: Complete TASK-057 schema after TASK-056 policy/contract closeout, then continue sequentially through TASK-065
+- **Overall health**: 🟢 Good — ADR-038 records policy, schema, API, OpenRouter cumulative USD 100, and local/development-write approval. Deployment and production-database writes remain excluded.
 
 ## Tech Summary
 
@@ -54,12 +54,14 @@ Future Signal/
 | Frontend | TASK-051/TASK-053 provide the ADR-033 report UI and parser enforcement. TASK-054 adds routed Home/list/detail/methodology information architecture, a real-history featured chart, ranked summaries, and responsive verification. PR #53 replaces two ES2022-only `.at()` reads with ES2020-compatible index access so typecheck and production build pass without configuration or behavior changes. |
 | Backend | `/api/issues/{id}/report` serves only successful v3 rows whose eight-field content validates, whose linked metric supplies `data_as_of`, and whose timestamp is not later than generation. Legacy, failed, malformed, unlinked, and incompatible rows keep `not_yet_generated`. TASK-053 adds read-time five-sentence enforcement and deterministic fallback-test isolation. Existing issue/category/history behavior and DB schema remain unchanged. |
 | Data/AI | TASK-049 advances generation to `PROMPT_VERSION=v3`: three constrained prose slots plus deterministic candidate comparison, external context, check points, limitations, and exact caution copy. ISS-010 aligned the fixed prompt with the frozen ADR-033 bounds/source scope and the approved Actions model configuration; the latest 10 stored v3 rows passed structural, wording-safety, and semantic validation. |
-| PM / Safety | P0 scope and ADR-033 remain locked. ADR-037 closes the technical MVP milestone while keeping deployment and presentation operations visible as deferred work. TASK-055's automated-context program remains backlog-only behind its existing approval gates. |
+| PM / Safety | The v3 MVP remains frozen. ADR-038 activates TASK-056~065 with verified-only automated context, strict evidence links, a cumulative USD 100 OpenRouter cap, and local/development-only writes. Deployment and production DB writes remain separate gates. |
+| v4 program | TASK-056 policy/contract is complete and TASK-057 schema is next. V4 requires OpenRouter API citation annotations, deterministic hard gates, a different verifier model, verified-only public reads, evidence-linked report fields, and an append-only migration. |
 
 ## Recent Changes
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | ADR-038 accepted and TASK-056~065 activated; TASK-056 policy/contract documentation completed without provider calls or DB writes. |
 | 2026-07-07 | AI Development Harness v1.1 initial setup (Standard tier) |
 | 2026-07-07 | PRD rescoped to v1.1 (hackathon-narrowed from broader "global issue outlook platform" concept) |
 | 2026-07-07 | Service Design, Technical Design, UX Design written as companion specs to PRD |

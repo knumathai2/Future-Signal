@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # standards.md — Outlook Signals Standards
 
-_Last updated: 2026-07-10_
+_Last updated: 2026-07-11_
 
 ## Code Style
 
@@ -69,6 +69,18 @@ Every user-facing string and every AI/template output must be checked against th
 - No numeric confidence stated as a probability of a real-world outcome (e.g., never "73% likely to happen")
 - Every metric-bearing surface must ship with its caution badge in the same viewport — no exceptions for "obviously fine" markets
 - v3 AI reports must validate against ADR-033's exact eight-field contract before storage; missing, extra, or unsafe fields block storage
+- v4 reports must validate against ADR-038's exact seven-field contract and
+  evidence references before storage. Metric statements require stored metric
+  IDs; context statements require verified candidate IDs with stored citation
+  sources. Missing or inconsistent evidence blocks storage and public serving.
+- Automated context accepts only OpenRouter API `url_citation` annotations.
+  Model-body URLs, unsupported dates/entities, hard-gate failures, verifier
+  disagreements, conflicts, and non-verified candidates must fail closed.
+- OpenRouter usage for TASK-056~065 must remain within the cumulative USD 100
+  approval and be recorded without prompts, responses, keys, or secrets.
+- v3 related-event and v4 verified-context candidates must carry the
+  candidate-not-cause boundary; timing or co-occurrence never establishes a
+  relationship with the observed movement.
 - Policy/lint docs and tests may quote prohibited expressions only to define or verify the blocking rule; demo-visible docs and product copy may not normalize those terms as user-facing language
 
 ## Documentation Standards

@@ -601,6 +601,69 @@ behavior change is approved by this decision.
 
 ---
 
+### ADR-038: Approve verified automated context and evidence-grounded v4 reports
+
+- **Date**: 2026-07-11
+- **Status**: Accepted ⚠️ HUMAN APPROVAL
+- **Decided by**: User (human), PM / Planner recording
+
+**Context**: TASK-055 proposed a sequential TASK-056~065 program that replaces
+the frozen v3 manual-only context path with a narrowly bounded automated
+research, verification, evidence, report, API, and change-episode UI flow. The
+project constitution required explicit approval for the policy change, schema,
+public API, paid provider use, and database writes before implementation.
+
+**Decision**:
+
+1. Authorize TASK-056~065 sequentially. TASK-056 is the policy/contract gate;
+   TASK-057~065 must follow the dependencies and stop conditions in
+   `reports/task-055-automated-context-execution-plan.md`.
+2. Permit automated context only when every source URL comes from an OpenRouter
+   API `url_citation` annotation, deterministic hard gates pass, a research
+   model and a different verifier model agree, and the candidate is stored as
+   `verified`. Model-body URLs and non-verified candidates are never public.
+3. Permit OpenRouter research, independent-verification, and report-writing
+   calls for this program up to USD 100 cumulative usage. Usage must be
+   recorded per run without secrets, prompts, or full responses, and execution
+   must refuse work that would exceed the remaining approved budget.
+4. Permit one new append-only migration,
+   `backend/migrations/002_context_candidates.sql`, adding
+   `context_candidates` and `context_collection_runs`. Existing migrations,
+   `related_events`, and legacy `ai_reports` rows remain unchanged.
+5. Permit the strict v4 response on the existing
+   `GET /api/issues/{id}/report` path with top-level report timing, episode,
+   evidence references, and verified context candidates with source metadata.
+   Legacy v1-v3, failed, malformed, unverified, and evidence-inconsistent rows
+   must return the existing not-yet-generated state.
+6. Fix v4 content to exactly `issue_overview`, `observed_change`,
+   `context_summary`, `relationship_boundary`, `what_to_check`,
+   `data_limitations`, and `caution_note`. `context_summary` alone is nullable.
+   Metric sentences require stored metric evidence; context sentences require
+   stored verified-candidate evidence.
+7. Permit the TASK-063 change-episode UI and local/development-only candidate,
+   report, migration, backfill, and audit writes. Production DB writes,
+   deployment, infrastructure changes, unrelated schema/API changes, and new
+   dependencies remain outside this approval.
+8. Preserve the bans on relationship assertions, real-world result
+   assertions, action-inducing language, individual-participant data, and
+   open-ended analysis. A missing or inconsistent requirement fails closed.
+
+**Rationale**: The program adds current public context while preserving the
+product's evidence-first, non-predictive posture through mechanical provenance,
+independent verification, strict evidence IDs, and verified-only public reads.
+
+**Trade-offs**: Automated verification can legitimately yield no public
+candidate. Provider cost and availability become pipeline dependencies, so the
+last successful candidate/report remains live on failure and `no_candidate`
+is a normal outcome. v3 remains the historical MVP contract while v4 is built.
+
+**Consequences**: TASK-056~065 move to `tasks/active.md`. TASK-057 and TASK-058
+may start only after TASK-056 documentation passes. TASK-065 may call the
+provider and write only against a guarded local/development database within
+the cumulative USD 100 limit. Deployment remains a separate approval gate.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07

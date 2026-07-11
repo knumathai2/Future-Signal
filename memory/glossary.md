@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Glossary — Outlook Signals
 
-_Last updated: 2026-07-10_
+_Last updated: 2026-07-11_
 
 ## Domain Terms (use these exact framings in UI copy and AI output)
 
@@ -15,7 +15,7 @@ _Last updated: 2026-07-10_
 |------|-----------|
 | Reflected expectation value | The current price/probability from Polymarket, reframed as "expectation reflected in market data," never "probability of the outcome" |
 | Interpretation-caution badge | Visual indicator (not a "trust badge") shown when activity level, liquidity, or volatility make a metric unreliable to over-interpret |
-| Related event candidate | A manually curated (3–5 issues only) contextual event shown alongside a market's change — always "candidate," never asserted as "cause" |
+| Related event candidate | The frozen v3 term for a manually curated contextual event shown alongside a market's change — always "candidate," never asserted as "cause" |
 | Heat score | Composite ranking metric (attention + volatility + magnitude of change) that powers the home dashboard "top movers" ranking |
 | Expectation Shift Detected | The MVP's only sudden-change signal: ±5pp change within a rolling window (Service Design §7) |
 | Data-as-of timestamp | Required on every data-bearing screen; shown even when serving last-known-good/fallback data |
@@ -24,6 +24,10 @@ _Last updated: 2026-07-10_
 | External context | Nullable v3 narrative derived only from PM/Data-approved related-event notes; source metadata remains in issue-detail `related_events`, and the section is hidden only when the value is `null` |
 | Context candidate comparison | Required v3 `possible_drivers` content derived only from approved candidate title/date or the fixed absence copy; always states that the data does not establish a relationship with the observed movement |
 | Offline candidate discovery | A non-public PM/Data review aid that may help find possible context candidates but cannot write to the database, change the public API, display results, or replace manual curation in MVP/v3 |
+| Verified context candidate | A v4 candidate backed only by OpenRouter `url_citation` annotations and accepted by deterministic hard gates plus an independent verifier model; timing may be compared with a change episode, but no relationship is asserted |
+| Change episode | A v4 display unit connecting one observed metric interval, its metric evidence ID, any verified context-candidate IDs, source metadata, timing, and interpretation caution |
+| v4 evidence-grounded report | The TASK-056 seven-field structured report with metric/candidate evidence references; it excludes legacy v1-v3 rows, rejects unsupported values or context, and uses `context_summary=null` when no verified candidate exists |
+| Fail closed | Withhold a candidate or report from the public API whenever citation provenance, hard-gate verification, independent verification, evidence references, schema, timing, or safety validation is missing or inconsistent |
 
 ## Abbreviations
 
@@ -91,3 +95,12 @@ or verify the blocking rule.
 | Outcome is likely | Current public data reading |
 | AI prediction | Data summary / issue report |
 | Confidence in the outcome | Data reliability / interpretation caution |
+
+### v4 automated-context wording replacements (ADR-038)
+
+| Avoid | Use instead |
+|---|---|
+| Automated news match | Verified context candidate for the change episode |
+| Event that moved the value | Public information recorded in the same review window |
+| Proof of the result | Source-supported context that does not establish the real-world result |
+| No event found | Hide the context section and keep `context_summary=null` |

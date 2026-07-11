@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Architecture â€” Outlook Signals
 
-_Last updated: 2026-07-10_
+_Last updated: 2026-07-11_
 _Full detail: [Technical Design](../docs/tech-design/README.md) â€” this file is the working summary agents update as the build progresses._
 
 ## System Overview
@@ -22,10 +22,10 @@ A read-heavy, batch-fed dashboard built to achieve: surface Polymarket-based iss
 Polymarket public APIs (Gamma + CLOB)
         |  scheduled fetch (GitHub Actions, every 24h)
         v
-Batch Collector (Python) -- fetch -> normalize -> diff -> snapshot -> metrics -> signals -> logs -> (gated) AI reports
+Batch Collector (Python) -- fetch -> normalize -> snapshot -> metrics -> signals -> verified context -> evidence-grounded reports -> logs
         |  writes
         v
-PostgreSQL -- markets / market_outcomes / market_snapshots / market_metrics / issue_signals / ai_reports / related_events / data_collection_logs
+PostgreSQL -- existing tables + approved v4 context_candidates / context_collection_runs
         |  reads only
         v
 FastAPI backend (read-only REST API) -- /api/issues /api/issues/:id /api/issues/:id/history /api/issues/:id/report ...
@@ -46,6 +46,10 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 6. Qualifying markets (new expectation-shift row, no report yet, or stale >24h) get a new `ai_reports` row via template-constrained generation plus a safety filter; report prompt inputs use the latest snapshot at or before the metric timestamp so historical-seed metric rows remain usable without fabricating values
 7. FastAPI serves the available read-only data; the report endpoint accepts only current `v3` rows whose ADR-033 content and metric-linked timestamp validate, while legacy/failed/malformed rows preserve the neutral empty state
 8. React Router renders Home -> Issue List -> Detail -> Chart -> Summary with shareable list query state; detail core, history, and report requests are independent, and the v3 report shows one evidence-first section at a time while keeping report timing plus snapshot caution in the same card
+9. TASK-056~065 inserts bounded OpenRouter research after signal detection,
+   accepts only API citation annotations, applies deterministic and independent
+   verification, stores candidates append-only, and serves only evidence-linked
+   v4 reports and verified candidate sources
 
 ## Design Decision Summary
 
@@ -65,6 +69,7 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 | Postgres driver | `psycopg[binary]` (psycopg3) | 2026-07-08 (ADR-007, human-approved) |
 | Postgres URL compatibility | `psycopg2-binary==2.9.10` for provider-copied `postgresql://...` URLs | 2026-07-09 (ADR-023, human-approved) |
 | Migration format (interim) | Plain SQL (`backend/migrations/*.sql`), not Alembic | 2026-07-08 (ADR-007) |
+| Automated context v4 | Citation annotations + deterministic hard gates + different verifier model + verified-only public reads; cumulative USD 100, local/dev writes only | 2026-07-11 (ADR-038, human-approved) |
 
 ## Architecture Constraints
 

@@ -83,6 +83,15 @@ Reconciling with PRD's hackathon scope and Service Design's data/metric prioriti
 **Not planned / gated on review**
 - Everything in Sections 9 and 10.2
 
+### Approved post-MVP v4 exception
+
+ADR-038 authorizes TASK-063's change-episode UI only after the schema, research,
+verification, batch, report, and API predecessors pass. Public context must be
+stored as `verified`, include stored citation-source metadata, and retain the
+candidate-not-cause boundary. Withheld/rejected candidates, model-body URLs,
+internal scores, and source excerpts never reach the UI. The v3 manual path
+remains the historical MVP behavior until the strict v4 endpoint is available.
+
 ---
 
 ## 13. Product Risk and Mitigation

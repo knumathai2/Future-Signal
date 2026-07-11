@@ -1,6 +1,8 @@
 # API Contract — Outlook Signals
 
-_Status: Implemented v3 runtime contract as defined by ADR-033.
+_Status: Implemented v3 runtime contract as defined by ADR-033. ADR-038
+approves the strict v4 replacement below for TASK-062; it is not the runtime
+contract until the TASK-057~061 dependencies and TASK-062 tests pass.
 The runtime shapes are backed by Pydantic schemas
 (`app/schemas/issues.py`, `app/schemas/health.py`) and routes
 (`app/api/routes/`). Legacy v1 and v2 report contents are gated out
@@ -144,6 +146,77 @@ Per ADR-008, this returns `200` with `{"status": "not_yet_generated"}`
 rather than Technical Design §5's originally proposed `204` (HTTP `204 No
 Content` cannot carry a body per spec, so most clients would discard the
 hint). This is accepted as final, not an open item.
+
+## Approved v4 replacement — TASK-056/TASK-062, ADR-038
+
+The path remains `GET /api/issues/{id}/report`; no new public endpoint is
+approved. When TASK-062 activates v4, the endpoint serves only the latest
+successful `prompt_version="v4"` row whose seven-field content, metric
+evidence, verified candidates, stored citation sources, episode linkage, and
+timing all validate. Legacy v1-v3, failed, malformed, withheld/rejected,
+unknown-evidence, source-mismatched, and `data_as_of > generated_at` rows are
+treated as `not_yet_generated`.
+
+```json
+{
+  "id": "7c2e1a90-0000-4000-8000-0000000000aa",
+  "status": "success",
+  "report_version": "v4",
+  "generated_at": "2026-07-11T09:05:00Z",
+  "data_as_of": "2026-07-11T09:00:00Z",
+  "episode_at": "2026-07-11T08:00:00Z",
+  "content": {
+    "issue_overview": "...",
+    "observed_change": "...",
+    "context_summary": null,
+    "relationship_boundary": "...",
+    "what_to_check": "...",
+    "data_limitations": "...",
+    "caution_note": "..."
+  },
+  "evidence_refs": ["metric:123"],
+  "context_candidates": []
+}
+```
+
+`content` has exactly the seven keys above. Only `context_summary` is nullable;
+all other keys are required non-empty strings. If it is non-null, at least one
+`candidate:<uuid>` must appear in `evidence_refs`, resolve to the same market
+and compatible episode, have `verification_state="verified"`, and have at
+least one stored public citation source. Every metric sentence must be
+supported by a `metric:<id>` reference and match its stored values.
+
+A public context candidate has exactly this shape:
+
+```json
+{
+  "id": "8b441a56-0000-4000-8000-0000000000bb",
+  "title": "...",
+  "event_at": "2026-07-11T07:30:00Z",
+  "summary": "...",
+  "sources": [
+    {
+      "title": "...",
+      "url": "https://example.gov/source",
+      "domain": "example.gov",
+      "published_at": "2026-07-11T07:00:00Z",
+      "source_type": "official"
+    }
+  ]
+}
+```
+
+`source_type` is `official` or `independent_secondary`; `published_at` alone
+may be null. URL/title/domain values must equal stored values derived from
+OpenRouter API `url_citation` annotations. Internal verification scores,
+source excerpts, model output, query text, usage cost, withheld/rejected
+candidates, and secrets are never returned.
+
+When no verified candidate exists, `context_summary` is JSON `null`,
+`context_candidates` is an empty array, and `evidence_refs` contains metric
+references only. The API does not generate a candidate-absence sentence.
+Unknown issue remains `404`; missing valid v4 content remains the accepted
+`200 {"status":"not_yet_generated"}` response.
 
 ## Legacy v2 report contract (Superseded by v3)
 
