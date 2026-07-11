@@ -913,6 +913,22 @@ def test_v4_missing_candidate_evidence_reference_is_not_exposed(
     assert response.json() == {"status": "not_yet_generated"}
 
 
+def test_v4_nonexistent_candidate_id_is_not_exposed(live_client, db_session):
+    seed_basic_market(db_session)
+    report, _ = seed_v4_report(db_session)
+    missing_id = "99999999-9999-4999-8999-999999999999"
+    envelope = dict(report.content)
+    envelope["context_candidate_ids"] = [missing_id]
+    envelope["evidence_refs"] = ["metric:1", f"candidate:{missing_id}"]
+    report.content = envelope
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
 def test_v4_metric_content_mismatch_is_not_exposed(live_client, db_session):
     seed_basic_market(db_session)
     report, _ = seed_v4_report(db_session)

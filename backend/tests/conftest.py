@@ -34,6 +34,7 @@ from app.db.models import (
     Base,
     ContextCandidate,
     ContextCollectionRun,
+    DataCollectionLog,
     IssueSignal,
     Market,
     MarketMetric,
@@ -89,6 +90,7 @@ def db_session():
             AiReport.__table__,
             ContextCandidate.__table__,
             ContextCollectionRun.__table__,
+            DataCollectionLog.__table__,
             RelatedEvent.__table__,
         ],
     )

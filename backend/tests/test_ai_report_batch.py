@@ -913,7 +913,7 @@ def test_v4_inputs_load_only_verified_same_episode_candidates_with_sources(db):
     assert inputs is not None
     assert inputs.metric_id == metric.id
     assert [candidate.id for candidate in inputs.context_candidates] == [candidate_id]
-    assert inputs.data_as_of == NOW.replace(tzinfo=None)
+    assert inputs.data_as_of == NOW
 
 
 def test_v4_success_stores_payload_with_metric_and_candidate_evidence(db):

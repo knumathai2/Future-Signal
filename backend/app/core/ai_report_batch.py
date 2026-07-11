@@ -69,6 +69,12 @@ MAX_REPORTS_PER_BATCH_RUN = 10
 MAX_ATTEMPTS = 2
 
 
+def _as_utc_aware(value: datetime) -> datetime:
+    if value.tzinfo is None or value.utcoffset() is None:
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
+
+
 @dataclass
 class ReportOutcome:
     market_id: uuid.UUID
@@ -591,9 +597,9 @@ def build_v4_inputs_for_market(
             sources = [V4ContextSource.model_validate(source) for source in row.sources]
             candidates.append(
                 V4VerifiedCandidateInput(
-                    id=row.id,
-                    title=row.event_title,
-                    event_at=row.event_at,
+                id=row.id,
+                title=row.event_title,
+                event_at=_as_utc_aware(row.event_at),
                     neutral_summary=row.neutral_summary,
                     sources=sources,
                 )
@@ -604,13 +610,13 @@ def build_v4_inputs_for_market(
     return V4ReportInputs(
         market_id=market.id,
         metric_id=metric.id,
-        episode_at=episode_at,
-        data_as_of=snapshot.captured_at,
+        episode_at=_as_utc_aware(episode_at),
+        data_as_of=_as_utc_aware(snapshot.captured_at),
         title=market.title,
         description=market.description or market.title,
         category=market.category,
         outcome_label=_find_tracked_outcome_label(db, market.id),
-        end_date=market.end_date,
+        end_date=_as_utc_aware(market.end_date) if market.end_date else None,
         current_value=float(snapshot.price),
         change_24h=float(metric.change_24h) if metric.change_24h is not None else None,
         change_7d=float(metric.change_7d) if metric.change_7d is not None else None,

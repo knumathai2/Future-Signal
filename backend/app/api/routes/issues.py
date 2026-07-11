@@ -341,7 +341,16 @@ def _issue_report_from_live(
     expected_content = assemble_v4_report_content(inputs, llm_fields)
     validation = run_v4_safety_and_semantic_checks(payload, inputs, llm_fields)
     if expected_content != payload.content:
-        raise ValueError("V4 deterministic content does not match stored evidence")
+        expected_fields = expected_content.model_dump() if expected_content else {}
+        mismatched_fields = [
+            field
+            for field, stored_value in payload.content.model_dump().items()
+            if expected_fields.get(field) != stored_value
+        ]
+        raise ValueError(
+            "V4 deterministic content does not match stored evidence: "
+            + ",".join(mismatched_fields)
+        )
     if not validation.passed:
         raise ValueError(f"V4 semantic check failed: {validation.rule}")
 

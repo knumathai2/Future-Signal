@@ -892,6 +892,33 @@ content-safety wording of the complete integrated flow.
 
 ---
 
+### ADR-046: Normalize v4 writer evidence timestamps to UTC before assembly
+
+- **Date**: 2026-07-11
+- **Status**: Accepted
+- **Decided by**: Reviewer within ADR-038 execution approval
+
+**Context**: TASK-064's full-flow SQLite fixture produced a valid verified
+candidate and v4 row, but the API correctly withheld it because the writer had
+serialized a timezone-naive snapshot timestamp while the read boundary
+reconstructed the same evidence as UTC-aware. SQLite does not preserve timezone
+metadata on these columns; PostgreSQL does.
+
+**Decision**: Normalize v4 snapshot, episode, candidate-event, and end-date
+inputs to UTC-aware datetimes in `build_v4_inputs_for_market` before any
+deterministic sentence or stored envelope is assembled. Keep the API's UTC
+normalization and exact reconstruction check unchanged.
+
+**Rationale**: Stored deterministic content must be identical across the
+approved local SQLite test path and development PostgreSQL path. Fixing the
+writer input is safer than weakening the API's independent evidence check.
+
+**Consequences**: Local/development v4 rows now round-trip through the strict
+API, and the full-flow integration test prevents regression. No schema, public
+API, dependency, provider, infrastructure, or deployment boundary changed.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07
