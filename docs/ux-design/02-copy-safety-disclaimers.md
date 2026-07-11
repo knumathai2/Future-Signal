@@ -128,4 +128,27 @@ Rule of thumb: **short-form disclaimer everywhere a number or signal appears; lo
 >
 > Do not make financial, legal, political, or other significant decisions based solely on information from this service. Always verify independently and consult a qualified professional where appropriate.
 
+### 8.1 V5 AI summary and source-link presentation (ADR-048)
+
+The detail screen visually separates `AI 이슈 요약` from deterministic metrics
+and caution copy. The AI area starts with a concise executive summary, then
+shows issue context, change interpretation, verified-evidence synthesis when
+available, open questions, and concrete materials or data updates to check.
+
+Verified source cards show source title, organization/domain, publication time,
+source type, a neutral evidence summary, and a safe external action such as
+`원문 확인`, `공식 자료 확인`, or `기사 원문 확인`. Link proximity must not imply
+that the source explains the observed movement. The relationship boundary stays
+visible beside the source region.
+
+When no verified source exists, the source region remains visible with a plain
+state explaining that no material passed the public criteria for the review
+window and that the background of the numeric movement is not established. It
+may link to the methodology page, but it must not link to an unverified result
+or a generic external search.
+
+Every AI summary retains report/data/episode timing and the interpretation
+caution in the same report surface. Internal model names, scores, reasoning,
+rejected URLs, and verification prompts remain non-public.
+
 ---
