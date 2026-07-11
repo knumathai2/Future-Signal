@@ -51,7 +51,7 @@ Future Signal/
 
 | Area | Current state |
 |---|---|
-| Frontend | TASK-118 divides the issue-detail route into Overview, AI Issue Briefing, Related Materials, and Interpretation Guide tabs. TASK-119 extends the same restrained terracotta/current-context and muted-blue/comparison hierarchy to the full issue list, including selected filters, result count, row metrics, hover, and pagination. Query state, accessibility, timing/caution, report states, and direction semantics remain intact. |
+| Frontend | TASK-118 divides issue detail into four query-linked tabs; TASK-119 extends restrained terracotta/current-context and muted-blue/comparison styling to the full issue list. TASK-120 aligns home desktop navigation with the shared right-side header group and presents methodology as emphasized numbered guidance cards. Query state, accessibility, timing/caution, report states, and direction semantics remain intact. |
 | Backend | TASK-062 activates the strict v4 report read contract and returns only reconstructed, evidence-consistent bundles with verified same-episode candidates and approved source fields. Legacy/failed/malformed/mismatched rows remain audit-only. TASK-057's append-only migration was applied to the approved development DB during TASK-065; production remains untouched. |
 | Data/AI | TASK-058/059 provide bounded annotation-only research and deterministic/independent verification. TASK-060 connects them between signals and reports, and TASK-061 adds strict evidence-linked v4 generation with deterministic metric/context fields, same-episode verified candidates, writer-cost accounting, and last-known-good failure isolation. |
 | PM / Safety | The v3 MVP remains frozen. ADR-038 activates TASK-056~065 with verified-only automated context, strict evidence links, a cumulative USD 100 OpenRouter cap, and local/development-only writes. Deployment and production DB writes remain separate gates. |
@@ -63,6 +63,7 @@ Future Signal/
 
 | Date | Change |
 |------|--------|
+| 2026-07-12 | TASK-120 moved home desktop navigation into the same right-aligned header group as other routes and applied restrained heading/action/number-card emphasis to methodology. Frontend checks and actual desktop/320px Browser QA pass with consistent navigation, 44px controls, no overflow, and no console warnings/errors. |
 | 2026-07-12 | TASK-119 extended the approved emphasis hierarchy to the full issue list: selected filters, result count, current reflected expectation values, comparison values, row hover, and active pagination. Frontend checks and actual desktop/320px Browser QA pass with 44px mobile filters, no overflow, and no console warnings/errors. |
 | 2026-07-12 | TASK-118 visual follow-up applied `#B84416`/`#FFF2E9` terracotta emphasis and `#466AA3`/`#EDF3FB` comparison styling to the detail flow and shared tokens. Frontend checks plus desktop/320px Browser QA pass without overflow or console warnings/errors. |
 | 2026-07-11 | TASK-118 reorganized the issue detail into four query-linked tabs while preserving v8 generation/source/failure states, exact timing boundaries, data-as-of, and caution. All Frontend checks and actual 1280px/390px/320px Browser QA pass with no clean-tab console errors or page overflow. |
