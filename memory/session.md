@@ -16,7 +16,7 @@ Harness Version: 1.1
 - **Date**: 2026-07-11
 - **Agent Role**: Data/AI Implementer
 - **Session Goal**: Execute the TASK-082~091 AI-report grounding program in dependency order.
-- **Branch**: `backend/TASK-083-resolution-rules-storage`
+- **Branch**: `data-ai/TASK-084-resolution-rules-input`
 
 ## Context Read
 
@@ -24,6 +24,13 @@ Harness Version: 1.1
 - TASK-065 backfill, audit, API, wording, browser, and budget criteria
 
 ## Work Completed
+
+- Completed TASK-084: the v5 writer and research stages now consume the latest
+  stored resolution evidence while display description remains non-authoritative.
+- New v5 payloads retain the exact rule snapshot for read-time reconstruction;
+  legacy payloads without rules remain valid.
+- Verified 220 focused Backend tests and Ruff without external calls or
+  non-test database writes.
 
 - Received explicit user approval for the planned database-schema and public
   API code changes; database application, deployment, and external calls remain

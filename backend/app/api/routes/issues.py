@@ -329,6 +329,7 @@ def _issue_report_from_live(
         volume_24h=float(snapshot.volume_24h) if snapshot.volume_24h is not None else None,
         liquidity=float(snapshot.liquidity) if snapshot.liquidity is not None else None,
         context_candidates=candidate_inputs,
+        resolution_rules=payload.resolution_rules,
     )
     llm_fields = V5LLMFields.model_validate(
         payload.content.model_dump(

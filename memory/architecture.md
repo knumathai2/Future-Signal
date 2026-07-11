@@ -58,6 +58,10 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
     collector output and appends changed definitions to
     `market_resolution_rules`; checked/local JSON artifacts still omit raw
     source descriptions. Migration 003 is checked in but not applied.
+12. TASK-084 injects the latest resolution-rule record into v5 writer and
+    context-research inputs. New v5 payloads retain that rule snapshot so API
+    reconstruction uses generation-time evidence; legacy payloads default to
+    no rule evidence.
 
 ## Design Decision Summary
 

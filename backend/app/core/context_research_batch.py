@@ -12,6 +12,7 @@ from collections import Counter
 from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 from typing import Protocol
+from urllib.parse import urlparse
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.exc import IntegrityError
@@ -32,6 +33,7 @@ from app.db.models import (
     Market,
     MarketMetric,
     MarketOutcome,
+    MarketResolutionRule,
     MarketSnapshot,
 )
 
@@ -202,7 +204,20 @@ def build_research_inputs(
             MarketOutcome.is_tracked.is_(True),
         )
     ).scalar_one_or_none()
-    tracked_condition = market.description or market.title
+    resolution_rule = db.execute(
+        select(MarketResolutionRule)
+        .where(MarketResolutionRule.market_id == target.market_id)
+        .order_by(
+            MarketResolutionRule.collected_at.desc(),
+            MarketResolutionRule.id.desc(),
+        )
+        .limit(1)
+    ).scalar_one_or_none()
+    tracked_condition = (
+        resolution_rule.condition_text
+        if resolution_rule is not None and resolution_rule.condition_text
+        else market.title
+    )
     if outcome is not None:
         tracked_condition = f"{tracked_condition} Tracked outcome: {outcome.outcome_label}."
     episode_at = _as_utc_aware(target.episode_at)
@@ -213,15 +228,30 @@ def build_research_inputs(
         description=market.description or market.title,
         category=market.category,
         tracked_condition=tracked_condition,
-        end_date=_as_utc_aware(market.end_date) if market.end_date else None,
-        resolution_source=None,
+        end_date=(
+            _as_utc_aware(resolution_rule.deadline)
+            if resolution_rule is not None and resolution_rule.deadline
+            else _as_utc_aware(market.end_date) if market.end_date else None
+        ),
+        resolution_source=(
+            resolution_rule.resolution_source if resolution_rule is not None else None
+        ),
+        resolution_exclusions=(
+            list(resolution_rule.exclusions or []) if resolution_rule is not None else []
+        ),
         current_value=float(snapshot.price),
         change_24h=float(metric.change_24h),
         change_7d=float(metric.change_7d),
         inflection_at=_as_utc_aware(target.inflection_at) if target.inflection_at else None,
         search_window_start=episode_at - search_window,
         search_window_end=episode_at + search_window,
-        allowed_domains=[],
+        allowed_domains=(
+            [urlparse(resolution_rule.resolution_source).hostname]
+            if resolution_rule is not None
+            and resolution_rule.resolution_source
+            and urlparse(resolution_rule.resolution_source).hostname
+            else []
+        ),
     )
 
 

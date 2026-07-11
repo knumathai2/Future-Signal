@@ -30,6 +30,7 @@ from app.core.ai_report import (
     LLMClient,
     LLMUsage,
     ReportPromptInputs,
+    ResolutionRulesInput,
     V4ContextSource,
     V4ReportInputs,
     V4StoredReportPayload,
@@ -61,6 +62,7 @@ from app.db.models import (
     Market,
     MarketMetric,
     MarketOutcome,
+    MarketResolutionRule,
     MarketSnapshot,
     RelatedEvent,
 )
@@ -254,6 +256,31 @@ def _find_tracked_outcome_label(db: Session, market_id: uuid.UUID) -> str | None
         )
     ).scalar_one_or_none()
     return outcome.outcome_label if outcome is not None else None
+
+
+def _latest_resolution_rules(
+    db: Session, market_id: uuid.UUID
+) -> ResolutionRulesInput | None:
+    row = db.execute(
+        select(MarketResolutionRule)
+        .where(MarketResolutionRule.market_id == market_id)
+        .order_by(
+            MarketResolutionRule.collected_at.desc(),
+            MarketResolutionRule.id.desc(),
+        )
+        .limit(1)
+    ).scalar_one_or_none()
+    if row is None:
+        return None
+    return ResolutionRulesInput(
+        condition_text=row.condition_text,
+        deadline=_as_utc_aware(row.deadline) if row.deadline else None,
+        exclusions=list(row.exclusions or []),
+        resolution_source=row.resolution_source,
+        source_description_hash=row.source_description_hash,
+        rules_hash=row.rules_hash,
+        collected_at=_as_utc_aware(row.collected_at),
+    )
 
 
 def build_prompt_inputs_for_market(
@@ -626,6 +653,7 @@ def build_v4_inputs_for_market(
         volume_24h=float(snapshot.volume_24h) if snapshot.volume_24h is not None else None,
         liquidity=float(snapshot.liquidity) if snapshot.liquidity is not None else None,
         context_candidates=candidates,
+        resolution_rules=_latest_resolution_rules(db, market.id),
     )
 
 

@@ -108,6 +108,7 @@ class ResearchInputs(BaseModel):
     tracked_condition: str = Field(min_length=1)
     end_date: datetime | None
     resolution_source: str | None
+    resolution_exclusions: list[str] = Field(default_factory=list, max_length=30)
     current_value: float = Field(ge=0, le=1)
     change_24h: float
     change_7d: float
