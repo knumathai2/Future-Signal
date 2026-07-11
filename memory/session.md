@@ -16,7 +16,7 @@ Harness Version: 1.1
 - **Date**: 2026-07-11
 - **Agent Role**: Data/AI Implementer
 - **Session Goal**: Execute the TASK-082~091 AI-report grounding program in dependency order.
-- **Branch**: `backend/TASK-090-report-basis-contract`
+- **Branch**: `review/TASK-091-grounding-integration`
 
 ## Context Read
 
@@ -24,6 +24,16 @@ Harness Version: 1.1
 - TASK-065 backfill, audit, API, wording, browser, and budget criteria
 
 ## Work Completed
+
+- Completed TASK-091 and the full TASK-082~091 grounding program.
+- Closed the remaining unsupported-procedural-detail gap with bounded evidence
+  vocabulary checks and legislative, monetary-policy, and diplomatic
+  adversarial cases.
+- Aligned API contract, Technical Design, and OpenAPI regression coverage with
+  one-to-four scenarios and strict basis fields.
+- Full verification: 348 Backend tests, Ruff, Frontend typecheck/lint/parser/
+  build, copy scan, and diff checks pass. Migration 003 remains unapplied; no
+  provider, development/production DB, or deployment action occurred.
 
 - Completed TASK-090: every scenario/check/watch item now has a strict basis
   tied to actually available market, observed, verified, or limitation evidence.

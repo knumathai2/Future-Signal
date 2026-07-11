@@ -1013,6 +1013,8 @@ def test_openapi_exposes_strict_v5_report_schema(live_client, db_session):
     assert {"episode_at", "evidence_refs", "context_candidates"}.issubset(properties)
     content_schema = schema["components"]["schemas"]["ReportContent"]
     assert content_schema["additionalProperties"] is False
+    assert content_schema["properties"]["conditional_scenarios"]["minItems"] == 1
+    assert content_schema["properties"]["conditional_scenarios"]["maxItems"] == 4
     assert set(content_schema["properties"]) == {
         "executive_summary",
         "current_data_interpretation",
@@ -1024,3 +1026,15 @@ def test_openapi_exposes_strict_v5_report_schema(live_client, db_session):
         "data_limitations",
         "caution_note",
     }
+    expected_basis = [
+        "market_definition",
+        "observed_data",
+        "verified_context",
+        "data_limitation",
+    ]
+    assert schema["components"]["schemas"]["ConditionalScenarioOut"]["properties"][
+        "basis"
+    ]["enum"] == expected_basis
+    assert schema["components"]["schemas"]["BriefingItemOut"]["properties"]["basis"][
+        "enum"
+    ] == expected_basis

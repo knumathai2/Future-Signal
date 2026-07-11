@@ -175,17 +175,22 @@ returns exactly six model-authored fields:
 {
   "executive_summary": "...",
   "current_data_interpretation": "...",
-  "conditional_scenarios": [{"title": "...", "narrative": "..."}],
-  "factors_to_check": [{"title": "...", "explanation": "..."}],
-  "signals_to_watch": [{"title": "...", "explanation": "..."}],
+  "conditional_scenarios": [{"title": "...", "narrative": "...", "basis": "market_definition"}],
+  "factors_to_check": [{"title": "...", "explanation": "...", "basis": "observed_data"}],
+  "signals_to_watch": [{"title": "...", "explanation": "...", "basis": "data_limitation"}],
   "evidence_synthesis": null
 }
 ```
 
-`conditional_scenarios` contains three or four distinct conditional items.
+`conditional_scenarios` contains one to four distinct conditional items. A
+deterministic completeness level restricts the actual count, including exactly
+one limitation item when neither a resolution definition nor verified context
+exists. Every scenario/check/watch item carries a basis enum tied to available
+definition, observed, verified-context, or limitation evidence.
 Every authored number must match the supplied metric/market/evidence values;
-generic lead text, non-conditional scenarios, and market/forecast-page sources
-fail before storage.
+generic lead text, exact-title mismatch, unsupported procedural detail,
+non-conditional scenarios, unavailable basis values, and market/forecast-page
+sources fail before storage.
 
 The stored envelope also carries the episode, metric ID, verified candidate
 IDs, and ordered evidence references. Deterministic builders add
