@@ -28,13 +28,16 @@ Batch Collector (Python) -- fetch -> normalize -> snapshot -> metrics -> signals
 PostgreSQL -- existing tables + context evidence + unapplied resolution-rule extension
         |  reads only
         v
-FastAPI backend (read-only REST API) -- /api/issues /api/issues/:id /api/issues/:id/history /api/issues/:id/report ...
+FastAPI backend -- read issue data + append v7 generation requests; never call providers
         |  HTTPS/JSON
         v
 React + Vite + React Router frontend -- `/` Home / `/issues` Issue List / `/issues/:id` Detail / `/methodology` Disclaimer
 ```
 
-Key rule: **the API layer never calls the AI provider or Polymarket directly** — it only reads from Postgres. This decouples "is a report fresh" from "is a user waiting," and lets the API degrade to last-known-good data on failure.
+Key rule: **the API layer never calls the AI provider or Polymarket directly**.
+It reads issue/report data and may append only ADR-051 generation request/event
+rows. In local/development, a committed queued request starts a request-scoped
+child worker; that isolated worker performs provider calls and report writes.
 
 ## Data Flow
 
@@ -95,6 +98,12 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** �
 | Evidence-bounded narrative v5 | Six authored narrative fields plus deterministic relationship/limitation/caution fields; verified exact-source links; genericity/evidence/safety gates | 2026-07-11 (ADR-048, human-approved) |
 | Resolution-rule evidence | Separate append-only source condition/deadline/exclusion/source records from display copy; hash-idempotent versions | 2026-07-11 (ADR-049, human-approved code change) |
 | Server-tool query scope | Deterministic anchors + bounded normalized metadata overlap; exact reported strings audited | 2026-07-11 (ADR-047, human-approved) |
+| V7 briefing boundary | Positive-first flexible sections with opaque evidence refs; backend-owned metrics/source/timing/cache; A-C public source levels; v7-positive-evidence-2 keeps shape/ref/source-parent/language/URL blockers while numeric tokens are prompt-guided | 2026-07-11 (ADR-051, ADR-054, human-approved) |
+| V7 request lifecycle | Immutable market/fingerprint request plus append-only queued/running/succeeded/failed events with expiring leases | 2026-07-11 (TASK-102, human-approved) |
+| V7 context policy | Bounded 30-day issue context, deterministic A-D levels and excerpt claims, verifier only for conflict/ambiguity/high-impact/material C | 2026-07-11 (TASK-103, human-approved) |
+| V7 generation service | Versioned evidence fingerprint, duplicate join, append-only lease recovery, optional context successor, one-shot writer, strict storage, standalone worker | 2026-07-11 (TASK-104, human-approved) |
+| Local/dev worker auto-launch | A queued POST spawns the guarded CLI for the exact request ID; API remains provider-free and spawn failure preserves queued recovery | 2026-07-11 (TASK-110, user-directed) |
+| V7 public API | Append-only generate POST, request polling, strict reconstructed fresh/stale/generating/failure/last-good GET; API never calls provider | 2026-07-11 (TASK-105, human-approved) |
 | Evidence-aware briefing v6 | Four deterministic change/evidence modes, strict basis union, one-owner metric/rule display, and v6-only fallback | 2026-07-11 (ADR-050, human-approved and implemented) |
 
 ## V6 evidence-aware briefing implementation (TASK-092~098)
@@ -121,6 +130,10 @@ workflow, infrastructure, deployment, or production-write change is included.
 - API surface uses `issues`/`signals`/`reports`/`categories` naming — never `markets`/`bets`/`trades`/`positions`/`profits` in any public path, including internal code (Technical Design §5)
 - No `users`/`watchlists`/wallet-level tables exist even in dormant form — schema itself is a policy signal (Technical Design §4.12)
 - `/api/categories` is a read-only broad Korean filter taxonomy derived from currently servable live issue titles/categories when DB data exists; DB-free/failure mode keeps the documented Korean sample fallback. `/api/issues?category=...` accepts those broad Korean labels and raw stored category values. Detailed labels such as `우크라이나 전쟁` and `이란 전쟁` are frontend card-display labels, not top-level filter values.
+- TASK-112 keeps the v7 append-only request/source/storage architecture but
+  activates a v8 writer and public report. V8 uses issue-centered unique
+  sections, section-level evidence refs, and versioned fingerprints; existing
+  tables and JSONB storage require no migration. V1-v7 rows remain audit-only.
 
 ## Implementation Status (2026-07-10 Day 5 v3 Integrated)
 

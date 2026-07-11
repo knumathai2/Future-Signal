@@ -142,4 +142,25 @@ Indexes cover market/episode/state lookup. The migration must document FK
 delete behavior and duplicate evidence-hash handling. Existing
 `related_events`, `ai_reports`, and legacy rows remain unchanged.
 
+### 4.14 Approved v7 on-demand request and lease extension (TASK-102)
+
+ADR-051 adds `004_ai_report_generation_requests.sql` without editing earlier
+migrations:
+
+- `ai_report_generation_requests` is an immutable request identity keyed by
+  market and a 64-character SHA-256 input fingerprint. It stores prompt,
+  policy, and input-schema versions, request origin, bounded context-refresh
+  intent, exact input evidence refs, and request time.
+- `ai_report_generation_events` is an append-only event stream. States are
+  `queued`, `running`, `succeeded`, and `failed`. Running events require a
+  lease token and expiry; success requires an exact `ai_reports` FK; failure
+  requires a safe error code. Shape constraints prevent mixed state fields.
+
+The unique market/fingerprint key makes repeated requests join the same
+identity. A worker locks the request row, reads the latest event, and appends a
+running event only when queued or when the latest running lease has expired.
+It then appends exactly one success or failure event. No request/event row is
+updated in place. Evidence or prompt revisions create a new fingerprint and
+therefore a new immutable request.
+
 ---

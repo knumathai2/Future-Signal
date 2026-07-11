@@ -1,26 +1,26 @@
 # API Contract — Outlook Signals
 
-_Status: Implemented strict v4 runtime contract as defined by ADR-038 and
-ADR-043. TASK-062 validates stored metric, episode, verified-candidate,
-citation-source, and timing integrity before serving a report.
+_Status: Implemented strict v8 issue-centered on-demand report contract.
+TASK-112 preserves the v7 evidence/source boundary while changing the writer,
+public section enum, and Frontend parser to the approved narrative flow.
 The runtime shapes are backed by Pydantic schemas
 (`app/schemas/issues.py`, `app/schemas/health.py`) and routes
 (`app/api/routes/`). Legacy v1 and v2 report contents are gated out
 and treated as not yet generated._
 
-**All endpoints are read-only.** All timestamps are ISO 8601 UTC. Public
+All issue-data endpoints are read-only. ADR-051 adds one append-only generation
+request POST; it never invokes a provider. All timestamps are ISO 8601 UTC. Public
 paths use `issues` / `signals` / `reports` / `categories` — never `markets`,
 `bets`, `trades`, `positions`, or `profits` (enforced by
 `tests/test_issues_contract.py::test_public_paths_never_use_market_terminal_vocabulary`).
 
-**Current implementation state** (TASK-010/TASK-062): issue and history routes
+**Current implementation state** (TASK-010/TASK-112): issue and history routes
 read from Postgres via `app/db/session.py::get_db()` when `DATABASE_URL` is
-set and live `market_snapshots` data exists. The report route reads the latest
-successful stored `prompt_version="v4"` evidence bundle in live mode and
-otherwise preserves the accepted empty state. Static fallback data never
-fabricates a v4 report. Migration `002_context_candidates.sql` remains
-unapplied pending the separately guarded TASK-065 local/development run; no
-production database write is approved.
+set and live `market_snapshots` data exists. The report route reconstructs only
+successful stored `prompt_version="v8"` evidence bundles and otherwise
+preserves the accepted idle/generation/failure states. Static fallback data
+never fabricates a report. Existing migrations are unchanged; no production
+database write is approved.
 
 ## `GET /api/health`
 
@@ -145,7 +145,85 @@ rather than Technical Design §5's originally proposed `204` (HTTP `204 No
 Content` cannot carry a body per spec, so most clients would discard the
 hint). This is accepted as final, not an open item.
 
-## `GET /api/issues/{id}/report` — current strict v6 runtime
+## `GET /api/issues/{id}/report` — current strict v8 runtime
+
+The endpoint returns one of:
+
+- `{"status":"idle"}` when no v8 request/report exists;
+- a minimal `generating` state when a queued/running request has no report;
+- a strict full v8 report with status `fresh`, `stale`, `generating`, or
+  `failed_with_last_good`; or
+- a minimal `failed` state when generation failed and no valid report exists.
+
+```json
+{
+  "id": "7c2e1a90-0000-4000-8000-0000000000aa",
+  "status": "fresh",
+  "report_version": "v8",
+  "headline": "...",
+  "summary": "...",
+  "sections": [
+    {
+      "type": "current_situation",
+      "title": "...",
+      "format": "paragraph",
+      "content": "...",
+      "items": [],
+      "evidence_refs": ["market_definition:..."]
+    }
+  ],
+  "sources": [
+    {
+      "id": "source:...",
+      "context_ref": "context:...",
+      "citation_id": "citation:...",
+      "title": "...",
+      "url": "https://example.gov/document",
+      "domain": "example.gov",
+      "source_level": "A",
+      "supported_claims": [
+        {"ref": "claim:...", "text": "...", "excerpt": "...", "citation_id": "citation:..."}
+      ],
+      "retrieved_at": "2026-07-11T09:00:00Z"
+    }
+  ],
+  "generated_at": "2026-07-11T09:05:00Z",
+  "data_as_of": "2026-07-11T09:00:00Z",
+  "context_as_of": "2026-07-11T09:00:00Z",
+  "cache": {
+    "state": "fresh",
+    "input_fingerprint": "64 lowercase hex characters",
+    "current_fingerprint": "64 lowercase hex characters"
+  },
+  "data_limitations": "...",
+  "caution_note": "...",
+  "request_id": null,
+  "request_error_code": null
+}
+```
+
+Read-time validation reconstructs the exact generation-time metric/snapshot,
+definition revision, retained v7 source-level context rows, A-C source records,
+supported claims, evidence refs, fingerprint, language/URL gates, deterministic
+limitations/caution, and timestamps. A malformed newest row is skipped in
+favor of the previous valid v8 row. V1-v7 are audit-only.
+
+## `POST /api/issues/{id}/report/generate`
+
+Request: `{"refresh_context": false}`. The API creates or joins one immutable
+market/fingerprint request and queued event and returns HTTP 202 with
+`request_id`, `status`, `created`, and `input_fingerprint`. In local/development,
+a queued result starts a request-scoped child worker after the commit. The API
+process performs no provider call; child-launch failure leaves the request
+queued for a later automatic or manual worker run.
+
+## `GET /api/issues/{id}/report/requests/{request_id}`
+
+Returns the latest append-only state (`queued`, `running`, `succeeded`, or
+`failed`), attempt number, request/update times, fingerprint, report/error, and
+optional successor request. The request must belong to the issue.
+
+## Historical strict v6 runtime (superseded by v7)
 
 The endpoint serves only a recent successful `prompt_version="v6"` row that can
 be reconstructed from its linked metric/snapshot, exact stored resolution-rule

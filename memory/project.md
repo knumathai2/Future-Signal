@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.12.0-v5-grounding-code-complete
-- **Phase**: Post-MVP grounding program complete in code
-- **Next milestone**: Render the approved v6 modes and collapsed resolution reference in the Frontend
-- **Overall health**: 🟢 TASK-093~095 are complete. The strict v6 generator, context configuration failure path, and public API pass all 383 Backend tests; TASK-096 is active.
+- **Version**: v0.15.0-v8-issue-centered
+- **Phase**: V8 issue-centered on-demand briefing implemented; provider-free verification complete
+- **Next milestone**: Review v8 output quality with an explicitly approved development generation before any legacy cleanup
+- **Overall health**: 🟢 TASK-112 activates the approved v8 prompt/API/UI contract with no schema change; external generation and TASK-109 deletion remain separately gated.
 
 ## Tech Summary
 
@@ -63,6 +63,17 @@ Future Signal/
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | TASK-112 added and activated the v8 issue-centered prompt, typed output contract, on-demand fingerprint/service/API path, strict Frontend parser, and issue-flow presentation while preserving v7 source and stored rows. Provider-free Backend and Frontend verification passed; no migration, DB write, provider call, deployment, or legacy deletion occurred. |
+| 2026-07-11 | TASK-111 removed v7 numeric-token blocking while retaining structure/reference/source-parent/language/URL gates, advanced policy fingerprinting to v7-positive-evidence-2, and produced the first valid development v7 report in one approved call for USD 0.011714. Stored reconstruction and fresh API serving pass; Backend remains at 446 tests/Ruff. |
+| 2026-07-11 | TASK-110 connected queued report POSTs to a request-scoped local/dev child worker while preserving the provider-free API boundary. Backend passes 446 tests and Ruff. |
+| 2026-07-11 | TASK-108 applied migration 004 only to the approved development DB and compared the same two v6/v7 issues. V6 was 2/2 for USD 0.007316; v7 was 0/8 for USD 0.077962. ISS-016 blocks v7 acceptance and legacy deletion. Backend passes 440 tests. |
+| 2026-07-11 | TASK-105 activated POST generate, request polling, and strict v7 fresh/stale/generating/failure/last-good report reads with exact reconstruction. Backend passes 437 tests. |
+| 2026-07-11 | TASK-104 removed report calls from normal collection and added the tested v7 fingerprint/request/lease/context/worker/report service. Full Backend suite passes 428 tests. |
+| 2026-07-11 | TASK-103 added the tested v7 30-day context path, A-D source levels, excerpt-backed claims, and conditional independent verification without a live provider call. |
+| 2026-07-11 | TASK-102 added unapplied migration 004 and tested immutable request plus append-only lease/outcome event models. Earlier migrations remain untouched. |
+| 2026-07-11 | TASK-101 activated the approved positive-first v7 writer/source policy and added strict flexible writer models, opaque evidence refs, parser, validation, and tests. No provider, database, schema, API, or workflow action occurred. |
+| 2026-07-11 | TASK-100 archived the v1-v6 contract map, separated permanent evidence/safety invariants from version-specific shape/style rules, and recorded the retention and separately approved cleanup boundary. No runtime or external state changed. |
+| 2026-07-11 | TASK-099 defined the proposed positive-first, user-requested, cache-backed v7 briefing direction and TASK-100~109 execution sequence. Implementation gates remain pending. |
 | 2026-07-11 | TASK-095 activated the v6-only report endpoint with strict DB evidence reconstruction, four mode unions, exact sources/rule reference, v5 exclusion, and previous-valid-v6 fallback. Full Backend verification passed with 383 tests. |
 | 2026-07-11 | TASK-094 resolved ISS-014: incomplete requested context configuration now records a safe failure reason, failed batch/log state, and CLI exit code one; explicit skip remains normal. No workflow configuration changed. |
 | 2026-07-11 | TASK-093 completed the deterministic four-mode v6 writer/storage contract, metric/rule single-owner enforcement, evidence-basis separation, duplicate/rule-leak/current-fact gates, and append-only batch path. Full Backend verification passed with 369 tests. |

@@ -124,6 +124,49 @@ bounded AI-policy and public report API changes on 2026-07-11. This approval
 does not authorize deployment, production writes, workflow mutation, new
 dependencies, or a schema change.
 
+### 6.11 Approved v7 on-demand briefing and source-level contract (ADR-051)
+
+V7 separates market collection, context collection, and briefing generation.
+Normal market collection never invokes the writer. An explicit user request or
+approved development evaluation builds a fingerprinted evidence bundle and
+creates or joins one generation request.
+
+The writer receives opaque market-definition, metric, history, context,
+source, and limitation references and returns a positive-first flexible
+`headline`, `summary`, and two-to-eight broad sections. Section count, order,
+title, and paragraph/list presentation may vary. The backend owns identifiers,
+values, timestamps, source metadata, source level, cache state, caution, and
+last-known-good selection.
+
+Accepted sources use visible levels A (official/primary), B (established
+reporting or recognized institution), or C (attributed supporting material).
+Level D remains internal rejection. Every A-C source must pass deterministic
+access, identity, relevance, time, supported-claim, duplicate, and
+contradiction checks. A no-search verifier is reserved for conflict,
+ambiguity, high-impact claims, strong relationship language, or materially
+used level-C claims. It can withhold but cannot promote failed evidence.
+
+Unknown or mismatched references, unsupported facts, unsafe links, invented
+metadata, unattributed C material, unsupported future/causal assertions, and
+irreconstructible envelopes block publication. Style, section ordering,
+English terms, and moderate repetition are quality diagnostics. The exact
+contract is `reports/task-101-v7-briefing-contract.md`.
+
+### 6.12 Approved v8 issue-centered narrative contract
+
+TASK-112 keeps v7's evidence and source safety boundary but organizes authored
+content around the questions a general reader asks: what the issue is, what is
+currently confirmed, what changed recently, what the available material can
+and cannot support, which conditions matter, and what information would change
+the assessment. Numeric observations support that narrative instead of leading
+it. External context is integrated only where accepted source evidence supports
+it, and a limitations section may appear at most once.
+
+Every section still carries exact opaque evidence references. Source references
+still require their context parent, authored links remain blocked, prohibited
+language remains blocked, and the writer cannot infer a background for an
+observed change. V1-v7 rows remain append-only audit history.
+
 ---
 
 ## 7. Sudden Change Signal Design

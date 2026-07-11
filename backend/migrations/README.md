@@ -27,6 +27,14 @@ the configured development database on 2026-07-11. The application and schema
 verification passed; production application remains prohibited without
 separate approval.
 
+`004_ai_report_generation_requests.sql` is the ADR-051/TASK-102 append-only
+on-demand briefing extension. It adds one immutable request identity per
+`(market_id, input_fingerprint)` and append-only queued/running/succeeded/failed
+events. Running events carry a bounded lease token/expiry; completed events
+carry either an exact report FK or a safe error code. The user approved local
+and development application under TASK-099 items 1-7. Production application
+and deployment remain prohibited without separate approval.
+
 Once approved, running it against a real Postgres instance is:
 
 ```bash
@@ -44,6 +52,12 @@ The same guarded procedure applies to migration 003:
 
 ```bash
 psql "$DATABASE_URL" -f migrations/003_market_resolution_rules.sql
+```
+
+And, after its predecessors, migration 004:
+
+```bash
+psql "$DATABASE_URL" -f migrations/004_ai_report_generation_requests.sql
 ```
 
 `psql` expects a plain Postgres URL such as `postgresql://...`; if local API

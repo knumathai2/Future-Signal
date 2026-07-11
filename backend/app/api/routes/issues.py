@@ -3,9 +3,8 @@
 Live-data read path (TASK-010): reads markets / market_snapshots /
 market_metrics / issue_signals / related_events through
 app.db.session.get_db() (see app/db/queries.py for the query helpers).
-Per Technical Design §3 / AGENTS.md, this API layer never writes to the DB
-and never calls Polymarket or an AI provider directly - not even after DB
-wiring.
+Per ADR-051, this API reads issue data and may append a generation request plus
+queued event. It never calls Polymarket or an AI provider directly.
 
 FALLBACK NOTE: TASK-007/TASK-008 (the batch collector) had not produced any
 market_snapshots/market_metrics rows as of this implementation, and
@@ -16,19 +15,19 @@ never become a silent, permanent substitute for live data - once TASK-008
 produces real rows the live path takes over automatically, no code change
 needed here. See reports/task-010-core-api-notes.md for detail.
 
-`/api/issues/{id}/report` serves only a reconstructed successful v6 evidence bundle
-whose stored metric, episode, verified candidates, and citation sources all
-validate. Missing, legacy, failed, malformed, or mismatched bundles preserve
-the accepted `not_yet_generated` empty state. Static fallback data does not
-fabricate a v4 report.
+`/api/issues/{id}/report` serves only a reconstructed successful v8 evidence
+bundle and exposes honest idle/generating/fresh/stale/failure states. V1-v6
+rows remain audit-only. Static fallback data never fabricates a report.
 """
 
 import logging
 from collections.abc import Generator
 from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import ValidationError
+from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
@@ -44,7 +43,16 @@ from app.core.ai_report import (
 )
 from app.core.category_taxonomy import category_matches
 from app.core.config import settings
+from app.core.on_demand_briefing import (
+    build_v8_input_bundle,
+    enqueue_v8_request,
+    latest_request_event,
+    reconstruct_v8_report,
+    v8_input_fingerprint,
+)
+from app.core.on_demand_worker_launcher import launch_on_demand_worker
 from app.core.snapshot_metrics import as_utc_naive
+from app.db.models import AiReport, AiReportGenerationRequest
 from app.db.queries import (
     LiveIssue,
     LiveV4AiReport,
@@ -52,12 +60,14 @@ from app.db.queries import (
     load_live_issues,
     load_related_events_for_market,
     load_signals_for_market,
-    load_successful_v6_reports,
 )
 from app.db.session import get_db
 from app.schemas.issues import (
     ContextCandidateOut,
     ContextSourceOut,
+    GenerationRequestIn,
+    GenerationRequestResponse,
+    GenerationRequestStatusResponse,
     HistoryPoint,
     IssueDetail,
     IssueHistoryResponse,
@@ -65,8 +75,11 @@ from app.schemas.issues import (
     IssueReportResponse,
     IssueSummary,
     RelatedEventCandidate,
-    ReportNotYetGenerated,
+    ReportFailed,
+    ReportGenerating,
+    ReportIdle,
     SignalOut,
+    V8IssueReportResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -512,13 +525,108 @@ def _issue_exists(issue_id: str, db: Session | None) -> bool:
     return issue_id in _FALLBACK_ISSUES
 
 
+def _latest_v8_reports(db: Session, market_id: UUID) -> list[AiReport]:
+    return list(
+        db.execute(
+            select(AiReport)
+            .where(
+                AiReport.market_id == market_id,
+                AiReport.status == "success",
+                AiReport.prompt_version == "v8",
+            )
+            .order_by(AiReport.generated_at.desc(), AiReport.id.desc())
+            .limit(20)
+        )
+        .scalars()
+        .all()
+    )
+
+
+def _latest_generation_request(
+    db: Session,
+    market_id: UUID,
+) -> AiReportGenerationRequest | None:
+    return db.execute(
+        select(AiReportGenerationRequest)
+        .where(
+            AiReportGenerationRequest.market_id == market_id,
+            AiReportGenerationRequest.prompt_version == "v8",
+        )
+        .order_by(
+            AiReportGenerationRequest.requested_at.desc(),
+            AiReportGenerationRequest.id.desc(),
+        )
+        .limit(1)
+    ).scalar_one_or_none()
+
+
+def _successor_request_id(usage: dict | None) -> UUID | None:
+    raw = usage.get("successor_request_id") if isinstance(usage, dict) else None
+    if not raw:
+        return None
+    try:
+        return UUID(str(raw))
+    except ValueError:
+        return None
+
+
+def _v8_public_report(
+    db: Session,
+    report: AiReport,
+    *,
+    current_fingerprint: str | None,
+    latest_request: AiReportGenerationRequest | None,
+) -> V8IssueReportResponse:
+    payload = reconstruct_v8_report(db, report)
+    latest_event = latest_request_event(db, latest_request.id) if latest_request else None
+    cache_state = (
+        "fresh" if current_fingerprint == payload.input_fingerprint else "stale"
+    )
+    public_status = cache_state
+    request_id = None
+    request_error = None
+    if latest_request is not None and latest_event is not None:
+        request_is_current = latest_request.input_fingerprint == current_fingerprint
+        request_is_newer = not _not_after(latest_request.requested_at, report.generated_at)
+        if request_is_current and latest_event.state in {"queued", "running"}:
+            public_status = "generating"
+            request_id = latest_request.id
+        elif request_is_newer and latest_event.state == "failed":
+            public_status = "failed_with_last_good"
+            request_id = latest_request.id
+            request_error = latest_event.error_code
+    return V8IssueReportResponse(
+        id=report.id,
+        status=public_status,
+        report_version="v8",
+        headline=payload.writer.headline,
+        summary=payload.writer.summary,
+        sections=[section.model_dump(mode="json") for section in payload.writer.sections],
+        sources=[source.model_dump(mode="json") for source in payload.sources],
+        generated_at=_as_utc(report.generated_at),
+        data_as_of=payload.data_as_of,
+        context_as_of=payload.context_as_of,
+        cache={
+            "state": cache_state,
+            "input_fingerprint": payload.input_fingerprint,
+            "current_fingerprint": current_fingerprint,
+        },
+        data_limitations=payload.data_limitations,
+        caution_note=payload.caution_note,
+        request_id=request_id,
+        request_error_code=request_error,
+    )
+
+
 @router.get(
     "/api/issues/{issue_id}/report",
-    response_model=IssueReportResponse | ReportNotYetGenerated,
+    response_model=(
+        V8IssueReportResponse | ReportIdle | ReportGenerating | ReportFailed
+    ),
 )
 def get_issue_report(
     issue_id: str, db: Session | None = Depends(_get_optional_db)
-) -> IssueReportResponse | ReportNotYetGenerated:
+) -> V8IssueReportResponse | ReportIdle | ReportGenerating | ReportFailed:
     live = _resolve_live(db)
     if live is not None and db is not None:
         live_issues, _ = live
@@ -526,27 +634,141 @@ def get_issue_report(
         if match is None:
             raise HTTPException(status_code=404, detail="Unknown issue id.")
         try:
-            live_reports = load_successful_v6_reports(db, match.market.id)
+            reports = _latest_v8_reports(db, match.market.id)
+            latest_request = _latest_generation_request(db, match.market.id)
+            current_bundle = build_v8_input_bundle(
+                db,
+                match.market.id,
+                now=datetime.now(UTC),
+            )
+            current_fingerprint = (
+                v8_input_fingerprint(current_bundle) if current_bundle is not None else None
+            )
         except SQLAlchemyError:
             logger.warning(
                 "FALLBACK: live report query failed, returning report empty state.",
                 exc_info=True,
             )
-            return ReportNotYetGenerated(status="not_yet_generated")
-        if not live_reports:
-            return ReportNotYetGenerated(status="not_yet_generated")
+            return ReportIdle(status="idle")
 
-        for live_report in live_reports:
+        for report in reports:
             try:
-                return _issue_report_from_live(live_report, match)
+                return _v8_public_report(
+                    db,
+                    report,
+                    current_fingerprint=current_fingerprint,
+                    latest_request=latest_request,
+                )
             except (ValidationError, ValueError):
                 logger.warning(
-                    "Live v6 report does not match its schema or stored evidence; "
+                    "Live v8 report does not match its schema or stored evidence; "
                     "trying the previous successful row.",
                     exc_info=True,
                 )
-        return ReportNotYetGenerated(status="not_yet_generated")
+        if latest_request is not None:
+            latest_event = latest_request_event(db, latest_request.id)
+            if latest_event is not None and latest_event.state in {"queued", "running"}:
+                return ReportGenerating(
+                    status="generating",
+                    request_id=latest_request.id,
+                    input_fingerprint=latest_request.input_fingerprint,
+                    requested_at=_as_utc(latest_request.requested_at),
+                )
+            if latest_event is not None and latest_event.state == "failed":
+                return ReportFailed(
+                    status="failed",
+                    request_id=latest_request.id,
+                    error_code=latest_event.error_code or "generation_failed",
+                )
+            if latest_event is not None and latest_event.state == "succeeded":
+                return ReportFailed(
+                    status="failed",
+                    request_id=latest_request.id,
+                    error_code="stored_report_invalid",
+                )
+        return ReportIdle(status="idle")
 
     if issue_id not in _FALLBACK_ISSUES:
         raise HTTPException(status_code=404, detail="Unknown issue id.")
-    return ReportNotYetGenerated(status="not_yet_generated")
+    return ReportIdle(status="idle")
+
+
+@router.post(
+    "/api/issues/{issue_id}/report/generate",
+    response_model=GenerationRequestResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
+def generate_issue_report(
+    issue_id: str,
+    request_body: GenerationRequestIn,
+    db: Session | None = Depends(_get_optional_db),
+) -> GenerationRequestResponse:
+    """Append or join a request; never call a provider in the API process."""
+    if db is None:
+        raise HTTPException(status_code=503, detail="Generation storage is unavailable.")
+    live = _resolve_live(db)
+    if live is None:
+        raise HTTPException(status_code=503, detail="Live issue data is unavailable.")
+    match = _find_live(live[0], issue_id)
+    if match is None:
+        raise HTTPException(status_code=404, detail="Unknown issue id.")
+    try:
+        result = enqueue_v8_request(
+            db,
+            match.market.id,
+            requested_by="user",
+            context_refresh_requested=request_body.refresh_context,
+        )
+    except SQLAlchemyError as exc:
+        db.rollback()
+        raise HTTPException(status_code=503, detail="Generation request failed.") from exc
+    if result is None:
+        raise HTTPException(status_code=409, detail="Current evidence bundle is unavailable.")
+    if result.state == "queued":
+        # Generation remains outside this API process. The child receives the
+        # committed request ID and owns the provider call plus report write.
+        launch_on_demand_worker(result.request_id, env=settings.env)
+    request_status = "fresh" if result.state == "succeeded" else result.state
+    return GenerationRequestResponse(
+        request_id=result.request_id,
+        status=request_status,
+        created=result.created,
+        input_fingerprint=result.input_fingerprint,
+    )
+
+
+@router.get(
+    "/api/issues/{issue_id}/report/requests/{request_id}",
+    response_model=GenerationRequestStatusResponse,
+)
+def get_generation_request_status(
+    issue_id: str,
+    request_id: UUID,
+    db: Session | None = Depends(_get_optional_db),
+) -> GenerationRequestStatusResponse:
+    if db is None:
+        raise HTTPException(status_code=503, detail="Generation storage is unavailable.")
+    live = _resolve_live(db)
+    if live is None:
+        raise HTTPException(status_code=503, detail="Live issue data is unavailable.")
+    match = _find_live(live[0], issue_id)
+    if match is None:
+        raise HTTPException(status_code=404, detail="Unknown issue id.")
+    request = db.get(AiReportGenerationRequest, request_id)
+    if request is None or request.market_id != match.market.id:
+        raise HTTPException(status_code=404, detail="Unknown generation request id.")
+    latest = latest_request_event(db, request.id)
+    if latest is None:
+        raise HTTPException(status_code=409, detail="Generation request has no state event.")
+    return GenerationRequestStatusResponse(
+        request_id=request.id,
+        issue_id=request.market_id,
+        state=latest.state,
+        attempt_number=latest.attempt_number,
+        requested_at=_as_utc(request.requested_at),
+        updated_at=_as_utc(latest.recorded_at),
+        input_fingerprint=request.input_fingerprint,
+        report_id=latest.report_id,
+        error_code=latest.error_code,
+        successor_request_id=_successor_request_id(latest.usage),
+    )

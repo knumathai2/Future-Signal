@@ -6,7 +6,9 @@ _Source: former project-root Technical Design sections 5-6._
 
 ## 5. API Structure
 
-All endpoints are **read-only** in MVP except the internal report-trigger, which is not user-facing. REST, JSON, versionless for hackathon (`/api/...` prefix is enough, no `/v1` needed yet).
+All issue-data endpoints are read-only. ADR-051 adds one public append-only
+generation-request POST; it never calls a provider in the API process. REST,
+JSON, versionless for hackathon (`/api/...` prefix is enough, no `/v1` needed yet).
 
 | Endpoint | Method | Purpose | Key params | DB tables used | MVP priority |
 |---|---|---|---|---|---|
@@ -16,8 +18,9 @@ All endpoints are **read-only** in MVP except the internal report-trigger, which
 | `/api/issues/:id/metrics` | GET | Full metric breakdown (if not already folded into detail) | — | `market_metrics` | **P1** (can fold into detail response for MVP instead of a separate call) |
 | `/api/signals` | GET | Recent signals across all markets ("what changed recently" feed) | `severity`, `since` | `issue_signals`, `markets` | **P1** |
 | `/api/issues/:id/signals` | GET | Signals for one market | — | `issue_signals` | **P0** (can be embedded in detail response) |
-| `/api/issues/:id/report` | GET | Latest AI report for the issue | — | `ai_reports` | **P0** |
-| `/api/issues/:id/report/generate` | POST (internal only, not called by the frontend) | Force regeneration; used by the batch job or an admin/demo script, never exposed as a user-facing button per UX Design §3.6 | — | `ai_reports`, `market_metrics` | **P1** (useful for demo-prep to guarantee the 3 demo issues have fresh reports) |
+| `/api/issues/:id/report` | GET | V8 idle/generating/fresh/stale/failure state and latest valid report | — | `ai_reports`, generation requests/events, evidence tables | **P0** |
+| `/api/issues/:id/report/generate` | POST | Create or join a fingerprinted generation request; no provider call | `refresh_context` | generation requests/events, evidence tables | **P0 v8** |
+| `/api/issues/:id/report/requests/:request_id` | GET | Poll append-only request/lease/outcome state | — | generation requests/events | **P0 v8** |
 | `/api/categories` | GET | List of categories for filter UI | — | `markets` (distinct) | **P1** |
 | `/api/search` | GET | Simple title search | `q` | `markets` (ILIKE) | **P2** |
 | `/api/watchlist` | GET/POST/DELETE | Phase 2 only | `market_id` | `watchlists` | **Excluded from MVP** |
@@ -66,11 +69,11 @@ Runs as a single sequential Python script, triggered on a schedule (recommend ev
 | 5. Calculate metrics | Current snapshot + trailing 24h/7d history from `market_snapshots` | Compute `change_24h`, `change_7d`, and (if time allows) volatility/attention/heat per Service Design §5 formulas | Insert into `market_metrics` | Fewer data points than the window requires → set the relevant field `null` and `confidence_level = insufficient_data`, never fabricate a number | Straightforward SQL/pandas over the last N rows per market |
 | 6. Detect sudden change signals | Latest `market_metrics` row + threshold config | Evaluate `|change_24h| >= 5pp` (MVP threshold from PRD §8.6); check a cooldown window so the same shift doesn't refire every run | Insert into `issue_signals` if triggered | Threshold misconfiguration → fail safe to "no signal" rather than over-firing | Simple conditional; cooldown = "don't insert a new signal for the same market within the same rolling window that's already covered by an unresolved one" |
 | 7. Save collection logs | Run metadata | Aggregate counts (processed/failed) and any error details from steps 1–6 | Insert into `data_collection_logs` | Logging itself failing should never fail the run — wrap in try/except with a stdout fallback | One row per run |
-| 8. Trigger AI report generation only when needed | Markets with a new signal from step 6, OR no existing report, OR last report older than a set staleness window (e.g., 24h) | Call `generate_report()` (Section 9) per qualifying market, capped at a max count per run for cost control | Insert into `ai_reports` | AI API error → retry once, mark `status=failed`, leave the previous successful report as the one served to users | Isolate each market's report generation in its own try/except so one AI failure doesn't block others |
+| Historical v1-v6 step 8 (superseded by ADR-051) | Previously selected new-signal, missing, or stale reports | Historical batch generators remain for audit/development comparison only | Historical `ai_reports` rows | Previous valid row remains | Normal collection no longer invokes this step |
 
 ### Sync vs. async
-- **Steps 1–7 run synchronously, in sequence, within one script invocation.** There's no benefit to parallelizing or queueing this for 30–50 markets — the whole run should complete in well under a minute, and sequential code is far easier to debug under hackathon time pressure.
-- **Step 8 (AI generation) is asynchronous relative to any user request** — it never runs in response to an API call, only from the batch job. Within the batch job itself, it can still execute sequentially at the end of the run; "asynchronous" here means "decoupled from the request/response cycle," not "requires a job queue." A real async queue (Celery/RQ, or a `pending`-status polling worker) is a legitimate Phase 2 upgrade once report volume or generation latency grows enough to matter.
+- **Steps 1–7 run synchronously, in sequence, within one script invocation.** Normal collection completes without a report provider.
+- **V8 briefing generation is a separate asynchronous service.** A user request creates or joins an immutable fingerprint request, and a standalone worker claims it through an append-only expiring lease. No new queue dependency is required.
 
 ### Duplicate prevention
 Since every step is append-only per run and keyed by `(market_id, captured_at)`/`(market_id, computed_at)`, duplicate prevention is really "don't run the batch job twice concurrently" — enforce with a simple advisory lock or a `data_collection_logs` check ("is there a run with `run_finished_at IS NULL` from the last hour? if so, skip") rather than building real distributed-lock infrastructure.
@@ -97,5 +100,29 @@ stop the full batch and cannot replace a prior successful candidate/report.
 usage is audited and the cumulative TASK-056~065 OpenRouter spend must remain
 within USD 100. The batch is guarded to local/development writes until separate
 deployment and production-write approval exists.
+
+### 6.2 Approved v8 workflow separation and worker (TASK-104/TASK-112)
+
+Normal `run_scheduled_batch()` stores market data, metrics, signals, optional
+independent context, and its collection log, then exits with zero report calls.
+Supplying a legacy writer client cannot make the normal path invoke it.
+Historical `--reports-only` remains only as an explicitly confirmed local/dev
+comparison path pending TASK-109 review.
+
+`enqueue_v8_request()` reconstructs current definition/metric/context evidence,
+computes the versioned SHA-256 fingerprint, and creates or joins one immutable
+request. `process_v8_request()` claims a lease, optionally invokes a bounded
+context-refresh callback, rebuilds and compares the fingerprint, makes one
+writer call, validates references and language, appends a v8 report, and
+appends success or safe failure. It never retries the same prompt automatically.
+
+`run_pending_v8_requests()` is the standalone FIFO worker boundary. A crashed
+worker leaves an expiring running event; a later worker appends a new attempt.
+The guarded local/development CLI is `python -m app.core.on_demand_worker`.
+TASK-110 connects a queued POST to that same boundary by spawning a detached,
+request-scoped child with `--request-id`. The API returns immediately and never
+constructs a provider client; the child owns the lease, provider call, and
+append-only report/event writes. The environment guard prevents this local/dev
+convenience path from silently becoming an unapproved production worker.
 
 ---
