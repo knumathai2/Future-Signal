@@ -19,8 +19,8 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 - **Version**: v0.10.0-v5-narrative-program-active
 - **Phase**: Approved post-MVP v5 narrative-summary/source-link program active
-- **Next milestone**: TASK-080 development regeneration and integration QA
-- **Overall health**: 🟢 Active — TASK-079 renders the complete v5 briefing, safe exact source links, and an explicit no-source state. Frontend typecheck/lint/parser/build and 320px/375px/desktop Browser QA pass. TASK-080 is active. Deployment and production writes remain excluded.
+- **Next milestone**: TASK-081 actual result quality review
+- **Overall health**: 🟢 Active — TASK-080 stored 14 valid v5 rows across 13 development issues; every latest row reconstructs cleanly. Actual no-source and fixture link states pass responsive/integration QA. TASK-081 is active. Deployment and production writes remain excluded.
 
 ## Tech Summary
 
@@ -62,6 +62,7 @@ Future Signal/
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | TASK-080 complete: 14 valid v5 rows across 13 development issues, 13/13 strict reconstruction, actual no-source Browser flow, fixture 0/1/3 evidence, responsive/loading/error/link/console QA, USD 0.268466 observed writer spend, 333 Backend tests, and all Frontend checks. TASK-081 activated. |
 | 2026-07-11 | TASK-079 complete: v5 AI briefing UI, scenario/check/watch cards, visible no-source state, safe exact source links, strict parser, full Frontend checks, and responsive Browser QA. TASK-080 activated. |
 | 2026-07-11 | TASK-078 complete: no-migration v5 JSONB storage/read contract, newest-to-oldest last-good reconstruction, exact verified-source API, OpenAPI update, and 332 Backend tests. TASK-079 activated. |
 | 2026-07-11 | TASK-077 complete: user-format v5 contract, 3–4 conditional scenarios, typed check/watch lists, issue-specific/numeric gates, title/entity/official-domain queries, market/forecast-page exclusion, seven guarded development research rows, USD 0.18057005 task spend, and 331 Backend tests. TASK-078 activated. |
