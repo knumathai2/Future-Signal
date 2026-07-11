@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.12.0-v5-grounding-code-complete
-- **Phase**: Post-MVP grounding program complete in code
-- **Next milestone**: Render the approved v6 modes and collapsed resolution reference in the Frontend
-- **Overall health**: 🟢 TASK-093~095 are complete. The strict v6 generator, context configuration failure path, and public API pass all 383 Backend tests; TASK-096 is active.
+- **Version**: v0.13.0-v6-baseline-v7-planning
+- **Phase**: V6 baseline preserved; on-demand v7 program awaiting implementation approvals
+- **Next milestone**: Approve and finalize the TASK-101 positive-first v7 policy contract
+- **Overall health**: 🟢 TASK-099~100 are complete. V1-v6 contracts and active constraints are archived without runtime changes; v6 remains the current implemented baseline.
 
 ## Tech Summary
 
@@ -63,6 +63,8 @@ Future Signal/
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | TASK-100 archived the v1-v6 contract map, separated permanent evidence/safety invariants from version-specific shape/style rules, and recorded the retention and separately approved cleanup boundary. No runtime or external state changed. |
+| 2026-07-11 | TASK-099 defined the proposed positive-first, user-requested, cache-backed v7 briefing direction and TASK-100~109 execution sequence. Implementation gates remain pending. |
 | 2026-07-11 | TASK-095 activated the v6-only report endpoint with strict DB evidence reconstruction, four mode unions, exact sources/rule reference, v5 exclusion, and previous-valid-v6 fallback. Full Backend verification passed with 383 tests. |
 | 2026-07-11 | TASK-094 resolved ISS-014: incomplete requested context configuration now records a safe failure reason, failed batch/log state, and CLI exit code one; explicit skip remains normal. No workflow configuration changed. |
 | 2026-07-11 | TASK-093 completed the deterministic four-mode v6 writer/storage contract, metric/rule single-owner enforcement, evidence-basis separation, duplicate/rule-leak/current-fact gates, and append-only batch path. Full Backend verification passed with 369 tests. |
