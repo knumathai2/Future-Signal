@@ -16,6 +16,7 @@ type IssueReportCardProps = {
   generationPending: boolean;
   generationActionError: boolean;
   streamedBriefing: StreamingBriefingState | null;
+  className?: string;
 };
 
 function isFullReport(
@@ -54,7 +55,7 @@ function ActionButton({
       type="button"
       disabled={pending}
       onClick={onGenerate}
-      className="inline-flex min-h-11 items-center justify-center rounded-full border border-ink bg-ink px-5 text-sm font-bold text-card transition hover:opacity-90 disabled:cursor-wait disabled:opacity-60"
+      className="inline-flex min-h-11 items-center justify-center rounded-full border border-accent bg-accent px-5 text-sm font-bold text-card transition hover:brightness-95 disabled:cursor-wait disabled:opacity-60"
     >
       {pending ? "요청을 기록하는 중" : label}
     </button>
@@ -110,7 +111,7 @@ function BriefingContent({ report }: { report: V8IssueReportResponse }) {
   );
   return (
     <div className="mt-5 space-y-5">
-      <div className="rounded-lg bg-paper px-4 py-4 sm:px-5">
+      <div className="rounded-lg border-l-4 border-accent bg-accent-soft px-4 py-4 sm:px-5">
         <h3 className="text-xl font-bold leading-8 text-ink">
           {report.headline}
         </h3>
@@ -178,7 +179,7 @@ function StreamingBriefingContent({
 }) {
   return (
     <div className="mt-5 space-y-5" aria-live="polite">
-      <div className="rounded-lg bg-paper px-4 py-4 sm:px-5">
+      <div className="rounded-lg border-l-4 border-accent bg-accent-soft px-4 py-4 sm:px-5">
         <p className="text-[11px] font-bold text-ink-faint">
           검증을 마친 내용부터 표시 중
         </p>
@@ -220,6 +221,7 @@ export function IssueReportCard({
   generationPending,
   generationActionError,
   streamedBriefing,
+  className = "mt-10",
 }: IssueReportCardProps) {
   const response =
     reportState.status === "ready" ? reportState.response : undefined;
@@ -242,7 +244,7 @@ export function IssueReportCard({
   return (
     <section
       data-issue-id={issueId}
-      className="mt-10 rounded-lg border border-line bg-card p-4 sm:p-5"
+      className={`${className} rounded-lg border border-line bg-card p-4 sm:p-5`}
       aria-labelledby="ai-briefing-title"
     >
       <div className="flex flex-wrap items-start justify-between gap-4">

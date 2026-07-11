@@ -13,18 +13,49 @@ Harness Version: 1.1
 
 ## Session Info
 
-- **Date**: 2026-07-11
-- **Agent Role**: PM / Planner with Backend, Data/AI, and Frontend implementation
-- **Session Goal**: Complete contextual wording and validated-block briefing streaming.
-- **Branch**: `backend/TASK-117-validated-block-streaming`
+- **Date**: 2026-07-12
+- **Agent Role**: Frontend Implementer with PM / safety review
+- **Session Goal**: Split the issue detail into four question-led tabs.
+- **Branch**: `frontend/TASK-118-issue-detail-tabs`
 
 ## Context Read
 
-- Project constitution and Backend implementation role prompt
-- PRD, Service Design, and Technical Design indexes and relevant report/API sections
-- Current project/session/task state, architecture, standards, known issues, decisions, API queries, models, and regression suites
+- Project constitution, PRD detail requirements, UX Design, and Frontend implementation prompt
+- Current project/session/task state, standards, glossary, detail/report components, types, and browser QA guidance
 
 ## Work Completed
+
+- Applied the user's TASK-118 visual follow-up. Updated the shared accent, soft
+  accent, ink, and muted comparison tokens; aligned the brand and chart's
+  hard-coded strokes; and added focused terracotta/blue metric tiles.
+- Emphasized the active detail tab, current reflected expectation value, chart,
+  timeline number, briefing summary edge, and briefing action while keeping
+  observed comparison values in muted blue and retaining sign/wording for
+  direction.
+- Restarted the local Frontend so the Tailwind token change took effect.
+  Frontend typecheck, lint, parser regression, build, desktop and 320px Browser
+  QA pass with no page overflow or console warnings/errors. The known bundle
+  size warning remains.
+
+- Completed TASK-118 at the user's direction. Reorganized the existing detail
+  route into Overview, AI Issue Briefing, Related Materials, and Interpretation
+  Guide tabs without changing the public API, report parser, database, or
+  generation workflow.
+- Added query-linked tab state that preserves unrelated parameters, semantic
+  tab/tab-panel roles, Arrow/Home/End navigation, direct-link active-tab
+  scrolling, and a narrow-screen tab rail that does not create page overflow.
+- Kept the full v8 briefing generation, validated-block, timestamp, source,
+  stale/failure, and last-good UI intact. Related Materials separates dated
+  candidates from accepted report sources and retains the no-relationship
+  boundary; every data-bearing tab keeps caution and data-as-of context.
+- Frontend typecheck, lint, v8 parser regression, production build, Prettier,
+  diff check, and wording review pass. Actual DB-backed Browser QA passed at
+  1280px, 390px, and 320px, including URL state, all four tabs, keyboard
+  movement, 44px controls, active-tab visibility, zero page overflow, and zero
+  warnings/errors in a clean tab. The known bundle-size warning remains.
+- No dependency, public API, schema, database write, provider call,
+  infrastructure, deployment, production action, safety-policy change, or
+  legacy deletion occurred.
 
 - Completed TASK-117 after explicit user approval for the append-only schema,
   public SSE API, and active v8 output-contract changes. Added strict one-call
