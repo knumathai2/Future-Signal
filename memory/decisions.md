@@ -690,6 +690,37 @@ normal batch paths remain strictly insert-only.
 
 ---
 
+### ADR-040: OpenRouter server-tool research trusts annotations, not model URLs
+
+- **Date**: 2026-07-11
+- **Status**: Accepted
+- **Decided by**: Data/AI Implementer within ADR-038 provider approval
+
+**Context**: TASK-058 needed to reconcile OpenRouter's beta
+`openrouter:web_search` Chat Completions response with the v4 citation-ID
+contract. The model can copy URLs into JSON, but model text alone is not
+provenance.
+
+**Decision**: Send the server tool through the existing OpenAI-compatible SDK
+using OpenRouter-only `extra_body.tools`. Parse nested or flat
+`url_citation` annotations, normalize and hash only those URLs/excerpts, and
+map model-returned candidate URLs to citation IDs only on exact annotation URL
+matches. Discard candidates with no matching annotation. Require provider
+usage to show a server-tool search unless it is a completed empty search, cap
+reported searches at six, total citations at 30, and reported queries to the
+deterministic market-metadata allowlist.
+
+**Rationale**: The model can organize candidate drafts but cannot create
+evidence. Exact annotation matching preserves provenance and lets TASK-059
+apply canonicalization and substantive verification independently.
+
+**Consequences**: Model-body URLs, missing-title/invalid-scheme annotations,
+out-of-allowlist queries, over-limit usage, and malformed output fail closed.
+No DB write occurs in TASK-058; TASK-059 receives normalized citations and
+candidate drafts only.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07
