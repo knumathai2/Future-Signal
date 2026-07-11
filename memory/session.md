@@ -15,8 +15,8 @@ Harness Version: 1.1
 
 - **Date**: 2026-07-11
 - **Agent Role**: Data/AI Implementer
-- **Session Goal**: Implement and activate the approved v8 issue-centered briefing contract while preserving v7 history.
-- **Branch**: `data-ai/TASK-112-v8-issue-centered`
+- **Session Goal**: Improve v8 public-source retrieval and evidence acceptance while preserving strict publication blockers.
+- **Branch**: `data-ai/TASK-113-v8-source-validation`
 
 ## Context Read
 
@@ -26,6 +26,36 @@ Harness Version: 1.1
 
 ## Work Completed
 
+- Completed TASK-113 under explicit user approval. Added deterministic 90-day
+  and 180-day issue horizons, bounded cross-wording queries, alias-aware
+  relevance, and exact-excerpt fallback claims under
+  `v8-source-level-2`.
+- Preserved exact annotation URLs, publisher title/domain, non-empty excerpts,
+  A-C attribution, source-parent linkage, blocked domains, conflict handling,
+  conditional verification, safe links, and no inferred relationship with an
+  observed movement.
+- Found and fixed the missing runtime connection: the Frontend briefing action
+  now requests a context refresh, and the local/development worker lazily
+  constructs the approved research path plus optional independent verifier.
+  Evidence changes retain immutable requests and the worker follows the
+  successor request before exiting.
+- Added a cumulative context-cost reservation check and advanced the input
+  fingerprint so earlier cached requests cannot mask the new source policy.
+- Verification passed: 459 Backend tests, Ruff, Frontend typecheck/lint/v8
+  parser regression/production build, and repository diff checks. The known
+  bundle-size warning remains. No provider call, non-test database write,
+  migration, dependency, infrastructure change, deployment, production
+  action, or legacy deletion occurred during implementation verification.
+- Ran the explicitly approved development evaluation for the U.S.-Russia
+  nuclear-agreement issue. The run exposed and fixed JSON-mode incompatibility,
+  optional tool execution, annotation-only fallback, current usage parsing,
+  plugin compatibility parameters, and failed-call cost persistence.
+- The final configured-model attempt performed two web searches but returned
+  no standard `url_citation` annotations. It failed closed with zero candidates
+  and no new report. Eight failed development audit rows were appended;
+  USD 0.33331060 is the reconstructible minimum evaluation cost because early
+  failed calls predated failure-usage persistence. ISS-018 records the provider
+  compatibility and historical evaluation-cost gap.
 - Opened the running local Frontend at the development-only `v8-sources`
   fixture route, verified the complete v8 issue briefing and visible source
   attribution in the in-app browser, and left the rendered screen open for

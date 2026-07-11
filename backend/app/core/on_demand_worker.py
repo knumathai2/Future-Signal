@@ -6,8 +6,14 @@ from uuid import UUID
 
 from app.core.ai_report import build_openai_client
 from app.core.config import settings
+from app.core.context_policy_v7 import build_v8_conditional_verifier_from_settings
+from app.core.context_research import build_context_research_client_from_settings
 from app.core.historical_seed import ensure_local_dev_write_allowed
-from app.core.on_demand_briefing import process_v8_request, run_pending_v8_requests
+from app.core.on_demand_briefing import (
+    process_v8_request,
+    refresh_v8_context_for_market,
+    run_pending_v8_requests,
+)
 from app.core.scheduled_batch import ai_extra_headers_from_settings
 from app.db.session import get_session_factory
 
@@ -24,6 +30,29 @@ def build_arg_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def build_context_refresher():
+    """Build a lazy bounded v8 context refresher for the worker process."""
+    research_client = None
+    verifier = None
+
+    def refresh(db, market_id, now):
+        nonlocal research_client, verifier
+        if research_client is None:
+            research_client = build_context_research_client_from_settings(settings)
+            verifier = build_v8_conditional_verifier_from_settings(settings)
+        refresh_v8_context_for_market(
+            db,
+            market_id,
+            now,
+            research_client=research_client,
+            verifier=verifier,
+            budget_usd=settings.context_budget_usd,
+            cost_reservation_usd=settings.context_cost_reservation_usd,
+        )
+
+    return refresh
+
+
 def main() -> int:
     args = build_arg_parser().parse_args()
     ensure_local_dev_write_allowed(settings.env, args.confirm_local_dev_write)
@@ -38,23 +67,33 @@ def main() -> int:
         provider_name=settings.ai_provider,
         extra_headers=ai_extra_headers_from_settings(),
     )
+    context_refresher = build_context_refresher()
     session = get_session_factory()()
     try:
         if args.request_id is not None:
-            results = [
-                process_v8_request(
+            result = process_v8_request(
+                session,
+                args.request_id,
+                client,
+                settings.openai_model,
+                context_refresher=context_refresher,
+            )
+            if result.successor_request_id is not None:
+                result = process_v8_request(
                     session,
-                    args.request_id,
+                    result.successor_request_id,
                     client,
                     settings.openai_model,
+                    context_refresher=context_refresher,
                 )
-            ]
+            results = [result]
         else:
             results = run_pending_v8_requests(
                 session,
                 client,
                 settings.openai_model,
                 max_requests=min(max(args.max_requests, 1), 50),
+                context_refresher=context_refresher,
             )
     finally:
         session.close()

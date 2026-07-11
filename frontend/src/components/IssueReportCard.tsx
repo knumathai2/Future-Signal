@@ -320,10 +320,11 @@ export function IssueReportCard({
           <ActionButton
             label={actionLabel}
             pending={generationPending}
-            onGenerate={() => void onGenerate(false)}
+            onGenerate={() => void onGenerate(true)}
           />
           <p className="text-xs leading-5 text-ink-faint">
-            같은 근거 묶음의 진행 중 요청이 있으면 해당 요청에 합류합니다.
+            확인 가능한 공개 자료를 새로 살핀 뒤 현재 근거 묶음으로 브리핑을
+            생성합니다.
           </p>
         </div>
       ) : null}

@@ -1733,3 +1733,47 @@ authorized.
 No schema migration is necessary. This approval does not authorize a provider
 call, database write, deployment, infrastructure change, dependency, or
 production action.
+
+---
+
+### ADR-056: Widen v8 discovery while narrowing accepted claims
+
+- **Date**: 2026-07-11
+- **Status**: Accepted and implemented in TASK-113
+- **Decided by**: Explicit user approval of the v8 improvement scope
+
+**Context**: The first reviewed v8 briefing was structurally valid and safely
+reported zero public sources, but it repeated the observed metric instead of
+explaining the issue's confirmed situation. The active context path used a
+30-day default, a 90-day maximum, direct token overlap, and a generation button
+that did not request context refresh. The request-scoped worker also had no
+research client connected to the optional refresh callback.
+
+**Decision**: Keep exact annotation URLs, publisher identity, non-empty
+excerpts, A-C attribution, source-parent linkage, blocked domains,
+duplicate/conflict handling, conditional verification, safe links, and the
+no-causal-inference boundary. Select a deterministic 90-day or 180-day issue
+horizon, add bounded concept aliases to query and relevance checks, and use the
+exact stored excerpt as the supported claim when it cannot support broader
+candidate wording. Advance the context fingerprint to
+`v8-source-level-2`. Make the v8 briefing action request context refresh, wire
+the bounded research and optional independent verifier into the local/dev
+worker, preserve immutable successor requests when evidence changes, and have
+the request-scoped worker follow that successor. Do not combine the web-search
+server tool with Chat Completions JSON mode because the configured provider
+rejects that combination; retain strict prompt instructions, Pydantic parsing,
+annotation provenance, and the bounded retry instead. If the server tool
+returns exact annotations with a non-JSON body, ignore body links and construct
+narrow candidates only from annotation title, URL, and excerpt before applying
+the normal deterministic gates. Require at least one server-tool call because
+the configured model otherwise completed without searching; zero search usage
+and no annotations routes the single bounded retry through OpenRouter's
+always-on web plugin. Both routes accept only exact `url_citation` annotations;
+a second response without annotations remains a blocking failure.
+
+**Consequences**: V8 can retrieve slower-moving public context and tolerate
+common cross-wording differences without publishing unsupported facts. Every
+accepted claim remains reconstructible from an exact excerpt. Context research
+is still budget-gated and only starts after an explicit briefing action. No
+schema, dependency, public response shape, infrastructure, deployment,
+production write, or legacy deletion was authorized or performed.

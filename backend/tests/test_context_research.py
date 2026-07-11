@@ -157,6 +157,23 @@ def test_search_queries_prioritize_entity_condition_window_and_official_domain()
     assert any("official announcement document" in query for query in queries)
 
 
+def test_search_queries_add_cross_wording_alias_for_diplomatic_issue():
+    queries = build_search_queries(
+        _inputs(
+            title="미·러 핵 합의가 연말까지 이뤄질까?",
+            description="미국과 러시아의 핵 합의 여부를 다루는 이슈입니다.",
+            category="외교",
+            tracked_condition="미국과 러시아가 핵 합의를 공식 발표함",
+            allowed_domains=[],
+            resolution_source=None,
+        )
+    )
+
+    assert any(
+        '"United States Russia nuclear agreement"' in query for query in queries
+    )
+
+
 def test_generic_stored_condition_does_not_become_search_entity_or_anchor():
     queries = build_search_queries(
         _inputs(
@@ -190,8 +207,8 @@ def test_research_inputs_and_candidates_require_timezone_aware_dates():
     content = _provider_content()
     content = content.replace("2026-07-11T08:00:00Z", "2026-07-11T08:00:00")
     client, _ = _client(_response(content=content))
-    with pytest.raises(ContextResearchError, match="invalid JSON"):
-        client.research(_inputs())
+    result = client.research(_inputs())
+    assert result.candidates[0].event_at is None
 
 
 def test_success_uses_server_tool_and_normalizes_only_annotation_citations():
@@ -216,7 +233,8 @@ def test_success_uses_server_tool_and_normalizes_only_annotation_citations():
     assert tool["type"] == "openrouter:web_search"
     assert tool["parameters"]["max_total_results"] == 30
     assert tool["parameters"]["allowed_domains"] == ["example.gov"]
-    assert request["response_format"] == {"type": "json_object"}
+    assert "response_format" not in request
+    assert request["tool_choice"] == "required"
     assert "Market listing, price, forecast, and mirror pages" in request["messages"][0]["content"]
 
 
@@ -251,6 +269,24 @@ def test_model_body_url_is_not_evidence_and_candidate_is_filtered():
     assert result.candidates == []
 
 
+def test_natural_language_search_response_uses_exact_annotation_fallback():
+    client, _ = _client(
+        _response(
+            content="The agency published an update with a source citation.",
+            annotations=[
+                _annotation(content="The agency published the documented update.")
+            ],
+        )
+    )
+
+    result = client.research(_inputs())
+
+    assert result.queries == build_search_queries(_inputs())
+    assert len(result.candidates) == 1
+    assert result.candidates[0].citation_ids == [result.citations[0].citation_id]
+    assert result.candidates[0].matched_condition == result.citations[0].content_excerpt
+
+
 def test_general_response_without_web_search_fails_closed():
     client, _ = _client(
         _response(content=_provider_content(candidates=[]), annotations=[], web_search_requests=0)
@@ -280,14 +316,16 @@ def test_completed_search_with_no_citations_is_normal_empty_result():
     ],
 )
 def test_malformed_or_out_of_bounds_model_output_fails_closed(content):
-    client, _ = _client(_response(content=content))
+    client, _ = _client(_response(content=content, annotations=[]))
 
     with pytest.raises(ContextResearchError, match="invalid JSON"):
         client.research(_inputs())
 
 
 def test_invalid_json_retries_once_and_retains_billed_usage():
-    client, fake = _client(_response(content="not-json", cost=0.05))
+    client, fake = _client(
+        _response(content="not-json", annotations=[], cost=0.05)
+    )
 
     with pytest.raises(ContextResearchError, match="invalid JSON"):
         client.research(_inputs())
@@ -297,6 +335,20 @@ def test_invalid_json_retries_once_and_retains_billed_usage():
     assert client.last_usage.output_tokens == 40
     assert client.last_usage.web_search_requests == 2
     assert client.last_usage.cost_usd == 0.1
+    assert fake.completions.kwargs["extra_body"]["plugins"][0]["id"] == "web"
+    assert "engine" not in fake.completions.kwargs["extra_body"]["plugins"][0]
+    assert "tool_choice" not in fake.completions.kwargs
+
+
+def test_current_server_tool_usage_detail_shape_is_counted():
+    response = _response()
+    response.usage.pop("server_tool_use")
+    response.usage["server_tool_use_details"] = {"web_search_requests": 2}
+    client, _ = _client(response)
+
+    result = client.research(_inputs())
+
+    assert result.usage.web_search_requests == 2
 
 
 def test_timeout_is_wrapped_without_prompt_or_key_details():
@@ -322,11 +374,11 @@ def test_reported_query_count_respects_configured_runtime_limit():
         "Technology confirmation record",
     ]
     client, _ = _client(
-        _response(content=_provider_content(queries=queries)),
+        _response(content=_provider_content(queries=queries), annotations=[]),
         max_search_queries=1,
     )
 
-    with pytest.raises(ContextResearchError, match="reported-query limit"):
+    with pytest.raises(ContextResearchError, match="query audit data"):
         client.research(_inputs())
 
 
@@ -350,12 +402,25 @@ def test_reformulated_query_with_normalized_metadata_overlap_is_accepted():
     ],
 )
 def test_reported_query_without_distinct_market_metadata_overlap_fails_closed(queries):
-    client, _ = _client(_response(content=_provider_content(queries=queries)))
+    client, _ = _client(
+        _response(content=_provider_content(queries=queries), annotations=[])
+    )
 
     with pytest.raises(ContextResearchError, match="query audit data|metadata scope"):
         client.research(_inputs())
 
     assert client.last_queries == queries
+
+
+def test_invalid_body_query_audit_with_annotations_uses_bounded_scope_queries():
+    client, _ = _client(
+        _response(content=_provider_content(queries=["celebrity sports score"]))
+    )
+
+    result = client.research(_inputs())
+
+    assert result.queries == build_search_queries(_inputs())
+    assert len(result.candidates) == 1
 
 
 def test_more_than_thirty_unique_citations_fails_closed():
