@@ -16,7 +16,7 @@ Harness Version: 1.1
 - **Date**: 2026-07-11
 - **Agent Role**: Data/AI Implementer
 - **Session Goal**: Execute the TASK-082~091 AI-report grounding program in dependency order.
-- **Branch**: `review/TASK-087-zero-evidence-state`
+- **Branch**: `data-ai/TASK-088-reference-values`
 
 ## Context Read
 
@@ -24,6 +24,12 @@ Harness Version: 1.1
 - TASK-065 backfill, audit, API, wording, browser, and budget criteria
 
 ## Work Completed
+
+- Completed TASK-088: v5 inputs now include exact 24h/7d reference values and
+  timestamps selected with the metric boundary rule.
+- Paired-field and delta consistency validation run before generation and again
+  during DB-backed API reconstruction.
+- Verified 193 focused Backend tests and Ruff.
 
 - Completed TASK-087 as a review-only task: the DB-backed no-candidate report,
   null evidence synthesis, metric-only evidence reference, strict Frontend

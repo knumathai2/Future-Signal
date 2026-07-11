@@ -283,6 +283,23 @@ def _latest_resolution_rules(
     )
 
 
+def _reference_snapshot(
+    db: Session,
+    market_id: uuid.UUID,
+    metric_timestamp: datetime,
+    window: timedelta,
+) -> MarketSnapshot | None:
+    return db.execute(
+        select(MarketSnapshot)
+        .where(
+            MarketSnapshot.market_id == market_id,
+            MarketSnapshot.captured_at <= metric_timestamp - window,
+        )
+        .order_by(MarketSnapshot.captured_at.desc(), MarketSnapshot.id.desc())
+        .limit(1)
+    ).scalar_one_or_none()
+
+
 def build_prompt_inputs_for_market(
     db: Session, market: Market, metric: MarketMetric, run_timestamp: datetime
 ) -> ReportPromptInputs | None:
@@ -600,6 +617,8 @@ def build_v4_inputs_for_market(
     ).scalar_one_or_none()
     if snapshot is None:
         return None
+    reference_24h = _reference_snapshot(db, market.id, metric_timestamp, timedelta(hours=24))
+    reference_7d = _reference_snapshot(db, market.id, metric_timestamp, timedelta(days=7))
 
     context_run = _latest_completed_context_run(db, market.id)
     episode_at = context_run.episode_at if context_run is not None else metric_timestamp
@@ -654,6 +673,14 @@ def build_v4_inputs_for_market(
         liquidity=float(snapshot.liquidity) if snapshot.liquidity is not None else None,
         context_candidates=candidates,
         resolution_rules=_latest_resolution_rules(db, market.id),
+        value_24h_ago=(float(reference_24h.price) if reference_24h is not None else None),
+        value_24h_ago_at=(
+            _as_utc_aware(reference_24h.captured_at) if reference_24h is not None else None
+        ),
+        value_7d_ago=(float(reference_7d.price) if reference_7d is not None else None),
+        value_7d_ago_at=(
+            _as_utc_aware(reference_7d.captured_at) if reference_7d is not None else None
+        ),
     )
 
 

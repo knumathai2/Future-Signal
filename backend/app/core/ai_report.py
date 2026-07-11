@@ -40,7 +40,7 @@ from datetime import datetime
 from typing import Literal, Protocol
 
 from openai import OpenAI, OpenAIError
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator, model_validator
 
 from app.core.snapshot_metrics import (
     CAUTION_HIGH_VOLATILITY_THRESHOLD,
@@ -971,6 +971,25 @@ class V4ReportInputs(BaseModel):
     liquidity: float | None
     context_candidates: list[V4VerifiedCandidateInput] = Field(max_length=3)
     resolution_rules: ResolutionRulesInput | None = None
+    value_24h_ago: float | None = Field(default=None, ge=0, le=1)
+    value_24h_ago_at: datetime | None = None
+    value_7d_ago: float | None = Field(default=None, ge=0, le=1)
+    value_7d_ago_at: datetime | None = None
+
+    @model_validator(mode="after")
+    def validate_reference_values(self) -> "V4ReportInputs":
+        """Require paired reference values/times and metric consistency."""
+        for label, value, captured_at, change in (
+            ("24h", self.value_24h_ago, self.value_24h_ago_at, self.change_24h),
+            ("7d", self.value_7d_ago, self.value_7d_ago_at, self.change_7d),
+        ):
+            if (value is None) != (captured_at is None):
+                raise ValueError(f"{label} reference value and timestamp must be paired")
+            if value is not None:
+                expected = round(self.current_value - value, 4)
+                if change is None or abs(expected - change) > 0.0001:
+                    raise ValueError(f"{label} reference value does not match stored change")
+        return self
 
 
 class V4LLMFields(BaseModel):
@@ -1374,6 +1393,14 @@ def build_v5_prompt(inputs: V4ReportInputs) -> tuple[str, str]:
                 round(inputs.change_7d * 100, 4) if inputs.change_7d is not None else None
             ),
             "confidence_level": inputs.confidence_level,
+            "value_24h_ago": inputs.value_24h_ago,
+            "value_24h_ago_at": (
+                inputs.value_24h_ago_at.isoformat() if inputs.value_24h_ago_at else None
+            ),
+            "value_7d_ago": inputs.value_7d_ago,
+            "value_7d_ago_at": (
+                inputs.value_7d_ago_at.isoformat() if inputs.value_7d_ago_at else None
+            ),
         },
         "verified_context_candidates": [
             {
@@ -1498,6 +1525,10 @@ def _v5_uses_only_evidence_numbers(fields: V5LLMFields, inputs: V4ReportInputs) 
         str(inputs.current_value),
         str(inputs.current_value * 100),
         "24 7",
+        str(inputs.value_24h_ago) if inputs.value_24h_ago is not None else None,
+        inputs.value_24h_ago_at.isoformat() if inputs.value_24h_ago_at else None,
+        str(inputs.value_7d_ago) if inputs.value_7d_ago is not None else None,
+        inputs.value_7d_ago_at.isoformat() if inputs.value_7d_ago_at else None,
     ]
     if inputs.resolution_rules is not None:
         allowed_parts.extend(

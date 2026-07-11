@@ -15,7 +15,7 @@ Technical Design §6 step 5 and AGENTS.md's no-fabrication rule.
 
 import uuid
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -58,6 +58,25 @@ class LiveV4AiReport:
     metric: MarketMetric
     snapshot: MarketSnapshot
     candidates: list[ContextCandidate]
+    reference_24h: MarketSnapshot | None = None
+    reference_7d: MarketSnapshot | None = None
+
+
+def _load_reference_snapshot(
+    db: Session,
+    market_id: uuid.UUID,
+    metric_at: datetime,
+    window: timedelta,
+) -> MarketSnapshot | None:
+    return db.execute(
+        select(MarketSnapshot)
+        .where(
+            MarketSnapshot.market_id == market_id,
+            MarketSnapshot.captured_at <= metric_at - window,
+        )
+        .order_by(MarketSnapshot.captured_at.desc(), MarketSnapshot.id.desc())
+        .limit(1)
+    ).scalar_one_or_none()
 
 
 def _latest_per_market(rows: list, market_id_attr: str = "market_id") -> dict:
@@ -269,6 +288,12 @@ def load_latest_successful_v4_report(
         metric=metric,
         snapshot=snapshot,
         candidates=candidates,
+        reference_24h=_load_reference_snapshot(
+            db, market_id, metric.computed_at, timedelta(hours=24)
+        ),
+        reference_7d=_load_reference_snapshot(
+            db, market_id, metric.computed_at, timedelta(days=7)
+        ),
     )
 
 
@@ -326,6 +351,12 @@ def load_successful_v5_reports(
                 metric=metric,
                 snapshot=snapshot,
                 candidates=candidates,
+                reference_24h=_load_reference_snapshot(
+                    db, market_id, metric.computed_at, timedelta(hours=24)
+                ),
+                reference_7d=_load_reference_snapshot(
+                    db, market_id, metric.computed_at, timedelta(days=7)
+                ),
             )
         )
     return results
