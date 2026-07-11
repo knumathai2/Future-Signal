@@ -15,8 +15,8 @@ Harness Version: 1.1
 
 - **Date**: 2026-07-11
 - **Agent Role**: PM / Planner
-- **Session Goal**: Document and prepare the positive-first, on-demand v7 issue briefing program without changing runtime behavior.
-- **Branch**: `pm/TASK-099-ai-briefing-policy-reset`
+- **Session Goal**: Archive v1-v6 constraints and prepare the positive-first, on-demand v7 issue briefing program without changing runtime behavior.
+- **Branch**: `pm/TASK-100-ai-contract-archive`
 
 ## Context Read
 
@@ -26,6 +26,14 @@ Harness Version: 1.1
 
 ## Work Completed
 
+- Completed TASK-100 by mapping v1-v6 active periods, ADRs, public/generation
+  shapes, runtime surfaces, supersession state, permanent retention set, and
+  separately gated cleanup candidates in
+  `docs/archive/ai-report-contracts/README.md` and
+  `reports/task-100-ai-contract-archive.md`.
+- Classified constitution/evidence-integrity controls separately from rigid
+  version-specific style and shape rules. V6 remains current until approved v7
+  implementation and review pass; no runtime or external state changed.
 - Preserved the completed and reopened v6 implementation state while preparing
   the user-directed v7 reset on a separate task branch.
 - Completed TASK-099 documentation in

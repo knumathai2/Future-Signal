@@ -18,7 +18,6 @@ historical v1-v6 archive followed by separately approved cleanup.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-100 | Inventory active constraints and archive the v1-v6 contract map | PM / Reviewer | PM / Planner | `pm/TASK-100-ai-contract-archive` | assigned |
 | TASK-101 | Finalize the positive-first v7 prompt, flexible section envelope, and A-D source-level policy | PM / Data-AI | Data/AI Implementer | `data-ai/TASK-101-v7-briefing-contract` | assigned |
 | TASK-102 | Design the append-only generation-request schema, worker lease, cache fingerprint, and recovery contract | Backend | Backend Implementer | `backend/TASK-102-on-demand-request-schema` | assigned |
 | TASK-103 | Implement broad context collection and lightweight evidence classification | Data/AI | Data/AI Implementer | `data-ai/TASK-103-broad-context-collection` | assigned |
@@ -29,8 +28,8 @@ historical v1-v6 archive followed by separately approved cleanup.
 | TASK-108 | Run a bounded development v6-v7 quality and cost comparison | Data/AI / Reviewer | Data/AI Implementer | `data-ai/TASK-108-v7-development-evaluation` | assigned |
 | TASK-109 | Remove superseded v1-v6 runtime code after v7 acceptance | Reviewer / Implementers | Reviewer | `review/TASK-109-legacy-report-cleanup` | assigned |
 
-No v7 implementation task is currently in progress. TASK-100 may start after
-the TASK-099 planning packet is accepted. TASK-101 requires explicit wording
+No v7 implementation task is currently in progress. TASK-100 archived the
+v1-v6 map without changing runtime behavior. TASK-101 requires explicit wording
 and AI-policy approval. TASK-102 requires schema approval. TASK-104 requires
 workflow/runtime approval. TASK-105 requires public API approval. TASK-103 and
 TASK-108 require bounded provider-call and local/development-write approval.
@@ -40,7 +39,8 @@ Deployment and production writes remain outside the approved program.
 The binding proposed sequence, acceptance criteria, and approval packet are in
 `reports/task-099-on-demand-briefing-policy-reset.md`. Only one task may be
 `in_progress` at a time. Existing v6 worktree changes must be preserved until
-TASK-100 records their archive or supersession state.
+TASK-100 records their archive and supersession state in
+`docs/archive/ai-report-contracts/README.md`.
 
 ## Status Values
 
