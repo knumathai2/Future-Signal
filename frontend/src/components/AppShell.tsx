@@ -13,9 +13,9 @@ export function BrandMark() {
   return (
     <span className="inline-flex items-center gap-2">
       <svg aria-hidden="true" viewBox="0 0 20 20" className="h-5 w-5">
-        <rect x="2" y="10" width="4" height="8" fill="oklch(52% 0.13 45)" />
-        <rect x="8" y="5" width="4" height="13" fill="oklch(22% 0.02 55)" />
-        <rect x="14" y="1" width="4" height="17" fill="oklch(52% 0.13 45)" />
+        <rect x="2" y="10" width="4" height="8" fill="#b84416" />
+        <rect x="8" y="5" width="4" height="13" fill="#241c18" />
+        <rect x="14" y="1" width="4" height="17" fill="#b84416" />
       </svg>
       <span className="text-base font-extrabold sm:text-xl">
         Outlook Signals

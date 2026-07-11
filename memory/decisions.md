@@ -1903,3 +1903,36 @@ blocks and a fresh five-section report for USD 0.010567. Client timing was
 9.700 seconds to first content and 13.738 seconds to complete; worker timing was
 5.223 and 8.493 seconds respectively. The actual API and Browser reconstruction
 passed. This evidence does not authorize further calls or another environment.
+
+---
+
+### ADR-061: Organize issue detail by four user questions
+
+- **Date**: 2026-07-11
+- **Status**: Accepted and implemented in TASK-118
+- **Decided by**: User direction after review of the four-screen mockup
+
+**Context**: The detail route presented deterministic metrics, chart, candidate
+material, and the on-demand AI briefing in one long column. This preserved all
+safety context but made the user's reading goal unclear and pushed later
+sections far below the initial observation.
+
+**Decision**: Keep one issue-detail route and the existing API/report contracts,
+but divide the rendered content into `개요`, `AI 이슈 브리핑`, `관련 자료`, and
+`해석 안내`. Deep-link the active view through the `tab` query parameter.
+Preserve the full generation/source/failure surface in the briefing tab. Show
+dated candidate material and accepted report sources separately, and never
+infer a relationship from time proximity. Repeat issue identity, reflected
+expectation value, seven-day observed change, caution, and data-as-of time at
+the top of non-overview tabs.
+
+**Consequences**: The detail screen now supports question-led navigation,
+keyboard tab movement, narrow-screen tab scrolling, and direct links without a
+public API, schema, dependency, generation, evidence, wording-policy,
+infrastructure, deployment, provider, or database change.
+
+**Visual follow-up**: The user approved the mockup's warm emphasis direction on
+2026-07-12. The active detail navigation, reflected expectation value, chart,
+timeline marker, and briefing action/summary use terracotta `#B84416` with
+`#FFF2E9`; comparison values use muted blue `#466AA3` with `#EDF3FB`. Direction
+still uses signs and labels rather than green/red gain-loss semantics.

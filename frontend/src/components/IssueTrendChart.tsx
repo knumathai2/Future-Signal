@@ -227,12 +227,12 @@ export function IssueTrendChart({
             <Line
               type="monotone"
               dataKey="value"
-              stroke="oklch(52% 0.13 45)"
+              stroke="#b84416"
               strokeWidth={2.4}
               dot={false}
               activeDot={{
                 r: 4,
-                stroke: "oklch(22% 0.02 55)",
+                stroke: "#241c18",
                 strokeWidth: 1.5,
               }}
               isAnimationActive={false}
@@ -243,7 +243,7 @@ export function IssueTrendChart({
                 x={point.timestamp}
                 y={point.value}
                 r={4}
-                fill="oklch(22% 0.02 55)"
+                fill="#241c18"
                 stroke="oklch(99% 0.006 75)"
                 strokeWidth={2}
               />
@@ -256,7 +256,7 @@ export function IssueTrendChart({
                 x={timestamp}
                 y={value}
                 r={5}
-                fill="oklch(52% 0.13 45)"
+                fill="#b84416"
                 stroke="oklch(99% 0.006 75)"
                 strokeWidth={2}
               />
