@@ -8,6 +8,8 @@ explicitly constructed and ``research`` is invoked.
 
 import hashlib
 import json
+import re
+import unicodedata
 from collections.abc import Callable, Mapping
 from datetime import UTC, datetime
 from typing import Any, Literal, Protocol
@@ -26,17 +28,60 @@ from app.core.config import (
 )
 
 RESEARCH_POLICY_VERSION = "v4"
+_TOKEN_PATTERN = re.compile(r"[^\W_]+", flags=re.UNICODE)
+_QUERY_SCOPE_STOPWORDS = frozenset(
+    {
+        "about",
+        "according",
+        "data",
+        "evidence",
+        "expected",
+        "latest",
+        "market",
+        "news",
+        "official",
+        "prediction",
+        "question",
+        "result",
+        "results",
+        "source",
+        "status",
+        "the",
+        "this",
+        "tracked",
+        "tracks",
+        "update",
+        "updates",
+        "whether",
+        "will",
+        "검색",
+        "공개",
+        "관련",
+        "결과",
+        "데이터",
+        "시장",
+        "업데이트",
+        "예측",
+        "최신",
+    }
+)
 RESEARCH_SYSTEM_PROMPT = """\
 You research public context for an issue-monitoring dashboard. Use the provided
-OpenRouter web-search server tool and only the bounded suggested queries. Return
+OpenRouter web-search server tool, using the bounded suggested queries as scope
+anchors. The provider may reformulate a query, but every query must remain on
+the supplied market topic and entities. Return
 strict JSON. Do not state that any event caused or explains a data movement.
 Do not assert a real-world result. A candidate may describe only what a cited
 source records and its timing relative to the supplied review window.
 
 For every candidate, copy only URLs that appeared in the web-search results.
 Never invent or repair a URL, title, date, entity, or tracked condition. If the
-sources do not directly support a candidate, omit it. Return at most 30
-candidates; later deterministic verification will apply a stricter gate."""
+sources do not directly support a candidate, omit it. Look for real-world
+public notices, proceedings, releases, or reporting within the review window.
+Market listing, price, forecast, and mirror pages are not context candidates.
+Before returning an empty candidate list, inspect the cited annotations for a
+qualifying external public update. Return at most 30 candidates; later
+deterministic verification will apply a stricter gate."""
 
 
 class ContextResearchError(RuntimeError):
@@ -182,7 +227,7 @@ class ChatCompletionsTransport(Protocol):
 def build_search_queries(
     inputs: ResearchInputs, *, limit: int = CONTEXT_MAX_SEARCH_QUERIES
 ) -> list[str]:
-    """Build a deterministic, de-duplicated query allowlist from market data."""
+    """Build deterministic, de-duplicated scope anchors from market data."""
     start = inputs.search_window_start.date().isoformat()
     end = inputs.search_window_end.date().isoformat()
     end_date = inputs.end_date.date().isoformat() if inputs.end_date else None
@@ -207,18 +252,59 @@ def build_search_queries(
     return queries
 
 
+def _normalized_scope_tokens(*values: str) -> set[str]:
+    """Return stable topic tokens while excluding generic search vocabulary."""
+    text = unicodedata.normalize("NFKC", " ".join(values)).casefold()
+    return {
+        token
+        for token in _TOKEN_PATTERN.findall(text)
+        if token not in _QUERY_SCOPE_STOPWORDS
+        and (
+            (token.isdigit() and len(token) >= 4)
+            or (not token.isdigit() and len(token) >= 3)
+        )
+    }
+
+
+def _query_has_metadata_overlap(query: str, inputs: ResearchInputs) -> bool:
+    """Require normalized topic/entity overlap with supplied market metadata.
+
+    Dates and domains cannot make an otherwise unrelated query pass: at least
+    one distinctive title, description, category, or tracked-condition token
+    must overlap. Citation and candidate gates remain independent.
+    """
+    normalized_query = " ".join(query.split())
+    if not normalized_query or len(normalized_query) > 300:
+        return False
+
+    query_tokens = _normalized_scope_tokens(normalized_query)
+    topic_tokens = _normalized_scope_tokens(
+        inputs.title,
+        inputs.description,
+        inputs.category,
+        inputs.tracked_condition,
+    )
+    topic_overlap = query_tokens & topic_tokens
+    if len(topic_overlap) >= 2:
+        return True
+    return any(not token.isdigit() and len(token) >= 5 for token in topic_overlap)
+
+
 def _build_user_prompt(inputs: ResearchInputs, queries: list[str]) -> str:
     payload = inputs.model_dump(mode="json")
     payload["suggested_queries"] = queries
     return (
         "You must execute at least one web search before answering. Research this change "
-        "episode using only the suggested queries. Return JSON with "
+        "episode within the scope of the suggested queries. You may use the exact "
+        "provider-generated reformulation needed by the server tool, but it must "
+        "retain normalized topic or entity overlap with the supplied market metadata. "
+        "Return JSON with "
         'exactly {"queries": [string], "candidates": [{"candidate_key": string, '
         '"title": string, "event_at": ISO-8601|null, "citation_urls": [string], '
         '"matched_entities": [string], "matched_condition": string, '
         '"temporal_relation": "before_window"|"same_window"|"after_window"}]}. '
-        "The queries array must copy exact strings from suggested_queries; never "
-        "rewrite, translate, or list a tool-generated variant. "
+        "The queries array must contain the exact bounded query strings actually "
+        "generated or submitted for this market; do not invent unexecuted queries. "
         "Every citation_urls value must exactly match a search-result URL.\n"
         + json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
     )
@@ -321,6 +407,7 @@ class OpenRouterContextResearchClient:
         self._extra_headers = extra_headers or {}
         self._clock = clock or (lambda: datetime.now(UTC))
         self.last_usage = ResearchUsage()
+        self.last_queries: list[str] = []
 
     def research(self, inputs: ResearchInputs) -> ContextResearchResult:
         accumulated = ResearchUsage()
@@ -340,6 +427,7 @@ class OpenRouterContextResearchClient:
 
     def _research_once(self, inputs: ResearchInputs) -> ContextResearchResult:
         self.last_usage = ResearchUsage()
+        self.last_queries = []
         queries = build_search_queries(inputs, limit=self._max_search_queries)
         parameters: dict[str, Any] = {
             "engine": self._engine,
@@ -389,8 +477,15 @@ class OpenRouterContextResearchClient:
             raw_output = _ProviderResearchOutput.model_validate_json(content)
         except ValidationError as exc:
             raise ContextResearchError("OpenRouter context research returned invalid JSON") from exc
-        if not set(raw_output.queries).issubset(queries):
-            raise ContextResearchError("OpenRouter reported a query outside the allowlist")
+        self.last_queries = list(raw_output.queries)
+        if not raw_output.queries or len(set(raw_output.queries)) != len(raw_output.queries):
+            raise ContextResearchError("OpenRouter reported invalid query audit data")
+        if len(raw_output.queries) > self._max_search_queries:
+            raise ContextResearchError("OpenRouter exceeded the reported-query limit")
+        if not all(_query_has_metadata_overlap(query, inputs) for query in raw_output.queries):
+            raise ContextResearchError(
+                "OpenRouter reported a query outside market metadata scope"
+            )
 
         if usage.web_search_requests > self._max_search_queries:
             raise ContextResearchError("OpenRouter exceeded the search-query limit")

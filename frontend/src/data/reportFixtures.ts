@@ -25,14 +25,14 @@ const CANDIDATES: IssueReportContextCandidate[] = [
   {
     id: "66666666-6666-4666-8666-666666666661",
     title: "관련 당사자 간 다자 협의 일정이 공개됨",
-    event_at: "2026-07-02T09:00:00Z",
+    event_at: "2026-07-05T09:00:00Z",
     summary: "공식 공개 자료에 다자 협의 일정과 참여 범위가 기록되었습니다.",
     sources: [
       {
         title: "다자 협의 일정 공지",
         url: "https://example.gov/notices/dialogue-schedule",
         domain: "example.gov",
-        published_at: "2026-07-02T08:30:00Z",
+        published_at: "2026-07-05T08:30:00Z",
         source_type: "official",
       },
     ],

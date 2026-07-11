@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.8.0-day5-technical-mvp-complete
-- **Phase**: Approved post-MVP v4 automated-context program
-- **Next milestone**: Obtain human approval for the narrow TASK-065 query-policy amendment, then resume the 30–50 issue guarded backfill
-- **Overall health**: 🟡 Needs decision — migration 002 is applied to the approved development DB and recorded spend is USD 0.778926, but current OpenRouter server-tool query reformulation conflicts with the exact query-string allowlist. Deployment and production writes remain excluded.
+- **Version**: v0.9.0-v4-context-program-complete
+- **Phase**: Approved post-MVP v4 automated-context program complete
+- **Next milestone**: Separate human decision for deployment or optional TASK-066+ stretch work
+- **Overall health**: 🟢 Verified — TASK-056~065 are complete. The 50-target development backfill completed 46 distinct issues, strict v4/API/browser audits passed, and DB-recorded spend is USD 3.00263875. Deployment and production writes remain excluded.
 
 ## Tech Summary
 
@@ -55,13 +55,15 @@ Future Signal/
 | Backend | TASK-062 activates the strict v4 report read contract and returns only reconstructed, evidence-consistent bundles with verified same-episode candidates and approved source fields. Legacy/failed/malformed/mismatched rows remain audit-only. TASK-057's append-only migration was applied to the approved development DB during TASK-065; production remains untouched. |
 | Data/AI | TASK-058/059 provide bounded annotation-only research and deterministic/independent verification. TASK-060 connects them between signals and reports, and TASK-061 adds strict evidence-linked v4 generation with deterministic metric/context fields, same-episode verified candidates, writer-cost accounting, and last-known-good failure isolation. |
 | PM / Safety | The v3 MVP remains frozen. ADR-038 activates TASK-056~065 with verified-only automated context, strict evidence links, a cumulative USD 100 OpenRouter cap, and local/development-only writes. Deployment and production DB writes remain separate gates. |
-| v4 program | TASK-056~064 are complete. TASK-065 applied migration 002 and completed bounded preflights, then stopped before bulk execution because provider-generated query reformulation fails the approved exact-string allowlist. Human approval is required for the proposed narrow query-policy amendment. |
+| v4 program | TASK-056~065 are complete. Migration 002 exists only in the approved development DB. ADR-047 permits bounded provider query reformulation with normalized market-metadata overlap while every evidence/publication gate remains unchanged. Fifty backfill targets yielded 46 completed distinct issues, seven rejected candidates, zero public candidates, and 14 successful v4 rows across 13 issues. |
 
 ## Recent Changes
 
 | Date | Change |
 |------|--------|
-| 2026-07-11 | TASK-065 checkpoint: development migration applied; 16 bounded preflight runs across five issues recorded USD 0.778926, but verified count is zero because OpenRouter-generated query variants fail the exact allowlist. Bulk backfill stopped pending policy approval. |
+| 2026-07-11 | TASK-065 complete: 50-target development backfill, 46 distinct completed issues, query/result maxima 5/26, zero public candidates after strict gates, 13 successful v4 issue reports with zero safety/evidence mismatch, five live no-candidate and five local fixture candidate Browser flows, and USD 3.00263875 recorded spend. |
+| 2026-07-11 | ADR-047 human-approved: bounded query reformulation may replace exact-string membership when normalized market topic/entity overlap passes; all annotation, independent-verification, and publication gates remain unchanged. TASK-065 resumed. |
+| 2026-07-11 | Historical TASK-065 checkpoint: development migration applied; 16 bounded preflight runs across five issues recorded USD 0.778926. Bulk backfill paused until the later ADR-047 approval recorded above. |
 | 2026-07-11 | TASK-064 approved after fixing UTC normalization in the SQLite local writer path; full integration/adversarial review reached 311 Backend tests and all Frontend/Browser checks. |
 | 2026-07-11 | TASK-063 completed: strict v4 parser, one-card change episode, candidate/source cards, chart-ID linkage, responsive and state Browser QA. |
 | 2026-07-11 | TASK-062 completed: strict v4 read-time reconstruction, verified-only candidate/source output, legacy/malformed gating, OpenAPI contract, and 309-test Backend verification. |

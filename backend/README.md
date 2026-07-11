@@ -119,6 +119,20 @@ ENV=local ./.venv/bin/python -m app.core.scheduled_batch \
   --confirm-local-dev-write
 ```
 
+When a bounded run has isolated incomplete inputs, use `--context-offset N`
+with a smaller `--context-max-markets` value to audit the next deterministic
+slice without repeating paid calls for the earlier slice.
+
+After context research is audited, generate only v4 reports from the stored
+verified/no-candidate state without repeating paid research:
+
+```bash
+ENV=local ./.venv/bin/python -m app.core.scheduled_batch \
+  --reports-only \
+  --v4-reports-from-stored-context \
+  --confirm-local-dev-write
+```
+
 Use `--skip-context-research` to run the pre-v4 path even when context settings
 are present. Production DB writes and deployment remain separately prohibited.
 

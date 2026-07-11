@@ -25,13 +25,13 @@ _Last updated: 2026-07-10_
 | TD-009 | The live API/static backend fallback path can still return English sample issue titles while the frontend dummy fallback is Korean. | Demo language consistency risk if the backend fallback is used during presentation. | Add a precise Day 5 fallback/demo note if backend fallback data is used in presentation, or localize the backend sample in a separate copy task. |
 | TD-011 | Existing successful `ai_reports` rows in the configured development DB may still use the v1 5-section content shape after `TASK-043`. | Non-default or lower-ranked issue detail pages can still show `not_yet_generated` until v2 reports are generated for those issues. The default top-20 heat-sorted issues are now verified with v2 content. | Continue guarded scheduled/manual report generation as needed; AI-provider key use remains covered by ADR-022/ADR-027. |
 | TD-012 | GitHub Actions warns that the Node.js 20 runtime used by `actions/checkout@v4` and `actions/setup-python@v5` is deprecated and currently forces those actions onto Node.js 24. | Non-blocking: run `29073226485` passed, but the compatibility bridge may be removed later. | Review current official action releases and update the workflow in a separate infrastructure-approved task. |
-| TD-013 | Reviewed context candidates are disconnected from the scheduled data/report path: the current local sync has no `related_events`, the generator selects at most one unordered candidate, and candidate data is deliberately excluded from model-authored prose. | v3 reports are structurally safe but often repeat a candidate-absence sentence and leave users to reconstruct the relationship between movement, context, and follow-up checks across separate sections. | Use `reports/task-055-context-candidate-ai-summary-strategy.md` for analysis, `reports/task-055-automated-context-execution-plan.md` for the proposed `TASK-056`~`TASK-065` core sequence, and `reports/task-055-automated-context-stretch-plan.md` for optional `TASK-066`~`TASK-074` quality expansion. All work remains blocked by applicable policy, schema, API, provider, and local/dev-write approval gates. |
 
 
 ## Resolved
 
 | ID | Description | Resolved | Method |
 |----|-------------|----------|--------|
+| TD-013 | Reviewed context candidates were disconnected from the scheduled data/report path and v3 UI. | 2026-07-11 | Human-approved TASK-056~065 added bounded automated research, deterministic and independent verification, append-only candidate/run storage, evidence-linked v4 writing/API reconstruction, and one change-episode UI. TASK-065 completed the development backfill and demo audit; optional TASK-066+ improvements remain backlog rather than a blocker. |
 | ISS-011 | TASK-054 used `Array.prototype.at()` in `FeaturedIssueCard.tsx`, so the latest `main` failed TypeScript checks under the configured `ES2020` library and could not complete a production build. | 2026-07-10 | PR #53 replaced both last-item reads with equivalent array index access. No TypeScript target, dependency, copy, API, or behavior changed. Frontend typecheck, lint, report-parser regression, production build, and changed-file formatting passed. |
 | ISS-010 | The daily GitHub Actions batch had no repository secrets, then its fallback model repeatedly produced v3 prose that missed ADR-033 bounds or wording/semantic requirements. | 2026-07-10 | With user approval, restored `DATABASE_URL` and the approved AI credential as Actions secrets, set the repository `OPENAI_MODEL` variable to the approved project model, and added the already-frozen v3 field bounds/source-scope instructions to the fixed prompt. Run `29073226485` passed with 50 processed, 0 failed, and 10 successful reports; the latest 10 stored v3 rows passed structural, wording-safety, and semantic validation. |
 | ISS-009 | Integrated v3 runtime omitted the ADR-033 five-sentence enforcement, could accept report prose without the required public-data scope, had environment-dependent fallback contract tests, and retained Korean hard-block copy in UI strings. | 2026-07-10 | TASK-053 added matching Backend/Frontend sentence validation, semantic public-data/conditional checks, isolated fallback tests from configured DB state, replaced blocked UI copy, and passed complete code, copy, and responsive-browser verification. |
@@ -346,7 +346,7 @@ Not bugs, but unresolved decisions that can affect later demo or product work:
 ### ISS-012: OpenRouter server-tool query reformulation conflicts with exact allowlist
 - **Severity**: High
 - **Found**: 2026-07-11 during TASK-065 development backfill preflight
-- **Status**: Open — human policy approval required
+- **Status**: Resolved by human-approved ADR-047 and TASK-065 completion
 - **Evidence**:
   - Migration 002 is applied to the approved development DB.
   - Sixteen bounded context runs across five issues produced one normal
@@ -356,20 +356,32 @@ Not bugs, but unresolved decisions that can affect later demo or product work:
     but reformulate the model-reported query or vary the JSON wrapper.
   - The existing client correctly rejects any reported query outside the exact
     deterministic suggestion allowlist.
-- **Impact**:
-  - TASK-065 cannot honestly satisfy 30+ completed research runs, verified
-    source URL checks, or five candidate→summary→source demo flows.
-  - Bulk execution is stopped; no public candidate was created.
-- **Safe work completed**:
-  - Added a 30–50-target CLI cap, one retry, and failed-response usage retention.
-  - Tried multiple current provider families and the official `gpt-5.2`
-    server-tool example without weakening annotation or verification gates.
-  - Full Backend suite passes 313 tests.
-- **Decision needed**:
-  - Approve or reject the narrow amendment in
-    `reports/task-065-context-backfill-preflight.md`: bounded query count plus
-    normalized metadata overlap instead of exact query-string equality, while
-    keeping annotation-only evidence and every candidate/publication hard gate.
-  - Ran guarded reports-only generation three times against the configured
-    local/dev DB. Final checked state: `success|v2|30`, and the default
-    top-20 heat-sorted issues all have current v2 report content.
+- **Resolution**:
+  - ADR-047 retains deterministic suggestions as scope anchors but validates
+    unique bounded reformulations by normalized distinctive market
+    topic/entity overlap. Reported strings are stored in the existing JSON
+    audit field; query and annotation caps remain explicit.
+  - `x-ai/grok-4.3` native search produced stable strict JSON and annotation
+    results while Anthropic Haiku remained the different-family verifier.
+  - The 50-target backfill completed 46 distinct issues and the regular
+    incremental batch completed its guarded path. No candidate passed every
+    publication gate, so no public source URL was exposed.
+  - Final evidence: `reports/task-065-context-backfill-evaluation.md`.
+
+### ISS-013: Rapid local Browser QA can saturate the development DB session pool
+- **Severity**: Low
+- **Found**: 2026-07-11 during TASK-065 screenshot capture
+- **Status**: Open — non-blocking development reliability follow-up
+- **Evidence**:
+  - Rapid repeated SPA navigation created overlapping detail/history/report/
+    category reads and reached the Supabase session-pool client limit.
+  - The API correctly degraded some reads, but that made early screenshots
+    unsuitable as live-flow evidence.
+- **Mitigation used**:
+  - Restarted only the local API process, serialized page navigation, waited for
+    full render, and reran in a clean tab. Five live no-candidate flows and five
+    fixture candidate flows then passed; final clean-tab console errors were 0.
+- **Follow-up**:
+  - Review application connection-pool sizing only under a separately approved
+    infrastructure/reliability task. TASK-065 did not change deployment or
+    production settings.

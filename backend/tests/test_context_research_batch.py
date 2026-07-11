@@ -361,6 +361,7 @@ def test_batch_max_targets_caps_deterministic_heat_order(db):
     verifier, _ = _verifier()
     research = FakeResearchClient(empty=True)
 
+    targets = select_context_targets(db, NOW, backfill=True)
     outcomes = run_context_research_batch(
         db,
         NOW,
@@ -368,11 +369,12 @@ def test_batch_max_targets_caps_deterministic_heat_order(db):
         verifier,
         backfill=True,
         max_targets=2,
+        target_offset=1,
         clock=lambda: NOW,
     )
 
     assert len(outcomes) == 2
-    assert len(research.calls) == 2
+    assert research.calls == [target.market_id for target in targets[1:3]]
 
 
 def test_build_research_inputs_requires_both_change_windows(db):
@@ -410,6 +412,9 @@ def test_batch_stores_verified_candidates_and_secret_free_usage(db):
     assert run.model_usage["verifier_input_tokens"] == 50
     assert run.model_usage["research_cost_usd"] == 0.05
     assert run.model_usage["verifier_cost_usd"] == 0.02
+    assert run.model_usage["reported_queries"] == ["bounded query"]
+    assert run.model_usage["decision_counts"] == {"verified": 1}
+    assert run.model_usage["decision_reason_codes"] == ["independent_multi_source_match"]
     assert set(run.error_detail or {}).isdisjoint({"api_key", "prompt", "response"})
     assert len(transport.calls) == 1
 
@@ -428,7 +433,9 @@ def test_no_candidate_is_normal_and_does_not_call_verifier(db):
 
     assert outcomes[0].status == "no_candidate"
     assert db.query(ContextCandidate).count() == 0
-    assert db.query(ContextCollectionRun).one().status == "no_candidate"
+    run = db.query(ContextCollectionRun).one()
+    assert run.status == "no_candidate"
+    assert run.query_count == 1
     assert transport.calls == []
 
 

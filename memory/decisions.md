@@ -707,15 +707,16 @@ using OpenRouter-only `extra_body.tools`. Parse nested or flat
 map model-returned candidate URLs to citation IDs only on exact annotation URL
 matches. Discard candidates with no matching annotation. Require provider
 usage to show a server-tool search unless it is a completed empty search, cap
-reported searches at six, total citations at 30, and reported queries to the
-deterministic market-metadata allowlist.
+reported searches at six and total citations at 30. ADR-047 amends only the
+reported-query check: queries use deterministic market-metadata suggestions as
+scope anchors and must pass normalized topic/entity overlap.
 
 **Rationale**: The model can organize candidate drafts but cannot create
 evidence. Exact annotation matching preserves provenance and lets TASK-059
 apply canonicalization and substantive verification independently.
 
 **Consequences**: Model-body URLs, missing-title/invalid-scheme annotations,
-out-of-allowlist queries, over-limit usage, and malformed output fail closed.
+out-of-scope queries, over-limit usage, and malformed output fail closed.
 No DB write occurs in TASK-058; TASK-059 receives normalized citations and
 candidate drafts only.
 
@@ -919,11 +920,11 @@ API, dependency, provider, infrastructure, or deployment boundary changed.
 
 ---
 
-### ADR-047: Stop TASK-065 bulk calls at the exact-query policy boundary
+### ADR-047: Permit bounded server-tool query reformulation within metadata scope
 
 - **Date**: 2026-07-11
-- **Status**: Proposed — requires human approval to amend ADR-040
-- **Decided by**: Data/AI Implementer + PM / Planner
+- **Status**: Accepted ⚠️ HUMAN APPROVAL
+- **Decided by**: User, Data/AI Implementer + PM / Planner
 
 **Context**: The approved development migration succeeded, but bounded live
 preflights showed that current OpenRouter server tools generate or reformulate
@@ -932,7 +933,7 @@ model-reported-query membership check. Multiple current model families,
 one-query configuration, explicit prompt constraints, and exactly one retry did
 not produce a reliable path.
 
-**Proposed decision**: Retain deterministic metadata suggestions, query/result
+**Decision**: Retain deterministic metadata suggestions, query/result
 caps, annotation-only evidence, deterministic verification, independent
 provider verification, verified-only storage/API reads, and all wording/evidence
 checks. Replace exact query-string membership with a bounded-count and
@@ -944,10 +945,20 @@ query. Exact equality is not an enforceable client-side constraint on this
 provider behavior; annotation provenance and candidate hard gates remain the
 actual publication boundary.
 
-**Consequences**: No code implements the proposed relaxation yet. TASK-065 is
-blocked and no further provider calls should run until the user approves or
-rejects this policy change. Migration 002 and existing audit rows remain in the
-approved development DB; deployment and production writes remain excluded.
+**Consequences**: Every reported query must be non-empty, unique, at most 300
+characters, within the six-query cap, and share normalized distinctive
+topic/entity tokens with title, description, category, or tracked condition.
+Generic search vocabulary, dates, and domains cannot make an unrelated query
+pass alone. Exact reported query strings remain stored for audit. Annotation
+provenance and every downstream candidate/publication gate are unchanged.
+Migration 002 and existing audit rows remain in the approved development DB;
+deployment and production writes remain excluded.
+
+**Implementation result**: TASK-065 completed exactly 50 development backfill
+targets. Forty-six distinct issues reached a normal completed research state;
+reported query/result maxima were five and 26. Seven drafts failed existing
+candidate gates, zero candidates became public, and no gate was relaxed.
+Final evidence is in `reports/task-065-context-backfill-evaluation.md`.
 
 ---
 

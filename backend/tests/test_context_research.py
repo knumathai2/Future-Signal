@@ -178,6 +178,9 @@ def test_success_uses_server_tool_and_normalizes_only_annotation_citations():
     assert tool["parameters"]["max_total_results"] == 30
     assert tool["parameters"]["allowed_domains"] == ["example.gov"]
     assert request["response_format"] == {"type": "json_object"}
+    assert "Market listing, price, forecast, and mirror pages" in request["messages"][0][
+        "content"
+    ]
 
 
 def test_flat_annotation_shape_is_supported():
@@ -276,11 +279,46 @@ def test_search_request_count_above_six_fails_closed():
         client.research(_inputs())
 
 
-def test_reported_query_outside_metadata_allowlist_fails_closed():
-    client, _ = _client(_response(content=_provider_content(queries=["unbounded query"])))
+def test_reported_query_count_respects_configured_runtime_limit():
+    queries = [
+        "Technology authority release",
+        "Technology confirmation record",
+    ]
+    client, _ = _client(
+        _response(content=_provider_content(queries=queries)),
+        max_search_queries=1,
+    )
 
-    with pytest.raises(ContextResearchError, match="outside the allowlist"):
+    with pytest.raises(ContextResearchError, match="reported-query limit"):
         client.research(_inputs())
+
+
+def test_reformulated_query_with_normalized_metadata_overlap_is_accepted():
+    query = "Technology authority confirmation release"
+    client, _ = _client(_response(content=_provider_content(queries=[query])))
+
+    result = client.research(_inputs())
+
+    assert result.queries == [query]
+    assert client.last_queries == [query]
+
+
+@pytest.mark.parametrize(
+    "queries",
+    [
+        ["celebrity sports score"],
+        ["official latest update"],
+        ["   "],
+        ["technology authority", "technology authority"],
+    ],
+)
+def test_reported_query_without_distinct_market_metadata_overlap_fails_closed(queries):
+    client, _ = _client(_response(content=_provider_content(queries=queries)))
+
+    with pytest.raises(ContextResearchError, match="query audit data|metadata scope"):
+        client.research(_inputs())
+
+    assert client.last_queries == queries
 
 
 def test_more_than_thirty_unique_citations_fails_closed():

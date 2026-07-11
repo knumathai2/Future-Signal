@@ -50,6 +50,10 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
    accepts only API citation annotations, applies deterministic and independent
    verification, stores candidates append-only, and serves only evidence-linked
    v4 reports and verified candidate sources
+10. ADR-047 treats deterministic queries as scope anchors and permits only
+    unique, bounded provider reformulations with normalized distinctive
+    topic/entity overlap. Reported queries are retained in run audit JSON; the
+    annotation, source, verifier, publication, and budget gates are unchanged
 
 ## Design Decision Summary
 
@@ -70,6 +74,7 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 | Postgres URL compatibility | `psycopg2-binary==2.9.10` for provider-copied `postgresql://...` URLs | 2026-07-09 (ADR-023, human-approved) |
 | Migration format (interim) | Plain SQL (`backend/migrations/*.sql`), not Alembic | 2026-07-08 (ADR-007) |
 | Automated context v4 | Citation annotations + deterministic hard gates + different verifier model + verified-only public reads; cumulative USD 100, local/dev writes only | 2026-07-11 (ADR-038, human-approved) |
+| Server-tool query scope | Deterministic anchors + bounded normalized metadata overlap; exact reported strings audited | 2026-07-11 (ADR-047, human-approved) |
 
 ## Architecture Constraints
 
@@ -102,12 +107,14 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 - `TASK-057` adds `002_context_candidates.sql` and matching ORM models for
   append-only candidate/run storage. Duplicate evidence is unique per market
   episode, verification/run states are constrained, and parent-market deletion
-  cascades consistently. The migration has not been applied to any database.
+  cascades consistently. TASK-065 applied this migration only to the approved
+  development DB; production remains untouched.
 - `TASK-058` adds the DB-free OpenRouter research client. It submits the
   `openrouter:web_search` server tool through the existing OpenAI SDK, clamps
   searches/results, and converts only API citation annotations into normalized
   evidence. Candidate URLs must exactly match annotations; model-body URLs are
-  ignored. Tests use fake transports only.
+  ignored. ADR-047 additionally audits unique provider-reported query strings
+  and requires normalized market metadata overlap.
 - `TASK-059` adds deterministic canonical URL, date, entity, condition,
   official/independent-source, duplicate-content, and wording gates followed by
   one no-web verifier call using a different provider family. A model cannot
@@ -123,6 +130,12 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
   deterministically. Stored envelopes link exactly one metric plus same-episode
   verified candidates, retain legacy rows for audit, and charge writer usage to
   the same cumulative budget before TASK-062 exposes any v4 row.
+- `TASK-065` completed a 50-target development backfill: 46 distinct issues
+  reached normal completed research, no candidate passed every publication
+  gate, and the final DB-recorded program spend was USD 3.00263875. Thirteen
+  issues have latest successful v4 reports with zero evidence or safety
+  mismatches. Guarded offset and stored-context writer modes avoid repeating
+  paid research during local evaluation.
 - `TASK-062` makes v4 the only public report version. The read helper loads a
   successful v4 row with its linked metric, latest prior snapshot, and only
   verified candidate rows. The route reconstructs deterministic content and
