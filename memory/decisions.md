@@ -1777,3 +1777,31 @@ accepted claim remains reconstructible from an exact excerpt. Context research
 is still budget-gated and only starts after an explicit briefing action. No
 schema, dependency, public response shape, infrastructure, deployment,
 production write, or legacy deletion was authorized or performed.
+
+---
+
+### ADR-057: Bound public API reads at the SQL layer
+
+- **Date**: 2026-07-11
+- **Status**: Accepted and implemented in TASK-114
+- **Decided by**: Backend Implementer under the ISS-017 objective
+
+**Context**: ID-based issue and report routes shared `load_live_issues()`,
+which loaded every accumulated snapshot and metric row before reducing them in
+Python. The 1.5-second request-status poll amplified this work against more
+than 33,000 development snapshots.
+
+**Decision**: Request status reads one request by primary key and its latest
+event. Other ID routes parse the issue UUID and constrain market, snapshot,
+metric, definition, context, report, request, and history queries by market ID,
+latest-row ordering, time bounds, and limits. List/category reads use portable
+SQL window functions to select the latest snapshot, metric, and tracked outcome
+per market; list sort and pagination run in SQL when no derived category
+classification is required.
+
+**Consequences**: Accumulated history is no longer materialized for current-row
+APIs. Public schemas, HTTP meanings, static fallback, incomplete-data
+exclusion, data-as-of, last-good, and append-only behavior remain unchanged.
+No index, migration, dependency, infrastructure, deployment, production write,
+or request-state recovery change is included. ISS-017 stays open for orphaned
+queued-request recovery.

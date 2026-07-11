@@ -105,6 +105,7 @@ child worker; that isolated worker performs provider calls and report writes.
 | V7 generation service | Versioned evidence fingerprint, duplicate join, append-only lease recovery, optional context successor, one-shot writer, strict storage, standalone worker | 2026-07-11 (TASK-104, human-approved) |
 | Local/dev worker auto-launch | A queued POST spawns the guarded CLI for the exact request ID; API remains provider-free and spawn failure preserves queued recovery | 2026-07-11 (TASK-110, user-directed) |
 | V7 public API | Append-only generate POST, request polling, strict reconstructed fresh/stale/generating/failure/last-good GET; API never calls provider | 2026-07-11 (TASK-105, human-approved) |
+| API query scope | ID routes use primary-key/market/time/latest-row bounds; lists use portable latest-per-market window subqueries | 2026-07-11 (ADR-057 / TASK-114) |
 | Evidence-aware briefing v6 | Four deterministic change/evidence modes, strict basis union, one-owner metric/rule display, and v6-only fallback | 2026-07-11 (ADR-050, human-approved and implemented) |
 
 ## V6 evidence-aware briefing implementation (TASK-092~098)
@@ -141,6 +142,11 @@ workflow, infrastructure, deployment, or production-write change is included.
   request-scoped worker processes before exiting. URL provenance, excerpt
   support, A-C attribution, conditional verification, cumulative budget, and
   publication blockers remain intact.
+- TASK-114 makes SQL query scope an API boundary. Request status never reads
+  snapshot or metric tables; issue/report/history/generation reads are bounded
+  by the requested market and latest/time-window limits; lists/categories use
+  `row_number()` latest-per-market subqueries compatible with SQLite and
+  PostgreSQL instead of materializing accumulated history in Python.
 
 ## Implementation Status (2026-07-10 Day 5 v3 Integrated)
 

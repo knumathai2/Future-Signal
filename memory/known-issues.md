@@ -481,7 +481,7 @@ Not bugs, but unresolved decisions that can affect later demo or product work:
   - Review the generated content and repeat a bounded representative sample
     before explicit v7 acceptance. TASK-109 deletion remains separately gated.
 
-### ISS-017: On-demand request can remain queued while status polling overloads live reads
+### ISS-017: On-demand request can remain queued after its worker is lost
 - **Severity**: High
 - **Found**: 2026-07-11 during live UI diagnosis
 - **Status**: Open
@@ -491,22 +491,23 @@ Not bugs, but unresolved decisions that can affect later demo or product work:
     from 2026-07-11 10:43:44 UTC; no worker process was active.
   - The page consequently stayed in `generating` and polled the request-status
     endpoint every 1.5 seconds.
-  - Each status read calls `_resolve_live()`, whose current implementation loads
-    and materializes all 33,588 `market_snapshots` rows and all 500 metric rows
-    before resolving one issue. Concurrent detail/history/report/status reads
-    timed out or accumulated against the remote development DB.
+  - Before TASK-114, each status read called `_resolve_live()` and materialized
+    all 33,588 snapshot rows plus all 500 metric rows. TASK-114 removed that
+    path from status and every ID-based API and added SQL-observation tests.
 - **Root cause**:
   - Automatic child-worker launch occurs only in the POST request path. An
     already-queued request surviving a failed/missing launch or API restart has
     no startup or polling-side recovery path and the UI offers no retry while
     it is marked generating.
-  - Request-status lookup unnecessarily depends on the full live-issue loader.
+- **Resolved in TASK-114**:
+  - Request status now reads the request primary key and latest event only.
+  - Detail, history, report, and generation routes use market-scoped/latest-row
+    reads; lists and categories no longer materialize accumulated history.
 - **Fix direction**:
   - Add a guarded recovery mechanism for orphaned queued requests (or an
     explicit retry transition) without performing provider work in the API.
-  - Resolve the requested market directly and replace full-table latest-row
-    materialization with bounded per-market/latest-row SQL for status and issue
-    reads. Add polling/load regressions before changing runtime behavior.
+  - Preserve append-only events and require separate approval before changing
+    request-state or recovery behavior.
 
 ### ISS-018: Configured v8 research model returns no standard citation annotations
 
