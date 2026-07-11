@@ -19,14 +19,19 @@ excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| — | No tasks currently in progress; TASK-075~081 are complete | — | — | — | completed |
+| — | No task in progress; TASK-083 awaits database-schema approval | — | — | — | blocked |
+
+TASK-082 defined the next program without changing product code, schema, API,
+infrastructure, or databases. TASK-083 may not begin implementation until the
+user explicitly approves its database-schema change. TASK-085 and TASK-090 may
+not begin implementation until the user explicitly approves their public API
+contract changes.
 
 Deployment and production writes remain outside the approved program.
 
-Exact dependencies, ownership, acceptance criteria, handoffs, and stop
-conditions are binding in
-`reports/task-075-narrative-summary-source-program.md`. Only one task may be
-`in_progress` at a time; each successor starts from the verified predecessor.
+TASK-082~091 dependencies, acceptance criteria, and approval gates are binding
+in `reports/task-082-grounding-contract.md`. Only one task may be `in_progress`
+at a time; each successor starts from the verified predecessor.
 
 ## Status Values
 
