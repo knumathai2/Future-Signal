@@ -66,22 +66,40 @@ export type CategorySummary = {
 
 export type IssueReportContent = {
   issue_overview: string;
-  current_data_reading: string;
-  possible_outlook: string;
-  possible_drivers: string;
-  external_context: string | null;
+  observed_change: string;
+  context_summary: string | null;
+  relationship_boundary: string;
   what_to_check: string;
   data_limitations: string;
   caution_note: string;
 };
 
+export type IssueReportContextSource = {
+  title: string;
+  url: string;
+  domain: string;
+  published_at: string | null;
+  source_type: "official" | "independent_secondary";
+};
+
+export type IssueReportContextCandidate = {
+  id: string;
+  title: string;
+  event_at: string;
+  summary: string;
+  sources: IssueReportContextSource[];
+};
+
 export type IssueReportSuccessResponse = {
   id: string;
   status: "success";
-  report_version: "v3";
+  report_version: "v4";
   generated_at: string;
   data_as_of: string;
+  episode_at: string;
   content: IssueReportContent;
+  evidence_refs: string[];
+  context_candidates: IssueReportContextCandidate[];
 };
 
 export type IssueReportNotYetGeneratedResponse = {

@@ -859,6 +859,39 @@ an external provider or writes to the database.
 
 ---
 
+### ADR-045: V4 renders as one evidence-first change episode
+
+- **Date**: 2026-07-11
+- **Status**: Accepted
+- **Decided by**: Frontend Implementer within ADR-038 execution approval
+
+**Context**: The v3 one-section-at-a-time navigator separated metrics, context,
+limitations, and caution. TASK-063 needed to make their linkage visible without
+turning context into an explanation of the observed movement.
+
+**Decision**: Render one change-episode card in this order: issue overview,
+observed change, optional same-review-window public context with candidate and
+source cards, mandatory relationship boundary, later checks, data limitations,
+and interpretation caution. Hide the whole context region when no verified
+candidate exists. Give each candidate card and its nearest visible chart marker
+the same candidate ID and bidirectional anchors. Open approved public source
+URLs in a new tab with `noopener noreferrer`. Repeat strict v4 schema, timestamp,
+evidence-reference, candidate/source, URL/domain, and no-internal-field checks
+in the Frontend parser. Keep local-host-only 0/1/3 candidate fixtures for
+responsive verification; they are inaccessible on non-local hosts.
+
+**Rationale**: A single reading flow makes the evidence hierarchy legible while
+the explicit relationship boundary and marker note prevent temporal proximity
+from being presented as influence. Repeating parser checks gives malformed API
+payloads a fail-closed UI state.
+
+**Consequences**: Legacy v3 success payloads enter the report error state and
+are never partially rendered. TASK-064 must review candidate/marker linkage,
+source-link safety, null-context behavior, all three responsive widths, and the
+content-safety wording of the complete integrated flow.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07

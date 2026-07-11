@@ -17,8 +17,7 @@ Deployment and production-database writes remain excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-063 | Build the change-episode UI | Frontend Implementer | Frontend Implementer | `frontend/TASK-063-change-episode-ui` | in_progress |
-| TASK-064 | Review the automated-context integration | Reviewer | Reviewer | `review/TASK-064-auto-context-integration` | assigned |
+| TASK-064 | Review the automated-context integration | Reviewer | Reviewer | `review/TASK-064-auto-context-integration` | in_progress |
 | TASK-065 | Run local/dev backfill and record demo evidence | Data/AI Implementer + PM | Data/AI Implementer + PM / Planner | `data-ai/TASK-065-context-backfill` | assigned |
 
 Exact dependencies, file ownership, acceptance criteria, verification commands,
