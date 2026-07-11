@@ -19,13 +19,11 @@ excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| — | No task in progress; TASK-083 awaits database-schema approval | — | — | — | blocked |
+| TASK-084 | Connect resolution rules to writer and research inputs | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-084-resolution-rules-input` | assigned |
 
-TASK-082 defined the next program without changing product code, schema, API,
-infrastructure, or databases. TASK-083 may not begin implementation until the
-user explicitly approves its database-schema change. TASK-085 and TASK-090 may
-not begin implementation until the user explicitly approves their public API
-contract changes.
+The user approved TASK-083's database-schema code change and TASK-085/TASK-090's
+public API changes on 2026-07-11. TASK-083 is complete without applying its
+migration to any database. TASK-084 is the next sequential task.
 
 Deployment and production writes remain outside the approved program.
 

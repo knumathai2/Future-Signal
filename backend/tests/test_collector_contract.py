@@ -1,7 +1,7 @@
 import json
-from datetime import date
+from datetime import UTC, date, datetime
 
-from app.core.collector import normalize_event
+from app.core.collector import build_display_safe_artifact, normalize_event
 
 
 def _event(
@@ -44,7 +44,12 @@ def _event(
 
 
 def test_normalized_sample_has_safe_display_description_and_required_fields():
-    sample, skipped = normalize_event(_event(), as_of_date=date(2026, 7, 8))
+    collected_at = datetime(2026, 7, 8, 12, 0, tzinfo=UTC)
+    sample, skipped = normalize_event(
+        _event(),
+        as_of_date=date(2026, 7, 8),
+        collected_at=collected_at,
+    )
 
     assert skipped is None
     assert sample is not None
@@ -68,9 +73,40 @@ def test_normalized_sample_has_safe_display_description_and_required_fields():
     ]
     assert all(sample[field] not in (None, "") for field in required_fields)
 
-    serialized = json.dumps(sample)
+    rules = sample["resolution_rules"]
+    assert rules["condition_text"] == "Raw market description that must remain out of display data."
+    assert rules["deadline"] == "2026-12-31T00:00:00Z"
+    assert rules["exclusions"] == []
+    assert rules["resolution_source"] is None
+    assert rules["source_description_hash"]
+    assert rules["rules_hash"]
+    assert rules["collected_at"] == collected_at.isoformat()
+
+    artifact = build_display_safe_artifact([sample])
+    serialized = json.dumps(artifact)
+    assert "resolution_rules" not in artifact[0]
     assert "Raw source description" not in serialized
     assert "Raw market description" not in serialized
+
+
+def test_resolution_rules_preserve_source_url_without_inference():
+    sample, skipped = normalize_event(
+        _event(
+            market_overrides={
+                "resolutionSource": "https://example.gov/policy/rule",
+                "description": None,
+            }
+        ),
+        as_of_date=date(2026, 7, 8),
+        collected_at=datetime(2026, 7, 8, 12, 0, tzinfo=UTC),
+    )
+
+    assert skipped is None
+    assert sample is not None
+    rules = sample["resolution_rules"]
+    assert rules["condition_text"] == _event()["description"]
+    assert rules["resolution_source"] == "https://example.gov/policy/rule"
+    assert rules["exclusions"] == []
 
 
 def test_missing_volume_24h_is_structured_skip():
