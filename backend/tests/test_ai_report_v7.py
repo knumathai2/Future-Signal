@@ -83,6 +83,10 @@ def test_v7_prompt_is_positive_first_and_exposes_exact_evidence_refs():
 
     assert system.startswith("You are an issue briefing writer")
     assert "Do not write any digits" not in system
+    assert "판정, 조건 충족 여부, 공식 결정" in system
+    assert "supplied comparison window" in system
+    assert "current_value_percent" in system
+    assert "calculating a new value" in system
     assert payload["policy_version"] == "v7-positive-evidence-1"
     assert [item["ref"] for item in payload["evidence"]] == [
         "market_definition:rule-1",

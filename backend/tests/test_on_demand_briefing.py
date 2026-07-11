@@ -256,6 +256,21 @@ def test_input_fingerprint_is_stable_and_changes_with_metric_revision(db):
     assert v7_input_fingerprint(changed) != v7_input_fingerprint(first)
 
 
+def test_metric_evidence_includes_backend_owned_display_units(db):
+    bundle = build_v7_input_bundle(db, MARKET_ID, now=NOW)
+    assert bundle is not None
+    metric = next(item for item in bundle.writer_inputs.evidence if item.kind == "metric")
+    values = json.loads(metric.text)
+    assert values["comparison_window_24h_hours"] == 24
+    assert values["comparison_window_7d_days"] == 7
+    assert values["current_value"] == 0.6
+    assert values["current_value_percent"] == 60.0
+    assert values["change_24h"] == 0.02
+    assert values["change_24h_pp"] == 2.0
+    assert values["change_7d"] == 0.03
+    assert values["change_7d_pp"] == 3.0
+
+
 def test_duplicate_enqueue_joins_one_request_and_one_queue_event(db):
     first = enqueue_v7_request(db, MARKET_ID, requested_by="user", now=NOW)
     second = enqueue_v7_request(db, MARKET_ID, requested_by="user", now=NOW)
@@ -340,6 +355,29 @@ def test_process_request_appends_v7_report_and_success_event(db):
     assert report.content["input_fingerprint"] == queued.input_fingerprint
     events = db.query(AiReportGenerationEvent).order_by(AiReportGenerationEvent.id).all()
     assert [event.state for event in events] == ["queued", "running", "succeeded"]
+
+
+def test_english_month_evidence_supports_ordinary_korean_numeric_month(db):
+    rule = db.get(
+        MarketResolutionRule,
+        uuid.UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"),
+    )
+    rule.condition_text = "The condition is assessed on December 31, 2026."
+    db.commit()
+    queued = enqueue_v7_request(db, MARKET_ID, requested_by="user", now=NOW)
+    assert queued is not None
+    raw = json.loads(_valid_output())
+    raw["sections"][0]["content"] = (
+        "공식 문서는 2026년 12월 31일을 조건 판정 기준일로 제시하고 있습니다."
+    )
+    result = process_v7_request(
+        db,
+        queued.request_id,
+        FakeLLM(json.dumps(raw, ensure_ascii=False)),
+        "fake/writer",
+        now=NOW + timedelta(seconds=1),
+    )
+    assert result.state == "succeeded"
 
 
 def test_unsupported_number_fails_closed_without_deleting_last_good(db):
