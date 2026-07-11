@@ -14,33 +14,32 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: Frontend Implementer
-- **Session Goal**: Complete TASK-063 v4 change-episode UI after TASK-062.
-- **Branch**: `frontend/TASK-063-change-episode-ui`
+- **Agent Role**: Reviewer
+- **Session Goal**: Complete TASK-064 automated-context integration review.
+- **Branch**: `review/TASK-064-auto-context-integration`
 
 ## Context Read
 
-- ADR-038 through ADR-044 and the sequential TASK-056~065 plan
-- TASK-062 v4 API schema, strict parser expectations, source/candidate fields
-- Existing detail chart, marker, report card, responsive states, and copy policy
+- ADR-038 through ADR-045 and TASK-056~063 implementation evidence
+- Full schema → research → verification → batch → report → API → UI path
+- Reviewer prompt, wording policy, adversarial fixtures, and browser criteria
 
 ## Previous Handoff
 
-- `/api/issues/{id}/report` now serves only `report_version="v4"` bundles.
-- Success includes `generated_at`, `data_as_of`, `episode_at`, seven content
-  fields, ordered evidence refs, and zero to three verified context candidates.
-- Public source fields are title, URL, domain, nullable `published_at`, and
-  `source_type`; internal evidence and verification fields never leave the API.
-- Legacy/failed/malformed/evidence-mismatched rows and static fallback return
-  `{"status":"not_yet_generated"}`; unknown issue remains 404.
-- Focused API tests: 61 passed; full Backend suite: 309 passed; Ruff, OpenAPI,
-  wording scan, and `git diff --check` passed.
+- Frontend consumes only strict v4; v3 and malformed bundles fail closed.
+- Change episode shows all mandatory fields in one flow and hides only the
+  context region when candidate count is zero.
+- Candidate cards and nearest visible chart markers share exact IDs and
+  bidirectional anchors; approved source links use a new tab plus
+  `noopener noreferrer`.
+- Frontend typecheck/lint/parser/build and Backend 309-test suite pass.
+- Browser QA passed 0/1/3 candidates at 320px, 375px, and desktop with no
+  overflow or console errors; timing/caution and non-success states remain.
 
 ## Approval Boundaries / Follow-up
 
-- TASK-063 may update only approved v4 Frontend types/parser, change-episode UI,
-  source links, candidate-marker linkage, tests, and responsive behavior.
-- No dependency, infrastructure, deployment, provider call, migration
-  application, configured DB write, or production DB write is approved here.
-- Every data-bearing report view must keep data-as-of and interpretation caution
-  visible, and candidate absence must hide the context area without fabrication.
+- TASK-064 may add adversarial integration coverage and fix findings within the
+  already approved v4 schema/API/UI/safety boundary.
+- No provider call, migration application, configured DB write, deployment,
+  infrastructure, dependency, or production DB write occurred in TASK-063.
+- TASK-065 must not start until the full review and evidence report pass.

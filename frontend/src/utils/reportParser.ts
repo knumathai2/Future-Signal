@@ -1,133 +1,94 @@
-/**
- * Report response parser and v3 section definitions.
- *
- * This module provides runtime validation for the ADR-033 v3 report contract
- * and the exhaustive section mapping used by IssueReportCard.
- *
- * No external dependencies. No v1/v2 aliases.
- */
+/** Strict runtime parser for the ADR-038/ADR-044 v4 evidence bundle. */
 import type {
   IssueReportContent,
+  IssueReportContextCandidate,
+  IssueReportContextSource,
   IssueReportLoadState,
   IssueReportSuccessResponse,
 } from "../types/issue";
 
-// ---------------------------------------------------------------------------
-// Section definition — the rendering source of truth
-// ---------------------------------------------------------------------------
+type LengthBounds = { min: number; max: number };
 
-type V3ReportSection = {
-  readonly key: keyof IssueReportContent;
-  readonly label: string;
-};
-
-/**
- * Frozen evidence-first display order and approved Korean labels (ADR-033).
- * The JSON object has no semantic key order; this array defines display order.
- */
-export const V3_REPORT_SECTIONS = [
-  { key: "issue_overview", label: "이슈 개요" },
-  { key: "current_data_reading", label: "현재 데이터 읽기" },
-  { key: "external_context", label: "외부 맥락" },
-  { key: "possible_drivers", label: "변화와 함께 확인할 요인" },
-  { key: "possible_outlook", label: "조건부 전개" },
-  { key: "what_to_check", label: "추가 확인 사항" },
-  { key: "data_limitations", label: "데이터 한계" },
-  { key: "caution_note", label: "해석 주의" },
-] as const satisfies readonly V3ReportSection[];
-
-// ---------------------------------------------------------------------------
-// Exhaustiveness invariant
-// ---------------------------------------------------------------------------
-
-/**
- * The exact set of keys that ADR-033 requires in successful v3 content.
- * Used at module load time to verify V3_REPORT_SECTIONS is exhaustive.
- */
-const V3_CONTENT_KEYS: ReadonlySet<keyof IssueReportContent> = new Set([
+const CONTENT_KEYS: ReadonlySet<keyof IssueReportContent> = new Set([
   "issue_overview",
-  "current_data_reading",
-  "possible_outlook",
-  "possible_drivers",
-  "external_context",
+  "observed_change",
+  "context_summary",
+  "relationship_boundary",
   "what_to_check",
   "data_limitations",
   "caution_note",
 ]);
 
-/**
- * Runtime invariant: V3_REPORT_SECTIONS contains exactly the eight unique
- * ADR-033 keys. TypeScript `satisfies` alone does not prove exhaustiveness.
- * This assertion runs once at module load time.
- */
-function assertSectionExhaustiveness(): void {
-  const sectionKeys = new Set(V3_REPORT_SECTIONS.map((s) => s.key));
-  if (sectionKeys.size !== V3_CONTENT_KEYS.size) {
-    throw new Error(
-      `V3_REPORT_SECTIONS has ${sectionKeys.size} unique keys but ` +
-        `ADR-033 requires exactly ${V3_CONTENT_KEYS.size}.`,
-    );
-  }
-  for (const key of V3_CONTENT_KEYS) {
-    if (!sectionKeys.has(key)) {
-      throw new Error(
-        `V3_REPORT_SECTIONS is missing required ADR-033 key: ${key}`,
-      );
-    }
-  }
-}
-
-assertSectionExhaustiveness();
-
-// ---------------------------------------------------------------------------
-// ADR-033 Unicode code-point length bounds
-// ---------------------------------------------------------------------------
-
-type LengthBounds = { min: number; max: number };
-
-const CONTENT_LENGTH_BOUNDS: Record<keyof IssueReportContent, LengthBounds | null> = {
+const CONTENT_LENGTH_BOUNDS: Record<keyof IssueReportContent, LengthBounds> = {
   issue_overview: { min: 30, max: 600 },
-  current_data_reading: { min: 50, max: 700 },
-  possible_outlook: { min: 60, max: 700 },
-  possible_drivers: { min: 80, max: 700 },
-  external_context: { min: 40, max: 700 }, // only when non-null
+  observed_change: { min: 50, max: 900 },
+  context_summary: { min: 40, max: 1800 },
+  relationship_boundary: { min: 50, max: 500 },
   what_to_check: { min: 30, max: 600 },
-  data_limitations: { min: 80, max: 700 },
+  data_limitations: { min: 50, max: 900 },
   caution_note: { min: 120, max: 700 },
 };
 
-/**
- * Count trimmed Unicode code points, not UTF-16 code units.
- * ADR-033 requires `Array.from(value.trim()).length`, not `value.length`.
- */
+const SUCCESS_KEYS = new Set([
+  "id",
+  "status",
+  "report_version",
+  "generated_at",
+  "data_as_of",
+  "episode_at",
+  "content",
+  "evidence_refs",
+  "context_candidates",
+]);
+const CANDIDATE_KEYS = new Set([
+  "id",
+  "title",
+  "event_at",
+  "summary",
+  "sources",
+]);
+const SOURCE_KEYS = new Set([
+  "title",
+  "url",
+  "domain",
+  "published_at",
+  "source_type",
+]);
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UTC_ISO_TIMESTAMP_PATTERN =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?(Z|\+00:00)$/;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function hasExactKeys(
+  raw: Record<string, unknown>,
+  keys: ReadonlySet<string>,
+): boolean {
+  const rawKeys = Object.keys(raw);
+  return rawKeys.length === keys.size && rawKeys.every((key) => keys.has(key));
+}
+
 function unicodeCodePointLength(value: string): number {
   return Array.from(value.trim()).length;
 }
 
-/** Match the Backend's ADR-033 sentence-count rule. */
 function sentenceCount(value: string): number {
   const matches = value.trim().match(/[.!?]+(?=\s|$)/g);
   return matches?.length ?? 1;
 }
 
-const UTC_ISO_TIMESTAMP_PATTERN =
-  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?(Z|\+00:00)$/;
-
-/**
- * Validate a timezone-aware ISO 8601 UTC timestamp and return a fixed-width
- * canonical value that preserves microseconds for chronological comparison.
- */
 function normalizeUtcIsoTimestamp(value: string): string | null {
   const match = UTC_ISO_TIMESTAMP_PATTERN.exec(value);
   if (!match) {
     return null;
   }
-
   const parsed = Date.parse(value);
   if (!Number.isFinite(parsed)) {
     return null;
   }
-
   const parsedDate = new Date(parsed);
   const [, year, month, day, hour, minute, second] = match;
   if (
@@ -140,183 +101,206 @@ function normalizeUtcIsoTimestamp(value: string): string | null {
   ) {
     return null;
   }
-
   const fraction = (match[7] ?? "").padEnd(6, "0");
   return `${year}-${month}-${day}T${hour}:${minute}:${second}.${fraction}Z`;
 }
 
-// ---------------------------------------------------------------------------
-// Report response parser / type guard
-// ---------------------------------------------------------------------------
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-/**
- * Validate that `content` matches the frozen ADR-033 eight-key set.
- * Returns the typed content on success, or null on any failure.
- */
-function validateContent(
-  raw: unknown,
-): IssueReportContent | null {
-  if (!isRecord(raw)) {
+function validateContent(raw: unknown): IssueReportContent | null {
+  if (!isRecord(raw) || !hasExactKeys(raw, CONTENT_KEYS)) {
     return null;
   }
-
-  const rawKeys = Object.keys(raw);
-
-  // Exact eight-key set: no missing, no extra
-  if (rawKeys.length !== V3_CONTENT_KEYS.size) {
-    return null;
-  }
-  for (const key of rawKeys) {
-    if (!V3_CONTENT_KEYS.has(key as keyof IssueReportContent)) {
-      return null;
-    }
-  }
-
-  // Validate each value
-  for (const key of V3_CONTENT_KEYS) {
+  const normalized: Partial<IssueReportContent> = {};
+  for (const key of CONTENT_KEYS) {
     const value = raw[key];
-
-    if (key === "external_context") {
-      // Nullable: null is valid; non-null must be a non-empty trimmed string
-      if (value === null) {
-        continue;
-      }
-      if (typeof value !== "string") {
-        return null;
-      }
-      const trimmed = value.trim();
-      if (trimmed.length === 0) {
-        return null;
-      }
-      const bounds = CONTENT_LENGTH_BOUNDS[key];
-      if (bounds) {
-        const codePoints = unicodeCodePointLength(value);
-        if (codePoints < bounds.min || codePoints > bounds.max) {
-          return null;
-        }
-      }
-      if (sentenceCount(value) > 5) {
-        return null;
-      }
+    if (key === "context_summary" && value === null) {
+      normalized.context_summary = null;
       continue;
     }
-
-    // Required non-null string
     if (typeof value !== "string") {
       return null;
     }
     const trimmed = value.trim();
-    if (trimmed.length === 0) {
+    const bounds = CONTENT_LENGTH_BOUNDS[key];
+    const length = unicodeCodePointLength(trimmed);
+    if (
+      length < bounds.min ||
+      length > bounds.max ||
+      sentenceCount(trimmed) > 5
+    ) {
       return null;
     }
-    const bounds = CONTENT_LENGTH_BOUNDS[key];
-    if (bounds) {
-      const codePoints = unicodeCodePointLength(value);
-      if (codePoints < bounds.min || codePoints > bounds.max) {
-        return null;
-      }
+    normalized[key] = trimmed;
+  }
+  return normalized as IssueReportContent;
+}
+
+function validateSource(
+  raw: unknown,
+  generatedAt: string,
+): IssueReportContextSource | null {
+  if (!isRecord(raw) || !hasExactKeys(raw, SOURCE_KEYS)) {
+    return null;
+  }
+  if (
+    typeof raw.title !== "string" ||
+    raw.title.trim().length === 0 ||
+    typeof raw.url !== "string" ||
+    typeof raw.domain !== "string" ||
+    raw.domain.trim().length === 0 ||
+    (raw.source_type !== "official" &&
+      raw.source_type !== "independent_secondary")
+  ) {
+    return null;
+  }
+  let sourceUrl: URL;
+  try {
+    sourceUrl = new URL(raw.url);
+  } catch {
+    return null;
+  }
+  if (
+    (sourceUrl.protocol !== "http:" && sourceUrl.protocol !== "https:") ||
+    sourceUrl.username !== "" ||
+    sourceUrl.password !== "" ||
+    sourceUrl.hostname.toLowerCase() !== raw.domain.trim().toLowerCase()
+  ) {
+    return null;
+  }
+  let publishedAt: string | null = null;
+  if (raw.published_at !== null) {
+    if (typeof raw.published_at !== "string") {
+      return null;
     }
-    if (sentenceCount(value) > 5) {
+    publishedAt = normalizeUtcIsoTimestamp(raw.published_at);
+    if (publishedAt === null || publishedAt > generatedAt) {
       return null;
     }
   }
-
-  // Render the same normalized strings that were used for length validation.
   return {
-    issue_overview: (raw.issue_overview as string).trim(),
-    current_data_reading: (raw.current_data_reading as string).trim(),
-    possible_outlook: (raw.possible_outlook as string).trim(),
-    possible_drivers: (raw.possible_drivers as string).trim(),
-    external_context:
-      raw.external_context === null
-        ? null
-        : (raw.external_context as string).trim(),
-    what_to_check: (raw.what_to_check as string).trim(),
-    data_limitations: (raw.data_limitations as string).trim(),
-    caution_note: (raw.caution_note as string).trim(),
+    title: raw.title.trim(),
+    url: raw.url,
+    domain: raw.domain.trim().toLowerCase(),
+    published_at: raw.published_at === null ? null : raw.published_at,
+    source_type: raw.source_type,
   };
 }
 
-/**
- * Parse an untrusted report API response into a typed load state.
- *
- * A success payload is valid only when:
- * - top-level `status` is `"success"` and `report_version` is `"v3"`
- * - `id` is non-empty and timestamps are UTC ISO values in chronological order
- * - `content` has the exact eight-key set with valid values
- *
- * The accepted empty response `{ status: "not_yet_generated" }` is also handled.
- *
- * Any other shape enters the report error state.
- */
+function validateCandidate(
+  raw: unknown,
+  generatedAt: string,
+): IssueReportContextCandidate | null {
+  if (!isRecord(raw) || !hasExactKeys(raw, CANDIDATE_KEYS)) {
+    return null;
+  }
+  if (
+    typeof raw.id !== "string" ||
+    !UUID_PATTERN.test(raw.id) ||
+    typeof raw.title !== "string" ||
+    raw.title.trim().length === 0 ||
+    typeof raw.summary !== "string" ||
+    raw.summary.trim().length === 0 ||
+    typeof raw.event_at !== "string" ||
+    !Array.isArray(raw.sources) ||
+    raw.sources.length === 0
+  ) {
+    return null;
+  }
+  const eventAt = normalizeUtcIsoTimestamp(raw.event_at);
+  if (eventAt === null || eventAt > generatedAt) {
+    return null;
+  }
+  const sources = raw.sources.map((source) =>
+    validateSource(source, generatedAt),
+  );
+  if (sources.some((source) => source === null)) {
+    return null;
+  }
+  return {
+    id: raw.id,
+    title: raw.title.trim(),
+    event_at: raw.event_at,
+    summary: raw.summary.trim(),
+    sources: sources as IssueReportContextSource[],
+  };
+}
+
 export function parseReportResponse(raw: unknown): IssueReportLoadState {
   if (!isRecord(raw)) {
     return { status: "error" };
   }
-
-  // Handle not_yet_generated
   if (raw.status === "not_yet_generated") {
-    return { status: "not_yet_generated" };
+    return hasExactKeys(raw, new Set(["status"]))
+      ? { status: "not_yet_generated" }
+      : { status: "error" };
   }
-
-  // Validate success shape
-  if (raw.status !== "success") {
-    return { status: "error" };
-  }
-
-  if (raw.report_version !== "v3") {
-    return { status: "error" };
-  }
-
   if (
+    raw.status !== "success" ||
+    raw.report_version !== "v4" ||
+    !hasExactKeys(raw, SUCCESS_KEYS) ||
     typeof raw.id !== "string" ||
-    raw.id.trim().length === 0 ||
+    !UUID_PATTERN.test(raw.id) ||
     typeof raw.generated_at !== "string" ||
-    typeof raw.data_as_of !== "string"
+    typeof raw.data_as_of !== "string" ||
+    typeof raw.episode_at !== "string" ||
+    !Array.isArray(raw.evidence_refs) ||
+    !Array.isArray(raw.context_candidates) ||
+    raw.context_candidates.length > 3
   ) {
     return { status: "error" };
   }
-
   const generatedAt = normalizeUtcIsoTimestamp(raw.generated_at);
   const dataAsOf = normalizeUtcIsoTimestamp(raw.data_as_of);
-  if (generatedAt === null || dataAsOf === null || dataAsOf > generatedAt) {
+  const episodeAt = normalizeUtcIsoTimestamp(raw.episode_at);
+  if (
+    generatedAt === null ||
+    dataAsOf === null ||
+    episodeAt === null ||
+    dataAsOf > generatedAt ||
+    episodeAt > generatedAt
+  ) {
     return { status: "error" };
   }
-
   const content = validateContent(raw.content);
   if (content === null) {
+    return { status: "error" };
+  }
+  const candidates = raw.context_candidates.map((candidate) =>
+    validateCandidate(candidate, generatedAt),
+  );
+  if (candidates.some((candidate) => candidate === null)) {
+    return { status: "error" };
+  }
+  const typedCandidates = candidates as IssueReportContextCandidate[];
+  const candidateIds = typedCandidates.map((candidate) => candidate.id);
+  if (new Set(candidateIds).size !== candidateIds.length) {
+    return { status: "error" };
+  }
+  const expectedRefs = [
+    raw.evidence_refs[0],
+    ...candidateIds.map((id) => `candidate:${id}`),
+  ];
+  if (
+    typeof raw.evidence_refs[0] !== "string" ||
+    !/^metric:\d+$/.test(raw.evidence_refs[0]) ||
+    raw.evidence_refs.length !== expectedRefs.length ||
+    !raw.evidence_refs.every(
+      (reference, index) => reference === expectedRefs[index],
+    ) ||
+    (content.context_summary === null) !== (typedCandidates.length === 0)
+  ) {
     return { status: "error" };
   }
 
   const report: IssueReportSuccessResponse = {
     id: raw.id,
     status: "success",
-    report_version: "v3",
+    report_version: "v4",
     generated_at: raw.generated_at,
     data_as_of: raw.data_as_of,
+    episode_at: raw.episode_at,
     content,
+    evidence_refs: raw.evidence_refs as string[],
+    context_candidates: typedCandidates,
   };
-
   return { status: "success", report };
-}
-
-// ---------------------------------------------------------------------------
-// Visible section helper
-// ---------------------------------------------------------------------------
-
-/**
- * Filter the ordered section definitions to exclude `external_context`
- * when its value is exactly `null`. All other sections always remain.
- */
-export function getVisibleSections(
-  content: IssueReportContent,
-): readonly V3ReportSection[] {
-  if (content.external_context === null) {
-    return V3_REPORT_SECTIONS.filter((s) => s.key !== "external_context");
-  }
-  return V3_REPORT_SECTIONS;
 }

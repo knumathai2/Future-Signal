@@ -93,6 +93,10 @@ export function IssueDetail({
     [issue, chartWindow],
   );
   const selectedWindowChange = changeForWindow(issue, chartWindow);
+  const contextCandidates =
+    reportState.status === "success"
+      ? reportState.report.context_candidates
+      : [];
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(focusRouteHeading);
@@ -284,43 +288,49 @@ export function IssueDetail({
                 </p>
               </div>
             ) : (
-              <IssueTrendChart issue={issue} windowKey={chartWindow} />
+              <IssueTrendChart
+                issue={issue}
+                windowKey={chartWindow}
+                contextCandidates={contextCandidates}
+              />
             )}
           </div>
         </section>
 
-        <section className="mt-10">
-          <h2 className="text-lg font-bold text-ink">관련 사건 후보</h2>
-          <p className="mt-1 text-sm leading-6 text-ink-faint">
-            관측된 변화와 함께 확인할 수 있도록 수동으로 정리한 후보 맥락입니다.
-            원인으로 제시하지 않습니다.
-          </p>
-
-          {issue.relatedEventCandidates?.length ? (
-            <div className="mt-4 space-y-3">
-              {issue.relatedEventCandidates.map((event) => (
-                <article
-                  key={`${event.date}-${event.title}`}
-                  className="rounded-lg border border-line bg-card px-4 py-3"
-                >
-                  <div className="text-xs font-semibold text-ink-faint">
-                    {formatShortDate(event.date)}
-                  </div>
-                  <h3 className="mt-1 text-sm font-bold text-ink">
-                    {event.title}
-                  </h3>
-                  <p className="mt-1 text-sm leading-6 text-ink-soft">
-                    {event.note}
-                  </p>
-                </article>
-              ))}
-            </div>
-          ) : (
-            <p className="mt-4 rounded-lg border border-dashed border-line px-4 py-4 text-sm text-ink-faint">
-              이 이슈에는 등록된 관련 사건 후보가 없습니다.
+        {reportState.status !== "success" ? (
+          <section className="mt-10">
+            <h2 className="text-lg font-bold text-ink">관련 사건 후보</h2>
+            <p className="mt-1 text-sm leading-6 text-ink-faint">
+              관측된 변화와 함께 확인할 수 있도록 수동으로 정리한 후보
+              맥락입니다. 원인으로 제시하지 않습니다.
             </p>
-          )}
-        </section>
+
+            {issue.relatedEventCandidates?.length ? (
+              <div className="mt-4 space-y-3">
+                {issue.relatedEventCandidates.map((event) => (
+                  <article
+                    key={`${event.date}-${event.title}`}
+                    className="rounded-lg border border-line bg-card px-4 py-3"
+                  >
+                    <div className="text-xs font-semibold text-ink-faint">
+                      {formatShortDate(event.date)}
+                    </div>
+                    <h3 className="mt-1 text-sm font-bold text-ink">
+                      {event.title}
+                    </h3>
+                    <p className="mt-1 text-sm leading-6 text-ink-soft">
+                      {event.note}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-4 rounded-lg border border-dashed border-line px-4 py-4 text-sm text-ink-faint">
+                이 이슈에는 등록된 관련 사건 후보가 없습니다.
+              </p>
+            )}
+          </section>
+        ) : null}
 
         <IssueReportCard
           issueId={issue.id}

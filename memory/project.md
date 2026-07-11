@@ -19,7 +19,7 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 - **Version**: v0.8.0-day5-technical-mvp-complete
 - **Phase**: Approved post-MVP v4 automated-context program
-- **Next milestone**: Build and browser-verify the v4 change-episode UI in TASK-063, then continue sequentially through TASK-065
+- **Next milestone**: Run the full automated-context integration and safety review in TASK-064, then the guarded local/development backfill in TASK-065
 - **Overall health**: 🟢 Good — ADR-038 records policy, schema, API, OpenRouter cumulative USD 100, and local/development-write approval. Deployment and production-database writes remain excluded.
 
 ## Tech Summary
@@ -51,16 +51,17 @@ Future Signal/
 
 | Area | Current state |
 |---|---|
-| Frontend | TASK-051/TASK-053 provide the ADR-033 report UI and parser enforcement. TASK-054 adds routed Home/list/detail/methodology information architecture, a real-history featured chart, ranked summaries, and responsive verification. PR #53 replaces two ES2022-only `.at()` reads with ES2020-compatible index access so typecheck and production build pass without configuration or behavior changes. |
+| Frontend | TASK-063 replaces the v3 step navigator with a strict v4 change-episode card. It validates the full evidence bundle, conditionally renders zero to three candidate/source cards, links exact candidate IDs to chart markers, keeps secure external links/timing/caution, and passes 320px/375px/desktop QA. Existing routed Home/list/detail/methodology information architecture remains intact. |
 | Backend | TASK-062 activates the strict v4 report read contract and returns only reconstructed, evidence-consistent bundles with verified same-episode candidates and approved source fields. Legacy/failed/malformed/mismatched rows remain audit-only. TASK-057's append-only migration remains unapplied pending TASK-065. |
 | Data/AI | TASK-058/059 provide bounded annotation-only research and deterministic/independent verification. TASK-060 connects them between signals and reports, and TASK-061 adds strict evidence-linked v4 generation with deterministic metric/context fields, same-episode verified candidates, writer-cost accounting, and last-known-good failure isolation. |
 | PM / Safety | The v3 MVP remains frozen. ADR-038 activates TASK-056~065 with verified-only automated context, strict evidence links, a cumulative USD 100 OpenRouter cap, and local/development-only writes. Deployment and production DB writes remain separate gates. |
-| v4 program | TASK-056~062 are complete; TASK-063 is in progress. V4 requires OpenRouter API citation annotations, deterministic hard gates, a different verifier model, verified-only public reads, evidence-linked report fields, and an append-only migration. |
+| v4 program | TASK-056~063 are complete; TASK-064 review is in progress. V4 requires OpenRouter API citation annotations, deterministic hard gates, a different verifier model, verified-only public reads, evidence-linked report fields, and an append-only migration. |
 
 ## Recent Changes
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | TASK-063 completed: strict v4 parser, one-card change episode, candidate/source cards, chart-ID linkage, responsive and state Browser QA. |
 | 2026-07-11 | TASK-062 completed: strict v4 read-time reconstruction, verified-only candidate/source output, legacy/malformed gating, OpenAPI contract, and 309-test Backend verification. |
 | 2026-07-11 | TASK-061 completed: strict seven-field evidence-grounded v4 generation, same-episode metric/candidate references, writer budget accounting, and failure-preserving storage passed the 298-test Backend suite. |
 | 2026-07-11 | ADR-038 accepted and TASK-056~065 activated; TASK-056 policy/contract documentation completed without provider calls or DB writes. |

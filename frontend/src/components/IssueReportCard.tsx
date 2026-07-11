@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
 import { ShortCautionNotice } from "./InformationNotice";
-import type { IssueReportContent, IssueReportLoadState } from "../types/issue";
-import { formatDataTimestamp } from "../utils/format";
-import { getVisibleSections } from "../utils/reportParser";
+import type {
+  IssueReportContextCandidate,
+  IssueReportLoadState,
+  IssueReportSuccessResponse,
+} from "../types/issue";
+import { formatDataTimestamp, formatShortDate } from "../utils/format";
 
 type IssueReportCardProps = {
   issueId: string;
@@ -11,9 +13,6 @@ type IssueReportCardProps = {
   issueDataAsOf: string;
 };
 
-/**
- * Report reference time: for a successful report, use its own data_as_of.
- */
 function reportDataAsOf(
   reportState: IssueReportLoadState,
   fallbackDataAsOf: string,
@@ -23,15 +22,11 @@ function reportDataAsOf(
     : fallbackDataAsOf;
 }
 
-// ---------------------------------------------------------------------------
-// Non-success states
-// ---------------------------------------------------------------------------
-
 function LoadingBody() {
   return (
-    <div className="mt-4 rounded-lg border border-line-soft px-4 py-4">
+    <div className="mt-4 rounded-lg border border-line-soft px-4 py-5">
       <div className="h-3 w-40 animate-pulse rounded-full bg-line" />
-      <div className="mt-3 h-3 w-full max-w-3xl animate-pulse rounded-full bg-line-soft" />
+      <div className="mt-4 h-3 w-full max-w-3xl animate-pulse rounded-full bg-line-soft" />
       <div className="mt-2 h-3 w-2/3 animate-pulse rounded-full bg-line-soft" />
     </div>
   );
@@ -39,13 +34,13 @@ function LoadingBody() {
 
 function NotYetGeneratedBody() {
   return (
-    <div className="mt-4 rounded-lg border border-dashed border-line px-4 py-4">
+    <div className="mt-4 rounded-lg border border-dashed border-line px-4 py-5">
       <h3 className="text-sm font-bold text-ink">
-        저장된 템플릿 요약이 아직 없습니다
+        검증된 변화 에피소드가 아직 없습니다
       </h3>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-ink-soft">
-        이슈 정보와 차트는 계속 확인할 수 있습니다. 요약이 생성되면 이슈 설명과
-        조건부 전개를 고정된 섹션 형식으로 표시합니다.
+        이슈 정보와 차트는 계속 확인할 수 있습니다. 저장된 수치와 검증된 공개
+        정보가 연결되면 이 영역에 함께 표시합니다.
       </p>
     </div>
   );
@@ -53,132 +48,162 @@ function NotYetGeneratedBody() {
 
 function ErrorBody({ fallbackSummary }: { fallbackSummary: string }) {
   return (
-    <div className="mt-4 rounded-lg border border-line px-4 py-4">
+    <div className="mt-4 rounded-lg border border-line px-4 py-5">
       <h3 className="text-sm font-bold text-ink">
-        저장된 요약을 불러오지 못했습니다
+        저장된 변화 에피소드를 불러오지 못했습니다
       </h3>
       <p className="mt-2 max-w-3xl text-sm leading-6 text-ink-soft">
-        아래 문장은 현재 화면 데이터로 만든 임시 요약입니다. 저장된 템플릿
-        요약이 아니며, 데이터 기준 시각과 해석 주의 상태를 함께 확인해야 합니다.
+        아래 문장은 현재 화면 데이터로 만든 임시 요약입니다. 검증된 공개 정보가
+        연결된 저장 결과가 아니므로 데이터 기준 시각과 해석 주의를 함께 확인해야
+        합니다.
       </p>
-      <p className="mt-4 max-w-4xl rounded-lg bg-accent-soft px-4 py-3 text-sm leading-7 text-ink">
+      <p className="mt-4 max-w-4xl rounded-lg bg-accent-soft px-4 py-3 text-sm leading-7 text-ink break-words">
         {fallbackSummary}
       </p>
     </div>
   );
 }
 
-// ---------------------------------------------------------------------------
-// One-section-at-a-time card navigation
-// ---------------------------------------------------------------------------
+function sourceTypeLabel(sourceType: "official" | "independent_secondary") {
+  return sourceType === "official" ? "공식 출처" : "독립 보조 출처";
+}
 
-function SectionNavigator({ content }: { content: IssueReportContent }) {
-  const visibleSections = useMemo(() => getVisibleSections(content), [content]);
-
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  // Reset/clamp when visible sections change
-  useEffect(() => {
-    setActiveIndex((prev) => {
-      if (prev >= visibleSections.length) {
-        return 0;
-      }
-      return prev;
-    });
-  }, [visibleSections]);
-
-  const currentSection = visibleSections[activeIndex];
-  const sectionValue = content[currentSection.key];
-  const isFirst = activeIndex === 0;
-  const isLast = activeIndex === visibleSections.length - 1;
-
+function ContextCandidateCard({
+  candidate,
+}: {
+  candidate: IssueReportContextCandidate;
+}) {
   return (
-    <div className="mt-4">
-      {/* Section content area — aria-live for screen readers */}
-      <div
-        aria-live="polite"
-        aria-atomic="true"
-        className="rounded-lg border border-line-soft bg-card px-4 py-4"
-        style={{ minHeight: "7rem" }}
-      >
-        <h3 className="text-sm font-bold text-ink">{currentSection.label}</h3>
-        <p className="mt-3 max-w-4xl text-sm leading-7 text-ink-soft whitespace-pre-wrap break-words">
-          {sectionValue}
-        </p>
+    <article
+      id={`context-candidate-${candidate.id}`}
+      data-candidate-id={candidate.id}
+      className="scroll-mt-24 rounded-lg border border-line-soft bg-card px-4 py-4"
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-xs font-semibold text-ink-faint">
+          {formatShortDate(candidate.event_at)}
+        </span>
+        <a
+          href={`#candidate-marker-${candidate.id}`}
+          className="inline-flex min-h-11 items-center text-xs font-bold text-accent hover:underline"
+        >
+          차트 위치 보기
+        </a>
+      </div>
+      <h4 className="mt-1 break-words text-sm font-bold text-ink">
+        {candidate.title}
+      </h4>
+      <p className="mt-2 break-words text-sm leading-6 text-ink-soft">
+        {candidate.summary}
+      </p>
+      <ul className="mt-3 space-y-2" aria-label={`${candidate.title} 출처`}>
+        {candidate.sources.map((source) => (
+          <li
+            key={`${source.url}-${source.title}`}
+            className="rounded-md bg-paper px-3 py-3"
+          >
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold text-ink-faint">
+              <span>{sourceTypeLabel(source.source_type)}</span>
+              <span aria-hidden="true">·</span>
+              <span className="break-all">{source.domain}</span>
+              <span aria-hidden="true">·</span>
+              <span>
+                {source.published_at
+                  ? formatShortDate(source.published_at)
+                  : "발행 시각 미제공"}
+              </span>
+            </div>
+            <a
+              href={source.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-1 inline-flex min-h-11 max-w-full items-center break-words text-sm font-bold leading-5 text-accent hover:underline"
+            >
+              {source.title}
+              <span className="ml-1" aria-hidden="true">
+                ↗
+              </span>
+              <span className="sr-only">새 창에서 열기</span>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </article>
+  );
+}
+
+function EvidenceSection({
+  label,
+  children,
+  tone = "plain",
+}: {
+  label: string;
+  children: React.ReactNode;
+  tone?: "plain" | "soft";
+}) {
+  return (
+    <section
+      className={
+        tone === "soft"
+          ? "rounded-lg bg-paper px-4 py-4"
+          : "border-t border-line-soft pt-5"
+      }
+    >
+      <h3 className="text-xs font-bold uppercase tracking-[0.08em] text-ink-faint">
+        {label}
+      </h3>
+      <div className="mt-2 break-words text-sm leading-7 text-ink-soft">
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function ChangeEpisode({ report }: { report: IssueReportSuccessResponse }) {
+  const { content, context_candidates: candidates } = report;
+  return (
+    <div className="mt-5 space-y-5" data-episode-at={report.episode_at}>
+      <EvidenceSection label="이슈 개요" tone="soft">
+        <p>{content.issue_overview}</p>
+      </EvidenceSection>
+
+      <EvidenceSection label="관찰된 변화">
+        <p className="font-semibold text-ink">{content.observed_change}</p>
+      </EvidenceSection>
+
+      {candidates.length > 0 && content.context_summary !== null ? (
+        <EvidenceSection label="같은 검토 구간의 공개 정보">
+          <p>{content.context_summary}</p>
+          <div className="mt-4 space-y-3">
+            {candidates.map((candidate) => (
+              <ContextCandidateCard key={candidate.id} candidate={candidate} />
+            ))}
+          </div>
+        </EvidenceSection>
+      ) : null}
+
+      <EvidenceSection label="관계 해석 범위" tone="soft">
+        <p>{content.relationship_boundary}</p>
+      </EvidenceSection>
+
+      <div className="grid gap-5 md:grid-cols-2">
+        <EvidenceSection label="추가로 확인할 내용">
+          <p>{content.what_to_check}</p>
+        </EvidenceSection>
+        <EvidenceSection label="데이터 한계">
+          <p>{content.data_limitations}</p>
+        </EvidenceSection>
       </div>
 
-      {/* Navigation controls — stable footer position */}
-      <nav
-        className="mt-3 flex items-center justify-between gap-3"
-        aria-label="요약 섹션 탐색"
-      >
-        <button
-          type="button"
-          onClick={() => setActiveIndex((i) => Math.max(0, i - 1))}
-          disabled={isFirst}
-          aria-label="이전 섹션"
-          className={
-            "inline-flex min-h-11 items-center rounded-full border px-4 text-xs font-bold transition " +
-            (isFirst
-              ? "cursor-not-allowed border-line-soft text-ink-faint"
-              : "border-line text-ink hover:border-accent hover:text-accent")
-          }
-        >
-          ← 이전
-        </button>
-
-        <span
-          className="text-xs font-semibold text-ink-faint tabular-nums"
-          aria-label={`${activeIndex + 1} / ${visibleSections.length} 섹션`}
-        >
-          {activeIndex + 1} / {visibleSections.length}
-        </span>
-
-        <button
-          type="button"
-          onClick={() =>
-            setActiveIndex((i) => Math.min(visibleSections.length - 1, i + 1))
-          }
-          disabled={isLast}
-          aria-label="다음 섹션"
-          className={
-            "inline-flex min-h-11 items-center rounded-full border px-4 text-xs font-bold transition " +
-            (isLast
-              ? "cursor-not-allowed border-line-soft text-ink-faint"
-              : "border-line text-ink hover:border-accent hover:text-accent")
-          }
-        >
-          다음 →
-        </button>
-      </nav>
-
-      {/* Compact section indicators */}
-      <div className="mt-3 flex flex-wrap gap-1 justify-center">
-        {visibleSections.map((section, idx) => (
-          <button
-            key={section.key}
-            type="button"
-            onClick={() => setActiveIndex(idx)}
-            aria-label={`${section.label} 섹션으로 이동`}
-            aria-current={idx === activeIndex ? "step" : undefined}
-            className={
-              "inline-flex min-h-11 items-center rounded-full px-2.5 text-[10px] font-bold transition " +
-              (idx === activeIndex
-                ? "bg-ink text-card"
-                : "bg-line-soft text-ink-faint hover:bg-line hover:text-ink-soft")
-            }
-          >
-            {section.label}
-          </button>
-        ))}
+      <div className="rounded-lg border border-line bg-accent-soft px-4 py-4">
+        <h3 className="text-xs font-bold text-ink">해석 주의</h3>
+        <p className="mt-2 break-words text-sm leading-7 text-ink-soft">
+          {content.caution_note}
+        </p>
       </div>
     </div>
   );
 }
-
-// ---------------------------------------------------------------------------
-// Report body dispatcher
-// ---------------------------------------------------------------------------
 
 function ReportBody({
   reportState,
@@ -190,21 +215,14 @@ function ReportBody({
   if (reportState.status === "loading") {
     return <LoadingBody />;
   }
-
   if (reportState.status === "success") {
-    return <SectionNavigator content={reportState.report.content} />;
+    return <ChangeEpisode report={reportState.report} />;
   }
-
   if (reportState.status === "not_yet_generated") {
     return <NotYetGeneratedBody />;
   }
-
   return <ErrorBody fallbackSummary={fallbackSummary} />;
 }
-
-// ---------------------------------------------------------------------------
-// Main report card
-// ---------------------------------------------------------------------------
 
 export function IssueReportCard({
   issueId,
@@ -213,22 +231,18 @@ export function IssueReportCard({
   issueDataAsOf,
 }: IssueReportCardProps) {
   const dataAsOf = reportDataAsOf(reportState, issueDataAsOf);
-
-  // Reset state when the issue changes — using key on the child ensures
-  // React remounts the SectionNavigator and resets activeIndex.
   const reportKey =
     reportState.status === "success"
       ? `${issueId}-${reportState.report.id}`
       : `${issueId}-${reportState.status}`;
 
   return (
-    <section className="mt-10 rounded-lg border border-line bg-card p-5">
-      {/* Header: title, report timing, and report-caution strip */}
+    <section className="mt-10 rounded-lg border border-line bg-card p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold text-ink">이슈 요약</h2>
+          <h2 className="text-lg font-bold text-ink">변화 에피소드</h2>
           <p className="mt-1 text-[11px] font-semibold text-ink-faint">
-            템플릿 기반 이슈 이해 요약
+            저장된 수치와 검증된 공개 정보를 같은 구간에서 확인합니다
           </p>
         </div>
         <div className="flex flex-col items-start gap-1.5 sm:items-end">
@@ -236,29 +250,29 @@ export function IssueReportCard({
             데이터 기준 시각: {formatDataTimestamp(dataAsOf)}
           </span>
           {reportState.status === "success" ? (
-            <span className="text-xs font-semibold text-ink-faint">
-              요약 생성 시각:{" "}
-              {formatDataTimestamp(reportState.report.generated_at)}
-            </span>
+            <>
+              <span className="text-xs font-semibold text-ink-faint">
+                검토 구간: {formatDataTimestamp(reportState.report.episode_at)}
+              </span>
+              <span className="text-xs font-semibold text-ink-faint">
+                생성 시각:{" "}
+                {formatDataTimestamp(reportState.report.generated_at)}
+              </span>
+            </>
           ) : null}
         </div>
       </div>
 
-      {/* Compact report-caution strip — adjacent to the report header */}
-      {reportState.status === "success" ? (
-        <div className="mt-3 flex items-center gap-2 rounded-md border border-line-soft px-3 py-2">
-          <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-accent text-[10px] font-bold text-accent">
-            i
-          </div>
-          <p className="text-xs leading-5 text-ink-soft">
-            이 요약은 저장된 시점의 데이터 흐름을 정리한 것이며, 현재 이슈의
-            해석 주의 상태와 다를 수 있습니다. 마지막 섹션에서 전체 해석 주의
-            내용을 확인하세요.
-          </p>
+      <div className="mt-3 flex items-start gap-2 rounded-md border border-line-soft px-3 py-2">
+        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-accent text-[10px] font-bold text-accent">
+          i
         </div>
-      ) : null}
+        <p className="text-xs leading-5 text-ink-soft">
+          공개 데이터의 관찰 흐름과 검증된 공개 정보를 함께 보여주지만, 두 항목
+          사이의 관계나 현실의 결과를 입증하지 않습니다.
+        </p>
+      </div>
 
-      {/* Report body — key ensures remount on issue/report change */}
       <div key={reportKey}>
         <ReportBody
           reportState={reportState}
@@ -266,7 +280,6 @@ export function IssueReportCard({
         />
       </div>
 
-      {/* Existing short caution notice for non-success states */}
       {reportState.status !== "success" ? (
         <ShortCautionNotice
           context="summary"
