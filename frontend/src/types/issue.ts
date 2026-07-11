@@ -172,3 +172,29 @@ export type GenerationRequestStatusResponse = {
   error_code: string | null;
   successor_request_id: string | null;
 };
+
+export type GenerationStreamBlock =
+  | {
+      sequence: 0;
+      block_type: "headline_summary";
+      payload: {
+        kind: "headline_summary";
+        headline: string;
+        summary: string;
+      };
+    }
+  | {
+      sequence: number;
+      block_type: "section";
+      payload: {
+        kind: "section";
+        index: number;
+        section: V8ReportSection;
+      };
+    };
+
+export type StreamingBriefingState = {
+  headline: string;
+  summary: string;
+  sections: V8ReportSection[];
+};

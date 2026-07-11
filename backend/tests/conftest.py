@@ -40,6 +40,7 @@ from app.core.ai_report import (
 )
 from app.db.models import (
     AiReport,
+    AiReportGenerationBlock,
     AiReportGenerationEvent,
     AiReportGenerationRequest,
     Base,
@@ -108,6 +109,7 @@ def db_session():
             AiReport.__table__,
             AiReportGenerationRequest.__table__,
             AiReportGenerationEvent.__table__,
+            AiReportGenerationBlock.__table__,
             ContextCandidate.__table__,
             ContextCollectionRun.__table__,
             DataCollectionLog.__table__,

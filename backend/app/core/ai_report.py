@@ -35,7 +35,7 @@ import logging
 import re
 import unicodedata
 import uuid
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Annotated, Literal, Protocol
@@ -210,6 +210,12 @@ class LLMClient(Protocol):
         ...
 
 
+class StreamingLLMClient(Protocol):
+    def stream(self, system_prompt: str, user_prompt: str) -> Iterator[str]:
+        """Yield raw text chunks from exactly one provider request."""
+        ...
+
+
 @dataclass(frozen=True)
 class LLMUsage:
     input_tokens: int = 0
@@ -286,6 +292,45 @@ class OpenAICompatibleReportClient:
             raise LLMCallError(f"Empty response from {self._provider_name}.")
         self.usage_records.append(_parse_llm_usage(getattr(response, "usage", None)))
         return content
+
+    def stream(self, system_prompt: str, user_prompt: str) -> Iterator[str]:
+        """Yield one chat completion as text chunks and retain final usage."""
+        kwargs = {
+            "model": self._model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": 0.2,
+            "timeout": 20,
+            "stream": True,
+            "stream_options": {"include_usage": True},
+        }
+        if self._extra_headers:
+            kwargs["extra_headers"] = self._extra_headers
+        try:
+            response = self._client.chat.completions.create(**kwargs)
+        except OpenAIError as exc:
+            raise LLMCallError(f"{self._provider_name} call failed: {type(exc).__name__}") from exc
+
+        usage = None
+        try:
+            for chunk in response:
+                chunk_usage = getattr(chunk, "usage", None)
+                if chunk_usage is not None:
+                    usage = chunk_usage
+                if not chunk.choices:
+                    continue
+                content = chunk.choices[0].delta.content
+                if content:
+                    yield content
+        except OpenAIError as exc:
+            raise LLMCallError(
+                f"{self._provider_name} stream failed: {type(exc).__name__}"
+            ) from exc
+        finally:
+            if usage is not None:
+                self.usage_records.append(_parse_llm_usage(usage))
 
 
 OpenAIReportClient = OpenAICompatibleReportClient
@@ -2102,17 +2147,11 @@ def _v6_required_issue_anchors(inputs: V4ReportInputs) -> list[str]:
     """Prefer proper names so Korean prose need not preserve generic English."""
     anchors: list[str] = []
     seen: set[str] = set()
-    anchor_sources = [inputs.title] + [
-        candidate.title for candidate in inputs.context_candidates
-    ]
+    anchor_sources = [inputs.title] + [candidate.title for candidate in inputs.context_candidates]
     for source in anchor_sources:
         for token in re.findall(r"[A-Za-z]{3,}", source):
             normalized = token.casefold()
-            if (
-                normalized in _V6_ANCHOR_STOPWORDS
-                or not token[0].isupper()
-                or normalized in seen
-            ):
+            if normalized in _V6_ANCHOR_STOPWORDS or not token[0].isupper() or normalized in seen:
                 continue
             anchors.append(token)
             seen.add(normalized)
@@ -2672,8 +2711,8 @@ def validate_v7_writer_output(
 # --------------------------------------------------------------------------
 
 V8_PROMPT_VERSION = "v8"
-V8_POLICY_VERSION = "v8-issue-centered-1"
-V8_INPUT_SCHEMA_VERSION = "v8-writer-input-1"
+V8_POLICY_VERSION = "v8-contextual-wording-1"
+V8_INPUT_SCHEMA_VERSION = "v8-writer-stream-input-1"
 V8SectionType = Literal[
     "current_situation",
     "recent_change",
@@ -2682,6 +2721,76 @@ V8SectionType = Literal[
     "what_to_watch",
     "limitations",
 ]
+
+V8_CONTEXTUAL_KOREAN_TERMS: tuple[str, ...] = (
+    "확정",
+    "보장",
+    "추천",
+    "기회",
+    "전망",
+    "원인",
+)
+V8_HARD_BLOCKED_KOREAN_TERMS: tuple[str, ...] = tuple(
+    phrase for phrase in KOREAN_BANNED_SUBSTRINGS if phrase not in V8_CONTEXTUAL_KOREAN_TERMS
+)
+_V8_HARD_KOREAN_PATTERNS: tuple[re.Pattern, ...] = tuple(
+    re.compile(re.escape(phrase)) for phrase in V8_HARD_BLOCKED_KOREAN_TERMS
+)
+_V8_CONTEXTUAL_SUPPORT_MARKERS: dict[str, tuple[str, ...]] = {
+    "확정": ("확정", "confirmed"),
+    "보장": ("보장", "guarantee", "guaranteed"),
+    "추천": ("추천", "권고", "recommend", "recommendation"),
+    "기회": ("기회", "opportunity"),
+    "전망": ("전망", "outlook", "forecast"),
+    "원인": ("원인", "cause", "caused"),
+}
+_V8_CONTEXTUAL_SAFE_PATTERNS: dict[str, tuple[re.Pattern, ...]] = {
+    term: (
+        re.compile(rf"{term}\s*여부"),
+        re.compile(
+            rf"{term}[^.!?。！？]{{0,40}}"
+            r"(?:않|아닙|아닌|아니|없|못|뜻하지|단정할\s*수\s*없|제시되지\s*않)"
+        ),
+    )
+    for term in V8_CONTEXTUAL_KOREAN_TERMS
+}
+_V8_ATTRIBUTION_PATTERN = re.compile(
+    r"공식\s*(?:문서|자료|발표|공지)|"
+    r"(?:기관|정부|의회|위원회|보고서|보도)[^.!?。！？]{0,80}"
+    r"(?:발표|공지|밝혔|명시|권고|따르면)|"
+    r"(?:발표|공지|보고서|보도)(?:에|에\s*따르면|를\s*통해)"
+)
+_V8_CONTEXTUAL_STRUCTURAL_PATTERNS = {r"원인(?!으로\s*제시되지\s*않|이\s*아니|이\s*아님)", r"전망"}
+
+
+def _v8_source_supports_contextual_term(
+    term: str,
+    evidence: list[V7EvidenceItem],
+) -> bool:
+    markers = _V8_CONTEXTUAL_SUPPORT_MARKERS[term]
+    return any(
+        item.kind == "source" and any(marker in item.text.casefold() for marker in markers)
+        for item in evidence
+    )
+
+
+def _validate_v8_contextual_text(
+    text: str,
+    evidence: list[V7EvidenceItem],
+) -> SafetyFilterResult:
+    sentences = [part.strip() for part in re.split(r"[.!?。！？]\s*|\n+", text) if part.strip()]
+    for sentence in sentences:
+        for term in V8_CONTEXTUAL_KOREAN_TERMS:
+            if term not in sentence:
+                continue
+            if any(pattern.search(sentence) for pattern in _V8_CONTEXTUAL_SAFE_PATTERNS[term]):
+                continue
+            if not _V8_ATTRIBUTION_PATTERN.search(sentence):
+                return SafetyFilterResult(False, f"contextual_phrase_unattributed:{term}")
+            if not _v8_source_supports_contextual_term(term, evidence):
+                return SafetyFilterResult(False, f"contextual_phrase_unsupported:{term}")
+    return SafetyFilterResult(True)
+
 
 V8_SYSTEM_PROMPT = """\
 당신은 일반 사용자가 복잡한 이슈의 현재 상황을 빠르게 이해하도록 돕는
@@ -2737,9 +2846,15 @@ paragraph 또는 bullets 형식, 그리고 해당 섹션 전체를 뒷받침하�
 유도하지 마십시오. 입력 출처가 더 강한 관계를 명시적으로 뒷받침하지 않는 한
 관찰 시점의 겹침은 시점의 겹침으로만 다루십시오.
 """ + (
-    "\n특히 다음 금지 표현은 어떤 활용형이나 문맥에서도 쓰지 마십시오: "
-    + ", ".join(KOREAN_BANNED_SUBSTRINGS)
+    "\n다음 표현은 어떤 문맥에서도 쓰지 마십시오: "
+    + ", ".join(V8_HARD_BLOCKED_KOREAN_TERMS)
     + ".\n"
+    "다음 문맥 표현은 명시적 부정·한계·여부 확인에서만 출처 없이 사용할 수 "
+    "있습니다: "
+    + ", ".join(V8_CONTEXTUAL_KOREAN_TERMS)
+    + ". 긍정 사실로 사용할 때에는 같은 섹션의 source:* 근거가 같은 강도의 "
+    "표현을 직접 지원하고, 문장 안에서 공식 문서·기관·정부·위원회·보고서·발표 "
+    "등으로 출처를 분명히 귀속하십시오. 애매하면 해당 표현을 피하십시오.\n"
 )
 
 
@@ -2816,6 +2931,36 @@ class V8WriterOutput(BaseModel):
 _V8_WRITER_ADAPTER = TypeAdapter(V8WriterOutput)
 
 
+class V8StreamHeadlineBlock(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    kind: Literal["headline_summary"]
+    headline: str = Field(min_length=10, max_length=100)
+    summary: str = Field(min_length=100, max_length=500)
+
+
+class V8StreamSectionBlock(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    kind: Literal["section"]
+    index: int = Field(ge=0, le=5)
+    section: V8WriterSection
+
+
+class V8StreamCompleteBlock(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    kind: Literal["complete"]
+    section_count: int = Field(ge=2, le=6)
+
+
+V8StreamBlock = Annotated[
+    V8StreamHeadlineBlock | V8StreamSectionBlock | V8StreamCompleteBlock,
+    Field(discriminator="kind"),
+]
+_V8_STREAM_BLOCK_ADAPTER = TypeAdapter(V8StreamBlock)
+
+
 def build_v8_prompt(inputs: V8WriterInputs) -> tuple[str, str]:
     """Build the approved issue-centered prompt over the existing evidence bundle."""
     payload = {
@@ -2858,11 +3003,127 @@ def build_v8_prompt(inputs: V8WriterInputs) -> tuple[str, str]:
     return V8_SYSTEM_PROMPT, json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
 
 
+def build_v8_stream_prompt(inputs: V8WriterInputs) -> tuple[str, str]:
+    """Build the v8 prompt with a strict, one-object-per-line output protocol."""
+    system_prompt, raw_payload = build_v8_prompt(inputs)
+    payload = json.loads(raw_payload)
+    payload["required_output_shape"] = {
+        "protocol": "NDJSON; exactly one compact JSON object per line",
+        "lines": [
+            {
+                "kind": "headline_summary",
+                "headline": "10-100 character string",
+                "summary": "100-500 character string",
+            },
+            {
+                "kind": "section",
+                "index": "zero-based consecutive integer",
+                "section": {
+                    "type": "one allowed section type",
+                    "title": "natural Korean section title",
+                    "format": "paragraph or bullets",
+                    "content": "paragraph text or null",
+                    "items": ["bullet text; empty for paragraph"],
+                    "evidence_refs": ["exact supplied ref"],
+                },
+            },
+            {"kind": "complete", "section_count": "exact emitted section count"},
+        ],
+    }
+    stream_rules = (
+        "\n\n출력 프로토콜:\n"
+        "- 마크다운 코드 블록, 설명문, JSON 배열을 출력하지 마십시오.\n"
+        "- 첫 줄은 headline_summary 객체 하나입니다.\n"
+        "- 다음 줄부터 section 객체를 index 0부터 빠짐없이 하나씩 출력합니다.\n"
+        "- 마지막 줄은 complete 객체 하나입니다.\n"
+        "- 각 JSON 객체는 반드시 한 줄 안에서 끝나야 합니다. 문자열 안의 줄바꿈은 "
+        "이스케이프하십시오.\n"
+    )
+    return (
+        system_prompt + stream_rules,
+        json.dumps(payload, ensure_ascii=False, separators=(",", ":")),
+    )
+
+
 def parse_v8_writer_output(raw_text: str) -> V8WriterOutput | None:
     try:
         return _V8_WRITER_ADAPTER.validate_json(raw_text)
     except ValidationError:
         return None
+
+
+def parse_v8_stream_line(raw_text: str) -> V8StreamBlock | None:
+    try:
+        return _V8_STREAM_BLOCK_ADAPTER.validate_json(raw_text)
+    except ValidationError:
+        return None
+
+
+def _validate_v8_scoped_text(
+    text: str,
+    evidence: list[V7EvidenceItem],
+) -> SafetyFilterResult:
+    for phrase, pattern in zip(BANNED_PHRASES, _PHRASE_PATTERNS, strict=True):
+        if pattern.search(text):
+            return SafetyFilterResult(False, f"banned_phrase:{phrase}")
+    for phrase, pattern in zip(
+        V8_HARD_BLOCKED_KOREAN_TERMS,
+        _V8_HARD_KOREAN_PATTERNS,
+        strict=True,
+    ):
+        if pattern.search(text):
+            return SafetyFilterResult(False, f"banned_phrase:{phrase}")
+    contextual = _validate_v8_contextual_text(text, evidence)
+    if not contextual.passed:
+        return contextual
+    for pattern in BANNED_PATTERNS:
+        if pattern.search(text):
+            return SafetyFilterResult(False, f"unsafe_language:{pattern.pattern}")
+    for pattern in KOREAN_BANNED_PATTERNS:
+        if pattern.pattern in _V8_CONTEXTUAL_STRUCTURAL_PATTERNS:
+            continue
+        if pattern.search(text):
+            return SafetyFilterResult(False, f"unsafe_language:{pattern.pattern}")
+    if _URL_PATTERN.search(text):
+        return SafetyFilterResult(False, "writer_added_url")
+    return SafetyFilterResult(True)
+
+
+def validate_v8_stream_block(
+    block: V8StreamHeadlineBlock | V8StreamSectionBlock,
+    inputs: V8WriterInputs,
+    prior_sections: list[V8WriterSection],
+) -> SafetyFilterResult:
+    """Validate one complete block before it becomes stream-visible."""
+    if isinstance(block, V8StreamHeadlineBlock):
+        if prior_sections:
+            return SafetyFilterResult(False, "headline_after_section")
+        for text in (block.headline, block.summary):
+            result = _validate_v8_scoped_text(text, [])
+            if not result.passed:
+                return result
+        return SafetyFilterResult(True)
+
+    if block.index != len(prior_sections):
+        return SafetyFilterResult(False, "nonconsecutive_section_index")
+    if block.section.type in {section.type for section in prior_sections}:
+        return SafetyFilterResult(False, "duplicate_section_type")
+    evidence_by_ref = {item.ref: item for item in inputs.evidence}
+    for ref in block.section.evidence_refs:
+        if ref not in evidence_by_ref:
+            return SafetyFilterResult(False, "unknown_evidence_ref", block.section.title)
+        item = evidence_by_ref[ref]
+        if item.kind == "source" and item.parent_ref not in block.section.evidence_refs:
+            return SafetyFilterResult(False, "source_parent_ref_missing", block.section.title)
+    section_evidence = [evidence_by_ref[ref] for ref in block.section.evidence_refs]
+    texts = [block.section.title, *block.section.items]
+    if block.section.content is not None:
+        texts.append(block.section.content)
+    for text in texts:
+        result = _validate_v8_scoped_text(text, section_evidence)
+        if not result.passed:
+            return result
+    return SafetyFilterResult(True)
 
 
 def validate_v8_writer_output(
@@ -2879,18 +3140,17 @@ def validate_v8_writer_output(
             if item.kind == "source" and item.parent_ref not in section.evidence_refs:
                 return SafetyFilterResult(False, "source_parent_ref_missing", section.title)
 
-    texts = [output.headline, output.summary]
+    scoped_texts: list[tuple[str, list[V7EvidenceItem]]] = [
+        (output.headline, []),
+        (output.summary, []),
+    ]
     for section in output.sections:
-        texts.extend([section.title, *(section.items)])
+        section_evidence = [evidence_by_ref[ref] for ref in section.evidence_refs]
+        scoped_texts.extend((text, section_evidence) for text in [section.title, *section.items])
         if section.content is not None:
-            texts.append(section.content)
-    for text in texts:
-        for phrase, pattern in zip(BANNED_PHRASES, _PHRASE_PATTERNS, strict=True):
-            if pattern.search(text):
-                return SafetyFilterResult(False, f"banned_phrase:{phrase}")
-        for phrase, pattern in zip(KOREAN_BANNED_SUBSTRINGS, _KOREAN_PHRASE_PATTERNS, strict=True):
-            if pattern.search(text):
-                return SafetyFilterResult(False, f"banned_phrase:{phrase}")
-        if _URL_PATTERN.search(text):
-            return SafetyFilterResult(False, "writer_added_url")
+            scoped_texts.append((section.content, section_evidence))
+    for text, evidence in scoped_texts:
+        result = _validate_v8_scoped_text(text, evidence)
+        if not result.passed:
+            return result
     return SafetyFilterResult(True)

@@ -19,7 +19,10 @@ Polymarket public APIs --> Batch collector (scheduled) --> Postgres --> Read-onl
                                           +--> Metric calc + signal detection --> AI report generation (async, cost-gated)
 ```
 
-No message queue, no real-time streaming, no websockets, and no user-auth system are required for the hackathon MVP. Every one of those is a legitimate Phase 2 addition, not a hackathon requirement — adding any of them now would spend days the team doesn't have on infrastructure the demo doesn't need.
+No message queue, WebSocket service, or user-auth system is required for the
+hackathon MVP. TASK-117 adds a narrow server-sent event read path over
+append-only validated briefing blocks; it reuses FastAPI, Postgres, and the
+existing worker and does not add real-time infrastructure.
 
 ---
 

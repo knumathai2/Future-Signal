@@ -15,6 +15,7 @@ from sqlalchemy.schema import CreateTable
 
 from app.db.models import (
     AiReport,
+    AiReportGenerationBlock,
     AiReportGenerationEvent,
     AiReportGenerationRequest,
     Base,
@@ -52,6 +53,7 @@ def db():
             AiReport.__table__,
             AiReportGenerationRequest.__table__,
             AiReportGenerationEvent.__table__,
+            AiReportGenerationBlock.__table__,
         ],
     )
     session = sessionmaker(bind=engine)()
@@ -121,6 +123,20 @@ def _event(event_id: int, state: str, **overrides) -> AiReportGenerationEvent:
     return AiReportGenerationEvent(**values)
 
 
+def _block(block_id: int, sequence: int = 0, **overrides) -> AiReportGenerationBlock:
+    values = {
+        "id": block_id,
+        "request_id": REQUEST_ID,
+        "attempt_number": 1,
+        "sequence_number": sequence,
+        "block_type": "headline_summary" if sequence == 0 else "section",
+        "payload": {"kind": "headline_summary" if sequence == 0 else "section"},
+        "recorded_at": NOW + timedelta(seconds=block_id),
+    }
+    values.update(overrides)
+    return AiReportGenerationBlock(**values)
+
+
 def test_request_and_event_history_are_append_only_and_ordered(db):
     db.add(_request())
     db.commit()
@@ -141,6 +157,16 @@ def test_same_market_and_fingerprint_is_idempotent(db):
     db.commit()
     db.add(_request(id=uuid.uuid4()))
 
+    with pytest.raises(IntegrityError):
+        db.commit()
+
+
+def test_validated_block_sequence_is_unique_per_request_attempt(db):
+    db.add(_request())
+    db.commit()
+    db.add(_block(1))
+    db.commit()
+    db.add(_block(2))
     with pytest.raises(IntegrityError):
         db.commit()
 
@@ -190,35 +216,41 @@ def test_parent_request_and_market_cascade_operational_history(db):
     db.add(_request())
     db.commit()
     db.add(_event(1, "queued"))
+    db.add(_block(1))
     db.commit()
 
     db.delete(db.get(Market, MARKET_ID))
     db.commit()
     assert db.query(AiReportGenerationRequest).count() == 0
     assert db.query(AiReportGenerationEvent).count() == 0
+    assert db.query(AiReportGenerationBlock).count() == 0
 
 
 def test_postgres_ddl_has_jsonb_timezone_fks_and_named_indexes():
     request_ddl = str(
-        CreateTable(AiReportGenerationRequest.__table__).compile(
-            dialect=postgresql.dialect()
-        )
+        CreateTable(AiReportGenerationRequest.__table__).compile(dialect=postgresql.dialect())
     )
     event_ddl = str(
-        CreateTable(AiReportGenerationEvent.__table__).compile(
-            dialect=postgresql.dialect()
-        )
+        CreateTable(AiReportGenerationEvent.__table__).compile(dialect=postgresql.dialect())
+    )
+    block_ddl = str(
+        CreateTable(AiReportGenerationBlock.__table__).compile(dialect=postgresql.dialect())
     )
     assert "JSONB NOT NULL" in request_ddl
     assert "TIMESTAMP WITH TIME ZONE NOT NULL" in request_ddl
     assert "JSONB NOT NULL" in event_ddl
     assert "ON DELETE CASCADE" in event_ddl
     assert "ON DELETE SET NULL" in event_ddl
+    assert "JSONB NOT NULL" in block_ddl
+    assert "ON DELETE CASCADE" in block_ddl
     assert {index.name for index in AiReportGenerationRequest.__table__.indexes} == {
         "idx_ai_report_generation_requests_market_requested"
     }
     assert {index.name for index in AiReportGenerationEvent.__table__.indexes} == {
         "idx_ai_report_generation_events_request_recorded"
+    }
+    assert {index.name for index in AiReportGenerationBlock.__table__.indexes} == {
+        "idx_ai_report_generation_blocks_request_attempt_sequence"
     }
 
 
@@ -232,3 +264,8 @@ def test_migration_is_additive_and_does_not_edit_prior_migrations():
     assert "DELETE FROM" not in migration
     assert "ai_report_generation_requests" not in initial
     assert "ai_report_generation_events" not in initial
+    block_migration = (MIGRATIONS / "005_ai_report_generation_blocks.sql").read_text()
+    assert "CREATE TABLE ai_report_generation_blocks" in block_migration
+    assert "UNIQUE (request_id, attempt_number, sequence_number)" in block_migration
+    assert "UPDATE " not in block_migration
+    assert "DELETE FROM" not in block_migration

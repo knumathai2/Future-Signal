@@ -5,11 +5,12 @@ from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import pytest
-from sqlalchemy import event
+from sqlalchemy import event, select
 
 from app.core.on_demand_briefing import build_v8_input_bundle, process_v8_request
 from app.db.models import (
     AiReport,
+    AiReportGenerationBlock,
     AiReportGenerationRequest,
     ContextCandidate,
     MarketMetric,
@@ -452,6 +453,50 @@ def test_generation_request_is_scoped_to_issue(live_client, db_session):
         f"/api/issues/does-not-exist/report/requests/{request['request_id']}"
     )
     assert response.status_code == 404
+    stream = live_client.get(
+        f"/api/issues/does-not-exist/report/requests/{request['request_id']}/stream"
+    )
+    assert stream.status_code == 404
+
+
+def test_completed_request_stream_replays_validated_blocks_then_completes(live_client, db_session):
+    seed_basic_market(db_session)
+    request = _enqueue(live_client)
+    result, _ = _process(db_session, request["request_id"])
+
+    response = live_client.get(
+        f"/api/issues/{MARKET_ID}/report/requests/{request['request_id']}/stream"
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/event-stream")
+    assert (
+        "/api/issues/{issue_id}/report/requests/{request_id}/stream"
+        in live_client.get("/openapi.json").json()["paths"]
+    )
+    assert response.text.count("event: block") == 3
+    assert '"block_type":"headline_summary"' in response.text
+    assert '"block_type":"section"' in response.text
+    assert "event: complete" in response.text
+    assert str(result.report_id) in response.text
+
+
+def test_stream_last_event_id_skips_already_received_block(live_client, db_session):
+    seed_basic_market(db_session)
+    request = _enqueue(live_client)
+    _process(db_session, request["request_id"])
+    first_id = db_session.execute(
+        select(AiReportGenerationBlock.id).order_by(AiReportGenerationBlock.id.asc()).limit(1)
+    ).scalar_one_or_none()
+    assert first_id is not None
+
+    response = live_client.get(
+        f"/api/issues/{MARKET_ID}/report/requests/{request['request_id']}/stream",
+        headers={"Last-Event-ID": str(first_id)},
+    )
+
+    assert response.text.count("event: block") == 2
+    assert "event: complete" in response.text
 
 
 def test_generate_rejects_unknown_issue_and_extra_body_fields(live_client, db_session):

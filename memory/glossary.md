@@ -53,13 +53,25 @@ _Last updated: 2026-07-11_
 
 ## Wording Policy (binding — see `../standards.md` Content Safety Lint for enforcement)
 
-### Prohibited wording — never ship, in any context (UI, AI output, error states, placeholder text, internal debug labels)
+### Hard-block wording — never ship, in any context (UI, AI output, error states, placeholder text, internal debug labels)
 
 `bet, buy, sell, trade, position, long, short, profit, win rate, odds, copy trader, follow this user, expert trader, best pick, recommended outcome, high-return opportunity, guaranteed, guaranteed prediction, signal to act, recommend, recommendation`
 
-Korean v3 additions for UI, fallback strings, and AI/template output:
+Korean hard blocks for active v8:
 
-`베팅, 매수, 매도, 포지션, 롱, 숏, 수익, 승률, 배당, 추천, 보장, 확정, 따라하기, 고수, 전문 트레이더, 고수익, 기회`
+`베팅, 매수, 매도, 포지션, 롱, 숏, 수익, 승률, 배당, 따라하기, 고수, 전문 트레이더, 고수익`
+
+### Contextual wording — active v8 only
+
+`확정, 보장, 추천, 기회, 전망, 원인`
+
+These expressions are not approved merely because evidence is present.
+Source-free use is limited to explicit negation/limitation or a verification
+inquiry such as `확정 여부`. A positive use requires an exact same-section
+`source:*` reference, a stored supported-claim marker of equal strength, and
+visible attribution in the authored sentence. Headline/summary may use only
+the source-free safe forms. Ambiguous uses fail closed. V1-v7 retain the
+historical flat block.
 
 Policy/lint documents and tests may quote prohibited expressions only to define
 or verify the blocking rule.

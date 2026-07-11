@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.15.3-v8-generation-retry
-- **Phase**: V8 generation retry and ISS-017 query-scope repair implemented
-- **Next milestone**: Add separately approved orphaned queued-request recovery, and test an annotation-capable research configuration
-- **Overall health**: 🟡 Real chart and stored-evidence v8 generation now pass end to end. ISS-017 remains open for orphaned queued-request recovery and ISS-018 remains open only for configured-provider citation compatibility.
+- **Version**: v0.16.0-validated-block-streaming
+- **Phase**: Active-v8 validated-block SSE enabled in the approved local development database
+- **Next milestone**: Review representative first-block latency samples only under a new bounded approval
+- **Overall health**: 🟡 Active v8 rendered its first actual validated block 4.038 seconds before full completion in the approved single-call sample while preserving final validation, polling, and last-known-good. ISS-017 queued-request recovery and ISS-018 citation compatibility remain open.
 
 ## Tech Summary
 
@@ -63,6 +63,7 @@ Future Signal/
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | TASK-116 activated `v8-contextual-wording-1`: six Korean expressions now require explicit negation/inquiry or source-supported visible attribution, while financial/action and future-outcome blocks remain strict. Historical v8 reports reconstruct as stale last-known-good. Backend 482 tests/Ruff pass. |
 | 2026-07-11 | TASK-115 restored the stopped Frontend server, added explicit v8 prohibited-expression prompt guidance, and made failed requests retryable with stored evidence through append-only event metadata. A real development chart and fresh v8 briefing were verified together; Backend 467 tests/Ruff and all Frontend checks pass. |
 | 2026-07-11 | TASK-114 removed full snapshot/metric materialization from ID routes, bounded history and report evidence reads by market/time/latest row, and moved list/category latest-row selection into portable SQL. Backend 466 tests/Ruff, API/OpenAPI, all Frontend checks, and diff checks pass. ISS-017 remains open only for orphaned queued-request recovery. |
 | 2026-07-11 | TASK-113 widened v8 context retrieval to deterministic 90/180-day horizons, added bounded aliases and exact-excerpt fallback claims, advanced the fingerprint, connected the action to research, and added server-tool/plugin compatibility handling. Backend 459 tests/Ruff and all Frontend checks pass. The approved development run returned no standard annotations, stored no candidate/report, and opened ISS-018. |
