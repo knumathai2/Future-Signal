@@ -1463,6 +1463,57 @@ def _basis_values_match_available_evidence(
     return True
 
 
+_GROUNDED_DETAIL_TERMS: tuple[str, ...] = (
+    "위원회",
+    "본회의",
+    "표결",
+    "수정안",
+    "연방준비제도",
+    "한국은행",
+    "유럽중앙은행",
+    "fomc",
+    "금통위",
+    "기준금리",
+    "물가",
+    "고용",
+    "중재자",
+    "중재",
+    "합의문",
+    "당사국",
+    "committee",
+    "plenary",
+    "amendment",
+    "federal reserve",
+    "central bank meeting",
+    "mediator",
+    "agreement document",
+)
+
+
+def _v5_uses_only_supported_detail_terms(
+    fields: V5LLMFields, inputs: V4ReportInputs
+) -> bool:
+    """Reject high-risk procedural detail absent from structured evidence.
+
+    This bounded MVP gate complements numeric/date/URL validation. A term may
+    appear when it is present in the source title, resolution definition, or
+    verified candidate evidence, but not merely from model background knowledge.
+    """
+    evidence_parts = [inputs.title, inputs.outcome_label or ""]
+    if inputs.resolution_rules is not None:
+        evidence_parts.extend(
+            [
+                inputs.resolution_rules.condition_text or "",
+                *inputs.resolution_rules.exclusions,
+            ]
+        )
+    for candidate in inputs.context_candidates:
+        evidence_parts.extend((candidate.title, candidate.neutral_summary))
+    evidence = " ".join(evidence_parts).casefold()
+    authored = _v5_authored_text(fields).casefold()
+    return all(term not in authored or term in evidence for term in _GROUNDED_DETAIL_TERMS)
+
+
 def build_v5_prompt(inputs: V4ReportInputs) -> tuple[str, str]:
     payload = {
         "input_completeness": determine_input_completeness(inputs),
@@ -1713,6 +1764,8 @@ def run_v5_safety_and_semantic_checks(
         return SafetyFilterResult(False, "scenario_count_evidence_mismatch")
     if not _basis_values_match_available_evidence(llm_fields, inputs):
         return SafetyFilterResult(False, "basis_evidence_mismatch")
+    if not _v5_uses_only_supported_detail_terms(llm_fields, inputs):
+        return SafetyFilterResult(False, "unsupported_procedural_detail")
     if bool(inputs.context_candidates) != (llm_fields.evidence_synthesis is not None):
         return SafetyFilterResult(False, "evidence_synthesis_presence_mismatch")
     expected_refs = [f"metric:{inputs.metric_id}"] + [

@@ -1290,3 +1290,76 @@ def test_v5_basis_must_match_available_evidence():
     result = run_v5_safety_and_semantic_checks(payload, inputs, invalid)
 
     assert result.rule == "basis_evidence_mismatch"
+
+
+@pytest.mark.parametrize(
+    ("title", "unsupported_text"),
+    [
+        (
+            "이번 회기 AI 감독 법안 통과",
+            "만약 위원회 표결 일정이 공개된다면 해당 절차를 기준으로 구분합니다.",
+        ),
+        (
+            "이번 분기 중앙은행 기준금리 경로",
+            "만약 FOMC 회의 자료가 공개된다면 해당 절차를 기준으로 구분합니다.",
+        ),
+        (
+            "미국과 이란의 휴전 협의 틀 마련",
+            "만약 중재자와 합의문이 공개된다면 해당 절차를 기준으로 구분합니다.",
+        ),
+    ],
+)
+def test_v5_title_only_cases_reject_unsupported_procedural_detail(
+    title, unsupported_text
+):
+    inputs = _v4_inputs(
+        title=title,
+        with_context=False,
+        resolution_rules=None,
+        change_24h=None,
+        change_7d=None,
+    )
+    fields = _v5_fields(
+        with_context=False,
+        executive_summary=(
+            f"{title} 질문과 저장된 현재 값만을 근거로 살펴보는 이슈입니다. 세부 판정 "
+            "정의가 없어 현실의 결과를 뜻하지 않으며 입력 범위 밖의 내용은 확인되지 않았습니다."
+        ),
+        conditional_scenarios=[
+            {
+                "title": "입력 밖 세부 절차",
+                "narrative": unsupported_text,
+                "basis": "data_limitation",
+            }
+        ],
+        factors_to_check=[
+            {
+                "title": "정의 결손",
+                "explanation": "세부 판정 정의가 입력에 없어 구체적 절차를 구분할 수 없습니다.",
+                "basis": "data_limitation",
+            },
+            {
+                "title": "현재 관측값",
+                "explanation": "저장된 현재 값과 데이터 기준 시각만 분리해 확인합니다.",
+                "basis": "observed_data",
+            },
+        ],
+        signals_to_watch=[
+            {
+                "title": "정의 자료",
+                "explanation": "세부 판정 정의가 이후 입력에 포함되는지 확인합니다.",
+                "basis": "data_limitation",
+            },
+            {
+                "title": "데이터 갱신",
+                "explanation": "공개 예측시장 데이터의 이후 갱신 시각을 확인합니다.",
+                "basis": "observed_data",
+            },
+        ],
+    )
+    content = assemble_v5_report_content(inputs, fields)
+    payload = build_v5_stored_payload(inputs, content)
+
+    result = run_v5_safety_and_semantic_checks(payload, inputs, fields)
+
+    assert result.rule == "unsupported_procedural_detail"

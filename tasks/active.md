@@ -19,11 +19,12 @@ excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-091 | Grounding integration, safety, and scope audit | Reviewer | Reviewer | `review/TASK-091-grounding-integration` | assigned |
+| — | No tasks currently in progress; TASK-082~091 are complete | — | — | — | completed |
 
 The user approved TASK-083's database-schema code change and TASK-085/TASK-090's
 public API changes on 2026-07-11. TASK-083 is complete without applying its
-migration to any database. TASK-090 is complete and TASK-091 is next.
+migration to any database. TASK-082~091 are complete. Migration 003 remains
+unapplied; deployment and all non-test database writes remain excluded.
 
 Deployment and production writes remain outside the approved program.
 

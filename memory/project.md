@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.11.0-v5-narrative-review-ready
-- **Phase**: Approved post-MVP v5 narrative-summary/source-link program complete
-- **Next milestone**: User quality decision on the actual local v5 result
-- **Overall health**: 🟢 Review ready — TASK-075~081 are complete. Development has valid v5 reports across 13 issues, strict API/UI/browser validation passes, and the actual comparison screen is open. Verified sources remain zero, so the real UI honestly shows the no-source state. Deployment and production writes remain excluded.
+- **Version**: v0.12.0-v5-grounding-code-complete
+- **Phase**: Post-MVP grounding program complete in code
+- **Next milestone**: Separately controlled migration 003 application and grounded report regeneration, if requested
+- **Overall health**: 🟢 Code complete — TASK-082~091 preserve source resolution evidence, scale output to evidence completeness, validate exact titles/reference values/basis, and pass full Backend/Frontend verification. Migration 003 remains unapplied and no grounded development rows were generated, consistent with the no-write/no-provider scope.
 
 ## Tech Summary
 
@@ -57,6 +57,7 @@ Future Signal/
 | PM / Safety | The v3 MVP remains frozen. ADR-038 activates TASK-056~065 with verified-only automated context, strict evidence links, a cumulative USD 100 OpenRouter cap, and local/development-only writes. Deployment and production DB writes remain separate gates. |
 | v4 program | TASK-056~065 are complete. Migration 002 exists only in the approved development DB. ADR-047 permits bounded provider query reformulation with normalized market-metadata overlap while every evidence/publication gate remains unchanged. Fifty backfill targets yielded 46 completed distinct issues, seven rejected candidates, zero public candidates, and 14 successful v4 rows across 13 issues. |
 | v5 program | ADR-048 expands the two authored v4 fields into six evidence-bounded narrative fields, adds explicit verified-source/no-source presentation, and activates sequential TASK-075~081 for implementation, development regeneration, and user quality review. |
+| grounding program | ADR-049/TASK-082~091 add unapplied migration 003, source resolution evidence, writer/research grounding, one-to-four completeness-scaled scenarios, exact-title/reference/history validation, strict basis fields, and issue-type adversarial gates. Full Backend/Frontend checks pass; no external call, deployment, or non-test DB write occurred. |
 
 ## Recent Changes
 

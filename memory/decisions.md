@@ -1496,7 +1496,7 @@ storage.
 ### ADR-049: Evidence-completeness contract for grounded v5 reports
 
 - **Date**: 2026-07-11
-- **Status**: Accepted for staged implementation; schema and API gates remain pending
+- **Status**: Accepted and implemented in code; migration remains unapplied
 - **Decided by**: User request and Data/AI analysis
 
 **Context**: The live collector preserves the market question but replaces the
@@ -1523,3 +1523,10 @@ authorized by this ADR.
 **Consequences**: TASK-082 is complete. TASK-083 is the next task but remains at
 its approval gate. The full contract and evaluation matrix are recorded in
 `reports/task-082-grounding-contract.md`.
+
+**Implementation follow-up (2026-07-11)**: The user approved the database-schema
+and public API code changes. TASK-083~091 completed the append-only schema,
+writer/research wiring, completeness-scaled scenarios, exact-title gate,
+no-source review, reference values, deterministic history summary, basis
+contract, and full integration audit. Migration 003 was not applied to any
+database, and no provider call, deployment, or non-test database write occurred.

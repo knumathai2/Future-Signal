@@ -157,9 +157,9 @@ metric, and exact same-episode verified candidates. Its top-level shape keeps
 {
   "executive_summary": "...",
   "current_data_interpretation": "...",
-  "conditional_scenarios": [{"title": "...", "narrative": "..."}],
-  "factors_to_check": [{"title": "...", "explanation": "..."}],
-  "signals_to_watch": [{"title": "...", "explanation": "..."}],
+  "conditional_scenarios": [{"title": "...", "narrative": "...", "basis": "market_definition"}],
+  "factors_to_check": [{"title": "...", "explanation": "...", "basis": "observed_data"}],
+  "signals_to_watch": [{"title": "...", "explanation": "...", "basis": "data_limitation"}],
   "evidence_synthesis": null,
   "relationship_boundary": "...",
   "data_limitations": "...",
@@ -167,12 +167,17 @@ metric, and exact same-episode verified candidates. Its top-level shape keeps
 }
 ```
 
-`conditional_scenarios` contains three or four items; the two checklist arrays
-contain two to six items. `evidence_synthesis` is non-null exactly when the
+`conditional_scenarios` contains one to four items, with the permitted count
+bounded by deterministic definition completeness; the two checklist arrays
+contain two to six items. Every nested item carries exactly one basis from
+`market_definition`, `observed_data`, `verified_context`, or `data_limitation`,
+and read-time validation confirms that the referenced evidence class exists.
+`evidence_synthesis` is non-null exactly when the
 response has verified candidates. Candidate/source shape remains the strict
 stored-URL shape documented below. Read-time validation reruns schema, wording,
-number, evidence-reference, candidate, URL/domain, deterministic-copy, and
-timestamp checks. If the latest successful row fails, the reader tries earlier
+number, exact-title, definition-completeness, procedural-detail, basis,
+evidence-reference, candidate, URL/domain, deterministic-copy, and timestamp
+checks. If the latest successful row fails, the reader tries earlier
 successful v5 rows and preserves the latest valid result. If none validates it
 returns `200 {"status":"not_yet_generated"}`. V1–v4 rows remain audit-only.
 
