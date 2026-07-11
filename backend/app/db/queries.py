@@ -27,6 +27,7 @@ from app.db.models import (
     Market,
     MarketMetric,
     MarketOutcome,
+    MarketResolutionRule,
     MarketSnapshot,
     RelatedEvent,
 )
@@ -61,6 +62,7 @@ class LiveV4AiReport:
     reference_24h: MarketSnapshot | None = None
     reference_7d: MarketSnapshot | None = None
     recent_history: list[MarketSnapshot] | None = None
+    resolution_rule: MarketResolutionRule | None = None
 
 
 def _load_reference_snapshot(
@@ -310,9 +312,7 @@ def load_latest_successful_v4_report(
         reference_24h=_load_reference_snapshot(
             db, market_id, metric.computed_at, timedelta(hours=24)
         ),
-        reference_7d=_load_reference_snapshot(
-            db, market_id, metric.computed_at, timedelta(days=7)
-        ),
+        reference_7d=_load_reference_snapshot(db, market_id, metric.computed_at, timedelta(days=7)),
         recent_history=_load_recent_history(db, market_id, metric.computed_at),
     )
 
@@ -378,6 +378,85 @@ def load_successful_v5_reports(
                     db, market_id, metric.computed_at, timedelta(days=7)
                 ),
                 recent_history=_load_recent_history(db, market_id, metric.computed_at),
+            )
+        )
+    return results
+
+
+def load_successful_v6_reports(
+    db: Session,
+    market_id: uuid.UUID,
+    *,
+    limit: int = 20,
+) -> list[LiveV4AiReport]:
+    """Load recent v6 rows with exact evidence for last-good reconstruction."""
+    rows = (
+        db.execute(
+            select(AiReport, MarketMetric)
+            .join(MarketMetric, AiReport.input_metrics_id == MarketMetric.id)
+            .where(
+                AiReport.market_id == market_id,
+                AiReport.status == "success",
+                AiReport.prompt_version == "v6",
+                MarketMetric.market_id == market_id,
+            )
+            .order_by(AiReport.generated_at.desc(), AiReport.id.desc())
+            .limit(limit)
+        )
+        .tuples()
+        .all()
+    )
+    results: list[LiveV4AiReport] = []
+    for report, metric in rows:
+        snapshot = db.execute(
+            select(MarketSnapshot)
+            .where(
+                MarketSnapshot.market_id == market_id,
+                MarketSnapshot.captured_at <= metric.computed_at,
+            )
+            .order_by(MarketSnapshot.captured_at.desc(), MarketSnapshot.id.desc())
+            .limit(1)
+        ).scalar_one_or_none()
+        if snapshot is None:
+            continue
+        candidates = list(
+            db.execute(
+                select(ContextCandidate)
+                .where(
+                    ContextCandidate.market_id == market_id,
+                    ContextCandidate.verification_state == "verified",
+                )
+                .order_by(ContextCandidate.event_at.asc(), ContextCandidate.id.asc())
+            )
+            .scalars()
+            .all()
+        )
+        resolution_rule = None
+        raw_rules = (
+            report.content.get("resolution_rules") if isinstance(report.content, dict) else None
+        )
+        rules_hash = raw_rules.get("rules_hash") if isinstance(raw_rules, dict) else None
+        if isinstance(rules_hash, str):
+            resolution_rule = db.execute(
+                select(MarketResolutionRule).where(
+                    MarketResolutionRule.market_id == market_id,
+                    MarketResolutionRule.rules_hash == rules_hash,
+                )
+            ).scalar_one_or_none()
+        results.append(
+            LiveV4AiReport(
+                report=report,
+                metric=metric,
+                snapshot=snapshot,
+                candidates=candidates,
+                reference_24h=_load_reference_snapshot(
+                    db, market_id, metric.computed_at, timedelta(hours=24)
+                ),
+                reference_7d=_load_reference_snapshot(
+                    db, market_id, metric.computed_at, timedelta(days=7)
+                ),
+                recent_history=_load_recent_history(db, market_id, metric.computed_at),
+                resolution_rule=resolution_rule,
             )
         )
     return results

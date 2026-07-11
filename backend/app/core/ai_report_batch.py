@@ -26,6 +26,7 @@ from app.core.ai_report import (
     PROMPT_VERSION,
     V4_PROMPT_VERSION,
     V5_PROMPT_VERSION,
+    V6_PROMPT_VERSION,
     LLMCallError,
     LLMClient,
     LLMUsage,
@@ -36,6 +37,7 @@ from app.core.ai_report import (
     V4StoredReportPayload,
     V4VerifiedCandidateInput,
     V5StoredReportPayload,
+    V6StoredReportPayload,
     assemble_report_content,
     assemble_v4_report_content,
     assemble_v5_report_content,
@@ -45,13 +47,18 @@ from app.core.ai_report import (
     build_v4_stored_payload,
     build_v5_prompt,
     build_v5_stored_payload,
+    build_v6_prompt,
+    build_v6_stored_payload,
+    determine_v6_report_mode,
     parse_llm_fields,
     parse_v4_llm_fields,
     parse_v5_llm_fields,
+    parse_v6_briefing,
     run_safety_filter,
     run_semantic_checks,
     run_v4_safety_and_semantic_checks,
     run_v5_safety_and_semantic_checks,
+    run_v6_safety_and_semantic_checks,
 )
 from app.core.context_research_batch import APPROVED_BUDGET_USD, context_spend_usd
 from app.core.snapshot_metrics import as_utc_naive
@@ -259,9 +266,7 @@ def _find_tracked_outcome_label(db: Session, market_id: uuid.UUID) -> str | None
     return outcome.outcome_label if outcome is not None else None
 
 
-def _latest_resolution_rules(
-    db: Session, market_id: uuid.UUID
-) -> ResolutionRulesInput | None:
+def _latest_resolution_rules(db: Session, market_id: uuid.UUID) -> ResolutionRulesInput | None:
     row = db.execute(
         select(MarketResolutionRule)
         .where(MarketResolutionRule.market_id == market_id)
@@ -301,9 +306,7 @@ def _reference_snapshot(
     ).scalar_one_or_none()
 
 
-def _recent_history_summary(
-    db: Session, market_id: uuid.UUID, metric_timestamp: datetime
-):
+def _recent_history_summary(db: Session, market_id: uuid.UUID, metric_timestamp: datetime):
     rows = db.execute(
         select(MarketSnapshot.captured_at, MarketSnapshot.price)
         .where(
@@ -1077,6 +1080,169 @@ def run_v5_ai_report_batch_for_latest_metrics(
 ) -> list[ReportOutcome]:
     metrics = select_latest_metrics_for_regeneration(db, V5_PROMPT_VERSION)
     return _run_v5_metrics(
+        db,
+        metrics,
+        llm_client,
+        model_name,
+        generated_at_for_metric=lambda _metric: datetime.now(UTC),
+        **kwargs,
+    )
+
+
+def generate_v6_report_for_market(
+    db: Session,
+    market: Market,
+    metric: MarketMetric,
+    inputs: V4ReportInputs,
+    llm_client: LLMClient,
+    generated_at: datetime,
+    model_name: str,
+) -> ReportOutcome:
+    """Generate and append one ADR-050 mode-constrained v6 report."""
+    mode = determine_v6_report_mode(inputs)
+    system_prompt, user_prompt = build_v6_prompt(inputs)
+    usage_start = len(_usage_records(llm_client))
+    payload: V6StoredReportPayload | None = None
+    briefing = None
+    last_error = "unknown"
+    for _attempt in range(1, MAX_ATTEMPTS + 1):
+        try:
+            raw = llm_client.complete(system_prompt, user_prompt)
+        except LLMCallError as exc:
+            last_error = type(exc).__name__
+            continue
+        briefing = parse_v6_briefing(raw, mode)
+        if briefing is None:
+            last_error = "malformed_mode_or_schema_mismatched_response"
+            continue
+        payload = build_v6_stored_payload(inputs, briefing)
+        if payload is None:
+            last_error = "assembled_content_failed_v6_contract"
+            continue
+        break
+
+    usage = _usage_since(llm_client, usage_start)
+    if payload is None or briefing is None:
+        db.add(
+            AiReport(
+                id=uuid.uuid4(),
+                market_id=market.id,
+                generated_at=generated_at,
+                input_metrics_id=metric.id,
+                content={},
+                model_used=model_name,
+                prompt_version=V6_PROMPT_VERSION,
+                status="failed",
+            )
+        )
+        db.commit()
+        return ReportOutcome(
+            market_id=market.id,
+            status="failed",
+            reason=last_error,
+            model_usage=usage,
+        )
+
+    validation = run_v6_safety_and_semantic_checks(payload, inputs, briefing)
+    if not validation.passed:
+        return ReportOutcome(
+            market_id=market.id,
+            status="filtered",
+            reason=f"{validation.field}:{validation.rule}",
+            model_usage=usage,
+        )
+
+    db.add(
+        AiReport(
+            id=uuid.uuid4(),
+            market_id=market.id,
+            generated_at=generated_at,
+            input_metrics_id=metric.id,
+            content=payload.model_dump(mode="json"),
+            model_used=model_name,
+            prompt_version=V6_PROMPT_VERSION,
+            status="success",
+        )
+    )
+    db.commit()
+    return ReportOutcome(market_id=market.id, status="success", model_usage=usage)
+
+
+def _run_v6_metrics(
+    db: Session,
+    metrics: list[MarketMetric],
+    llm_client: LLMClient,
+    model_name: str,
+    *,
+    generated_at_for_metric,
+    failed_context_market_ids: set[uuid.UUID] | None = None,
+    budget_usd: float = APPROVED_BUDGET_USD,
+    writer_cost_reservation_usd: float = 0.5,
+) -> list[ReportOutcome]:
+    failed_context_market_ids = failed_context_market_ids or set()
+    outcomes: list[ReportOutcome] = []
+    running_spend = context_spend_usd(db)
+    effective_budget = min(budget_usd, APPROVED_BUDGET_USD)
+    for metric in metrics:
+        if metric.market_id in failed_context_market_ids:
+            outcomes.append(ReportOutcome(metric.market_id, "skipped", "context_research_failed"))
+            continue
+        if running_spend + writer_cost_reservation_usd > effective_budget:
+            outcomes.append(ReportOutcome(metric.market_id, "skipped", "budget_limit"))
+            continue
+        market = db.get(Market, metric.market_id)
+        if market is None:
+            outcomes.append(ReportOutcome(metric.market_id, "skipped", "market_not_found"))
+            continue
+        generated_at = generated_at_for_metric(metric)
+        inputs = build_v4_inputs_for_market(db, market, metric, generated_at)
+        if inputs is None:
+            outcomes.append(
+                ReportOutcome(metric.market_id, "skipped", "invalid_or_missing_v6_evidence")
+            )
+            continue
+        try:
+            outcome = generate_v6_report_for_market(
+                db, market, metric, inputs, llm_client, generated_at, model_name
+            )
+        except Exception:
+            db.rollback()
+            logger.exception("Unhandled error generating v6 report for market %s.", market.id)
+            outcome = ReportOutcome(market.id, "skipped", "unhandled_error")
+        outcomes.append(outcome)
+        if outcome.model_usage:
+            cost = outcome.model_usage.get("writer_cost_usd")
+            if isinstance(cost, int | float):
+                running_spend += float(cost)
+    return outcomes
+
+
+def run_v6_ai_report_batch(
+    db: Session,
+    run_timestamp: datetime,
+    llm_client: LLMClient,
+    model_name: str,
+    **kwargs,
+) -> list[ReportOutcome]:
+    metrics = select_markets_for_regeneration(db, run_timestamp, V6_PROMPT_VERSION)
+    return _run_v6_metrics(
+        db,
+        metrics,
+        llm_client,
+        model_name,
+        generated_at_for_metric=lambda _metric: run_timestamp,
+        **kwargs,
+    )
+
+
+def run_v6_ai_report_batch_for_latest_metrics(
+    db: Session,
+    llm_client: LLMClient,
+    model_name: str,
+    **kwargs,
+) -> list[ReportOutcome]:
+    metrics = select_latest_metrics_for_regeneration(db, V6_PROMPT_VERSION)
+    return _run_v6_metrics(
         db,
         metrics,
         llm_client,

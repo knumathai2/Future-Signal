@@ -27,6 +27,7 @@ from app.core.ai_report import (
     PROMPT_VERSION,
     V4_PROMPT_VERSION,
     V5_PROMPT_VERSION,
+    V6_PROMPT_VERSION,
     LLMCallError,
     LLMReportFields,
     LLMUsage,
@@ -41,6 +42,7 @@ from app.core.ai_report_batch import (
     run_ai_report_batch,
     run_v4_ai_report_batch,
     run_v5_ai_report_batch,
+    run_v6_ai_report_batch,
     select_markets_for_regeneration,
 )
 from app.core.historical_seed import metric_timestamp_for_seed
@@ -91,6 +93,28 @@ LEGACY_CONTENT = {
     "scenario_status_quo": "조건이 성립하지 않으면 기존 흐름이 대체로 유지될 수 있습니다.",
     "check_points": "확인할 지점은 공식 발표, 기준일, 후속 절차입니다.",
     "caution_note": "이 요약은 공개 데이터와 등록된 맥락을 정리한 것입니다.",
+}
+
+VALID_V6_CHANGE_WITHOUT_EVIDENCE = {
+    "mode": "change_without_evidence",
+    "conditional_scenarios": [
+        {
+            "title": "문서 범위가 달라지는 경우",
+            "text": (
+                "만약 Test 항목을 다루는 공개 문서의 범위가 달라지는 경우 일반적인 "
+                "상황 구분에 따라 내용을 살펴볼 수 있습니다."
+            ),
+            "basis": "general_scenario",
+        }
+    ],
+    "materials_to_check": [
+        {
+            "scenario_index": 1,
+            "title": "공개 문서 범위",
+            "text": "Test 항목을 다루는 공식 공개 문서의 범위를 확인할 자료입니다.",
+            "basis": "general_scenario",
+        }
+    ],
 }
 
 
@@ -1056,6 +1080,30 @@ def test_v5_no_candidate_stores_narrative_and_metric_evidence(db):
     assert row.content["evidence_refs"] == [f"metric:{metric.id}"]
     assert row.content["content"]["evidence_synthesis"] is None
     assert "Test issue" in row.content["content"]["executive_summary"]
+
+
+def test_v6_batch_stores_only_mode_constrained_payload(db):
+    _, metric, _ = _seed_v4_metric_state(db, with_context=False)
+    client = FakeV4LLMClient([json.dumps(VALID_V6_CHANGE_WITHOUT_EVIDENCE, ensure_ascii=False)])
+
+    outcomes = run_v6_ai_report_batch(db, NOW, client, "openai/writer")
+
+    assert outcomes[0].status == "success"
+    row = db.query(AiReport).one()
+    assert row.prompt_version == V6_PROMPT_VERSION
+    assert row.input_metrics_id == metric.id
+    assert row.content["report_mode"] == "change_without_evidence"
+    assert row.content["briefing"]["mode"] == "change_without_evidence"
+    assert row.content["observed_change"] == {
+        "metric_id": metric.id,
+        "window": "24h",
+        "current_value": 0.63,
+        "change_value": 0.08,
+        "significant": True,
+        "threshold": 0.05,
+    }
+    assert row.content["evidence_refs"] == [f"metric:{metric.id}"]
+    assert "current_value" not in row.content["briefing"]
 
 
 def test_v5_generic_summary_is_filtered_and_not_stored(db):

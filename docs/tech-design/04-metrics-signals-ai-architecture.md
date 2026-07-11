@@ -209,4 +209,33 @@ The frontend opens the exact stored URL with safe external-link attributes. A
 zero-candidate report is valid but cannot contain `evidence_synthesis` prose or
 source links.
 
+### 10.9 Approved v6 mode and reconstruction architecture (ADR-050)
+
+V6 keeps append-only `ai_reports.content` JSONB and requires no migration. A
+deterministic selector evaluates the latest linked metric with the existing
+`build_expectation_shift_signal()` rule and independently reconstructs zero to
+three public verified candidates. Their two booleans select one of four strict
+`report_mode` values before the writer is called.
+
+The stored/public envelope adds deterministic `observed_change`,
+`resolution_reference`, and `report_mode`, plus a mode-discriminated `briefing`
+union. Each narrative block carries one evidence basis from `observed_data`,
+`market_definition`, `verified_context`, `general_scenario`, or
+`data_limitation`. Only the fields allowed for the chosen mode may be generated
+or stored. Fixed no-source/general-scenario labels, metric prose, limitations,
+caution, and rule-reference content are rebuilt from stored evidence.
+
+Generation and API reconstruction independently verify the mode, metric,
+candidate/source timing, evidence availability, basis enum, allowed fields,
+resolution-rule reference, and exact URLs. They also normalize bodies to reject
+exact and title-only duplicates, reject high-overlap cross-section prose, and
+block authored metric/date/rule repetition. V1-v5 remain audit-only; fallback is
+limited to an earlier valid v6 row.
+
+The exact public shape is in
+`reports/task-092-evidence-aware-briefing-policy.md`. The user approved the
+public API and AI-policy changes on 2026-07-11. Workflow/runtime configuration,
+deployment, production writes, new dependencies, and schema changes remain
+outside this approval.
+
 ---

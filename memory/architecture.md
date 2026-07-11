@@ -95,6 +95,25 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 | Evidence-bounded narrative v5 | Six authored narrative fields plus deterministic relationship/limitation/caution fields; verified exact-source links; genericity/evidence/safety gates | 2026-07-11 (ADR-048, human-approved) |
 | Resolution-rule evidence | Separate append-only source condition/deadline/exclusion/source records from display copy; hash-idempotent versions | 2026-07-11 (ADR-049, human-approved code change) |
 | Server-tool query scope | Deterministic anchors + bounded normalized metadata overlap; exact reported strings audited | 2026-07-11 (ADR-047, human-approved) |
+| Evidence-aware briefing v6 | Four deterministic change/evidence modes, strict basis union, one-owner metric/rule display, and v6-only fallback | 2026-07-11 (ADR-050, human-approved and implemented) |
+
+## V6 evidence-aware briefing implementation (TASK-092~098)
+
+ADR-050 defines a no-migration v6 extension over append-only
+`ai_reports.content`. The selector reuses the existing 24-hour Â±5pp signal rule
+and the current verified-candidate reconstruction gates to choose one of four
+report modes before generation. The public response adds deterministic
+`observed_change`, `resolution_reference`, `report_mode`, and a strict
+mode-discriminated briefing union. V1-v5 remain audit-only and only a
+contract-compatible v6 row could satisfy fallback.
+
+TASK-093 implements mode-constrained generation and append-only storage;
+TASK-095 reconstructs the strict public response from DB evidence and excludes
+v1-v5 rows; TASK-096 renders the four layouts and collapsed rule reference;
+TASK-097 stores two actual development successes after bounded fail-closed
+evaluation; and TASK-098 verifies stored/API/UI integration. The user approved
+the AI-policy, public API, and bounded provider calls. No schema, dependency,
+workflow, infrastructure, deployment, or production-write change is included.
 
 ## Architecture Constraints
 

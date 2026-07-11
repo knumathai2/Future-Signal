@@ -1,0 +1,1947 @@
+[
+  {
+    "id": "16183",
+    "market_id": "691547",
+    "polymarket_condition_id": "0xced0cb8725bad43d78fda0cd0e5fa9e31804625cb3502b2c7897f8e8f7fa9e1f",
+    "title": "Kraken IPO by December 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this crypto issue. Interpret changes with caution and verify source context.",
+    "category": "Crypto",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.245,
+    "volume_24h": 326.99,
+    "volume_total": 545391.2913150019,
+    "liquidity": 10175.4568,
+    "market_created_at": "2025-11-19T15:48:14.624315Z",
+    "end_date": "2027-01-01T05:00:00Z",
+    "event_created_at": "2024-12-31T18:18:36.692417Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2027-01-01T05:00:00Z",
+    "clob_token_ids": [
+      "34626184950254225208692030156208941308358060420950772251072421141618169142241",
+      "28557614648090529004584076028720900603196666949274543515794672175624115225556"
+    ],
+    "price_history_token": "34626184950254225208692030156208941308358060420950772251072421141618169142241",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Kraken IPO by ___ ?",
+      "tag_slugs": [
+        "2025-predictions",
+        "business",
+        "crypto",
+        "crypto-listings",
+        "exchange",
+        "featured",
+        "finance",
+        "ipos"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "16263",
+    "market_id": "2694508",
+    "polymarket_condition_id": "0x98e6e35c934b5281f28373b408a129825c6453918fb8bd9dfb8a991be2dd684f",
+    "title": "Macron out by July 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this france issue. Interpret changes with caution and verify source context.",
+    "category": "France",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.0095,
+    "volume_24h": 334.82,
+    "volume_total": 10051.618198999993,
+    "liquidity": 22053.0997,
+    "market_created_at": "2026-06-26T15:56:20.157318Z",
+    "end_date": "2026-07-31T12:00:00Z",
+    "event_created_at": "2025-01-03T19:28:39.855536Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2026-06-30T12:00:00Z",
+    "clob_token_ids": [
+      "28543399540889573521326455114444614843465304193358852739098843595402438285283",
+      "64737144597035632498370333432882203102562861720967881889541302920852035334778"
+    ],
+    "price_history_token": "28543399540889573521326455114444614843465304193358852739098843595402438285283",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Macron out by...?",
+      "tag_slugs": [
+        "2025-predictions",
+        "france",
+        "macron",
+        "politics",
+        "resign",
+        "world"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "16423",
+    "market_id": "2354064",
+    "polymarket_condition_id": "0x43204573cf724eda06c520a42a7cb97df319cc27ed997be3b96ca74398ede87f",
+    "title": "Will the next UK election be called by December 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this uk issue. Interpret changes with caution and verify source context.",
+    "category": "UK",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.135,
+    "volume_24h": 680.43,
+    "volume_total": 10221.344127000002,
+    "liquidity": 4119.9138,
+    "market_created_at": "2026-05-25T15:34:30.060986Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-01-06T13:06:31.446876Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2025-12-31T12:00:00Z",
+    "clob_token_ids": [
+      "31627048520492227354616069874124458767757243686332730237616510640600462926383",
+      "37064221817179838225957455025143891294172126736355626367799841115771049178138"
+    ],
+    "price_history_token": "31627048520492227354616069874124458767757243686332730237616510640600462926383",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "UK election called by...?",
+      "tag_slugs": [
+        "england",
+        "pedophile",
+        "starmer",
+        "uk",
+        "uk-labour-leadership"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "17549",
+    "market_id": "2749382",
+    "polymarket_condition_id": "0x9ec578f6ec257edab771698bd600a8eac1e59709a4e8e9cd53986cf8387e80e6",
+    "title": "NATO/EU troops fighting in Ukraine by December 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this ukraine issue. Interpret changes with caution and verify source context.",
+    "category": "Ukraine",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.065,
+    "volume_24h": 30583.451987000004,
+    "volume_total": 59631.13934199999,
+    "liquidity": 30072.8672,
+    "market_created_at": "2026-06-30T23:39:02.930267Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-01-31T00:57:34.582889Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2026-12-31T12:00:00Z",
+    "clob_token_ids": [
+      "83822435716035660497147241422577858668594129234727507087266598622219382324322",
+      "17799682251044587344253612662468317771332927166743838473163687802268935485073"
+    ],
+    "price_history_token": "83822435716035660497147241422577858668594129234727507087266598622219382324322",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "NATO/EU troops fighting in Ukraine by...?",
+      "tag_slugs": [
+        "eu",
+        "geopolitics",
+        "nato",
+        "politics",
+        "russia",
+        "security-guarantee",
+        "trump-zelenskyy",
+        "ukraine",
+        "world"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "17858",
+    "market_id": "1323364",
+    "polymarket_condition_id": "0x3e4e5225054ad5168e0b249164f643453ba97a8947f84d7aacb4c768275d48e9",
+    "title": "Ukraine recognizes Russian sovereignty over its territory by December 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this politics issue. Interpret changes with caution and verify source context.",
+    "category": "Politics",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.041,
+    "volume_24h": 7.32,
+    "volume_total": 74800.89907999999,
+    "liquidity": 36598.45293,
+    "market_created_at": "2026-02-03T00:49:21.271194Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-02-06T22:01:47.648437Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2026-12-31T12:00:00Z",
+    "clob_token_ids": [
+      "111407906413483830198481741547621131014289190946534570245645667771579973364067",
+      "112468620935063687606410022378078855998390735429551163191251582889945981781902"
+    ],
+    "price_history_token": "111407906413483830198481741547621131014289190946534570245645667771579973364067",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Ukraine recognizes Russian sovereignty over its territory by...?",
+      "tag_slugs": [
+        "foreign-policy",
+        "geopolitics",
+        "politics",
+        "putin",
+        "trump",
+        "trump-presidency",
+        "trump-putin",
+        "trump-zelenskyy",
+        "ukraine",
+        "world",
+        "zelensky"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "18558",
+    "market_id": "2602067",
+    "polymarket_condition_id": "0x0bd9ea5ce49559923c2929958afa1c699b0c1ace54cdd6ffa0b56506e9273d56",
+    "title": "Ukraine election called by August 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this ukraine issue. Interpret changes with caution and verify source context.",
+    "category": "Ukraine",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.0735,
+    "volume_24h": 25.316454,
+    "volume_total": 128783.668211,
+    "liquidity": 30415.11895,
+    "market_created_at": "2026-06-19T00:39:13.016754Z",
+    "end_date": "2026-08-31T11:00:00Z",
+    "event_created_at": "2025-02-13T19:39:15.966366Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2026-12-31T12:00:00Z",
+    "clob_token_ids": [
+      "93493841580506086301850708011539393401066204405236876763051464421070051891780",
+      "83943169380140685038489730889739849898318526088225940815697125664098988909042"
+    ],
+    "price_history_token": "93493841580506086301850708011539393401066204405236876763051464421070051891780",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Ukraine election called by...?",
+      "tag_slugs": [
+        "foreign-policy",
+        "geopolitics",
+        "politics",
+        "trump-zelenskyy",
+        "ukraine",
+        "world"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "18571",
+    "market_id": "1807912",
+    "polymarket_condition_id": "0x523959b6256674318eb34755789fffd8c62cd652e5fa11ffd332402361d058e9",
+    "title": "Will any country leave NATO by December 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this nato issue. Interpret changes with caution and verify source context.",
+    "category": "NATO",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.0435,
+    "volume_24h": 28692.527211999997,
+    "volume_total": 316338.5907739999,
+    "liquidity": 45010.26419,
+    "market_created_at": "2026-03-31T15:38:07.695444Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-02-13T22:27:42.74491Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2026-12-31T12:00:00Z",
+    "clob_token_ids": [
+      "97672112380588518658859221422581522664938121648778223046012006536512218182756",
+      "111540681317740103557967262084337258765868556750780059317482948108124337120382"
+    ],
+    "price_history_token": "97672112380588518658859221422581522664938121648778223046012006536512218182756",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Will any country leave NATO by...?",
+      "tag_slugs": [
+        "geopolitics",
+        "nato",
+        "politics",
+        "world"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "18576",
+    "market_id": "677358",
+    "polymarket_condition_id": "0xe29c8bf245ab35d14c722503922e6086da7dcfb08f357d1e8012331573d9e633",
+    "title": "Ukraine election held by December 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this ukraine issue. Interpret changes with caution and verify source context.",
+    "category": "Ukraine",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.085,
+    "volume_24h": 12.0,
+    "volume_total": 220670.31507699974,
+    "liquidity": 18003.8141,
+    "market_created_at": "2025-11-11T22:24:22.343831Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-02-13T23:40:55.577987Z",
+    "event_updated_at": "2026-07-11T06:34:31.681338Z",
+    "event_end_date": "2025-12-31T12:00:00Z",
+    "clob_token_ids": [
+      "109439459397675447272341488571573598040211823291452380402543262182060250075424",
+      "65651447697756505945607381171434271908621057725573696706081861343152172944468"
+    ],
+    "price_history_token": "109439459397675447272341488571573598040211823291452380402543262182060250075424",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Ukraine election held by...?",
+      "tag_slugs": [
+        "foreign-policy",
+        "geopolitics",
+        "politics",
+        "trump-zelenskyy",
+        "ukraine",
+        "world"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "25009",
+    "market_id": "676804",
+    "polymarket_condition_id": "0xf53d2cf86bf4ea3c6a0bfb739cc0dded28001dde6eee5f90b8bb6716ce33571a",
+    "title": "Will OpenAI launch a new consumer hardware product by December 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this tech issue. Interpret changes with caution and verify source context.",
+    "category": "Tech",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.32,
+    "volume_24h": 31.23,
+    "volume_total": 31146.684380999992,
+    "liquidity": 4893.3694,
+    "market_created_at": "2025-11-11T17:59:14.261328Z",
+    "end_date": "2026-12-31T00:00:00Z",
+    "event_created_at": "2025-05-22T14:37:13.578027Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2025-12-31T12:00:00Z",
+    "clob_token_ids": [
+      "108052633825118494550832240247980096965299835115818656939682823516952479310001",
+      "109032054135515324372392914003878608801870315631474102526082551908911817990775"
+    ],
+    "price_history_token": "108052633825118494550832240247980096965299835115818656939682823516952479310001",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Will OpenAI launch a consumer hardware product by...?",
+      "tag_slugs": [
+        "ai",
+        "big-tech",
+        "gpt-5",
+        "openai",
+        "sam-altman",
+        "tech"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "25036",
+    "market_id": "2159718",
+    "polymarket_condition_id": "0x271e1d96693db79b42a277dc5f64b61a72bc1a0fad85586fd28c7d89b9b96231",
+    "title": "Will Russia capture Kostyantynivka by September 30?",
+    "description": "Tracks reflected expectation in public prediction-market data for this ukraine issue. Interpret changes with caution and verify source context.",
+    "category": "Ukraine",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.815,
+    "volume_24h": 1673.825534,
+    "volume_total": 263649.5041039998,
+    "liquidity": 75914.3744,
+    "market_created_at": "2026-05-04T20:42:57.818734Z",
+    "end_date": "2026-09-30T12:00:00Z",
+    "event_created_at": "2025-05-22T21:05:50.676357Z",
+    "event_updated_at": "2026-07-11T06:36:08.156819Z",
+    "event_end_date": "2025-12-31T12:00:00Z",
+    "clob_token_ids": [
+      "55628874182306186050631811887515133881663823417535899038376461448048315313936",
+      "63712527751974257201038440220031691363508120012860375402898424160848105925111"
+    ],
+    "price_history_token": "55628874182306186050631811887515133881663823417535899038376461448048315313936",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Will Russia capture Kostyantynivka by...?",
+      "tag_slugs": [
+        "geopolitics",
+        "politics",
+        "russia-capture",
+        "ukraine",
+        "ukraine-map",
+        "world"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "25391",
+    "market_id": "2676035",
+    "polymarket_condition_id": "0xa9cebe2b15436ca65edfdcd7d447a0b7028ae5bc5f70ab8860609cf931ff536c",
+    "title": "Spain snap election called by August 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this politics issue. Interpret changes with caution and verify source context.",
+    "category": "Politics",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.0315,
+    "volume_24h": 31.7,
+    "volume_total": 3697.085261,
+    "liquidity": 19292.89325,
+    "market_created_at": "2026-06-24T23:10:33.820263Z",
+    "end_date": "2026-08-31T23:59:00Z",
+    "event_created_at": "2025-05-28T17:17:11.280439Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2026-08-31T12:00:00Z",
+    "clob_token_ids": [
+      "53107233019936818776932537419928255013820188991890096631827301058948809573990",
+      "103533043587935563046576444710847485034787596543228838053472803805384813876872"
+    ],
+    "price_history_token": "53107233019936818776932537419928255013820188991890096631827301058948809573990",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Spain snap election called by...?",
+      "tag_slugs": [
+        "elections",
+        "global-elections",
+        "international-election-props",
+        "politics",
+        "world",
+        "world-affairs"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "25410",
+    "market_id": "1124834",
+    "polymarket_condition_id": "0x3373d3750e99d0fd60da842e688d89b71ad92d6bdd42c329f199add1c5bacb06",
+    "title": "US x Russia military clash by December 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this trump presidency issue. Interpret changes with caution and verify source context.",
+    "category": "Trump Presidency",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.0555,
+    "volume_24h": 41.026425,
+    "volume_total": 1021588.8365330021,
+    "liquidity": 29973.27909,
+    "market_created_at": "2026-01-06T21:08:23.432945Z",
+    "end_date": "2026-12-31T12:00:00Z",
+    "event_created_at": "2025-05-28T21:26:39.80768Z",
+    "event_updated_at": "2026-07-11T06:34:44.737245Z",
+    "event_end_date": "2026-12-31T12:00:00Z",
+    "clob_token_ids": [
+      "74580890713477889155778397033413604695248820561928419929239929602538131402272",
+      "7257011479626409922035368873631229141341263144294525166015954883117981789975"
+    ],
+    "price_history_token": "74580890713477889155778397033413604695248820561928419929239929602538131402272",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "US x Russia military clash by...?",
+      "tag_slugs": [
+        "geopolitics",
+        "military-action",
+        "trump",
+        "trump-presidency",
+        "us-iran",
+        "world"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "25827",
+    "market_id": "1007579",
+    "polymarket_condition_id": "0x6176cc868c8893cf431ae1e8103d4d4c1fcfcf239c3b3415b672151337125884",
+    "title": "Will Russia capture Sumy by March 31, 2027?",
+    "description": "Tracks reflected expectation in public prediction-market data for this geopolitics issue. Interpret changes with caution and verify source context.",
+    "category": "Geopolitics",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.095,
+    "volume_24h": 131.54000000000002,
+    "volume_total": 336331.46782200725,
+    "liquidity": 45503.721,
+    "market_created_at": "2025-12-23T22:30:21.792558Z",
+    "end_date": "2027-03-31T00:00:00Z",
+    "event_created_at": "2025-06-02T23:22:03.880999Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2027-03-31T00:00:00Z",
+    "clob_token_ids": [
+      "53233529358602879115478722993262404502732073224174276202211965211706009589067",
+      "76350537296247188972152277947349396667408693228883257954471424426267688952517"
+    ],
+    "price_history_token": "53233529358602879115478722993262404502732073224174276202211965211706009589067",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Will Russia capture Sumy by...?",
+      "tag_slugs": [
+        "geopolitics",
+        "putin",
+        "russia-capture",
+        "ukraine",
+        "ukraine-map",
+        "world"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "25930",
+    "market_id": "1068327",
+    "polymarket_condition_id": "0xd3a3c1d537142ebc94ae25f7b268ce64e4e43e6452c5a912221d2e2744aeb312",
+    "title": "Will Pump.fun perform an airdrop by December 31, 2026",
+    "description": "Tracks reflected expectation in public prediction-market data for this airdrops issue. Interpret changes with caution and verify source context.",
+    "category": "Airdrops",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.125,
+    "volume_24h": 28.51,
+    "volume_total": 171368.75573599956,
+    "liquidity": 6657.4305,
+    "market_created_at": "2025-12-30T20:42:32.722107Z",
+    "end_date": "2027-01-01T05:00:00Z",
+    "event_created_at": "2025-06-03T20:29:19.151437Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2027-01-01T05:00:00Z",
+    "clob_token_ids": [
+      "23979773390611496299652546131606735686099256186322678196712320732715801255871",
+      "46094258080196889322046056727689179412841124675494563561748811364384667201787"
+    ],
+    "price_history_token": "23979773390611496299652546131606735686099256186322678196712320732715801255871",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Pump.fun airdrop by ....? ",
+      "tag_slugs": [
+        "airdrops",
+        "crypto",
+        "pre-market",
+        "pumpptfun"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "27831",
+    "market_id": "2100106",
+    "polymarket_condition_id": "0x12ed4858fd4aa92e1a644c74273ca76f49735c114d6833f8a3edef4f19e5ebff",
+    "title": "Will Hyperliquid perform an airdrop by December 31, 2027?",
+    "description": "Tracks reflected expectation in public prediction-market data for this crypto issue. Interpret changes with caution and verify source context.",
+    "category": "Crypto",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.365,
+    "volume_24h": 41.205665,
+    "volume_total": 2593.786669999999,
+    "liquidity": 2980.679,
+    "market_created_at": "2026-04-27T21:25:09.476682Z",
+    "end_date": "2028-01-01T05:00:00Z",
+    "event_created_at": "2025-06-19T18:54:50.926439Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2028-01-01T05:00:00Z",
+    "clob_token_ids": [
+      "35599907049186982879557420969598528789434547136942253652554709047485665633870",
+      "18054759644013870900749170809345467324611742242067616964612696305379357034954"
+    ],
+    "price_history_token": "35599907049186982879557420969598528789434547136942253652554709047485665633870",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Hyperliquid airdrop by ....? ",
+      "tag_slugs": [
+        "airdrops",
+        "crypto",
+        "featured",
+        "pre-market"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "29005",
+    "market_id": "2119266",
+    "polymarket_condition_id": "0x10d8e0d7123623b6cd8303aab6d2e61792b8aded915336efb3adc11df448937b",
+    "title": "Will MegaETH perform an airdrop by December 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this airdrops issue. Interpret changes with caution and verify source context.",
+    "category": "Airdrops",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.2,
+    "volume_24h": 29.14,
+    "volume_total": 9721.616524999992,
+    "liquidity": 2906.4267,
+    "market_created_at": "2026-04-29T21:32:45.048017Z",
+    "end_date": "2027-01-01T05:00:00Z",
+    "event_created_at": "2025-06-26T19:38:04.692025Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2027-01-01T05:00:00Z",
+    "clob_token_ids": [
+      "4073964439546781679844222219197458984323215148120046536055850319869173017640",
+      "57444375933620596258067193404376499933911971337929532732080247805234422208790"
+    ],
+    "price_history_token": "4073964439546781679844222219197458984323215148120046536055850319869173017640",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "MegaETH airdrop by...?",
+      "tag_slugs": [
+        "airdrops",
+        "crypto",
+        "megaeth",
+        "pre-market"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "30615",
+    "market_id": "558934",
+    "polymarket_condition_id": "0x7976b8dbacf9077eb1453a62bcefd6ab2df199acd28aad276ff0d920d6992892",
+    "title": "Will Spain win the 2026 FIFA World Cup?",
+    "description": "Tracks reflected expectation in public prediction-market data for this sports issue. Interpret changes with caution and verify source context.",
+    "category": "Sports",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.2115,
+    "volume_24h": 4950826.211957053,
+    "volume_total": 102434992.06316988,
+    "liquidity": 6818880.48738,
+    "market_created_at": "2025-07-02T16:54:40.860413Z",
+    "end_date": "2026-07-20T00:00:00Z",
+    "event_created_at": "2025-07-02T16:54:39.838289Z",
+    "event_updated_at": "2026-07-11T06:36:11.633225Z",
+    "event_end_date": "2026-07-20T00:00:00Z",
+    "clob_token_ids": [
+      "4394372887385518214471608448209527405727552777602031099972143344338178308080",
+      "112680630004798425069810935278212000865453267506345451433803052322987302357330"
+    ],
+    "price_history_token": "4394372887385518214471608448209527405727552777602031099972143344338178308080",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "World Cup Winner ",
+      "tag_slugs": [
+        "2026-fifa-world-cup",
+        "fifa-world-cup",
+        "hide-from-new",
+        "soccer",
+        "sports",
+        "wc-tournament-futures"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "30828",
+    "market_id": "559651",
+    "polymarket_condition_id": "0xa467b14d51f01b957109d9cbb1d6c124fab2a089d52ed8f471d23c2812e743b7",
+    "title": "Xi Jinping out before 2027?",
+    "description": "Tracks reflected expectation in public prediction-market data for this hfc issue. Interpret changes with caution and verify source context.",
+    "category": "HFC",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.0495,
+    "volume_24h": 26471.484078,
+    "volume_total": 11224593.865185922,
+    "liquidity": 225926.36477,
+    "market_created_at": "2025-07-03T20:25:56.889606Z",
+    "end_date": "2026-12-31T00:00:00Z",
+    "event_created_at": "2025-07-03T20:25:55.760196Z",
+    "event_updated_at": "2026-07-11T06:36:14.59755Z",
+    "event_end_date": "2026-12-31T00:00:00Z",
+    "clob_token_ids": [
+      "32338220190071351435772801779725302244575775216413325951443816017994629993401",
+      "25659310674993675562345759665114759892400026242514633218387667107987341231962"
+    ],
+    "price_history_token": "32338220190071351435772801779725302244575775216413325951443816017994629993401",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Xi Jinping out before 2027?",
+      "tag_slugs": [
+        "earn-4",
+        "geopolitics",
+        "hfc",
+        "macro-geopolitics",
+        "world",
+        "world-affairs"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "30829",
+    "market_id": "559652",
+    "polymarket_condition_id": "0x0f49db97f71c68b1e42a6d16e3de93d85dbf7d4148e3f018eb79e88554be9f75",
+    "title": "Will Gavin Newsom win the 2028 Democratic presidential nomination?",
+    "description": "Tracks reflected expectation in public prediction-market data for this united states issue. Interpret changes with caution and verify source context.",
+    "category": "United States",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.189,
+    "volume_24h": 6604.342752,
+    "volume_total": 26419938.460268296,
+    "liquidity": 336246.35682,
+    "market_created_at": "2025-07-03T20:36:58.88434Z",
+    "end_date": "2028-11-07T00:00:00Z",
+    "event_created_at": "2025-07-03T20:36:57.824243Z",
+    "event_updated_at": "2026-07-11T06:36:14.515859Z",
+    "event_end_date": "2028-11-07T00:00:00Z",
+    "clob_token_ids": [
+      "54533043819946592547517511176940999955633860128497669742211153063842200957669",
+      "87854174148074652060467921081181402357467303721471806610111179101805869578687"
+    ],
+    "price_history_token": "54533043819946592547517511176940999955633860128497669742211153063842200957669",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Democratic Presidential Nominee 2028",
+      "tag_slugs": [
+        "earn-4",
+        "elections",
+        "politics",
+        "primaries",
+        "united-states",
+        "us-presidential-election",
+        "world-elections"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "31195",
+    "market_id": "560317",
+    "polymarket_condition_id": "0x6bd56627aa21311850825edb27e53434a0e17a4f782be0086bc07f71eee00d0d",
+    "title": "Putin out as President of Russia by December 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this putin issue. Interpret changes with caution and verify source context.",
+    "category": "putin",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.085,
+    "volume_24h": 17111.855003,
+    "volume_total": 16872830.77311606,
+    "liquidity": 1846697.7242,
+    "market_created_at": "2025-07-06T18:19:59.120869Z",
+    "end_date": "2026-12-31T18:30:00Z",
+    "event_created_at": "2025-07-06T18:19:57.8735Z",
+    "event_updated_at": "2026-07-11T06:36:16.16336Z",
+    "event_end_date": "2027-06-30T18:30:00Z",
+    "clob_token_ids": [
+      "350977769852917329387037893294763093471844346281449484439085576212613048126",
+      "87073899845581463485186346288398658568334162612963837182986759797304993556208"
+    ],
+    "price_history_token": "350977769852917329387037893294763093471844346281449484439085576212613048126",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Putin out as President of Russia by...?",
+      "tag_slugs": [
+        "earn-4",
+        "geopolitics",
+        "politics",
+        "putin",
+        "russia",
+        "ukraine",
+        "world"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "31552",
+    "market_id": "561229",
+    "polymarket_condition_id": "0x7ad403c3508f8e3912940fd1a913f227591145ca0614074208e0b962d5fcc422",
+    "title": "Will JD Vance win the 2028 US Presidential Election?",
+    "description": "Tracks reflected expectation in public prediction-market data for this president issue. Interpret changes with caution and verify source context.",
+    "category": "President",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.1995,
+    "volume_24h": 16791.398765999995,
+    "volume_total": 14604580.267736001,
+    "liquidity": 454455.43968,
+    "market_created_at": "2025-07-08T19:05:57.953786Z",
+    "end_date": "2028-11-07T00:00:00Z",
+    "event_created_at": "2025-07-08T19:05:57.129881Z",
+    "event_updated_at": "2026-07-11T06:36:11.327126Z",
+    "event_end_date": "2028-11-07T00:00:00Z",
+    "clob_token_ids": [
+      "16040015440196279900485035793550429453516625694844857319147506590755961451627",
+      "94476829201604408463453426454480212459887267917122244941405244686637914508323"
+    ],
+    "price_history_token": "16040015440196279900485035793550429453516625694844857319147506590755961451627",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Presidential Election Winner 2028",
+      "tag_slugs": [
+        "earn-4",
+        "elections",
+        "global-elections",
+        "main-election",
+        "politics",
+        "president",
+        "united-states",
+        "us-presidential-election",
+        "world-elections"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "31875",
+    "market_id": "561973",
+    "polymarket_condition_id": "0x895e01dbf3e6a33cd9a44ca0f8cdb5df1bd2b0b6ebed5300d28f8da7145145e4",
+    "title": "Will Donald Trump win the 2028 Republican presidential nomination?",
+    "description": "Tracks reflected expectation in public prediction-market data for this united states issue. Interpret changes with caution and verify source context.",
+    "category": "United States",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.0125,
+    "volume_24h": 1599.375658,
+    "volume_total": 9020745.060637984,
+    "liquidity": 466391.3102,
+    "market_created_at": "2025-07-10T16:58:02.775241Z",
+    "end_date": "2028-11-07T00:00:00Z",
+    "event_created_at": "2025-07-10T16:58:01.775603Z",
+    "event_updated_at": "2026-07-11T06:35:06.697361Z",
+    "event_end_date": "2028-11-07T00:00:00Z",
+    "clob_token_ids": [
+      "3039641309958397001906153616677074061284510636204155275446291716739429262374",
+      "27828976648682466778776999076215423777766972981338264154049603024771135223200"
+    ],
+    "price_history_token": "3039641309958397001906153616677074061284510636204155275446291716739429262374",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Republican Presidential Nominee 2028",
+      "tag_slugs": [
+        "earn-4",
+        "elections",
+        "global-elections",
+        "politics",
+        "primaries",
+        "united-states",
+        "us-presidential-election",
+        "world-elections"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "32224",
+    "market_id": "562793",
+    "polymarket_condition_id": "0x307a1ed89d60b61002dd5bbf00e1408c5ed2ab3fcdb056191ca7ef9bc34d38f3",
+    "title": "Will the Democratic Party control the Senate after the 2026 Midterm elections?",
+    "description": "Tracks reflected expectation in public prediction-market data for this senate issue. Interpret changes with caution and verify source context.",
+    "category": "Senate",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.455,
+    "volume_24h": 989.894344,
+    "volume_total": 1772789.6085790093,
+    "liquidity": 184941.1225,
+    "market_created_at": "2025-07-11T19:22:46.116532Z",
+    "end_date": "2026-11-03T00:00:00Z",
+    "event_created_at": "2025-07-11T19:22:45.037917Z",
+    "event_updated_at": "2026-07-11T06:35:16.420206Z",
+    "event_end_date": "2026-11-03T00:00:00Z",
+    "clob_token_ids": [
+      "113287701564209339913693347405685749986285999146352375265161592243948562084773",
+      "107118433685650702332040991454078902188473746599223732907923581436160160612542"
+    ],
+    "price_history_token": "113287701564209339913693347405685749986285999146352375265161592243948562084773",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Which party will win the Senate in 2026?",
+      "tag_slugs": [
+        "congress",
+        "earn-4",
+        "elections",
+        "global-elections",
+        "main-election",
+        "midterms",
+        "parent-for-derivative",
+        "politics",
+        "senate-elections",
+        "united-states",
+        "us-presidential-election",
+        "world-elections"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "32225",
+    "market_id": "562802",
+    "polymarket_condition_id": "0xd5d9fc47718bd553592d126b1fa5e87183d27f3936975b0c04cc0f2dec1f1bb4",
+    "title": "Will the Democratic Party control the House after the 2026 Midterm elections?",
+    "description": "Tracks reflected expectation in public prediction-market data for this parent for derivative issue. Interpret changes with caution and verify source context.",
+    "category": "Parent For Derivative",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.835,
+    "volume_24h": 29918.942609999947,
+    "volume_total": 4558510.707386833,
+    "liquidity": 297979.7608,
+    "market_created_at": "2025-07-11T19:29:37.755178Z",
+    "end_date": "2026-11-03T00:00:00Z",
+    "event_created_at": "2025-07-11T19:29:37.155683Z",
+    "event_updated_at": "2026-07-11T06:34:21.019039Z",
+    "event_end_date": "2026-11-03T00:00:00Z",
+    "clob_token_ids": [
+      "83247781037352156539108067944461291821683755894607244160607042790356561625563",
+      "33156410999665902694791064431724433042010245771106314074312009703157423879038"
+    ],
+    "price_history_token": "83247781037352156539108067944461291821683755894607244160607042790356561625563",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Which party will win the House in 2026?",
+      "tag_slugs": [
+        "earn-4",
+        "elections",
+        "global-elections",
+        "main-election",
+        "midterms",
+        "parent-for-derivative",
+        "politics",
+        "united-states",
+        "us-presidential-election",
+        "world-elections"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "32228",
+    "market_id": "562828",
+    "polymarket_condition_id": "0x16c63b7cc37f012b9f59ee164ec03877914c701d06d48291ae8d6fc08a088b0d",
+    "title": "2026 Balance of Power: D Senate, D House",
+    "description": "Tracks reflected expectation in public prediction-market data for this united states issue. Interpret changes with caution and verify source context.",
+    "category": "United States",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.445,
+    "volume_24h": 4226.185155,
+    "volume_total": 2150763.321525997,
+    "liquidity": 214972.3528,
+    "market_created_at": "2025-07-11T20:47:53.368542Z",
+    "end_date": "2026-11-03T00:00:00Z",
+    "event_created_at": "2025-07-11T20:47:52.389129Z",
+    "event_updated_at": "2026-07-11T06:35:26.349487Z",
+    "event_end_date": "2026-11-03T00:00:00Z",
+    "clob_token_ids": [
+      "34722410608062854697106861099776685947172185964394483545370684749662285977831",
+      "24483563228660028121020430722896740519524131851526579619586176931221901842798"
+    ],
+    "price_history_token": "34722410608062854697106861099776685947172185964394483545370684749662285977831",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Balance of Power: 2026 Midterms",
+      "tag_slugs": [
+        "earn-4",
+        "elections",
+        "main-election",
+        "midterms",
+        "politics",
+        "rewards-20-4pt5-50",
+        "united-states",
+        "us-presidential-election"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "32565",
+    "market_id": "563650",
+    "polymarket_condition_id": "0x139ba0e7f931f09466c0fb27fc8ddb5e77ce9d1e2bdc953a5f22765bf779452f",
+    "title": "SCOTUS accepts sports event contract case by July 31, 2026?     ",
+    "description": "Tracks reflected expectation in public prediction-market data for this supreme court  issue. Interpret changes with caution and verify source context.",
+    "category": "Supreme Court ",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.013,
+    "volume_24h": 169.710971,
+    "volume_total": 947433.3566729985,
+    "liquidity": 22809.97889,
+    "market_created_at": "2025-07-15T15:56:24.794278Z",
+    "end_date": "2026-07-31T00:00:00Z",
+    "event_created_at": "2025-07-15T15:56:24.220008Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2026-12-31T00:00:00Z",
+    "clob_token_ids": [
+      "43377185540092441472523885859099478235201860627294255832516299903130560463298",
+      "17398942423057686582491252867921221591924525918102079345877032638913486446065"
+    ],
+    "price_history_token": "43377185540092441472523885859099478235201860627294255832516299903130560463298",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "SCOTUS accepts sports event contract case by...?     ",
+      "tag_slugs": [
+        "courts",
+        "finance",
+        "legal",
+        "politics",
+        "prediction-markets",
+        "supreme-court",
+        "tech"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "33228",
+    "market_id": "565065",
+    "polymarket_condition_id": "0xb106a3c9d1c59ed8117493dae6459a3ff79369a8f7cddaf62f4a05828b89195e",
+    "title": "Will the Democrats win the 2028 US Presidential Election?",
+    "description": "Tracks reflected expectation in public prediction-market data for this us election issue. Interpret changes with caution and verify source context.",
+    "category": "US Election",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.585,
+    "volume_24h": 545.24,
+    "volume_total": 832954.6248149999,
+    "liquidity": 204557.1193,
+    "market_created_at": "2025-07-18T16:09:59.684978Z",
+    "end_date": "2028-11-07T00:00:00Z",
+    "event_created_at": "2025-07-18T16:09:58.12192Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2028-11-07T00:00:00Z",
+    "clob_token_ids": [
+      "49084048476353771153083262278964615095037480324537117350127265918750912547378",
+      "1376044590327709616459174469529480611299625159235587466149878628404281805565"
+    ],
+    "price_history_token": "49084048476353771153083262278964615095037480324537117350127265918750912547378",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Which party wins 2028 US Presidential Election?",
+      "tag_slugs": [
+        "earn-4",
+        "elections",
+        "global-elections",
+        "politics",
+        "us-presidential-election"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "33647",
+    "market_id": "2676277",
+    "polymarket_condition_id": "0x25e4d8c492f2b24d8f720c9bd7480e541613405d6d13598c51f36f214ec5112a",
+    "title": "Will Russia capture Lyman by September 30, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this ukraine issue. Interpret changes with caution and verify source context.",
+    "category": "Ukraine",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.215,
+    "volume_24h": 719.54329,
+    "volume_total": 23570.724053000024,
+    "liquidity": 23129.0008,
+    "market_created_at": "2026-06-25T00:14:34.261521Z",
+    "end_date": "2026-09-30T23:55:00Z",
+    "event_created_at": "2025-07-22T13:28:38.742008Z",
+    "event_updated_at": "2026-07-11T06:35:09.849919Z",
+    "event_end_date": "2026-12-31T23:55:00Z",
+    "clob_token_ids": [
+      "114917961775204108860828272724498097767653587946728459585603389950394616872800",
+      "71418186787677948176727422149720262158054147177659978491938945624454952053435"
+    ],
+    "price_history_token": "114917961775204108860828272724498097767653587946728459585603389950394616872800",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Will Russia capture Lyman by...?",
+      "tag_slugs": [
+        "geopolitics",
+        "politics",
+        "russia-capture",
+        "ukraine",
+        "ukraine-map",
+        "world",
+        "world-affairs"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "33685",
+    "market_id": "1939065",
+    "polymarket_condition_id": "0x8b2d3edd0500a52b39676e1d59a0da5ac145f4e03e97b0d0412da13ca0e70c2a",
+    "title": "Will Israel annex any territory by December 31?",
+    "description": "Tracks reflected expectation in public prediction-market data for this politics issue. Interpret changes with caution and verify source context.",
+    "category": "Politics",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.085,
+    "volume_24h": 47438.65,
+    "volume_total": 74400.577906,
+    "liquidity": 17673.1372,
+    "market_created_at": "2026-04-10T18:02:50.886011Z",
+    "end_date": "2026-12-31T22:00:00Z",
+    "event_created_at": "2025-07-22T20:13:27.644062Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2025-12-31T22:00:00Z",
+    "clob_token_ids": [
+      "58415083519048662499155366006294980527058935541698275412554812493316191385998",
+      "52837405094236171687649460051264604710453798793021773034180132912701882960185"
+    ],
+    "price_history_token": "58415083519048662499155366006294980527058935541698275412554812493316191385998",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Will Israel annex any territory by...?",
+      "tag_slugs": [
+        "geopolitics",
+        "israel",
+        "middle-east",
+        "politics",
+        "world",
+        "world-affairs"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "33705",
+    "market_id": "566760",
+    "polymarket_condition_id": "0x0dc45815251ab7d5c3cbde5d7eee5bc96eac3d924c0a4c4f10175049e068fe20",
+    "title": "Will Trump pardon Ghislaine Maxwell by end of 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this politics issue. Interpret changes with caution and verify source context.",
+    "category": "Politics",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.065,
+    "volume_24h": 33.72573200000001,
+    "volume_total": 718674.0783060018,
+    "liquidity": 44334.9459,
+    "market_created_at": "2025-07-23T05:02:43.066925Z",
+    "end_date": "2026-12-31T00:00:00Z",
+    "event_created_at": "2025-07-23T05:02:41.998683Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2026-12-31T00:00:00Z",
+    "clob_token_ids": [
+      "703229116919803457142440034780425874346022451261358752931225117413237404457",
+      "71144742975537017512904527392353107518472601816123355990566837993879064231255"
+    ],
+    "price_history_token": "703229116919803457142440034780425874346022451261358752931225117413237404457",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Will Trump pardon Ghislaine Maxwell by end of 2026?",
+      "tag_slugs": [
+        "earn-4",
+        "epstein",
+        "ghislaine-maxwell",
+        "maxwell",
+        "politics",
+        "trump"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "34044",
+    "market_id": "567621",
+    "polymarket_condition_id": "0xd9fb1184af0064e5e34b129f5b79afa5a17b7e32f2953ab05efed82315fee6d4",
+    "title": "Will China invade Taiwan by end of 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this politics issue. Interpret changes with caution and verify source context.",
+    "category": "Politics",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.0375,
+    "volume_24h": 23915.469435000123,
+    "volume_total": 38276589.89349586,
+    "liquidity": 779653.27553,
+    "market_created_at": "2025-07-24T22:43:54.006955Z",
+    "end_date": "2026-12-31T00:00:00Z",
+    "event_created_at": "2025-07-24T22:43:52.620767Z",
+    "event_updated_at": "2026-07-11T06:34:20.266701Z",
+    "event_end_date": "2026-12-31T00:00:00Z",
+    "clob_token_ids": [
+      "94559586571241563470235664821564670251180951772614764383113614156422396181162",
+      "90772332434487149264114862115632028379978765245278600275169585501290867536237"
+    ],
+    "price_history_token": "94559586571241563470235664821564670251180951772614764383113614156422396181162",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Will China invade Taiwan by end of 2026?",
+      "tag_slugs": [
+        "china",
+        "earn-4",
+        "foreign-policy",
+        "geopolitics",
+        "politics",
+        "world"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "34051",
+    "market_id": "2555383",
+    "polymarket_condition_id": "0xc553d06377f1f3768d3d302748609f5d01c035744dddc327ccc7e55c0067a504",
+    "title": "Netanyahu out by July 31?",
+    "description": "Tracks reflected expectation in public prediction-market data for this geopolitics issue. Interpret changes with caution and verify source context.",
+    "category": "Geopolitics",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.0075,
+    "volume_24h": 632.00057,
+    "volume_total": 95593.28124199976,
+    "liquidity": 60068.39276,
+    "market_created_at": "2026-06-15T18:03:03.623752Z",
+    "end_date": "2026-07-31T00:00:00Z",
+    "event_created_at": "2025-07-24T23:11:19.184091Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2026-12-31T00:00:00Z",
+    "clob_token_ids": [
+      "59998658781035476778449418646398730088700792908221657065358591513871102835151",
+      "81884166811074002028138369660127588420358639269194135906770008813817544349172"
+    ],
+    "price_history_token": "59998658781035476778449418646398730088700792908221657065358591513871102835151",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Netanyahu out by...?",
+      "tag_slugs": [
+        "earn-4",
+        "geopolitics",
+        "israel",
+        "middle-east",
+        "politics",
+        "world"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "34052",
+    "market_id": "567689",
+    "polymarket_condition_id": "0x51f624dbbf14f9edb575fef1be6f7a303751de70783fa144fce27b957452c803",
+    "title": "Zelenskyy out as Ukraine president by end of 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this ukraine issue. Interpret changes with caution and verify source context.",
+    "category": "Ukraine",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.105,
+    "volume_24h": 4232.651964,
+    "volume_total": 2605126.027139949,
+    "liquidity": 135668.4885,
+    "market_created_at": "2025-07-24T23:14:11.033603Z",
+    "end_date": "2026-12-31T00:00:00Z",
+    "event_created_at": "2025-07-24T23:14:09.636687Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2026-12-31T00:00:00Z",
+    "clob_token_ids": [
+      "108187737663325442737199857734058032845728149267925579081973309839049299838520",
+      "12238337804021350373072513606997115174826680613156170611182546081135779794915"
+    ],
+    "price_history_token": "108187737663325442737199857734058032845728149267925579081973309839049299838520",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Zelenskyy out as Ukraine president by end of 2026?",
+      "tag_slugs": [
+        "earn-4",
+        "geopolitics",
+        "politics",
+        "ukraine",
+        "world"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "34053",
+    "market_id": "567690",
+    "polymarket_condition_id": "0x14501df0ca5ec395792b0614b18133b72e702a9a2615dd0a4b3f0c6e097de081",
+    "title": "Erdo\u011fan out by December 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this geopolitics issue. Interpret changes with caution and verify source context.",
+    "category": "Geopolitics",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.055,
+    "volume_24h": 1539.7078759999986,
+    "volume_total": 559149.9031260029,
+    "liquidity": 63442.1178,
+    "market_created_at": "2025-07-24T23:17:29.994819Z",
+    "end_date": "2026-12-31T00:00:00Z",
+    "event_created_at": "2025-07-24T23:17:28.662466Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2026-12-31T00:00:00Z",
+    "clob_token_ids": [
+      "60482166031720291380868655057144166386114272673178755337360544583400474201659",
+      "36584990740430575779853916178487409250519468755041580140068769472851047579138"
+    ],
+    "price_history_token": "60482166031720291380868655057144166386114272673178755337360544583400474201659",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Erdo\u011fan out by December 31, 2026?",
+      "tag_slugs": [
+        "earn-4",
+        "geopolitics",
+        "politics",
+        "turkey",
+        "world"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "34348",
+    "market_id": "568116",
+    "polymarket_condition_id": "0x4c8ceef9b9c0a27b6b4efa7c398ece4a5eeda76502f722de398c232abefe2ede",
+    "title": "Will Trump be impeached by end of 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this trump issue. Interpret changes with caution and verify source context.",
+    "category": "Trump",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.0275,
+    "volume_24h": 710.38448,
+    "volume_total": 962330.608745005,
+    "liquidity": 153139.13364,
+    "market_created_at": "2025-07-25T18:28:50.747813Z",
+    "end_date": "2026-12-31T00:00:00Z",
+    "event_created_at": "2025-07-25T18:28:49.752147Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2026-12-31T00:00:00Z",
+    "clob_token_ids": [
+      "22094182676612877581056034720566110371610082057092726094559729674155018648896",
+      "78473141615408645278260621827323903204731180016962666262959632385172645644801"
+    ],
+    "price_history_token": "22094182676612877581056034720566110371610082057092726094559729674155018648896",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Will Trump be impeached by end of 2026?",
+      "tag_slugs": [
+        "earn-4",
+        "politics",
+        "trump",
+        "trump-presidency"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "34349",
+    "market_id": "568117",
+    "polymarket_condition_id": "0x448f73e89890ae9d0e42ad0b592f63b53c0ae05d1ca3fa8d80b30027781f1be7",
+    "title": "Will Trump resign by December 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this trump issue. Interpret changes with caution and verify source context.",
+    "category": "Trump",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.055,
+    "volume_24h": 526.315788,
+    "volume_total": 500567.3269109975,
+    "liquidity": 58885.017,
+    "market_created_at": "2025-07-25T18:31:13.211546Z",
+    "end_date": "2026-12-31T00:00:00Z",
+    "event_created_at": "2025-07-25T18:31:12.059586Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2026-12-31T00:00:00Z",
+    "clob_token_ids": [
+      "82496570332984679554195177789706736795170417640692739176832196524671988217379",
+      "74453252193148717007972627387565739933229360141591660605434616142548704822067"
+    ],
+    "price_history_token": "82496570332984679554195177789706736795170417640692739176832196524671988217379",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Will Trump resign by December 31, 2026?",
+      "tag_slugs": [
+        "politics",
+        "trump",
+        "trump-presidency"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "34889",
+    "market_id": "2747434",
+    "polymarket_condition_id": "0x1e5204036bd51e6ca0e0da6221319c5839bd9940782adc6d0f6fa703aa8a3bf4",
+    "title": "Will Hamas agree to disarm by December 31?",
+    "description": "Tracks reflected expectation in public prediction-market data for this gaza issue. Interpret changes with caution and verify source context.",
+    "category": "Gaza",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.21,
+    "volume_24h": 1004.866038,
+    "volume_total": 6678.626225999999,
+    "liquidity": 17682.6843,
+    "market_created_at": "2026-06-30T21:13:55.721654Z",
+    "end_date": "2026-12-31T20:00:00Z",
+    "event_created_at": "2025-07-30T18:07:34.857736Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2026-12-31T20:00:00Z",
+    "clob_token_ids": [
+      "3833250547311424992805456252782158332407335422350263044535636678503072819141",
+      "30676432546818066080538703205639237969080188796746196694446265523208566227883"
+    ],
+    "price_history_token": "3833250547311424992805456252782158332407335422350263044535636678503072819141",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Will Hamas agree to disarm by...?",
+      "tag_slugs": [
+        "foreign-policy",
+        "gaza",
+        "geopolitics",
+        "global",
+        "israel",
+        "politics"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "36173",
+    "market_id": "573656",
+    "polymarket_condition_id": "0x02deb9538f5c123373adaa4ee6217b01745f1662bc902e46ac92f3fe6f8741e8",
+    "title": "Will Bitcoin hit $150k by December 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this bitcoin issue. Interpret changes with caution and verify source context.",
+    "category": "Bitcoin",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.0435,
+    "volume_24h": 2868.4021710000006,
+    "volume_total": 2605331.271821965,
+    "liquidity": 118683.75506,
+    "market_created_at": "2025-08-07T14:34:08.095389Z",
+    "end_date": "2027-01-01T05:00:00Z",
+    "event_created_at": "2025-08-07T14:34:05.316535Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2027-01-01T05:00:00Z",
+    "clob_token_ids": [
+      "93694900555669388759405753550770573998169287228984912881955464376232163096213",
+      "55119388124180116303253993098894090042427725500010038140578121972388485050538"
+    ],
+    "price_history_token": "93694900555669388759405753550770573998169287228984912881955464376232163096213",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "When will Bitcoin hit $150k?",
+      "tag_slugs": [
+        "bitcoin",
+        "crypto",
+        "crypto-prices",
+        "price-milestone"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "36307",
+    "market_id": "2498739",
+    "polymarket_condition_id": "0x0a7e71104968403d863330abe7a4b7c1871281e96e878761ba49d75d6b6a57a4",
+    "title": "Will GPT-6 be released by July 31, 2026? ",
+    "description": "Tracks reflected expectation in public prediction-market data for this openai issue. Interpret changes with caution and verify source context.",
+    "category": "OpenAI",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.0205,
+    "volume_24h": 972.408667,
+    "volume_total": 50939.665307000025,
+    "liquidity": 26986.2719,
+    "market_created_at": "2026-06-10T22:14:26.886404Z",
+    "end_date": "2026-07-31T00:00:00Z",
+    "event_created_at": "2025-08-07T20:01:06.654234Z",
+    "event_updated_at": "2026-07-11T06:34:34.601374Z",
+    "event_end_date": "2025-12-31T00:00:00Z",
+    "clob_token_ids": [
+      "11280558115936456585904675567640707056155241092370692901368524463925928600842",
+      "39556753444993217193532214884429349349511229187713739915516531227083289040316"
+    ],
+    "price_history_token": "11280558115936456585904675567640707056155241092370692901368524463925928600842",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "GPT-6 released by\u2026?",
+      "tag_slugs": [
+        "ai",
+        "ai-releases",
+        "big-tech",
+        "gpt-5",
+        "openai",
+        "sam-altman",
+        "tech"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "37568",
+    "market_id": "2698285",
+    "polymarket_condition_id": "0xfc98f07ab754678bca09823d33f613aa5edad59008d436c36ba1c380c1b99811",
+    "title": "U.S. x Russia Nuclear deal by July 31?",
+    "description": "Tracks reflected expectation in public prediction-market data for this trump-putin issue. Interpret changes with caution and verify source context.",
+    "category": "Trump-Putin",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.0165,
+    "volume_24h": 38.854786,
+    "volume_total": 8532.040533999998,
+    "liquidity": 12938.84544,
+    "market_created_at": "2026-06-26T20:15:45.171032Z",
+    "end_date": "2026-07-31T00:00:00Z",
+    "event_created_at": "2025-08-14T22:45:30.799987Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2026-06-30T00:00:00Z",
+    "clob_token_ids": [
+      "26230223804745125273649564792162976932021263324850436165966658372817836484970",
+      "15543373643405400332126858271737083990649590710958544116604835664981075665667"
+    ],
+    "price_history_token": "26230223804745125273649564792162976932021263324850436165966658372817836484970",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "U.S. x Russia Nuclear deal by...?",
+      "tag_slugs": [
+        "foreign-policy",
+        "politics",
+        "trump",
+        "trump-presidency",
+        "trump-putin",
+        "ukraine"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "40091",
+    "market_id": "1068384",
+    "polymarket_condition_id": "0x59cbdc98e569c31d3c33517131aa57a0a8d28e412df4a567d7df5b3ae9ec3de8",
+    "title": "Will El Salvador hold $1b+ of BTC by December 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this crypto issue. Interpret changes with caution and verify source context.",
+    "category": "Crypto",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.19,
+    "volume_24h": 4.545453,
+    "volume_total": 9325.399435,
+    "liquidity": 856.2172,
+    "market_created_at": "2025-12-30T21:14:06.765193Z",
+    "end_date": "2027-01-01T05:00:00Z",
+    "event_created_at": "2025-08-27T23:39:09.134861Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2027-01-01T05:00:00Z",
+    "clob_token_ids": [
+      "85050326633307103921116183405959204984545408066775745936128241765963012426383",
+      "6388191045056267170217957100365018215195736723213112943581350419506189056936"
+    ],
+    "price_history_token": "85050326633307103921116183405959204984545408066775745936128241765963012426383",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Will El Salvador hold $1b+ of BTC by...? ",
+      "tag_slugs": [
+        "crypto",
+        "gov-reserve",
+        "world"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "40285",
+    "market_id": "718188",
+    "polymarket_condition_id": "0xd008c45c5320e7453b4e7725bda285cd822a3a61adef14759f2aadf0778c64b6",
+    "title": "Will Abstract launch a token by December 31, 2026",
+    "description": "Tracks reflected expectation in public prediction-market data for this crypto issue. Interpret changes with caution and verify source context.",
+    "category": "Crypto",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.165,
+    "volume_24h": 28.9,
+    "volume_total": 336235.77211300016,
+    "liquidity": 11578.1083,
+    "market_created_at": "2025-11-27T20:10:06.050773Z",
+    "end_date": "2027-01-01T05:00:00Z",
+    "event_created_at": "2025-08-28T20:39:48.812857Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2027-01-01T05:00:00Z",
+    "clob_token_ids": [
+      "105292534464588119413823901919588224897612305776681795693919323419047416388812",
+      "98646985707839121837958202212263078387820716702786874164268337295747851893706"
+    ],
+    "price_history_token": "105292534464588119413823901919588224897612305776681795693919323419047416388812",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Will Abstract launch a token by ___?",
+      "tag_slugs": [
+        "abstract",
+        "crypto",
+        "pre-market",
+        "token-launch"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "40286",
+    "market_id": "694160",
+    "polymarket_condition_id": "0x07eb65c2a3f1cb716a8f24e7d8e97188f451d2928e59bc2781bcd9a9757b41b8",
+    "title": "Will Axiom launch a token by December 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this crypto issue. Interpret changes with caution and verify source context.",
+    "category": "Crypto",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.17,
+    "volume_24h": 12.04,
+    "volume_total": 178871.8948890001,
+    "liquidity": 5007.5639,
+    "market_created_at": "2025-11-21T02:32:42.252401Z",
+    "end_date": "2028-01-01T05:00:00Z",
+    "event_created_at": "2025-08-28T20:42:48.482033Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2028-01-01T05:00:00Z",
+    "clob_token_ids": [
+      "102247931292363358443142609337677636196132124871357390516013850502857860652483",
+      "69920194040711736936002737306616966483487315622418282521632179548073807568918"
+    ],
+    "price_history_token": "102247931292363358443142609337677636196132124871357390516013850502857860652483",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Will Axiom launch a token by ___ ?",
+      "tag_slugs": [
+        "axiom",
+        "crypto",
+        "pre-market",
+        "token-launch"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "40287",
+    "market_id": "697523",
+    "polymarket_condition_id": "0xad6b6fb149c8c50df1ea56e7f3a0fd42b95ada7e178683d51a536235a6b38a3f",
+    "title": "Will Unit launch a token by December 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this crypto issue. Interpret changes with caution and verify source context.",
+    "category": "Crypto",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.15,
+    "volume_24h": 164.811266,
+    "volume_total": 8532.686296000002,
+    "liquidity": 637.2913,
+    "market_created_at": "2025-11-22T21:36:23.828136Z",
+    "end_date": "2028-01-01T05:00:00Z",
+    "event_created_at": "2025-08-28T20:47:22.951274Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2028-01-01T05:00:00Z",
+    "clob_token_ids": [
+      "72750636841574605405487206563918173178146863274250147094493667932708322166254",
+      "23734407721982664566939201849439761766477731273397118470832638812112205898239"
+    ],
+    "price_history_token": "72750636841574605405487206563918173178146863274250147094493667932708322166254",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Will Unit launch a token by ___ ?",
+      "tag_slugs": [
+        "crypto",
+        "pre-market",
+        "token-launch",
+        "unit"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "41359",
+    "market_id": "2354063",
+    "polymarket_condition_id": "0xac1721c071b72e556df41a0c0d3c4d3c0baa599d352bbe92bc8450e06e596021",
+    "title": "Israeli parliament dissolved by July 31?",
+    "description": "Tracks reflected expectation in public prediction-market data for this israel issue. Interpret changes with caution and verify source context.",
+    "category": "Israel",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.875,
+    "volume_24h": 4585.3240479999995,
+    "volume_total": 158950.45957399998,
+    "liquidity": 32408.325,
+    "market_created_at": "2026-05-25T15:33:02.858835Z",
+    "end_date": "2026-07-31T00:00:00Z",
+    "event_created_at": "2025-09-02T23:52:24.976283Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2026-06-30T00:00:00Z",
+    "clob_token_ids": [
+      "37568497895153900126473020275346461590343182178991703056907093864099955621494",
+      "105829206264997691788038542061294329729237305386795827730740731011854221360614"
+    ],
+    "price_history_token": "37568497895153900126473020275346461590343182178991703056907093864099955621494",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Israeli parliament dissolved by...?",
+      "tag_slugs": [
+        "international-election-props",
+        "israel",
+        "middle-east",
+        "politics",
+        "world"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "43347",
+    "market_id": "593972",
+    "polymarket_condition_id": "0x136a2773866c2d841b00652b7d99b026409c9a55db769c525ed450e04c653f23",
+    "title": "Will Bernie endorse James Talarico for TX-Sen by Nov 2 2026 ET?",
+    "description": "Tracks reflected expectation in public prediction-market data for this bernie sanders issue. Interpret changes with caution and verify source context.",
+    "category": "bernie sanders",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.745,
+    "volume_24h": 38.92,
+    "volume_total": 74984.53894599996,
+    "liquidity": 3370.1934,
+    "market_created_at": "2025-09-11T16:52:37.051687Z",
+    "end_date": "2026-11-03T00:00:00Z",
+    "event_created_at": "2025-09-11T16:52:35.110845Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2026-11-04T00:00:00Z",
+    "clob_token_ids": [
+      "7096166888327966243811396544854606771946352128513885963401994819079689910004",
+      "46602177860594371790368647304895927569955807454104515886440302763404709997663"
+    ],
+    "price_history_token": "7096166888327966243811396544854606771946352128513885963401994819079689910004",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Who will Bernie endorse?",
+      "tag_slugs": [
+        "bernie-sanders",
+        "politics"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "43352",
+    "market_id": "593983",
+    "polymarket_condition_id": "0x2aaffb7c88af0204f5095581dc72f82886f4e13902fe5c7727fac6ed48a25f11",
+    "title": "Will Trump endorse John Cornyn for TX-Sen by Nov 2 2026 ET?",
+    "description": "Tracks reflected expectation in public prediction-market data for this trump issue. Interpret changes with caution and verify source context.",
+    "category": "Trump",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.015,
+    "volume_24h": 5.0,
+    "volume_total": 127497.45976500005,
+    "liquidity": 23014.83821,
+    "market_created_at": "2025-09-11T17:11:42.236436Z",
+    "end_date": "2026-11-04T00:00:00Z",
+    "event_created_at": "2025-09-11T17:11:40.15251Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2026-11-04T00:00:00Z",
+    "clob_token_ids": [
+      "11046262311494533237971148351329185314005627894869626528589068956894902481233",
+      "109174961673759237090251150164977878122667077529594097403713839280719428670272"
+    ],
+    "price_history_token": "11046262311494533237971148351329185314005627894869626528589068956894902481233",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Who will Trump endorse?",
+      "tag_slugs": [
+        "politics",
+        "trump",
+        "trump-presidency"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "44955",
+    "market_id": "2491316",
+    "polymarket_condition_id": "0xc48e17e33742004e4ec5d3386d05f7d723f1c2da37b5cbc56e9ce432e13d8ed4",
+    "title": "Will Base launch a token by December 31, 2027?",
+    "description": "Tracks reflected expectation in public prediction-market data for this token launch issue. Interpret changes with caution and verify source context.",
+    "category": "token launch",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.64,
+    "volume_24h": 95.5,
+    "volume_total": 25990.552808,
+    "liquidity": 7521.7477,
+    "market_created_at": "2026-06-10T15:26:21.673609Z",
+    "end_date": "2028-01-01T05:00:00Z",
+    "event_created_at": "2025-09-15T15:21:24.651504Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2028-01-01T05:00:00Z",
+    "clob_token_ids": [
+      "50067946737985819644638241783771238619616055560007143911749636220745966692358",
+      "61335977902549040838647614340959106920439456466051953454810638023705765740133"
+    ],
+    "price_history_token": "50067946737985819644638241783771238619616055560007143911749636220745966692358",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Will Base launch a token by ___ ?",
+      "tag_slugs": [
+        "base",
+        "crypto",
+        "pre-market",
+        "token-launch"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "44989",
+    "market_id": "690631",
+    "polymarket_condition_id": "0xf9ef8c1386d8ee35b4ea45c585a8b9ea0e61e755b43a721cc8a784ea1c210970",
+    "title": "Will Ostium launch a token by December 31, 2026?",
+    "description": "Tracks reflected expectation in public prediction-market data for this token launch issue. Interpret changes with caution and verify source context.",
+    "category": "token launch",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.48,
+    "volume_24h": 50.36,
+    "volume_total": 234928.26632799994,
+    "liquidity": 8524.4696,
+    "market_created_at": "2025-11-18T23:47:21.185345Z",
+    "end_date": "2027-01-01T05:00:00Z",
+    "event_created_at": "2025-09-15T17:10:00.046693Z",
+    "event_updated_at": "2026-07-11T06:34:12.101002Z",
+    "event_end_date": "2027-01-01T05:00:00Z",
+    "clob_token_ids": [
+      "50908696008507958169271205996986336942909727840896678702670002065843972440441",
+      "3393189601984328357714967753890220292627220333135579847770592023632567525419"
+    ],
+    "price_history_token": "50908696008507958169271205996986336942909727840896678702670002065843972440441",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Will Ostium launch a token by ___ ?",
+      "tag_slugs": [
+        "crypto",
+        "ostium",
+        "pre-market",
+        "token-launch"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  },
+  {
+    "id": "45017",
+    "market_id": "599304",
+    "polymarket_condition_id": "0x0bde18e0a0220d1f97173850504a1ed4fa90ef2c6a7bc0932952790053ca0c0e",
+    "title": "Will Haley Stevens win the 2026 Michigan Democratic Primary?",
+    "description": "Tracks reflected expectation in public prediction-market data for this primary elections issue. Interpret changes with caution and verify source context.",
+    "category": "primary elections",
+    "status": "active",
+    "outcome_type": "binary",
+    "outcome_label": "Yes",
+    "current_value": 0.199,
+    "volume_24h": 3322.632863,
+    "volume_total": 103074.00320299994,
+    "liquidity": 71561.28934,
+    "market_created_at": "2025-09-15T18:32:49.275087Z",
+    "end_date": "2026-08-04T00:00:00Z",
+    "event_created_at": "2025-09-15T18:32:48.140841Z",
+    "event_updated_at": "2026-07-11T06:36:16.682117Z",
+    "event_end_date": "2026-08-04T00:00:00Z",
+    "clob_token_ids": [
+      "4041912122563547970024635557261696068618666839090786586996637505354743961673",
+      "105325602140854796101190465907542426130401271786879982796716189175875071392057"
+    ],
+    "price_history_token": "4041912122563547970024635557261696068618666839090786586996637505354743961673",
+    "price_history_source": "CLOB",
+    "source_metadata": {
+      "event_title": "Michigan Democratic Senate Primary Winner",
+      "tag_slugs": [
+        "august-4-primaries",
+        "democratic-primary",
+        "elections",
+        "michigan-primary",
+        "politics",
+        "primaries",
+        "primary-elections",
+        "senate-primary",
+        "us-presidential-election"
+      ],
+      "resolution_source_present": false,
+      "description_policy": "raw_source_descriptions_omitted"
+    }
+  }
+]

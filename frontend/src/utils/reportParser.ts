@@ -1,45 +1,35 @@
-/** Strict runtime parser for the ADR-048 v5 evidence bundle. */
+/** Strict runtime parser for the ADR-050 v6 evidence-aware report bundle. */
 import type {
-  IssueReportContent,
+  GeneralScenario,
+  IssueReportBriefing,
   IssueReportContextCandidate,
   IssueReportContextSource,
   IssueReportLoadState,
+  IssueReportMode,
+  IssueReportObservedChange,
+  IssueReportResolutionReference,
   IssueReportSuccessResponse,
+  MaterialToCheck,
+  VerifiedBlock,
+  VerifiedInterpretation,
 } from "../types/issue";
-
-type LengthBounds = { min: number; max: number };
-
-const CONTENT_KEYS: ReadonlySet<keyof IssueReportContent> = new Set([
-  "executive_summary",
-  "current_data_interpretation",
-  "conditional_scenarios",
-  "factors_to_check",
-  "signals_to_watch",
-  "evidence_synthesis",
-  "relationship_boundary",
-  "data_limitations",
-  "caution_note",
-]);
-
-const CONTENT_LENGTH_BOUNDS: Record<string, LengthBounds> = {
-  executive_summary: { min: 80, max: 1200 },
-  current_data_interpretation: { min: 50, max: 1200 },
-  evidence_synthesis: { min: 50, max: 1800 },
-  relationship_boundary: { min: 50, max: 500 },
-  data_limitations: { min: 50, max: 900 },
-  caution_note: { min: 120, max: 700 },
-};
 
 const SUCCESS_KEYS = new Set([
   "id",
   "status",
   "report_version",
+  "report_mode",
   "generated_at",
   "data_as_of",
   "episode_at",
-  "content",
+  "observed_change",
+  "briefing",
+  "resolution_reference",
   "evidence_refs",
   "context_candidates",
+  "relationship_boundary",
+  "data_limitations",
+  "caution_note",
 ]);
 const CANDIDATE_KEYS = new Set([
   "id",
@@ -55,180 +45,122 @@ const SOURCE_KEYS = new Set([
   "published_at",
   "source_type",
 ]);
+const OBSERVED_KEYS = new Set([
+  "metric_id",
+  "window",
+  "current_value",
+  "change_value",
+  "significant",
+  "threshold",
+]);
+const REFERENCE_KEYS = new Set([
+  "status",
+  "condition_text",
+  "deadline",
+  "exclusions",
+  "source_url",
+]);
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const UTC_ISO_TIMESTAMP_PATTERN =
   /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?(Z|\+00:00)$/;
+const MODES = new Set<IssueReportMode>([
+  "change_with_evidence",
+  "change_without_evidence",
+  "stable_with_evidence",
+  "stable_without_evidence",
+]);
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function hasExactKeys(
-  raw: Record<string, unknown>,
-  keys: ReadonlySet<string>,
-): boolean {
+function hasExactKeys(raw: Record<string, unknown>, keys: ReadonlySet<string>) {
   const rawKeys = Object.keys(raw);
   return rawKeys.length === keys.size && rawKeys.every((key) => keys.has(key));
 }
 
-function unicodeCodePointLength(value: string): number {
-  return Array.from(value.trim()).length;
-}
-
-function sentenceCount(value: string): number {
-  const matches = value.trim().match(/[.!?]+(?=\s|$)/g);
-  return matches?.length ?? 1;
-}
-
 function normalizeUtcIsoTimestamp(value: string): string | null {
   const match = UTC_ISO_TIMESTAMP_PATTERN.exec(value);
-  if (!match) {
-    return null;
-  }
-  const parsed = Date.parse(value);
-  if (!Number.isFinite(parsed)) {
-    return null;
-  }
-  const parsedDate = new Date(parsed);
+  if (!match || !Number.isFinite(Date.parse(value))) return null;
+  const parsed = new Date(value);
   const [, year, month, day, hour, minute, second] = match;
   if (
-    parsedDate.getUTCFullYear() !== Number(year) ||
-    parsedDate.getUTCMonth() + 1 !== Number(month) ||
-    parsedDate.getUTCDate() !== Number(day) ||
-    parsedDate.getUTCHours() !== Number(hour) ||
-    parsedDate.getUTCMinutes() !== Number(minute) ||
-    parsedDate.getUTCSeconds() !== Number(second)
-  ) {
+    parsed.getUTCFullYear() !== Number(year) ||
+    parsed.getUTCMonth() + 1 !== Number(month) ||
+    parsed.getUTCDate() !== Number(day) ||
+    parsed.getUTCHours() !== Number(hour) ||
+    parsed.getUTCMinutes() !== Number(minute) ||
+    parsed.getUTCSeconds() !== Number(second)
+  )
     return null;
-  }
-  const fraction = (match[7] ?? "").padEnd(6, "0");
-  return `${year}-${month}-${day}T${hour}:${minute}:${second}.${fraction}Z`;
+  return value;
 }
 
-function validateContent(raw: unknown): IssueReportContent | null {
-  if (!isRecord(raw) || !hasExactKeys(raw, CONTENT_KEYS)) {
+function safeExternalUrl(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  try {
+    const url = new URL(value);
+    if (
+      (url.protocol !== "http:" && url.protocol !== "https:") ||
+      url.username ||
+      url.password
+    )
+      return null;
+    return value;
+  } catch {
     return null;
   }
-  const record = raw;
-  function text(key: string, nullable = false): string | null | undefined {
-    const value = record[key];
-    if (nullable && value === null) return null;
-    if (typeof value !== "string") {
-      return undefined;
-    }
-    const trimmed = value.trim();
-    const bounds = CONTENT_LENGTH_BOUNDS[key];
-    const length = unicodeCodePointLength(trimmed);
-    if (
-      length < bounds.min ||
-      length > bounds.max ||
-      sentenceCount(trimmed) > 5
-    ) {
-      return undefined;
-    }
-    return trimmed;
-  }
-  function items(
-    key: string,
-    bodyKey: "narrative" | "explanation",
-    min: number,
-    max: number,
-  ) {
-    const value = record[key];
-    if (!Array.isArray(value) || value.length < min || value.length > max) return null;
-    const parsed = value.map((item) => {
-      if (!isRecord(item) || !hasExactKeys(item, new Set(["title", bodyKey, "basis"]))) return null;
-      if (typeof item.title !== "string" || typeof item[bodyKey] !== "string") return null;
-      if (
-        item.basis !== "market_definition" &&
-        item.basis !== "observed_data" &&
-        item.basis !== "verified_context" &&
-        item.basis !== "data_limitation"
-      ) return null;
-      const title = item.title.trim();
-      const body = item[bodyKey].trim();
-      if (title.length < 2 || body.length < 20 || sentenceCount(body) > 5) return null;
-      return { title, [bodyKey]: body, basis: item.basis };
-    });
-    return parsed.some((item) => item === null) ? null : parsed;
-  }
-  const executiveSummary = text("executive_summary");
-  const currentDataInterpretation = text("current_data_interpretation");
-  const evidenceSynthesis = text("evidence_synthesis", true);
-  const relationshipBoundary = text("relationship_boundary");
-  const dataLimitations = text("data_limitations");
-  const cautionNote = text("caution_note");
-  const conditionalScenarios = items("conditional_scenarios", "narrative", 1, 4);
-  const factorsToCheck = items("factors_to_check", "explanation", 2, 6);
-  const signalsToWatch = items("signals_to_watch", "explanation", 2, 6);
+}
+
+function cleanText(value: unknown, min: number, max: number): string | null {
+  if (typeof value !== "string") return null;
+  const text = value.trim();
+  const length = Array.from(text).length;
+  return length >= min && length <= max ? text : null;
+}
+
+function parseUuidList(value: unknown, min = 1): string[] | null {
+  if (!Array.isArray(value) || value.length < min || value.length > 3)
+    return null;
   if (
-    typeof executiveSummary !== "string" || typeof currentDataInterpretation !== "string" ||
-    evidenceSynthesis === undefined || relationshipBoundary === undefined ||
-    typeof relationshipBoundary !== "string" || typeof dataLimitations !== "string" ||
-    typeof cautionNote !== "string" ||
-    conditionalScenarios === null || factorsToCheck === null || signalsToWatch === null
-  ) return null;
-  return {
-    executive_summary: executiveSummary,
-    current_data_interpretation: currentDataInterpretation,
-    conditional_scenarios: conditionalScenarios as IssueReportContent["conditional_scenarios"],
-    factors_to_check: factorsToCheck as IssueReportContent["factors_to_check"],
-    signals_to_watch: signalsToWatch as IssueReportContent["signals_to_watch"],
-    evidence_synthesis: evidenceSynthesis,
-    relationship_boundary: relationshipBoundary,
-    data_limitations: dataLimitations,
-    caution_note: cautionNote,
-  };
+    !value.every((item) => typeof item === "string" && UUID_PATTERN.test(item))
+  )
+    return null;
+  return new Set(value).size === value.length ? value : null;
 }
 
 function validateSource(
   raw: unknown,
   generatedAt: string,
 ): IssueReportContextSource | null {
-  if (!isRecord(raw) || !hasExactKeys(raw, SOURCE_KEYS)) {
-    return null;
-  }
+  if (!isRecord(raw) || !hasExactKeys(raw, SOURCE_KEYS)) return null;
+  const title = cleanText(raw.title, 1, 500);
+  const url = safeExternalUrl(raw.url);
   if (
-    typeof raw.title !== "string" ||
-    raw.title.trim().length === 0 ||
-    typeof raw.url !== "string" ||
+    title === null ||
+    url === null ||
     typeof raw.domain !== "string" ||
-    raw.domain.trim().length === 0 ||
     (raw.source_type !== "official" &&
       raw.source_type !== "independent_secondary")
-  ) {
+  )
     return null;
-  }
-  let sourceUrl: URL;
-  try {
-    sourceUrl = new URL(raw.url);
-  } catch {
-    return null;
-  }
-  if (
-    (sourceUrl.protocol !== "http:" && sourceUrl.protocol !== "https:") ||
-    sourceUrl.username !== "" ||
-    sourceUrl.password !== "" ||
-    sourceUrl.hostname.toLowerCase() !== raw.domain.trim().toLowerCase()
-  ) {
-    return null;
-  }
-  let publishedAt: string | null = null;
+  const parsedUrl = new URL(url);
+  const domain = raw.domain.trim().toLowerCase();
+  if (!domain || parsedUrl.hostname.toLowerCase() !== domain) return null;
   if (raw.published_at !== null) {
-    if (typeof raw.published_at !== "string") {
+    if (
+      typeof raw.published_at !== "string" ||
+      normalizeUtcIsoTimestamp(raw.published_at) === null ||
+      raw.published_at > generatedAt
+    )
       return null;
-    }
-    publishedAt = normalizeUtcIsoTimestamp(raw.published_at);
-    if (publishedAt === null || publishedAt > generatedAt) {
-      return null;
-    }
   }
   return {
-    title: raw.title.trim(),
-    url: raw.url,
-    domain: raw.domain.trim().toLowerCase(),
-    published_at: raw.published_at === null ? null : raw.published_at,
+    title,
+    url,
+    domain,
+    published_at: raw.published_at as string | null,
     source_type: raw.source_type,
   };
 }
@@ -237,45 +169,420 @@ function validateCandidate(
   raw: unknown,
   generatedAt: string,
 ): IssueReportContextCandidate | null {
-  if (!isRecord(raw) || !hasExactKeys(raw, CANDIDATE_KEYS)) {
-    return null;
-  }
+  if (!isRecord(raw) || !hasExactKeys(raw, CANDIDATE_KEYS)) return null;
+  const title = cleanText(raw.title, 1, 500);
+  const summary = cleanText(raw.summary, 1, 1800);
   if (
     typeof raw.id !== "string" ||
     !UUID_PATTERN.test(raw.id) ||
-    typeof raw.title !== "string" ||
-    raw.title.trim().length === 0 ||
-    typeof raw.summary !== "string" ||
-    raw.summary.trim().length === 0 ||
+    title === null ||
+    summary === null ||
     typeof raw.event_at !== "string" ||
+    normalizeUtcIsoTimestamp(raw.event_at) === null ||
+    raw.event_at > generatedAt ||
     !Array.isArray(raw.sources) ||
     raw.sources.length === 0
-  ) {
+  )
     return null;
-  }
-  const eventAt = normalizeUtcIsoTimestamp(raw.event_at);
-  if (eventAt === null || eventAt > generatedAt) {
-    return null;
-  }
   const sources = raw.sources.map((source) =>
     validateSource(source, generatedAt),
   );
-  if (sources.some((source) => source === null)) {
-    return null;
-  }
+  if (sources.some((source) => source === null)) return null;
   return {
     id: raw.id,
-    title: raw.title.trim(),
+    title,
     event_at: raw.event_at,
-    summary: raw.summary.trim(),
+    summary,
     sources: sources as IssueReportContextSource[],
   };
 }
 
-export function parseReportResponse(raw: unknown): IssueReportLoadState {
-  if (!isRecord(raw)) {
-    return { status: "error" };
+function validateObserved(raw: unknown): IssueReportObservedChange | null {
+  if (!isRecord(raw) || !hasExactKeys(raw, OBSERVED_KEYS)) return null;
+  if (
+    !Number.isInteger(raw.metric_id) ||
+    raw.window !== "24h" ||
+    typeof raw.current_value !== "number" ||
+    raw.current_value < 0 ||
+    raw.current_value > 1 ||
+    (raw.change_value !== null && typeof raw.change_value !== "number") ||
+    typeof raw.significant !== "boolean" ||
+    raw.threshold !== 0.05
+  )
+    return null;
+  return raw as unknown as IssueReportObservedChange;
+}
+
+function validateReference(
+  raw: unknown,
+): IssueReportResolutionReference | null {
+  if (!isRecord(raw) || !hasExactKeys(raw, REFERENCE_KEYS)) return null;
+  if (raw.status !== "available" && raw.status !== "unavailable") return null;
+  if (
+    !Array.isArray(raw.exclusions) ||
+    !raw.exclusions.every((item) => typeof item === "string")
+  ) {
+    return null;
   }
+  if (raw.status === "unavailable") {
+    if (
+      raw.condition_text !== null ||
+      raw.deadline !== null ||
+      raw.exclusions.length !== 0 ||
+      raw.source_url !== null
+    )
+      return null;
+  } else {
+    if (cleanText(raw.condition_text, 1, 5000) === null) return null;
+    if (
+      raw.deadline !== null &&
+      (typeof raw.deadline !== "string" ||
+        normalizeUtcIsoTimestamp(raw.deadline) === null)
+    )
+      return null;
+    if (raw.source_url !== null && safeExternalUrl(raw.source_url) === null)
+      return null;
+  }
+  return raw as unknown as IssueReportResolutionReference;
+}
+
+function validateGeneralScenario(raw: unknown): GeneralScenario | null {
+  if (!isRecord(raw) || !hasExactKeys(raw, new Set(["title", "text", "basis"])))
+    return null;
+  const title = cleanText(raw.title, 2, 100);
+  const text = cleanText(raw.text, 30, 900);
+  if (title === null || text === null || raw.basis !== "general_scenario")
+    return null;
+  if (
+    !["만약", "경우", "된다면", "않는다면"].some((token) =>
+      text.includes(token),
+    )
+  )
+    return null;
+  return { title, text, basis: "general_scenario" };
+}
+
+function validateMaterial(raw: unknown): MaterialToCheck | null {
+  if (
+    !isRecord(raw) ||
+    !hasExactKeys(raw, new Set(["scenario_index", "title", "text", "basis"]))
+  )
+    return null;
+  const title = cleanText(raw.title, 2, 120);
+  const text = cleanText(raw.text, 20, 700);
+  const scenarioIndex = raw.scenario_index;
+  if (
+    typeof scenarioIndex !== "number" ||
+    !Number.isInteger(scenarioIndex) ||
+    scenarioIndex < 1 ||
+    scenarioIndex > 4 ||
+    title === null ||
+    text === null ||
+    raw.basis !== "general_scenario"
+  )
+    return null;
+  return {
+    scenario_index: scenarioIndex,
+    title,
+    text,
+    basis: "general_scenario",
+  };
+}
+
+function validateVerifiedBlock(raw: unknown): VerifiedBlock | null {
+  if (
+    !isRecord(raw) ||
+    !hasExactKeys(raw, new Set(["text", "basis", "candidate_ids"]))
+  ) {
+    return null;
+  }
+  const text = cleanText(raw.text, 30, 1200);
+  const candidateIds = parseUuidList(raw.candidate_ids);
+  if (
+    text === null ||
+    raw.basis !== "verified_context" ||
+    candidateIds === null
+  )
+    return null;
+  return { text, basis: "verified_context", candidate_ids: candidateIds };
+}
+
+function validateInterpretation(raw: unknown): VerifiedInterpretation | null {
+  if (
+    !isRecord(raw) ||
+    !hasExactKeys(raw, new Set(["title", "text", "basis", "candidate_ids"]))
+  )
+    return null;
+  const title = cleanText(raw.title, 2, 100);
+  const text = cleanText(raw.text, 30, 900);
+  const candidateIds = parseUuidList(raw.candidate_ids);
+  if (
+    title === null ||
+    text === null ||
+    raw.basis !== "verified_context" ||
+    candidateIds === null ||
+    !["만약", "경우", "된다면", "않는다면"].some((token) =>
+      text.includes(token),
+    )
+  )
+    return null;
+  return {
+    title,
+    text,
+    basis: "verified_context",
+    candidate_ids: candidateIds,
+  };
+}
+
+function parseArray<T>(
+  value: unknown,
+  parser: (item: unknown) => T | null,
+  min: number,
+  max: number,
+): T[] | null {
+  if (!Array.isArray(value) || value.length < min || value.length > max)
+    return null;
+  const parsed = value.map(parser);
+  return parsed.some((item) => item === null) ? null : (parsed as T[]);
+}
+
+function validateBriefing(
+  raw: unknown,
+  mode: IssueReportMode,
+): IssueReportBriefing | null {
+  if (!isRecord(raw) || raw.mode !== mode) return null;
+  if (mode === "change_with_evidence") {
+    if (
+      !hasExactKeys(
+        raw,
+        new Set(["mode", "verified_background", "conditional_interpretations"]),
+      )
+    )
+      return null;
+    const background = validateVerifiedBlock(raw.verified_background);
+    const items = parseArray(
+      raw.conditional_interpretations,
+      validateInterpretation,
+      1,
+      4,
+    );
+    return background && items
+      ? {
+          mode,
+          verified_background: background,
+          conditional_interpretations: items,
+        }
+      : null;
+  }
+  if (mode === "change_without_evidence") {
+    if (
+      !hasExactKeys(
+        raw,
+        new Set(["mode", "conditional_scenarios", "materials_to_check"]),
+      )
+    )
+      return null;
+    const scenarios = parseArray(
+      raw.conditional_scenarios,
+      validateGeneralScenario,
+      1,
+      4,
+    );
+    const materials = parseArray(
+      raw.materials_to_check,
+      validateMaterial,
+      1,
+      8,
+    );
+    return scenarios &&
+      materials &&
+      materialsCoverScenarios(scenarios, materials)
+      ? {
+          mode,
+          conditional_scenarios: scenarios,
+          materials_to_check: materials,
+        }
+      : null;
+  }
+  if (mode === "stable_with_evidence") {
+    if (
+      !hasExactKeys(
+        raw,
+        new Set([
+          "mode",
+          "issue_explanation",
+          "verified_background",
+          "conditional_scenarios",
+        ]),
+      )
+    )
+      return null;
+    const issue = validateSimpleBlock(
+      raw.issue_explanation,
+      "market_definition",
+    );
+    const background = validateVerifiedBlock(raw.verified_background);
+    const scenarios = parseArray(
+      raw.conditional_scenarios,
+      validateGeneralScenario,
+      1,
+      4,
+    );
+    return issue && background && scenarios
+      ? {
+          mode,
+          issue_explanation: issue,
+          verified_background: background,
+          conditional_scenarios: scenarios,
+        }
+      : null;
+  }
+  if (
+    !hasExactKeys(
+      raw,
+      new Set([
+        "mode",
+        "issue_explanation",
+        "conditional_scenarios",
+        "materials_to_check",
+      ]),
+    )
+  )
+    return null;
+  const issue = validateSimpleBlock(raw.issue_explanation, "general_scenario");
+  const scenarios = parseArray(
+    raw.conditional_scenarios,
+    validateGeneralScenario,
+    1,
+    4,
+  );
+  const materials = parseArray(raw.materials_to_check, validateMaterial, 1, 8);
+  return issue &&
+    scenarios &&
+    materials &&
+    materialsCoverScenarios(scenarios, materials)
+    ? {
+        mode,
+        issue_explanation: issue,
+        conditional_scenarios: scenarios,
+        materials_to_check: materials,
+      }
+    : null;
+}
+
+function validateSimpleBlock<
+  B extends "market_definition" | "general_scenario",
+>(raw: unknown, basis: B): { text: string; basis: B } | null {
+  if (!isRecord(raw) || !hasExactKeys(raw, new Set(["text", "basis"])))
+    return null;
+  const text = cleanText(raw.text, 30, 900);
+  return text !== null && raw.basis === basis ? { text, basis } : null;
+}
+
+function materialsCoverScenarios(
+  scenarios: GeneralScenario[],
+  materials: MaterialToCheck[],
+) {
+  const indices = new Set(materials.map((item) => item.scenario_index));
+  return (
+    scenarios.every((_, index) => indices.has(index + 1)) &&
+    [...indices].every((index) => index <= scenarios.length)
+  );
+}
+
+function briefingBodies(briefing: IssueReportBriefing): string[] {
+  switch (briefing.mode) {
+    case "change_with_evidence":
+      return [
+        briefing.verified_background.text,
+        ...briefing.conditional_interpretations.map((item) => item.text),
+      ];
+    case "change_without_evidence":
+      return [
+        ...briefing.conditional_scenarios.map((item) => item.text),
+        ...briefing.materials_to_check.map((item) => item.text),
+      ];
+    case "stable_with_evidence":
+      return [
+        briefing.issue_explanation.text,
+        briefing.verified_background.text,
+        ...briefing.conditional_scenarios.map((item) => item.text),
+      ];
+    case "stable_without_evidence":
+      return [
+        briefing.issue_explanation.text,
+        ...briefing.conditional_scenarios.map((item) => item.text),
+        ...briefing.materials_to_check.map((item) => item.text),
+      ];
+  }
+}
+
+function canonical(value: string) {
+  return value
+    .normalize("NFKC")
+    .toLocaleLowerCase()
+    .replace(/\d+(?:[.,:/-]\d+)*/g, "#")
+    .replace(/[^a-z가-힣#]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function tokens(value: string) {
+  return new Set(
+    canonical(value)
+      .split(" ")
+      .filter((token) => token.length >= 2),
+  );
+}
+
+function hasDuplicateBodies(briefing: IssueReportBriefing) {
+  const bodies = briefingBodies(briefing);
+  const normalized = bodies.map(canonical);
+  if (new Set(normalized).size !== normalized.length) return true;
+  return bodies.some((left, index) =>
+    bodies.slice(index + 1).some((right) => {
+      const leftTokens = tokens(left);
+      const rightTokens = tokens(right);
+      const union = new Set([...leftTokens, ...rightTokens]);
+      const overlap = [...leftTokens].filter((token) =>
+        rightTokens.has(token),
+      ).length;
+      return (
+        Math.min(leftTokens.size, rightTokens.size) >= 4 &&
+        overlap / union.size >= 0.82
+      );
+    }),
+  );
+}
+
+function repeatsRule(
+  briefing: IssueReportBriefing,
+  reference: IssueReportResolutionReference,
+) {
+  if (reference.status !== "available" || reference.condition_text === null)
+    return false;
+  const ruleTokens = tokens(reference.condition_text);
+  return briefingBodies(briefing).some((body) => {
+    const overlap = [...tokens(body)].filter((token) =>
+      ruleTokens.has(token),
+    ).length;
+    return (
+      canonical(body).includes(canonical(reference.condition_text as string)) ||
+      (overlap >= 4 && overlap / Math.max(1, ruleTokens.size) >= 0.7)
+    );
+  });
+}
+
+function verifiedCandidateIds(briefing: IssueReportBriefing): string[] {
+  if (briefing.mode === "change_with_evidence")
+    return briefing.verified_background.candidate_ids;
+  if (briefing.mode === "stable_with_evidence")
+    return briefing.verified_background.candidate_ids;
+  return [];
+}
+
+export function parseReportResponse(raw: unknown): IssueReportLoadState {
+  if (!isRecord(raw)) return { status: "error" };
   if (raw.status === "not_yet_generated") {
     return hasExactKeys(raw, new Set(["status"]))
       ? { status: "not_yet_generated" }
@@ -283,8 +590,10 @@ export function parseReportResponse(raw: unknown): IssueReportLoadState {
   }
   if (
     raw.status !== "success" ||
-    raw.report_version !== "v5" ||
+    raw.report_version !== "v6" ||
     !hasExactKeys(raw, SUCCESS_KEYS) ||
+    typeof raw.report_mode !== "string" ||
+    !MODES.has(raw.report_mode as IssueReportMode) ||
     typeof raw.id !== "string" ||
     !UUID_PATTERN.test(raw.id) ||
     typeof raw.generated_at !== "string" ||
@@ -293,62 +602,96 @@ export function parseReportResponse(raw: unknown): IssueReportLoadState {
     !Array.isArray(raw.evidence_refs) ||
     !Array.isArray(raw.context_candidates) ||
     raw.context_candidates.length > 3
-  ) {
+  )
     return { status: "error" };
-  }
+
+  const mode = raw.report_mode as IssueReportMode;
   const generatedAt = normalizeUtcIsoTimestamp(raw.generated_at);
   const dataAsOf = normalizeUtcIsoTimestamp(raw.data_as_of);
   const episodeAt = normalizeUtcIsoTimestamp(raw.episode_at);
   if (
-    generatedAt === null ||
-    dataAsOf === null ||
-    episodeAt === null ||
+    !generatedAt ||
+    !dataAsOf ||
+    !episodeAt ||
     dataAsOf > generatedAt ||
     episodeAt > generatedAt
   ) {
     return { status: "error" };
   }
-  const content = validateContent(raw.content);
-  if (content === null) {
+  const observed = validateObserved(raw.observed_change);
+  const reference = validateReference(raw.resolution_reference);
+  const briefing = validateBriefing(raw.briefing, mode);
+  const relationshipBoundary = cleanText(raw.relationship_boundary, 50, 500);
+  const dataLimitations = cleanText(raw.data_limitations, 50, 900);
+  const cautionNote = cleanText(raw.caution_note, 120, 700);
+  if (
+    !observed ||
+    !reference ||
+    !briefing ||
+    !relationshipBoundary ||
+    !dataLimitations ||
+    !cautionNote
+  ) {
     return { status: "error" };
   }
+  if (
+    briefingBodies(briefing).some((text) => /\d/.test(text)) ||
+    hasDuplicateBodies(briefing) ||
+    repeatsRule(briefing, reference)
+  ) {
+    return { status: "error" };
+  }
+
   const candidates = raw.context_candidates.map((candidate) =>
     validateCandidate(candidate, generatedAt),
   );
-  if (candidates.some((candidate) => candidate === null)) {
+  if (candidates.some((candidate) => candidate === null))
     return { status: "error" };
-  }
   const typedCandidates = candidates as IssueReportContextCandidate[];
   const candidateIds = typedCandidates.map((candidate) => candidate.id);
-  if (new Set(candidateIds).size !== candidateIds.length) {
+  if (new Set(candidateIds).size !== candidateIds.length)
     return { status: "error" };
-  }
   const expectedRefs = [
-    raw.evidence_refs[0],
+    `metric:${observed.metric_id}`,
     ...candidateIds.map((id) => `candidate:${id}`),
   ];
+  const hasEvidence = mode.endsWith("with_evidence");
+  const hasChange = mode.startsWith("change_");
   if (
-    typeof raw.evidence_refs[0] !== "string" ||
-    !/^metric:\d+$/.test(raw.evidence_refs[0]) ||
     raw.evidence_refs.length !== expectedRefs.length ||
-    !raw.evidence_refs.every(
-      (reference, index) => reference === expectedRefs[index],
-    ) ||
-    (content.evidence_synthesis === null) !== (typedCandidates.length === 0)
-  ) {
+    !raw.evidence_refs.every((ref, index) => ref === expectedRefs[index]) ||
+    hasEvidence !== candidateIds.length > 0 ||
+    hasChange !== observed.significant ||
+    verifiedCandidateIds(briefing).join("|") !== candidateIds.join("|")
+  )
     return { status: "error" };
+  if (briefing.mode === "change_with_evidence") {
+    const allowed = new Set(candidateIds);
+    if (
+      briefing.conditional_interpretations.some((item) =>
+        item.candidate_ids.some((id) => !allowed.has(id)),
+      )
+    ) {
+      return { status: "error" };
+    }
   }
 
   const report: IssueReportSuccessResponse = {
     id: raw.id,
     status: "success",
-    report_version: "v5",
+    report_version: "v6",
+    report_mode: mode,
     generated_at: raw.generated_at,
     data_as_of: raw.data_as_of,
     episode_at: raw.episode_at,
-    content,
+    observed_change: observed,
+    briefing,
+    resolution_reference: reference,
     evidence_refs: raw.evidence_refs as string[],
     context_candidates: typedCandidates,
+    relationship_boundary: relationshipBoundary,
+    data_limitations: dataLimitations,
+    caution_note: cautionNote,
   };
   return { status: "success", report };
 }
