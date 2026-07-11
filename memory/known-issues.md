@@ -7,12 +7,13 @@ Harness Version: 1.1
 
 # Known Issues — Outlook Signals
 
-_Last updated: 2026-07-10_
+_Last updated: 2026-07-11_
 
 ## Active Bugs
 
 | ID | Severity | Description | Found | Owner |
 |----|----------|-------------|-------|-------|
+| ISS-016 | Medium | V7's immediate zero-report condition is resolved by TASK-111, but only one post-change development report has passed. Broader content-quality and reliability review remains before explicit v7 acceptance. | 2026-07-11 | Data/AI Implementer / Reviewer |
 
 ## Technical Debt
 
@@ -462,22 +463,47 @@ Not bugs, but unresolved decisions that can affect later demo or product work:
   - Completed: stored safety/rule-repeat/evidence audits, HTTP reconstruction,
     and actual Browser flows passed. No additional market was called.
 
-### ISS-016: V6 authored dates and generic English escaped the first safety pass
-- **Severity**: High
-- **Found**: 2026-07-11 during TASK-098 final visual audit
-- **Status**: Open — one clean actual Trump regeneration pending approval
+### ISS-016: V7 development generation reliability
+- **Severity**: Medium
+- **Found**: 2026-07-11 during TASK-108 development evaluation
+- **Status**: Immediate zero-report condition resolved; broader acceptance open
 - **Evidence**:
-  - The successful Trump row repeated `december` in the issue explanation and
-    conditional scenario even though numeric dates were blocked.
-  - Both successful rows preserved generic English action terms because the
-    first anchor list included more than proper names.
+  - The first v7 evaluation produced zero valid reports across eight calls:
+    six numeric-token failures and two prohibited-language failures.
+  - A user-triggered retry before TASK-111 also failed numeric validation.
 - **Fix implemented**:
-  - Prompt anchors now prefer proper names from the issue and verified
-    candidates and instruct the writer to translate all other English terms.
-  - Generation and read-time validation reject authored month/deadline words
-    and English tokens outside the supplied proper-name anchors.
-  - Full Backend verification passes 390 tests. Both old append-only rows now
-    fail closed as `not_yet_generated` and remain available for audit only.
+  - TASK-111 removed numeric-token blocking from generation and read-time
+    reconstruction, kept the other evidence/safety gates, and moved those
+    requirements into the system prompt under `v7-positive-evidence-2`.
+  - One approved development regeneration succeeded on its first attempt,
+    reconstructed from stored evidence, and returned a fresh public response.
 - **Remaining proof**:
-  - One new Trump generation must pass the strengthened gate and actual UI
-    review. This provider call exceeds the prior exact two-issue approval.
+  - Review the generated content and repeat a bounded representative sample
+    before explicit v7 acceptance. TASK-109 deletion remains separately gated.
+
+### ISS-017: On-demand request can remain queued while status polling overloads live reads
+- **Severity**: High
+- **Found**: 2026-07-11 during live UI diagnosis
+- **Status**: Open
+- **Evidence**:
+  - The visible U.S.–Russia nuclear-deal briefing request
+    `b1ec5edf-e676-4f5d-85f2-2dc518bda884` remained `queued` with attempt zero
+    from 2026-07-11 10:43:44 UTC; no worker process was active.
+  - The page consequently stayed in `generating` and polled the request-status
+    endpoint every 1.5 seconds.
+  - Each status read calls `_resolve_live()`, whose current implementation loads
+    and materializes all 33,588 `market_snapshots` rows and all 500 metric rows
+    before resolving one issue. Concurrent detail/history/report/status reads
+    timed out or accumulated against the remote development DB.
+- **Root cause**:
+  - Automatic child-worker launch occurs only in the POST request path. An
+    already-queued request surviving a failed/missing launch or API restart has
+    no startup or polling-side recovery path and the UI offers no retry while
+    it is marked generating.
+  - Request-status lookup unnecessarily depends on the full live-issue loader.
+- **Fix direction**:
+  - Add a guarded recovery mechanism for orphaned queued requests (or an
+    explicit retry transition) without performing provider work in the API.
+  - Resolve the requested market directly and replace full-table latest-row
+    materialization with bounded per-market/latest-row SQL for status and issue
+    reads. Add polling/load regressions before changing runtime behavior.

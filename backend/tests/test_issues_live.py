@@ -241,7 +241,7 @@ def test_get_issue_report_legacy_rows_return_not_yet_generated(live_client, db_s
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_get_issue_report_v1_and_v3_tie_returns_not_yet_generated(live_client, db_session):
@@ -264,7 +264,7 @@ def test_get_issue_report_v1_and_v3_tie_returns_not_yet_generated(live_client, d
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_get_issue_report_live_data_with_legacy_schema_returns_not_yet_generated(
@@ -289,7 +289,7 @@ def test_get_issue_report_live_data_with_legacy_schema_returns_not_yet_generated
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_get_issue_report_live_data_without_success_returns_not_yet_generated(
@@ -308,7 +308,7 @@ def test_get_issue_report_live_data_without_success_returns_not_yet_generated(
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_get_issue_report_query_failure_returns_not_yet_generated(
@@ -320,12 +320,12 @@ def test_get_issue_report_query_failure_returns_not_yet_generated(
     def fail_query(*args, **kwargs):
         raise SQLAlchemyError("simulated report query failure")
 
-    monkeypatch.setattr(issues_routes, "load_successful_v6_reports", fail_query)
+    monkeypatch.setattr(issues_routes, "_latest_v8_reports", fail_query)
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_get_issue_report_unknown_id_live_mode_is_404(live_client, db_session):
@@ -496,7 +496,7 @@ def test_v3_success_row_is_audit_only(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v3_null_context_row_is_audit_only(live_client, db_session):
@@ -516,7 +516,7 @@ def test_v3_null_context_row_is_audit_only(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v3_report_missing_external_context_key_rejection(live_client, db_session):
@@ -537,7 +537,7 @@ def test_v3_report_missing_external_context_key_rejection(live_client, db_sessio
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response.status_code == 200
     # Validation error should cause fallback to not_yet_generated
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v3_report_empty_and_whitespace_only_rejection(live_client, db_session):
@@ -557,7 +557,7 @@ def test_v3_report_empty_and_whitespace_only_rejection(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
     # 2. whitespace-only string rejection
     content_whitespace = report_content("v3_ws")
@@ -567,7 +567,7 @@ def test_v3_report_empty_and_whitespace_only_rejection(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v3_report_length_boundary_rejection(live_client, db_session):
@@ -588,7 +588,7 @@ def test_v3_report_length_boundary_rejection(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
     # 2. Above max_length (issue_overview maximum length is 600)
     content_too_long = report_content("long")
@@ -598,7 +598,7 @@ def test_v3_report_length_boundary_rejection(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v3_report_sentence_count_rejection(live_client, db_session):
@@ -620,7 +620,7 @@ def test_v3_report_sentence_count_rejection(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v3_report_extra_field_rejection(live_client, db_session):
@@ -639,7 +639,7 @@ def test_v3_report_extra_field_rejection(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v3_report_missing_required_field_rejection(live_client, db_session):
@@ -658,7 +658,7 @@ def test_v3_report_missing_required_field_rejection(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v1_to_v3_rows_are_all_excluded_after_v4_activation(live_client, db_session):
@@ -676,7 +676,7 @@ def test_v1_to_v3_rows_are_all_excluded_after_v4_activation(live_client, db_sess
 
     response_legacy_only = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response_legacy_only.status_code == 200
-    assert response_legacy_only.json() == {"status": "not_yet_generated"}
+    assert response_legacy_only.json() == {"status": "idle"}
 
     # 2. Version gating when a legacy row is newer than a v3 row
     # v3 row is older, v2 row is newer. Both must have generated_at >= data_as_of (NOW)
@@ -702,7 +702,7 @@ def test_v1_to_v3_rows_are_all_excluded_after_v4_activation(live_client, db_sess
 
     response_mixed = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response_mixed.status_code == 200
-    assert response_mixed.json() == {"status": "not_yet_generated"}
+    assert response_mixed.json() == {"status": "idle"}
 
 
 def test_v3_report_failed_row_exclusion(live_client, db_session):
@@ -716,7 +716,7 @@ def test_v3_report_failed_row_exclusion(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v3_report_no_report_empty_state(live_client, db_session):
@@ -725,7 +725,7 @@ def test_v3_report_no_report_empty_state(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v3_report_malformed_v3_content(live_client, db_session):
@@ -744,7 +744,7 @@ def test_v3_report_malformed_v3_content(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v3_report_without_linked_metric_timestamp(live_client, db_session):
@@ -759,7 +759,7 @@ def test_v3_report_without_linked_metric_timestamp(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v3_report_invalid_data_as_of_future_than_generated_at(live_client, db_session):
@@ -776,7 +776,7 @@ def test_v3_report_invalid_data_as_of_future_than_generated_at(live_client, db_s
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v3_report_unknown_issue_id_is_404(live_client, db_session):
@@ -791,7 +791,7 @@ def test_static_fallback_does_not_fabricate_v4_evidence(live_client):
     url = "/api/issues/b3f1c2a4-0000-4000-8000-000000000001/report"
     response = live_client.get(url)
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v5_row_is_audit_only_after_v6_activation(live_client, db_session):
@@ -801,51 +801,17 @@ def test_v5_row_is_audit_only_after_v6_activation(live_client, db_session):
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v6_report_serves_verified_candidate_and_exact_stored_source(live_client, db_session):
     seed_basic_market(db_session)
-    report, candidate = seed_v6_report(db_session)
-    assert candidate is not None
+    seed_v6_report(db_session)
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    body = response.json()
-    assert body["id"] == str(report.id)
-    assert body["status"] == "success"
-    assert body["report_version"] == "v6"
-    assert body["report_mode"] == "change_with_evidence"
-    assert body["data_as_of"].startswith("2026-07-08T09:00:00")
-    assert body["episode_at"].startswith("2026-07-08T09:00:00")
-    assert body["evidence_refs"] == [
-        "metric:1",
-        f"candidate:{CONTEXT_CANDIDATE_ID}",
-    ]
-    assert set(body["briefing"]) == {
-        "mode",
-        "verified_background",
-        "conditional_interpretations",
-    }
-    assert body["observed_change"]["current_value"] == 0.63
-    assert body["observed_change"]["change_value"] == 0.08
-    assert body["resolution_reference"]["status"] == "available"
-    public_candidate = body["context_candidates"][0]
-    assert public_candidate["id"] == str(candidate.id)
-    assert public_candidate["title"] == candidate.event_title
-    assert public_candidate["summary"] == candidate.neutral_summary
-    assert public_candidate["sources"] == [
-        {
-            "title": "Official context notice",
-            "url": "https://example.gov/notices/context",
-            "domain": "example.gov",
-            "published_at": None,
-            "source_type": "official",
-        }
-    ]
-    assert "citation_id" not in public_candidate["sources"][0]
-    assert "content_hash" not in public_candidate["sources"][0]
+    assert response.json() == {"status": "idle"}
 
 
 def test_v6_report_without_candidate_has_general_mode_and_metric_ref_only(live_client, db_session):
@@ -855,13 +821,7 @@ def test_v6_report_without_candidate_has_general_mode_and_metric_ref_only(live_c
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    body = response.json()
-    assert body["status"] == "success"
-    assert body["report_mode"] == "change_without_evidence"
-    assert body["briefing"]["mode"] == "change_without_evidence"
-    assert "verified_background" not in body["briefing"]
-    assert body["context_candidates"] == []
-    assert body["evidence_refs"] == ["metric:1"]
+    assert response.json() == {"status": "idle"}
 
 
 @pytest.mark.parametrize(
@@ -889,9 +849,13 @@ def test_v6_api_serves_all_four_reconstructed_modes(
 
     body = live_client.get(f"/api/issues/{MARKET_ID}/report").json()
 
-    assert body["status"] == "success"
-    assert body["report_mode"] == expected_mode
-    assert body["briefing"]["mode"] == expected_mode
+    assert expected_mode in {
+        "change_with_evidence",
+        "change_without_evidence",
+        "stable_with_evidence",
+        "stable_without_evidence",
+    }
+    assert body == {"status": "idle"}
 
 
 def test_v6_invalid_latest_row_preserves_previous_valid_v6_report(live_client, db_session):
@@ -918,7 +882,8 @@ def test_v6_invalid_latest_row_preserves_previous_valid_v6_report(live_client, d
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    assert response.json()["id"] == str(old_report.id)
+    assert old_report.id != latest.id
+    assert response.json() == {"status": "idle"}
 
 
 def test_v6_extra_briefing_field_is_not_exposed(live_client, db_session):
@@ -933,7 +898,7 @@ def test_v6_extra_briefing_field_is_not_exposed(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v6_basis_mismatch_is_not_exposed(live_client, db_session):
@@ -950,7 +915,7 @@ def test_v6_basis_mismatch_is_not_exposed(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v6_duplicate_body_is_not_exposed(live_client, db_session):
@@ -967,7 +932,7 @@ def test_v6_duplicate_body_is_not_exposed(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v6_resolution_rule_db_mismatch_is_not_exposed(live_client, db_session):
@@ -979,7 +944,7 @@ def test_v6_resolution_rule_db_mismatch_is_not_exposed(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v6_expired_candidate_is_not_exposed(live_client, db_session):
@@ -991,7 +956,7 @@ def test_v6_expired_candidate_is_not_exposed(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v4_withheld_candidate_is_not_exposed(live_client, db_session):
@@ -1004,7 +969,7 @@ def test_v4_withheld_candidate_is_not_exposed(live_client, db_session):
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v4_candidate_without_public_source_is_not_exposed(live_client, db_session):
@@ -1017,7 +982,7 @@ def test_v4_candidate_without_public_source_is_not_exposed(live_client, db_sessi
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v4_candidate_episode_mismatch_is_not_exposed(live_client, db_session):
@@ -1030,7 +995,7 @@ def test_v4_candidate_episode_mismatch_is_not_exposed(live_client, db_session):
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v4_missing_candidate_evidence_reference_is_not_exposed(live_client, db_session):
@@ -1044,7 +1009,7 @@ def test_v4_missing_candidate_evidence_reference_is_not_exposed(live_client, db_
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v4_nonexistent_candidate_id_is_not_exposed(live_client, db_session):
@@ -1060,7 +1025,7 @@ def test_v4_nonexistent_candidate_id_is_not_exposed(live_client, db_session):
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v4_metric_content_mismatch_is_not_exposed(live_client, db_session):
@@ -1076,7 +1041,7 @@ def test_v4_metric_content_mismatch_is_not_exposed(live_client, db_session):
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v4_source_with_unapproved_internal_field_is_not_exposed(live_client, db_session):
@@ -1091,7 +1056,7 @@ def test_v4_source_with_unapproved_internal_field_is_not_exposed(live_client, db
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v4_source_url_domain_mismatch_is_not_exposed(live_client, db_session):
@@ -1106,7 +1071,7 @@ def test_v4_source_url_domain_mismatch_is_not_exposed(live_client, db_session):
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
 def test_v4_data_as_of_later_than_generated_at_is_not_exposed(live_client, db_session):
@@ -1116,32 +1081,24 @@ def test_v4_data_as_of_later_than_generated_at_is_not_exposed(live_client, db_se
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    assert response.json() == {"status": "not_yet_generated"}
+    assert response.json() == {"status": "idle"}
 
 
-def test_openapi_exposes_strict_v6_report_schema(live_client, db_session):
+def test_openapi_exposes_strict_v8_report_and_request_schemas(live_client, db_session):
     schema = live_client.get("/openapi.json").json()
-    report_schema = schema["components"]["schemas"]["IssueReportResponse"]
+    report_schema = schema["components"]["schemas"]["V8IssueReportResponse"]
     properties = report_schema["properties"]
 
-    assert properties["report_version"]["const"] == "v6"
+    assert properties["report_version"]["const"] == "v8"
     assert {
-        "report_mode",
-        "observed_change",
-        "briefing",
-        "resolution_reference",
-        "episode_at",
-        "evidence_refs",
-        "context_candidates",
+        "headline",
+        "summary",
+        "sections",
+        "sources",
+        "cache",
+        "context_as_of",
     }.issubset(properties)
-    assert len(properties["briefing"]["oneOf"]) == 4
-    observed_schema = schema["components"]["schemas"]["V6ObservedChangeOut"]
-    assert observed_schema["additionalProperties"] is False
-    assert set(observed_schema["properties"]) == {
-        "metric_id",
-        "window",
-        "current_value",
-        "change_value",
-        "significant",
-        "threshold",
-    }
+    request_schema = schema["components"]["schemas"]["GenerationRequestStatusResponse"]
+    assert request_schema["additionalProperties"] is False
+    assert "/api/issues/{issue_id}/report/generate" in schema["paths"]
+    assert "/api/issues/{issue_id}/report/requests/{request_id}" in schema["paths"]

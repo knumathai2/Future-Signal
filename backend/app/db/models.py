@@ -6,8 +6,8 @@ remains local/development-only until a guarded application step is explicitly
 run. Production application still requires separate approval.
 
 Append-only rule (Technical Design §4.10): market_snapshots, market_metrics,
-issue_signals, ai_reports, context_candidates, and context_collection_runs are
-insert-only from the batch collector.
+issue_signals, ai_reports, context candidates/runs, resolution rules, and v7
+generation requests/events are insert-only.
 Only markets.last_seen_at/status are ever updated in place. Do not add
 update/upsert helpers for the append-only tables.
 """
@@ -16,6 +16,7 @@ from datetime import datetime
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     CheckConstraint,
     DateTime,
     ForeignKey,
@@ -276,3 +277,91 @@ class ContextCollectionRun(Base):
     accepted_count: Mapped[int] = mapped_column(Integer, default=0)
     model_usage: Mapped[dict] = mapped_column(JSONB, default=dict)
     error_detail: Mapped[dict | None] = mapped_column(JSONB)
+
+
+class AiReportGenerationRequest(Base):
+    """Immutable identity and fingerprint for one on-demand v7 request."""
+
+    __tablename__ = "ai_report_generation_requests"
+    __table_args__ = (
+        CheckConstraint(
+            "length(input_fingerprint) = 64 AND input_fingerprint = lower(input_fingerprint)",
+            name="ck_ai_report_generation_requests_fingerprint",
+        ),
+        CheckConstraint(
+            "requested_by IN ('user', 'development_evaluation')",
+            name="ck_ai_report_generation_requests_requested_by",
+        ),
+        UniqueConstraint(
+            "market_id",
+            "input_fingerprint",
+            name="uq_ai_report_generation_requests_market_fingerprint",
+        ),
+        Index(
+            "idx_ai_report_generation_requests_market_requested",
+            "market_id",
+            "requested_at",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    market_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("markets.id", ondelete="CASCADE")
+    )
+    input_fingerprint: Mapped[str] = mapped_column(Text)
+    prompt_version: Mapped[str] = mapped_column(Text)
+    policy_version: Mapped[str] = mapped_column(Text)
+    input_schema_version: Mapped[str] = mapped_column(Text)
+    requested_by: Mapped[str] = mapped_column(Text)
+    context_refresh_requested: Mapped[bool] = mapped_column(Boolean, default=False)
+    input_evidence_refs: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class AiReportGenerationEvent(Base):
+    """Append-only state, lease, outcome, and usage event for a request."""
+
+    __tablename__ = "ai_report_generation_events"
+    __table_args__ = (
+        CheckConstraint(
+            "state IN ('queued', 'running', 'succeeded', 'failed')",
+            name="ck_ai_report_generation_events_state",
+        ),
+        CheckConstraint(
+            "attempt_number >= 0",
+            name="ck_ai_report_generation_events_attempt",
+        ),
+        CheckConstraint(
+            "(state = 'queued' AND lease_token IS NULL AND lease_expires_at IS NULL "
+            "AND report_id IS NULL AND error_code IS NULL) OR "
+            "(state = 'running' AND attempt_number >= 1 AND lease_token IS NOT NULL "
+            "AND lease_expires_at IS NOT NULL AND report_id IS NULL AND error_code IS NULL) OR "
+            "(state = 'succeeded' AND attempt_number >= 1 AND lease_token IS NULL "
+            "AND lease_expires_at IS NULL AND report_id IS NOT NULL AND error_code IS NULL) OR "
+            "(state = 'failed' AND attempt_number >= 1 AND lease_token IS NULL "
+            "AND lease_expires_at IS NULL AND report_id IS NULL AND error_code IS NOT NULL)",
+            name="ck_ai_report_generation_events_shape",
+        ),
+        Index(
+            "idx_ai_report_generation_events_request_recorded",
+            "request_id",
+            "recorded_at",
+            "id",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    request_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("ai_report_generation_requests.id", ondelete="CASCADE"),
+    )
+    state: Mapped[str] = mapped_column(Text)
+    attempt_number: Mapped[int] = mapped_column(Integer, default=0)
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    lease_token: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    report_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("ai_reports.id", ondelete="SET NULL")
+    )
+    error_code: Mapped[str | None] = mapped_column(Text)
+    usage: Mapped[dict] = mapped_column(JSONB, default=dict)

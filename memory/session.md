@@ -14,17 +14,160 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: PM / Planner
-- **Session Goal**: Define the TASK-092 v6 evidence-aware briefing policy and
-  approval boundary before sequential TASK-093~098 implementation.
-- **Branch**: `pm/TASK-092-evidence-aware-briefing-policy`
+- **Agent Role**: Data/AI Implementer
+- **Session Goal**: Implement and activate the approved v8 issue-centered briefing contract while preserving v7 history.
+- **Branch**: `data-ai/TASK-112-v8-issue-centered`
 
 ## Context Read
 
-- ADR-038 through human-approved ADR-047 and TASK-056~064 evidence
-- TASK-065 backfill, audit, API, wording, browser, and budget criteria
+- Project constitution and Backend implementation role prompt
+- PRD, Service Design, Technical Design, and UX Design indexes and relevant AI/report sections
+- Current project/session/task state, wording policy, glossary, architecture, active report code, API, batch, and validation paths
 
 ## Work Completed
+
+- Opened the running local Frontend at the development-only `v8-sources`
+  fixture route, verified the complete v8 issue briefing and visible source
+  attribution in the in-app browser, and left the rendered screen open for
+  user review. No code, database, provider, or deployment action occurred.
+- Completed TASK-112 under explicit user approval. Added the v8 issue-centered
+  prompt, input/output models, section-level evidence validation, unique
+  narrative section contract, and versioned fingerprint identifiers while
+  retaining the complete v7 writer implementation.
+- Activated v8 in the on-demand request, worker, stored-report reconstruction,
+  public API, TypeScript types, strict runtime parser, development fixtures,
+  and issue briefing UI. Authored limitations suppress the duplicate
+  deterministic limitations card while caution remains visible.
+- Added v8 tests and updated API/OpenAPI/service/Frontend regressions plus
+  Service, Technical, UX, policy, glossary, decision, and task documentation.
+  No provider call, database write, migration, dependency, infrastructure,
+  deployment, production action, or legacy deletion occurred.
+- Completed TASK-111 at the user's direction. Removed v7 numeric-token blocking
+  from generation and read-time reconstruction while retaining strict shape,
+  exact evidence refs, source-parent linkage, prohibited-language, and authored-
+  URL gates. Added the retained rules to the writer prompt and advanced the
+  fingerprinted policy to `v7-positive-evidence-2`.
+- Ran one approved development regeneration for the latest user market that had
+  failed numeric validation. The OpenRouter writer call succeeded on attempt
+  one for USD 0.011714 and stored report
+  `3480ee09-831c-4485-89ac-ef06af48d5d3`. Stored reconstruction and the actual
+  GET report API passed with HTTP 200, fresh cache, four sections, data-as-of,
+  and caution. Full Backend verification passes 446 tests, Ruff, and diff
+  checks. No context call, production write, deployment, infrastructure,
+  schema, dependency, or public response-shape change occurred.
+- Read-only diagnosis of the current v7 no-generation symptom found two
+  sequential failure layers. The pre-TASK-110 API path committed requests but
+  did not start the standalone worker, which matches one current user request
+  still at `queued` / attempt 0. A later user request did reach the worker and
+  configured provider, but failed closed at attempt 2 with
+  `unsupported_number`; the development database still has zero successful v7
+  reports. Focused worker/API/service verification passes 28 tests plus Ruff.
+  No provider call, database write, or product-code change was made during this
+  diagnosis.
+- Completed TASK-110: a queued generate POST now starts the guarded worker as
+  an isolated request-scoped child in local/development.
+- Added `--request-id` to the existing CLI so the click-triggered process
+  claims the exact committed request instead of consuming an older FIFO row.
+- Kept provider client construction, provider calls, validation, report writes,
+  and terminal event writes inside the child worker. Spawn failure preserves
+  the queued request and HTTP 202 response for manual recovery.
+- Added launcher, API integration, CLI routing, environment-guard, process
+  reaping, and spawn-failure tests. Full Backend verification passes 446 tests
+  and Ruff. The repository-wide format check still identifies 25 pre-existing
+  files; the new dedicated files pass formatting. No provider call, non-test
+  DB write, dependency, schema, infrastructure, deployment, or public response
+  shape changed.
+- Completed TASK-108 against the same two actual development issues and model
+  as v6. Applied migration 004 only to the approved `ENV=local` development DB.
+- V6's final comparison was 2/2 successful calls for USD 0.007316. V7 made
+  eight bounded calls for USD 0.077962 and stored zero reports: six failed
+  unsupported-number validation and two failed the Korean blocked-word gate.
+- Retained deterministic English-month, percent/percentage-point display, and
+  24-hour/7-day window evidence improvements plus preferred status vocabulary.
+  Full Backend passes 440 tests and Ruff. No further provider call will run.
+- Recorded ISS-016 and did not accept v7. TASK-109 may audit candidates but
+  legacy deletion is not eligible and remains separately approval-gated.
+- Completed TASK-107 integration review across request creation, duplicate
+  join, lease/recovery, cache revisions, last-good, strict evidence/source
+  reconstruction, wording gates, budget/provider/validation failure, polling,
+  and core-detail isolation.
+- Fixed mixed UTC-format comparison in the v7 parser and bounded Frontend
+  polling after three consecutive status failures without discarding last-good.
+  Added same-fingerprint failure/requeue/attempt-two/success coverage.
+- V7 focused 38 tests, full Backend 438 tests, Ruff, all Frontend checks,
+  wording scan, Prettier, and diff checks pass. No external call or non-test
+  state change occurred. TASK-108 is next.
+- Completed TASK-106 with a strict v7 runtime parser, explicit generate/join
+  button, issue-scoped request polling, flexible paragraph/list rendering, and
+  idle/generating/fresh/stale/failed/failed-with-last-good UI states.
+- Added exact safe A-C source links, visible supported claims, preserved
+  last-good content during refresh/failure, and data-as-of plus caution on every
+  report state. The detail/chart/manual-context areas remain independently
+  available.
+- Frontend typecheck, lint, parser regressions, production build, Prettier,
+  wording scan, and diff checks pass. Browser QA covered all v7 public states,
+  source/no-source, 1280px and 390px with no overflow and 44px controls.
+- No dependency, provider call, database write, migration application,
+  infrastructure change, deployment, production action, or TASK-109 deletion
+  occurred. TASK-107 is next.
+- Completed TASK-105 with public POST generate, GET request status, and strict
+  v7 GET report states. The API appends only request/queue rows and never calls
+  a provider.
+- Added generation-time evidence reconstruction, current fingerprint freshness,
+  stale/generating/failed-with-last-good behavior, previous-valid-v7 fallback,
+  exact A-C source/claim/link output, request scoping, OpenAPI, and legacy
+  audit-only coverage. Full Backend passes 437 tests with Ruff/diff clean.
+- Completed TASK-104: normal collection now makes zero report calls; the v7
+  service owns exact evidence bundles/fingerprints, duplicate join, append-only
+  leases, recovery, optional context refresh/successor requests, one-shot
+  validation/storage, budget gate, last-good preservation, and FIFO worker.
+- Added v7 context/run persistence and a guarded standalone local/dev worker.
+  Focused service/workflow coverage passes 23 tests and the full Backend suite
+  passes 428 tests with Ruff/diff clean. No live provider or non-test DB call ran.
+- Completed TASK-103 with a separate v7 30-day broad context path, A-D source
+  classification, exact excerpt-backed supported claims, conditional verifier
+  triggers, independent-provider/no-search verification, and fail-closed
+  handling. Historical v4 behavior remains unchanged.
+- Combined new v7 plus existing research/verifier coverage passes 71 tests;
+  Ruff and diff checks pass. No live provider or DB call occurred.
+- Completed TASK-102 with additive migration 004, immutable fingerprinted
+  request identities, append-only queued/running/succeeded/failed events,
+  bounded lease/recovery semantics, report FK, safe error/usage fields, and
+  matching ORM models.
+- Ten schema/ORM regressions pass with Ruff and diff checks. Migrations 001-003
+  remain untouched and migration 004 was not applied to a database.
+- Received explicit approval for TASK-099 items 1-7, excluding deployment,
+  production writes, new dependencies, and TASK-109 legacy deletion.
+- Completed TASK-101: activated ADR-051 policy documentation and added the
+  provider-independent v7 positive-first writer input/output, prompt, parser,
+  evidence/source-parent checks, and structural/public-language gates.
+- Added eight v7 regressions; focused v6/v7 verification passes 35 tests with
+  Ruff and diff checks clean. No provider, DB, schema, API, or workflow action
+  occurred in this task.
+- Prepared `reports/task-101-v7-briefing-contract.md` with the exact writer-owned
+  JSON shape, backend-owned fields, evidence-reference grammar, positive-first
+  prompt, A-D source levels, deterministic checks, conditional-verifier
+  triggers, blocker-versus-diagnostic matrix, and exact v6 supersession list.
+- Completed TASK-100 by mapping v1-v6 active periods, ADRs, public/generation
+  shapes, runtime surfaces, supersession state, permanent retention set, and
+  separately gated cleanup candidates in
+  `docs/archive/ai-report-contracts/README.md` and
+  `reports/task-100-ai-contract-archive.md`.
+- Classified constitution/evidence-integrity controls separately from rigid
+  version-specific style and shape rules. V6 remains current until approved v7
+  implementation and review pass; no runtime or external state changed.
+- Preserved the completed and reopened v6 implementation state while preparing
+  the user-directed v7 reset on a separate task branch.
+- Completed TASK-099 documentation in
+  `reports/task-099-on-demand-briefing-policy-reset.md`.
+- Recorded the button-triggered cache flow, independent market/context/writer
+  responsibilities, positive-first prompt direction, broad flexible section
+  envelope, A-D source levels, conditional verifier use, blocking-vs-quality
+  validation split, and v1-v6 archive/cleanup sequence.
+- Added proposed ADR-051 and prepared TASK-100~109 with explicit policy,
+  schema, workflow, API, provider, database, deployment, and deletion gates.
+- No product code, schema, API, workflow, provider, database, dependency,
+  infrastructure, deployment, or binding active-policy text changed.
 
 - Completed TASK-095: v6-only API reconstruction, all four mode responses,
   exact metric/snapshot/reference/history/rule/candidate/source revalidation,
@@ -335,3 +478,19 @@ Harness Version: 1.1
   preserved but the current HTTP API honestly returns `not_yet_generated`.
   TASK-097 is active again pending separate approval for one clean Trump call;
   TASK-098 is assigned.
+
+## 2026-07-11 live AI briefing diagnosis
+
+- Reproduced the user's current Chrome page for the U.S.–Russia nuclear-deal
+  issue and confirmed the briefing remains in the `generating` state.
+- Read-only development DB inspection found the matching request has remained
+  `queued` at attempt zero since 10:43:44 UTC and no on-demand worker is active.
+- Confirmed the status polling path calls the full live loader; concurrent API
+  reads materialize 33,588 snapshots on every request and timed out during the
+  reproduction. Recorded the combined orphaned-queue/polling issue as ISS-017.
+- No provider call, DB write, runtime restart, code fix, dependency, schema,
+  API-contract, infrastructure, or deployment change was made.
+- At the user's request, the orphaned U.S.–Russia request
+  `b1ec5edf-e676-4f5d-85f2-2dc518bda884` was then stopped before execution by
+  appending a local-development `failed / cancelled_by_user` event. No worker or
+  provider call was active, so the cancellation incurred no generation cost.

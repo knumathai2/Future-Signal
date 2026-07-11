@@ -11,41 +11,33 @@ _Last updated: 2026-07-11_
 
 ## In Progress
 
-The user-approved evidence-aware briefing objective is decomposed into
-TASK-092~098 below. Existing evidence, wording, no-causality, fail-closed,
-local/development-only write, and cumulative USD 100 program boundaries remain
-in force. Deployment and production writes remain excluded.
+TASK-099 records the user-directed v7 planning reset: positive-first prompts,
+button-triggered cache-backed briefing generation, independent broad context
+collection with simpler evidence levels, flexible broad-section output, and a
+historical v1-v6 archive followed by separately approved cleanup.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-097 | Regenerate and evaluate v6 reports in development | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-097-v6-development-regeneration` | in_progress |
-| TASK-098 | Review the integrated v6 flow and leave the development UI ready for user review | Reviewer | Reviewer | `review/TASK-098-evidence-aware-briefing-integration` | assigned |
+| TASK-109 | Remove superseded v1-v6 runtime code after v7 acceptance | Reviewer / Implementers | Reviewer | `review/TASK-109-legacy-report-cleanup` | assigned |
 
-
-TASK-092~098 must run in dependency order:
-
-1. TASK-092 completes the four-mode policy, deterministic decision rules,
-   section ownership, duplication rules, disclosure contract, and exact
-   approval boundary.
-2. TASK-093 starts only after TASK-092 and any required AI-policy approval.
-3. TASK-094 may start after TASK-092, but workflow/runtime configuration
-   changes remain separately approval-gated.
-4. TASK-095 starts only after TASK-093 and explicit public API approval.
-5. TASK-096 starts only after TASK-095.
-6. TASK-097 starts only after TASK-093~096 and may write only append-only local
-   or development records within the recorded cumulative budget.
-7. TASK-098 starts only after TASK-092~097 pass their own acceptance checks.
-
-Only one task may be `in_progress` at a time. Existing user worktree changes
-from the grounding/regeneration session must be preserved. No new dependency,
-schema migration, production write, deployment, or infrastructure mutation is
-authorized by this task list.
+TASK-101~108 and the user-directed TASK-110~111 follow-ups are complete under the
+user’s approval of TASK-099 items 1-7.
+TASK-112 is complete under the user's explicit approval of the v8 prompt,
+public API, Frontend, and policy transition. V7 code and stored rows remain;
+TASK-109 deletion is still separately gated.
+TASK-108 did not accept the first v7 policy after eight bounded calls produced
+zero valid reports. TASK-111 removed numeric-token blocking at the user's
+direction and produced the first valid development v7 report. TASK-109 may
+audit cleanup candidates but cannot delete legacy runtime without explicit v7
+acceptance and the user's separate deletion approval.
 
 Deployment and production writes remain outside the approved program.
 
-The detailed TASK-092~098 acceptance criteria and stop conditions are binding
-in the user-provided goal objective and the TASK-092 contract report once
-accepted.
+The binding proposed sequence, acceptance criteria, and approval packet are in
+`reports/task-099-on-demand-briefing-policy-reset.md`. Only one task may be
+`in_progress` at a time. Existing v6 worktree changes must be preserved until
+TASK-100 records their archive and supersession state in
+`docs/archive/ai-report-contracts/README.md`.
 
 ## Status Values
 

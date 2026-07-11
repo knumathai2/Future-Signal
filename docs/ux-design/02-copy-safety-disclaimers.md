@@ -178,4 +178,32 @@ Exact stored links alone open in a new tab with safe external-link attributes.
 The user approved the v6 public API and AI-policy contract in
 `reports/task-092-evidence-aware-briefing-policy.md` on 2026-07-11.
 
+### 8.3 Approved v7 flexible briefing presentation (ADR-051)
+
+V7 begins in an idle state with an explicit `AI 브리핑 생성` control. The
+deterministic issue data remains readable during generation. Fresh, stale,
+generating, and failed-with-last-good states show honest generated/data/context
+times and retain the interpretation caution in the briefing surface.
+
+The UI renders two-to-eight broad sections in the order returned by the strict
+parser. Paragraph and short-list sections share consistent typography without
+forcing the v6 four-mode layout. Market observations and external context stay
+visually distinct even when their section order varies.
+
+Source cards show exact stored title, domain, time, supported-claim summary,
+and visible A/B/C level. Level C material is always attributed. Exact stored
+safe URLs alone are interactive. The presence of a source must not imply that
+it explains the observed movement.
+
+### 8.4 Approved v8 issue-centered briefing presentation
+
+V8 keeps the same request, cache, timestamp, caution, and source-card states but
+changes the authored reading order. The headline and summary begin with the
+issue and its currently confirmed situation. Sections then move through recent
+change, interpretation boundaries, key conditions, and later information to
+check. Section titles remain natural Korean rather than exposing internal data
+categories. If the writer supplies a `limitations` section, the UI does not
+repeat the deterministic data-limitations card; interpretation caution remains
+visible in every full report state.
+
 ---

@@ -6,11 +6,11 @@ Runs the MVP pipeline in one process:
 2. Store snapshots and compute metrics.
 3. Detect expectation-shift signals for the same metric run.
 4. Research, verify, and store bounded context candidates when configured.
-5. Generate stored AI reports for qualifying issues.
-6. Record one collection log for the combined run.
+5. Record one collection log for the combined run.
 
-The public API remains read-only; this module is the explicit write path for
-local/dev or scheduled batch execution.
+AI briefing generation is intentionally not part of normal collection. The v7
+on-demand service owns user-requested generation. Historical reports-only mode
+remains an explicit guarded development-evaluation path until TASK-109 review.
 """
 
 import argparse
@@ -304,16 +304,9 @@ def run_scheduled_batch(
                 use_v4=use_v4_reports,
                 failed_context_market_ids=failed_context_market_ids,
             )
-        elif not result.skipped_duplicate_run and result.run_timestamp is not None:
-            result.report_outcomes = run_reports_for_timestamp(
-                db,
-                result.run_timestamp,
-                llm_client,
-                model_name,
-                use_v4=use_v4_reports,
-                failed_context_market_ids=failed_context_market_ids,
-            )
         else:
+            # ADR-051/TASK-104: normal collection never invokes a report
+            # provider, even when a legacy client is accidentally supplied.
             result.report_outcomes = []
 
     except Exception as exc:
@@ -450,7 +443,7 @@ def main() -> int:
 
     normalized_markets = normalized_markets_from_args(args)
     llm_client = None
-    if not args.skip_ai_reports:
+    if args.reports_only and not args.skip_ai_reports:
         if not settings.ai_api_key:
             raise SystemExit("OPENAI_API_KEY or OPENROUTER_API_KEY is not set.")
         llm_client = build_openai_client(

@@ -64,8 +64,14 @@ Every user-facing string and every AI/template output must be checked against th
 `signal, alert, watch, momentum, confidence, market activity, probability spike` — see UX Design §5.2 for the exact safe phrasing pattern for each.
 
 **Structural rules:**
-- No causal verbs in AI output (`because`, `due to`, `caused by`) — use `coincides with`, `occurred alongside` instead
-- Related-event candidates must always carry the "candidate, not cause" qualifier
+- V1-v6 AI output keeps the historical causal-verb restrictions. V7 may quote
+  or summarize a causal interpretation only when it is explicitly attributed
+  to an accepted source and its exact supported claim; the product must never
+  infer that context explains an observed movement.
+- V1-v6 related-event candidates keep the historical "candidate, not cause"
+  qualifier. V7 source material instead exposes A-C source level, attribution,
+  and supported claims; timing overlap alone still cannot be presented as a
+  relationship.
 - No numeric confidence stated as a probability of a real-world outcome (e.g., never "73% likely to happen")
 - Every metric-bearing surface must ship with its caution badge in the same viewport — no exceptions for "obviously fine" markets
 - v3 AI reports must validate against ADR-033's exact eight-field contract before storage; missing, extra, or unsafe fields block storage
@@ -81,6 +87,16 @@ Every user-facing string and every AI/template output must be checked against th
 - v3 related-event and v4 verified-context candidates must carry the
   candidate-not-cause boundary; timing or co-occurrence never establishes a
   relationship with the observed movement.
+- v7 writer output must validate against ADR-051's flexible stable envelope.
+  Unknown refs, unsupported source claims, unsafe links, invented evidence,
+  unattributed level-C claims, or irreconstructible output block publication;
+  ordinary style, ordering, English-term, and moderate-overlap findings are
+  diagnostics rather than automatic rejection.
+- v8 keeps the v7 evidence/source publication blockers while requiring the
+  TASK-112 issue-centered envelope. `current_situation` and `recent_change`
+  are mandatory, section types are unique, limitations may appear once, and
+  the public UI must not repeat the deterministic limitations block when the
+  authored limitations section is present.
 - Policy/lint docs and tests may quote prohibited expressions only to define or verify the blocking rule; demo-visible docs and product copy may not normalize those terms as user-facing language
 
 ## Documentation Standards

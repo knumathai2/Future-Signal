@@ -238,4 +238,48 @@ public API and AI-policy changes on 2026-07-11. Workflow/runtime configuration,
 deployment, production writes, new dependencies, and schema changes remain
 outside this approval.
 
+### 10.10 Approved v7 writer boundary (ADR-051)
+
+The v7 provider response is limited to `headline`, `summary`, and two-to-eight
+flexible sections. Each section has a broad type, title, paragraph-or-bullets
+shape, and exact opaque evidence references. Pydantic rejects extra fields,
+invalid presentation unions, duplicate references, unknown references, and a
+source reference without its parent context reference.
+
+The backend assembles request/report identifiers, observed metrics, context and
+source metadata, A-C source levels, supported claims, timestamps, cache state,
+data limitations, caution, and last-known-good behavior. Prompt, policy, and
+input-schema versions participate in the request fingerprint. Provider output
+cannot create or rewrite these fields.
+
+The `v7-positive-evidence-2` policy keeps strict JSON shape, exact evidence
+references, source-parent linkage, prohibited-language checks, and authored-URL
+blocking. Numeric tokens are no longer a standalone publication blocker;
+metrics and definition records remain attributable through section evidence
+references, while the prompt asks the writer to copy supplied display values
+instead of calculating replacements.
+
+TASK-101 adds only the provider-independent writer boundary. TASK-102 adds the
+append-only request/lease schema; TASK-103 adds accepted-source and conditional
+verification behavior; TASK-104 connects the asynchronous generation service;
+TASK-105 activates the public request/status/cache/report contract.
+
+### 10.11 Approved v8 issue-centered writer boundary (TASK-112)
+
+V8 preserves v7's opaque evidence records, source-parent linkage, A-C source
+metadata, append-only requests, cache fingerprinting, last-known-good behavior,
+and publication blockers. It changes the writer's organizing structure from
+data categories to the reader flow: current situation, recent change,
+interpretation, key conditions, what to check next, and an optional single
+limitations section.
+
+The writer returns a 10-100 character headline, a 100-500 character two-to-four
+sentence summary, and two-to-six uniquely typed sections. `current_situation`
+and `recent_change` are required because definition and metric evidence are
+always present. References are attached at section level rather than requiring
+sentence-by-sentence assembly. V7 prompt/models remain in source for historical
+reconstruction; new generation and public serving use `prompt_version="v8"`,
+`policy_version="v8-issue-centered-1"`, and
+`input_schema_version="v8-writer-input-1"`.
+
 ---

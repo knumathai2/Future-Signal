@@ -130,7 +130,7 @@ class FakeLLMClient:
         return self._responses.pop(0)
 
 
-def test_full_batch_writes_metrics_signals_logs_and_ai_report(db):
+def test_full_batch_writes_metrics_signals_logs_without_ai_report(db):
     client = FakeLLMClient([json.dumps(VALID_CONTENT)])
 
     result = run_scheduled_batch(
@@ -144,12 +144,11 @@ def test_full_batch_writes_metrics_signals_logs_and_ai_report(db):
     assert result.markets_processed == 1
     assert result.markets_failed == 0
     assert result.signals_inserted == 0  # first run has insufficient history
-    assert result.reports_success == 1
-    assert client.calls == 1
+    assert result.reports_success == 0
+    assert client.calls == 0
     assert db.query(MarketSnapshot).count() == 1
     assert db.query(MarketMetric).count() == 1
-    assert db.query(AiReport).count() == 1
-    assert db.query(AiReport).one().status == "success"
+    assert db.query(AiReport).count() == 0
     log = db.query(DataCollectionLog).one()
     assert log.status == "scheduled_batch_success"
     assert log.markets_processed == 1
@@ -178,7 +177,7 @@ def test_full_batch_marks_empty_normalized_input_as_failed(db):
     assert log.error_detail["error"] == result.error
 
 
-def test_full_batch_detects_signal_before_ai_report_generation(db, monkeypatch):
+def test_full_batch_detects_signal_without_ai_report_generation(db, monkeypatch):
     # Make the second collection run occur after 7d/24h baselines are usable.
     times = iter(
         [
@@ -218,7 +217,8 @@ def test_full_batch_detects_signal_before_ai_report_generation(db, monkeypatch):
 
     assert second.error is None
     assert second.signals_inserted == 1
-    assert second.reports_success == 1
+    assert second.reports_success == 0
+    assert second_client.calls == 0
     assert db.query(IssueSignal).count() == 1
 
 
@@ -339,7 +339,7 @@ def test_reports_only_uses_each_markets_latest_metric_not_only_global_max(db):
     assert db.query(AiReport).count() == 2
 
 
-def test_context_stage_runs_after_signals_and_before_reports(db, monkeypatch):
+def test_context_stage_runs_after_signals_without_reports(db, monkeypatch):
     import app.core.scheduled_batch as scheduled_batch
 
     order = []
@@ -371,7 +371,7 @@ def test_context_stage_runs_after_signals_and_before_reports(db, monkeypatch):
     )
 
     assert result.error is None
-    assert order == ["signals", "context", "reports"]
+    assert order == ["signals", "context"]
 
 
 def test_context_offset_cli_is_guarded_and_explicit():
@@ -424,7 +424,7 @@ def test_stored_context_writer_mode_uses_v4_without_research(db, monkeypatch):
     assert captured["use_v4"] is True
 
 
-def test_context_failure_marks_combined_log_partial_without_blocking_reports(db, monkeypatch):
+def test_context_failure_marks_combined_log_partial_without_invoking_reports(db, monkeypatch):
     import app.core.scheduled_batch as scheduled_batch
 
     market_id = uuid.uuid4()
@@ -432,7 +432,11 @@ def test_context_failure_marks_combined_log_partial_without_blocking_reports(db,
     def fake_context(*_args, **_kwargs):
         return [ContextResearchOutcome(market_id=market_id, status="failed")]
 
+    report_calls = 0
+
     def fake_reports(*_args, **_kwargs):
+        nonlocal report_calls
+        report_calls += 1
         return [ReportOutcome(market_id=market_id, status="success")]
 
     monkeypatch.setattr(scheduled_batch, "run_context_research_batch", fake_context)
@@ -449,7 +453,8 @@ def test_context_failure_marks_combined_log_partial_without_blocking_reports(db,
 
     assert result.error is None
     assert result.context_failed == 1
-    assert result.reports_success == 1
+    assert result.reports_success == 0
+    assert report_calls == 0
     log = db.query(DataCollectionLog).one()
     assert log.status == "scheduled_batch_partial"
     assert log.error_detail["context_failed"] == 1

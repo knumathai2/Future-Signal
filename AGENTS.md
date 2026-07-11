@@ -69,14 +69,20 @@ Even if the user explicitly requests them, ask for confirmation first:
 - [ ] Using prohibited wording anywhere it could ship (UI copy, AI/template output, code comments that could leak to users, marketing text): `bet, buy, sell, trade, position, long, short, profit, win rate, odds, guaranteed, recommend, follow/copy trader, best pick, signal to act, high-return opportunity`. Full list: [`memory/glossary.md`](memory/glossary.md) and `standards.md`.
 - [ ] Asserting a future outcome, asserting a cause of a market's change, or implying the product predicts real-world events
 - [ ] Exposing wallet-level or individual-participant browsable/searchable data — aggregate-only, per Service Design §8
-- [ ] Building unverified or causal news-to-market matching. TASK-056 permits only
+- [ ] Building unsupported or causal news-to-market matching. TASK-056 permits
+      the historical strict verified-only path, while TASK-099 permits the v7
+      A-C source-level path only when deterministic access, identity,
+      relevance, time, supported-claim, duplicate, and contradiction checks
+      pass and the public UI retains source level and attribution. Neither path
+      may claim that context explains an observed movement.
+      TASK-056 permits only
       the TASK-057~065 v4 automated-context path: OpenRouter `url_citation`
       annotations, deterministic hard gates, an independent verifier model,
       verified-only public output, and fail-closed handling. The frozen v3 MVP
       remains manual-only.
 - [ ] Shipping any data-bearing screen without a data-as-of timestamp AND an interpretation-caution badge/text
 - [ ] Adding login, accounts, saving/watchlist, notifications, weekly reports, or team sharing — these are explicitly P2/Phase-2+ (PRD §6.5) and out of hackathon scope
-- [ ] Letting the AI report generator produce unconstrained or evidence-free analysis — ADR-048 permits only the TASK-075~081 v5 evidence-bounded structured narrative; every output must retain fixed fields, evidence validation, deterministic caution boundaries, and the banned-phrase filter before storage
+- [ ] Letting the AI report generator produce unconstrained or evidence-free analysis — ADR-051 permits flexible v7 sections only inside the approved stable envelope; every factual section must retain reconstructible evidence references, deterministic caution/timing, and the prohibited-language filter before storage
 
 ---
 
@@ -114,6 +120,20 @@ program ceiling, and append new report/context/audit records only to local or
 development databases. It does not authorize unconstrained analysis,
 deployment, production writes, infrastructure mutation, new dependencies,
 existing-migration edits, or unrelated schema/API changes.
+
+### TASK-099 approved program boundary
+
+The user's 2026-07-11 approval authorizes TASK-099~108 to activate the
+positive-first evidence-linked v7 writer policy, publish deterministically
+accepted A-C source levels with visible attribution, add one append-only
+generation-request/lease migration, remove report generation from normal
+collection, implement the on-demand request/status/cache/report API and UI,
+call the existing approved provider path within recorded bounded development
+evaluation, and append context/request/report records only to local or
+development databases. It does not authorize deployment, production writes,
+new dependencies, existing-migration edits, unrelated infrastructure changes,
+or deletion of v1-v6 runtime. TASK-109 deletion requires a separate approval
+after v7 acceptance.
 
 ---
 
