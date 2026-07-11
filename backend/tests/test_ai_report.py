@@ -908,6 +908,8 @@ def test_v5_prompt_and_parser_use_exact_six_field_contract():
     assert "exactly six fields" in system_prompt
     assert "JD Vance" in user_prompt
     assert "verified_context_candidates" in user_prompt
+    assert '"display_value_percent":63.0' in user_prompt
+    assert '"display_change_24h_percentage_points":8.0' in user_prompt
     raw = json.dumps(_v5_fields().model_dump(), ensure_ascii=False)
     assert parse_v5_llm_fields(raw) == _v5_fields()
     assert (

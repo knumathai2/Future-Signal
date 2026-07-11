@@ -15,8 +15,8 @@ Harness Version: 1.1
 
 - **Date**: 2026-07-11
 - **Agent Role**: Reviewer + Data/AI Implementer → PM / Planner
-- **Session Goal**: Activate and implement the approved TASK-075~081 narrative-summary/source-link program.
-- **Branch**: `review/TASK-080-narrative-summary-integration` → `pm/TASK-081-summary-quality-review`
+- **Session Goal**: Complete the approved TASK-075~081 narrative-summary/source-link program and open actual development results for review.
+- **Branch**: `pm/TASK-081-summary-quality-review`
 
 ## Context Read
 
@@ -110,3 +110,10 @@ Harness Version: 1.1
   and fixture Browser states, responsive sizes, links, console, and overflow pass.
 - TASK-081 is active and must compare real v4/v5 results, document quality and
   limits, and leave the actual local development v5 page open for the user.
+- TASK-081 is complete. The real Israeli-parliament case was compared across
+  v4/v5, display values were refined to percent/percentage-point prose, and ten
+  representative append-only regenerations produced six new valid rows while
+  four validation failures preserved their previous valid reports. Total
+  observed v5 writer spend is USD 0.376609. Development verified sources remain
+  zero, so the actual screen shows the explicit no-source state. The local
+  browser is left on the real v5 result for user review.

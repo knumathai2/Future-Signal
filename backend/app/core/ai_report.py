@@ -1211,6 +1211,11 @@ candidate evidence; do not calculate, round, or introduce counts.
 Do not say 상승이 이어진다, 하락이 이어진다, 움직임이 계속된다, or any
 equivalent future direction. Scenarios may describe only whether the documented
 market condition is confirmed, partially documented, or not confirmed.
+Prefer the supplied display_value_percent and display_change_*_percentage_points
+when writing Korean prose. Do not expose the internal confidence_level enum or
+raw 0-to-1 decimals when a display value is supplied. Factors and watch items
+must stay tied to the named market condition, outcome label, end date, or
+verified evidence; do not fill them with generic data-methodology reminders.
 conditional_scenarios must contain three or four distinct items. Each item must
 have a short title and a narrative beginning with a Korean conditional expression
 such as "만약" and may describe only conditions present in the supplied market
@@ -1296,8 +1301,15 @@ def build_v5_prompt(inputs: V4ReportInputs) -> tuple[str, str]:
         "observed_data": {
             "data_as_of": inputs.data_as_of.isoformat(),
             "current_value": inputs.current_value,
+            "display_value_percent": round(inputs.current_value * 100, 4),
             "change_24h": inputs.change_24h,
             "change_7d": inputs.change_7d,
+            "display_change_24h_percentage_points": (
+                round(inputs.change_24h * 100, 4) if inputs.change_24h is not None else None
+            ),
+            "display_change_7d_percentage_points": (
+                round(inputs.change_7d * 100, 4) if inputs.change_7d is not None else None
+            ),
             "confidence_level": inputs.confidence_level,
         },
         "verified_context_candidates": [
