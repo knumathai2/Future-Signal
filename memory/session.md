@@ -16,7 +16,7 @@ Harness Version: 1.1
 - **Date**: 2026-07-11
 - **Agent Role**: Data/AI Implementer
 - **Session Goal**: Execute the TASK-082~091 AI-report grounding program in dependency order.
-- **Branch**: `data-ai/TASK-088-reference-values`
+- **Branch**: `data-ai/TASK-089-observed-data-summary`
 
 ## Context Read
 
@@ -24,6 +24,12 @@ Harness Version: 1.1
 - TASK-065 backfill, audit, API, wording, browser, and budget criteria
 
 ## Work Completed
+
+- Completed TASK-089: v5 observed data now contains activity, liquidity,
+  deterministic seven-day history summary, and explicit missing fields.
+- API reconstruction recomputes the same summary from snapshots bounded by the
+  stored metric timestamp.
+- Verified 194 focused Backend tests and Ruff.
 
 - Completed TASK-088: v5 inputs now include exact 24h/7d reference values and
   timestamps selected with the metric boundary rule.

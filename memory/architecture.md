@@ -65,6 +65,9 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 13. TASK-088 reloads the closest snapshot at or before each 24h/7d metric
     boundary, sends its value and timestamp to the writer, and revalidates that
     the stored delta is reproducible during generation and API reconstruction.
+14. TASK-089 summarizes snapshots within the fixed seven-day metric window into
+    deterministic start/end/min/max/sample fields and adds activity, liquidity,
+    and explicit evidence gaps to writer input.
 
 ## Design Decision Summary
 
