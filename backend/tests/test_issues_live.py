@@ -14,6 +14,7 @@ Day 3 detail-chart readiness pass.
 from datetime import timedelta
 
 import pytest
+from sqlalchemy import event
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routes import issues as issues_routes
@@ -21,6 +22,7 @@ from app.db.models import (
     AiReport,
     ContextCandidate,
     Market,
+    MarketMetric,
     MarketResolutionRule,
     MarketSnapshot,
 )
@@ -145,6 +147,40 @@ def test_get_issue_detail_live_data(live_client, db_session):
     assert "candidate, not a cause" in related["note"]
 
 
+def test_issue_detail_scopes_snapshot_and_metric_queries_to_requested_market(
+    live_client, db_session, monkeypatch
+):
+    seed_basic_market(db_session)
+    seed_market_without_metric(db_session)
+    statements: list[str] = []
+
+    monkeypatch.setattr(
+        issues_routes,
+        "load_live_issues",
+        lambda _db, **_kwargs: pytest.fail("detail must not call the list loader"),
+    )
+
+    def record_statement(_conn, _cursor, statement, _parameters, _context, _many):
+        statements.append(statement.casefold())
+
+    engine = db_session.get_bind()
+    event.listen(engine, "before_cursor_execute", record_statement)
+    try:
+        response = live_client.get(f"/api/issues/{MARKET_ID}")
+    finally:
+        event.remove(engine, "before_cursor_execute", record_statement)
+
+    assert response.status_code == 200
+    history_queries = [
+        statement
+        for statement in statements
+        if "market_snapshots" in statement or "market_metrics" in statement
+    ]
+    assert len(history_queries) == 2
+    assert all("market_id =" in statement for statement in history_queries)
+    assert all("limit" in statement for statement in history_queries)
+
+
 def test_detail_auxiliary_query_failure_keeps_core_issue(live_client, db_session, monkeypatch):
     seed_basic_market(db_session)
 
@@ -181,6 +217,91 @@ def test_get_issue_history_live_data(live_client, db_session):
     assert body["window"] == "7d"
     assert len(body["points"]) == 1
     assert body["points"][0]["value"] == 0.63
+
+
+def test_history_sql_contains_market_and_both_window_bounds(
+    live_client, db_session, monkeypatch
+):
+    seed_basic_market(db_session)
+    statements: list[str] = []
+    monkeypatch.setattr(
+        issues_routes,
+        "load_live_issues",
+        lambda _db, **_kwargs: pytest.fail("history must not call the list loader"),
+    )
+
+    def record_statement(_conn, _cursor, statement, _parameters, _context, _many):
+        statements.append(statement.casefold())
+
+    engine = db_session.get_bind()
+    event.listen(engine, "before_cursor_execute", record_statement)
+    try:
+        response = live_client.get(f"/api/issues/{MARKET_ID}/history?window=7d")
+    finally:
+        event.remove(engine, "before_cursor_execute", record_statement)
+
+    assert response.status_code == 200
+    history_query = next(
+        statement
+        for statement in statements
+        if "market_snapshots" in statement and "captured_at >=" in statement
+    )
+    assert "market_id =" in history_query
+    assert "captured_at <=" in history_query
+
+
+def test_list_sort_filter_and_pagination_use_latest_rows(live_client, db_session):
+    seed_basic_market(db_session)
+    seed_market_without_metric(db_session)
+    db_session.add(
+        MarketMetric(
+            id=2,
+            market_id=MARKET_ID_NO_METRIC,
+            computed_at=NOW + timedelta(hours=1),
+            change_24h=-0.2,
+            change_7d=-0.3,
+            volatility_score=0.4,
+            attention_score=0.6,
+            heat_score=90,
+            confidence_level="sufficient",
+        )
+    )
+    db_session.commit()
+
+    first = live_client.get("/api/issues?sort=heat&limit=1").json()["issues"]
+    second = live_client.get("/api/issues?sort=heat&limit=1&offset=1").json()["issues"]
+    change = live_client.get("/api/issues?sort=change&window=7d&limit=1").json()["issues"]
+    filtered = live_client.get("/api/issues?category=technology").json()["issues"]
+
+    assert [issue["id"] for issue in first] == [str(MARKET_ID_NO_METRIC)]
+    assert [issue["id"] for issue in second] == [str(MARKET_ID)]
+    assert [issue["id"] for issue in change] == [str(MARKET_ID_NO_METRIC)]
+    assert [issue["id"] for issue in filtered] == [str(MARKET_ID)]
+
+
+def test_list_and_categories_rank_latest_rows_in_sql(live_client, db_session):
+    seed_basic_market(db_session)
+    statements: list[str] = []
+
+    def record_statement(_conn, _cursor, statement, _parameters, _context, _many):
+        statements.append(statement.casefold())
+
+    engine = db_session.get_bind()
+    event.listen(engine, "before_cursor_execute", record_statement)
+    try:
+        assert live_client.get("/api/issues?limit=1").status_code == 200
+        assert live_client.get("/api/categories").status_code == 200
+    finally:
+        event.remove(engine, "before_cursor_execute", record_statement)
+
+    snapshot_queries = [statement for statement in statements if "market_snapshots" in statement]
+    metric_queries = [statement for statement in statements if "market_metrics" in statement]
+    assert any("row_number() over" in statement for statement in snapshot_queries)
+    assert any("row_number() over" in statement for statement in metric_queries)
+    assert all(
+        "row_number() over" in statement or "max(market_snapshots.captured_at)" in statement
+        for statement in snapshot_queries
+    )
 
 
 def test_history_query_failure_returns_empty_points(live_client, db_session, monkeypatch):
