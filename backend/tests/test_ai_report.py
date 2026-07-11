@@ -26,8 +26,10 @@ from app.core.ai_report import (
     V4LLMFields,
     V4ReportInputs,
     V4VerifiedCandidateInput,
+    V5LLMFields,
     assemble_report_content,
     assemble_v4_report_content,
+    assemble_v5_report_content,
     build_caution_note,
     build_data_limitations,
     build_external_context,
@@ -36,12 +38,16 @@ from app.core.ai_report import (
     build_prompt,
     build_v4_prompt,
     build_v4_stored_payload,
+    build_v5_prompt,
+    build_v5_stored_payload,
     build_what_to_check,
     parse_llm_fields,
     parse_v4_llm_fields,
+    parse_v5_llm_fields,
     run_safety_filter,
     run_semantic_checks,
     run_v4_safety_and_semantic_checks,
+    run_v5_safety_and_semantic_checks,
 )
 from app.core.config import (
     OPENROUTER_BASE_URL,
@@ -160,6 +166,38 @@ def _v4_fields(**overrides) -> V4LLMFields:
     }
     values.update(overrides)
     return V4LLMFields(**values)
+
+
+def _v5_fields(*, with_context=True, **overrides) -> V5LLMFields:
+    values = {
+        "executive_summary": (
+            "JD Vance의 미국 대통령 선거 당선 조건을 다루는 이슈입니다. 공개 데이터에 "
+            "저장된 현재 값과 최근 비교 구간의 움직임을 함께 읽되 현실의 결과로 해석하지 않습니다."
+        ),
+        "issue_context": (
+            "이 항목은 JD Vance가 정해진 미국 대통령 선거에서 당선되는지라는 문서 조건을 "
+            "기준일까지 확인합니다."
+        ),
+        "change_interpretation": (
+            "저장된 현재 값과 최근 비교값은 참여자 데이터의 관찰 흐름을 보여줍니다. "
+            "이 움직임만으로 현실의 결과나 배경을 판단할 수 없습니다."
+        ),
+        "evidence_synthesis": (
+            "같은 검토 구간의 공개 정보 업데이트는 해당 조건과 관련된 기록을 제공합니다. "
+            "이 자료와 관찰된 움직임 사이의 관계는 확인되지 않았습니다."
+            if with_context
+            else None
+        ),
+        "open_questions": (
+            "후속 공식 문서에서 후보와 판정 조건이 어떻게 명시되는지는 아직 확인이 필요합니다."
+        ),
+        "what_to_watch": (
+            "공식 선거 문서와 후보 관련 발표, 이후 공개 데이터의 갱신 내용을 "
+            "차례로 확인할 수 있습니다."
+        ),
+    }
+    values.update(overrides)
+    return V5LLMFields(**values)
 
 
 # --- build_prompt -------------------------------------------------------
@@ -367,9 +405,7 @@ def test_assemble_report_content_rejects_llm_field_below_minimum_length():
 
 
 def test_assemble_report_content_rejects_unknown_confidence_level():
-    content = assemble_report_content(
-        _inputs(confidence_level="not_a_real_level"), _llm_fields()
-    )
+    content = assemble_report_content(_inputs(confidence_level="not_a_real_level"), _llm_fields())
     assert content is None
 
 
@@ -659,9 +695,7 @@ def test_openrouter_model_slug_is_preserved_when_already_qualified():
         _resolve_ai_model("openrouter", raw_model="anthropic/claude-3.5-sonnet")
         == "anthropic/claude-3.5-sonnet"
     )
-    assert _resolve_ai_model("openrouter", raw_model="~openai/gpt-latest") == (
-        "~openai/gpt-latest"
-    )
+    assert _resolve_ai_model("openrouter", raw_model="~openai/gpt-latest") == ("~openai/gpt-latest")
 
 
 class _CapturingChatCompletions:
@@ -705,9 +739,7 @@ def test_build_openai_client_passes_openrouter_base_url_and_headers(monkeypatch)
         "base_url": OPENROUTER_BASE_URL,
     }
     assert stub.completions.kwargs["model"] == "openai/gpt-4o-mini"
-    assert stub.completions.kwargs["extra_headers"] == {
-        "X-OpenRouter-Title": "Outlook Signals"
-    }
+    assert stub.completions.kwargs["extra_headers"] == {"X-OpenRouter-Title": "Outlook Signals"}
 
 
 # --- ADR-038 v4 evidence-grounded report ---------------------------------
@@ -787,9 +819,7 @@ def test_v4_rejects_metric_or_context_text_that_differs_from_inputs():
         update={
             "content": payload.content.model_copy(
                 update={
-                    "observed_change": payload.content.observed_change.replace(
-                        "63.0%", "73.0%"
-                    )
+                    "observed_change": payload.content.observed_change.replace("63.0%", "73.0%")
                 }
             )
         }
@@ -802,12 +832,11 @@ def test_v4_rejects_metric_or_context_text_that_differs_from_inputs():
         }
     )
 
-    assert run_v4_safety_and_semantic_checks(
-        metric_payload, inputs, _v4_fields()
-    ).rule == "metric_content_mismatch"
-    assert run_v4_safety_and_semantic_checks(
-        context_payload, inputs, _v4_fields()
-    ).passed is False
+    assert (
+        run_v4_safety_and_semantic_checks(metric_payload, inputs, _v4_fields()).rule
+        == "metric_content_mismatch"
+    )
+    assert run_v4_safety_and_semantic_checks(context_payload, inputs, _v4_fields()).passed is False
 
 
 @pytest.mark.parametrize(
@@ -832,3 +861,103 @@ def test_v4_unknown_caution_level_cannot_assemble():
             _v4_inputs(confidence_level="unknown"),
             _v4_fields(),
         )
+
+
+# --- ADR-048 v5 evidence-bounded narrative -----------------------------
+
+
+def test_v5_prompt_and_parser_use_exact_six_field_contract():
+    inputs = _v4_inputs(
+        title="Will JD Vance win the US Presidential Election?",
+        description="Tracks whether JD Vance wins the documented election.",
+    )
+    system_prompt, user_prompt = build_v5_prompt(inputs)
+
+    assert "exactly six fields" in system_prompt
+    assert "JD Vance" in user_prompt
+    assert "verified_context_candidates" in user_prompt
+    raw = json.dumps(_v5_fields().model_dump(), ensure_ascii=False)
+    assert parse_v5_llm_fields(raw) == _v5_fields()
+    assert (
+        parse_v5_llm_fields(
+            json.dumps({**_v5_fields().model_dump(), "extra": "x"}, ensure_ascii=False)
+        )
+        is None
+    )
+
+
+@pytest.mark.parametrize("with_context", [False, True])
+def test_v5_assembles_deterministic_boundaries_and_evidence_refs(with_context):
+    inputs = _v4_inputs(
+        with_context=with_context,
+        title="Will JD Vance win the US Presidential Election?",
+        description="Tracks whether JD Vance wins the documented election.",
+    )
+    fields = _v5_fields(with_context=with_context)
+    content = assemble_v5_report_content(inputs, fields)
+    payload = build_v5_stored_payload(inputs, content)
+
+    assert payload.content.relationship_boundary
+    assert payload.content.data_limitations
+    assert payload.content.caution_note
+    assert payload.evidence_refs[0] == "metric:123"
+    assert len(payload.context_candidate_ids) == int(with_context)
+    assert run_v5_safety_and_semantic_checks(payload, inputs, fields).passed
+
+
+def test_v5_rejects_generic_or_duplicated_narrative():
+    inputs = _v4_inputs(
+        with_context=False,
+        title="Will JD Vance win the US Presidential Election?",
+        description="Tracks whether JD Vance wins the documented election.",
+    )
+    generic = _v5_fields(
+        with_context=False,
+        executive_summary=(
+            "이 항목은 문서에 적힌 조건을 살펴보는 내용입니다. 공개 데이터와 이후 자료를 "
+            "함께 확인하되 현실의 결과를 뜻하는 것으로 해석하지 않습니다. 저장된 근거의 "
+            "범위를 벗어난 배경이나 결과는 이 요약에서 판단하지 않습니다."
+        ),
+        issue_context=(
+            "정해진 기준일까지 문서 조건이 확인되는지를 살펴보는 일반 항목입니다. "
+            "조건의 충족 여부는 이후 공개되는 문서에서 별도로 확인해야 합니다."
+        ),
+    )
+    generic_content = assemble_v5_report_content(inputs, generic)
+    generic_payload = build_v5_stored_payload(inputs, generic_content)
+
+    assert (
+        run_v5_safety_and_semantic_checks(generic_payload, inputs, generic).rule
+        == "generic_summary"
+    )
+
+    duplicate_text = (
+        "JD Vance 관련 공식 문서와 선거 조건의 후속 갱신 내용을 차례로 확인할 필요가 있습니다."
+    )
+    duplicated = _v5_fields(
+        with_context=False,
+        open_questions=duplicate_text,
+        what_to_watch=duplicate_text,
+    )
+    duplicated_content = assemble_v5_report_content(inputs, duplicated)
+    duplicated_payload = build_v5_stored_payload(inputs, duplicated_content)
+    assert (
+        run_v5_safety_and_semantic_checks(duplicated_payload, inputs, duplicated).rule
+        == "duplicate_narrative_fields"
+    )
+
+
+def test_v5_rejects_evidence_synthesis_without_verified_candidate():
+    inputs = _v4_inputs(
+        with_context=False,
+        title="Will JD Vance win the US Presidential Election?",
+        description="Tracks whether JD Vance wins the documented election.",
+    )
+    fields = _v5_fields(with_context=True)
+    content = assemble_v5_report_content(inputs, fields)
+    payload = build_v5_stored_payload(inputs, content)
+
+    assert (
+        run_v5_safety_and_semantic_checks(payload, inputs, fields).rule
+        == "evidence_synthesis_presence_mismatch"
+    )

@@ -26,6 +26,7 @@ from app.core.ai_report import (
     POSSIBLE_DRIVERS_WITH_CANDIDATE,
     PROMPT_VERSION,
     V4_PROMPT_VERSION,
+    V5_PROMPT_VERSION,
     LLMCallError,
     LLMReportFields,
     LLMUsage,
@@ -39,6 +40,7 @@ from app.core.ai_report_batch import (
     generate_report_for_market,
     run_ai_report_batch,
     run_v4_ai_report_batch,
+    run_v5_ai_report_batch,
     select_markets_for_regeneration,
 )
 from app.core.historical_seed import metric_timestamp_for_seed
@@ -220,11 +222,31 @@ class FakeLLMClient:
 
 
 VALID_V4_RESPONSE = {
-    "issue_overview": (
-        "이 이슈는 문서에 적힌 조건이 정해진 기준 안에서 확인되는지를 살펴봅니다."
-    ),
+    "issue_overview": ("이 이슈는 문서에 적힌 조건이 정해진 기준 안에서 확인되는지를 살펴봅니다."),
     "what_to_check": (
         "게시된 조건 문구와 이후 공개되는 자료 및 데이터 갱신 내용을 추가로 확인해야 합니다."
+    ),
+}
+
+VALID_V5_RESPONSE = {
+    "executive_summary": (
+        "test issue의 문서 조건을 정해진 기준일까지 확인하는 이슈입니다. 저장된 현재 값과 "
+        "최근 비교 구간의 움직임을 함께 정리하지만 현실의 결과나 배경을 뜻하지 않습니다."
+    ),
+    "issue_context": (
+        "test issue는 공개 문서에 적힌 조건이 기준일까지 충족되는지를 확인하도록 정의된 "
+        "항목이며 판정은 해당 문서 조건을 따릅니다."
+    ),
+    "change_interpretation": (
+        "저장된 현재 값과 최근 비교값은 참여자 데이터의 관찰 흐름을 보여줍니다. "
+        "이 움직임만으로 현실의 결과나 배경을 판단할 수 없습니다."
+    ),
+    "evidence_synthesis": None,
+    "open_questions": (
+        "후속 공식 문서에서 test issue의 판정 조건이 어떻게 확인되는지는 아직 남아 있습니다."
+    ),
+    "what_to_watch": (
+        "공식 문서의 조건 문구와 이후 공개 데이터의 갱신 내용을 차례로 확인할 수 있습니다."
     ),
 }
 
@@ -947,6 +969,40 @@ def test_v4_no_candidate_stores_null_context_without_absence_narrative(db):
     assert row.content["content"]["context_summary"] is None
     assert row.content["context_candidate_ids"] == []
     assert row.content["evidence_refs"] == [f"metric:{metric.id}"]
+
+
+def test_v5_no_candidate_stores_narrative_and_metric_evidence(db):
+    _, metric, _ = _seed_v4_metric_state(db, with_context=False)
+    client = FakeV4LLMClient([json.dumps(VALID_V5_RESPONSE, ensure_ascii=False)])
+
+    outcomes = run_v5_ai_report_batch(db, NOW, client, "openai/writer")
+
+    assert outcomes[0].status == "success"
+    row = db.query(AiReport).one()
+    assert row.prompt_version == V5_PROMPT_VERSION
+    assert row.content["evidence_refs"] == [f"metric:{metric.id}"]
+    assert row.content["content"]["evidence_synthesis"] is None
+    assert "test issue" in row.content["content"]["executive_summary"]
+
+
+def test_v5_generic_summary_is_filtered_and_not_stored(db):
+    _seed_v4_metric_state(db, with_context=False)
+    generic = dict(VALID_V5_RESPONSE)
+    generic["executive_summary"] = (
+        "이 항목은 문서 조건을 기준일까지 확인하는 일반적인 이슈입니다. 저장된 현재 값과 "
+        "최근 비교 구간을 함께 정리하지만 현실의 결과나 배경을 뜻하지 않습니다."
+    )
+    generic["issue_context"] = (
+        "이 항목은 공개 문서에 적힌 조건이 기준일까지 충족되는지를 확인하며 판정은 해당 "
+        "문서 조건을 따릅니다."
+    )
+    client = FakeV4LLMClient([json.dumps(generic, ensure_ascii=False)])
+
+    outcomes = run_v5_ai_report_batch(db, NOW, client, "openai/writer")
+
+    assert outcomes[0].status == "filtered"
+    assert outcomes[0].reason == "executive_summary:generic_summary"
+    assert db.query(AiReport).count() == 0
 
 
 def test_v4_malformed_fields_retry_once_then_store_failed_audit_row(db):
