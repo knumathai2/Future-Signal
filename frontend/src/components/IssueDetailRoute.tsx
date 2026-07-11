@@ -82,6 +82,9 @@ export function IssueDetailRoute() {
   const forcedStatus = parseForcedStatus(searchParams);
   const reportFixtureName = searchParams.get("report");
   const developmentReportState = useMemo<IssueReportLoadState | null>(() => {
+    if (reportFixtureName === "loading") return { status: "loading" };
+    if (reportFixtureName === "empty") return { status: "not_yet_generated" };
+    if (reportFixtureName === "error") return { status: "error" };
     const fixture = getDevelopmentReportFixture(reportFixtureName);
     return fixture ? parseReportResponse(fixture) : null;
   }, [reportFixtureName]);

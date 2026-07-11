@@ -19,7 +19,7 @@ excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-080 | Regenerate development v5 reports and run integration/browser QA | Reviewer + Data/AI | Reviewer | `review/TASK-080-narrative-summary-integration` | in_progress |
+| TASK-081 | Prepare actual v4/v5 quality comparison and user review screen | PM | PM / Planner | `pm/TASK-081-summary-quality-review` | in_progress |
 
 Exact dependencies, ownership, acceptance criteria, handoffs, and stop
 conditions are binding in

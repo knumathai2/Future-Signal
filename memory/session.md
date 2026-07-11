@@ -14,9 +14,9 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: Frontend Implementer → Reviewer + Data/AI Implementer
+- **Agent Role**: Reviewer + Data/AI Implementer → PM / Planner
 - **Session Goal**: Activate and implement the approved TASK-075~081 narrative-summary/source-link program.
-- **Branch**: `frontend/TASK-079-ai-summary-source-ui` → `review/TASK-080-narrative-summary-integration`
+- **Branch**: `review/TASK-080-narrative-summary-integration` → `pm/TASK-081-summary-quality-review`
 
 ## Context Read
 
@@ -103,3 +103,10 @@ Harness Version: 1.1
   zero/one/three-source Browser QA, overflow, and clean-console checks passed.
 - TASK-080 is active and must generate at least ten real development v5 reports,
   audit stored content/evidence/cost, and rerun integrated Browser states.
+- TASK-080 is complete. Development now has 14 successful v5 rows across 13
+  distinct issues; all latest rows reconstruct cleanly and all have the honest
+  no-source state because verified candidates remain zero. Observed v5 writer
+  spend is USD 0.268466. Backend 333 tests/Ruff, all Frontend checks, actual DB
+  and fixture Browser states, responsive sizes, links, console, and overflow pass.
+- TASK-081 is active and must compare real v4/v5 results, document quality and
+  limits, and leave the actual local development v5 page open for the user.

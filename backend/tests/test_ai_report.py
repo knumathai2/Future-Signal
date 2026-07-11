@@ -1031,3 +1031,17 @@ def test_v5_rejects_unsupported_numbers_and_nonconditional_scenarios():
         "JD Vance 관련 공식 문서와 판정 조건을 순서대로 확인합니다."
     )
     assert parse_v5_llm_fields(json.dumps(invalid, ensure_ascii=False)) is None
+
+
+def test_v5_number_validation_handles_missing_change_window():
+    inputs = _v4_inputs(
+        with_context=False,
+        change_7d=None,
+        title="Will JD Vance win the US Presidential Election?",
+        description="Tracks whether JD Vance wins the documented election.",
+    )
+    fields = _v5_fields(with_context=False)
+    content = assemble_v5_report_content(inputs, fields)
+    payload = build_v5_stored_payload(inputs, content)
+
+    assert run_v5_safety_and_semantic_checks(payload, inputs, fields).passed

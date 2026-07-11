@@ -1198,7 +1198,19 @@ signals_to_watch, and evidence_synthesis.
 Use natural, issue-specific prose. Do not write generic filler that could apply
 to an unrelated issue. Do not add facts, names, dates, numbers, events, sources,
 URLs, relationships, forecasts, or outcomes that are absent from the evidence.
+Include the exact supplied market.title once in executive_summary so the lead
+section remains auditable and issue-specific; explain it in natural Korean
+around that unchanged title.
 Never state or imply that a cited event explains an observed data movement.
+Do not use the Korean words 원인, 전망, 확정, 추천, or 수익 anywhere, even in
+negative or cautionary sentences. Use 배경은 확인되지 않았습니다, 조건부
+시나리오, 현실 결과를 뜻하지 않습니다, or independently verified wording
+instead. Do not number scenarios or checklist items in the JSON text. Use only
+the exact numbers and dates supplied in market, observed_data, or verified
+candidate evidence; do not calculate, round, or introduce counts.
+Do not say 상승이 이어진다, 하락이 이어진다, 움직임이 계속된다, or any
+equivalent future direction. Scenarios may describe only whether the documented
+market condition is confirmed, partially documented, or not confirmed.
 conditional_scenarios must contain three or four distinct items. Each item must
 have a short title and a narrative beginning with a Korean conditional expression
 such as "만약" and may describe only conditions present in the supplied market
@@ -1389,31 +1401,25 @@ def _v5_has_excessive_duplication(fields: V5LLMFields) -> bool:
 
 
 def _v5_uses_only_evidence_numbers(fields: V5LLMFields, inputs: V4ReportInputs) -> bool:
-    allowed_text = " ".join(
-        filter(
-            None,
-            (
-                inputs.title,
-                inputs.description,
-                inputs.outcome_label,
-                inputs.end_date.isoformat() if inputs.end_date else None,
-                inputs.data_as_of.isoformat(),
-                str(inputs.current_value),
-                str(inputs.current_value * 100),
-                str(inputs.change_24h),
-                str(inputs.change_24h * 100),
-                str(inputs.change_7d),
-                str(inputs.change_7d * 100),
-                "24 7",
-                *(
-                    f"{candidate.title} {candidate.event_at.isoformat()} "
-                    f"{candidate.neutral_summary} "
-                    + " ".join(source.title for source in candidate.sources)
-                    for candidate in inputs.context_candidates
-                ),
-            ),
-        )
+    allowed_parts = [
+        inputs.title,
+        inputs.description,
+        inputs.outcome_label,
+        inputs.end_date.isoformat() if inputs.end_date else None,
+        inputs.data_as_of.isoformat(),
+        str(inputs.current_value),
+        str(inputs.current_value * 100),
+        "24 7",
+    ]
+    for change in (inputs.change_24h, inputs.change_7d):
+        if change is not None:
+            allowed_parts.extend((str(change), str(change * 100)))
+    allowed_parts.extend(
+        f"{candidate.title} {candidate.event_at.isoformat()} "
+        f"{candidate.neutral_summary} " + " ".join(source.title for source in candidate.sources)
+        for candidate in inputs.context_candidates
     )
+    allowed_text = " ".join(part for part in allowed_parts if part)
     allowed = set(_NUMBER_PATTERN.findall(allowed_text))
     actual = set(_NUMBER_PATTERN.findall(_v5_authored_text(fields)))
     return actual.issubset(allowed)
