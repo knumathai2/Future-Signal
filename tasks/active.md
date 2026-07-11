@@ -19,7 +19,9 @@ excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-081 | Prepare actual v4/v5 quality comparison and user review screen | PM | PM / Planner | `pm/TASK-081-summary-quality-review` | in_progress |
+| — | No tasks currently in progress; TASK-075~081 are complete | — | — | — | completed |
+
+Deployment and production writes remain outside the approved program.
 
 Exact dependencies, ownership, acceptance criteria, handoffs, and stop
 conditions are binding in

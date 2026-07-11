@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.10.0-v5-narrative-program-active
-- **Phase**: Approved post-MVP v5 narrative-summary/source-link program active
-- **Next milestone**: TASK-081 actual result quality review
-- **Overall health**: 🟢 Active — TASK-080 stored 14 valid v5 rows across 13 development issues; every latest row reconstructs cleanly. Actual no-source and fixture link states pass responsive/integration QA. TASK-081 is active. Deployment and production writes remain excluded.
+- **Version**: v0.11.0-v5-narrative-review-ready
+- **Phase**: Approved post-MVP v5 narrative-summary/source-link program complete
+- **Next milestone**: User quality decision on the actual local v5 result
+- **Overall health**: 🟢 Review ready — TASK-075~081 are complete. Development has valid v5 reports across 13 issues, strict API/UI/browser validation passes, and the actual comparison screen is open. Verified sources remain zero, so the real UI honestly shows the no-source state. Deployment and production writes remain excluded.
 
 ## Tech Summary
 
@@ -62,6 +62,7 @@ Future Signal/
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | TASK-081 complete: actual v4/v5 comparison, display-value refinement, ten-report quality regeneration with six successes/four safe rejections, USD 0.376609 total observed v5 writer spend, documented limitations, and open local review screen. TASK-075~081 program complete. |
 | 2026-07-11 | TASK-080 complete: 14 valid v5 rows across 13 development issues, 13/13 strict reconstruction, actual no-source Browser flow, fixture 0/1/3 evidence, responsive/loading/error/link/console QA, USD 0.268466 observed writer spend, 333 Backend tests, and all Frontend checks. TASK-081 activated. |
 | 2026-07-11 | TASK-079 complete: v5 AI briefing UI, scenario/check/watch cards, visible no-source state, safe exact source links, strict parser, full Frontend checks, and responsive Browser QA. TASK-080 activated. |
 | 2026-07-11 | TASK-078 complete: no-migration v5 JSONB storage/read contract, newest-to-oldest last-good reconstruction, exact verified-source API, OpenAPI update, and 332 Backend tests. TASK-079 activated. |
