@@ -16,7 +16,7 @@ Harness Version: 1.1
 - **Date**: 2026-07-11
 - **Agent Role**: Data/AI Implementer
 - **Session Goal**: Execute the TASK-082~091 AI-report grounding program in dependency order.
-- **Branch**: `data-ai/TASK-086-exact-title-validation`
+- **Branch**: `review/TASK-087-zero-evidence-state`
 
 ## Context Read
 
@@ -24,6 +24,12 @@ Harness Version: 1.1
 - TASK-065 backfill, audit, API, wording, browser, and budget criteria
 
 ## Work Completed
+
+- Completed TASK-087 as a review-only task: the DB-backed no-candidate report,
+  null evidence synthesis, metric-only evidence reference, strict Frontend
+  parser, explicit no-source copy, and one-scenario build all pass.
+- No product code or non-test data changed; the production build retained only
+  the known bundle-size warning.
 
 - Completed TASK-086: v5 storage and serving now reject an executive summary
   unless the exact source title occurs once.

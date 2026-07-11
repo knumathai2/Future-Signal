@@ -19,11 +19,11 @@ excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-087 | Live zero-evidence API and UI regression | Reviewer + Frontend Implementer | Reviewer | `review/TASK-087-zero-evidence-state` | assigned |
+| TASK-088 | Reference values, timestamps, and consistency validation | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-088-reference-values` | assigned |
 
 The user approved TASK-083's database-schema code change and TASK-085/TASK-090's
 public API changes on 2026-07-11. TASK-083 is complete without applying its
-migration to any database. TASK-086 is complete and TASK-087 is next.
+migration to any database. TASK-087 is complete and TASK-088 is next.
 
 Deployment and production writes remain outside the approved program.
 
