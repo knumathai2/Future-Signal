@@ -19,7 +19,7 @@ excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-076 | Build the evidence-bounded narrative AI generator and quality gates | Data/AI | Data/AI Implementer | `data-ai/TASK-076-narrative-summary-generator` | in_progress |
+| TASK-077 | Improve verified article and official-source retrieval quality | Data/AI | Data/AI Implementer | `data-ai/TASK-077-source-retrieval-quality` | in_progress |
 
 Exact dependencies, ownership, acceptance criteria, handoffs, and stop
 conditions are binding in

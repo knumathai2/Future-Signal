@@ -19,8 +19,8 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 - **Version**: v0.10.0-v5-narrative-program-active
 - **Phase**: Approved post-MVP v5 narrative-summary/source-link program active
-- **Next milestone**: TASK-076 evidence-bounded narrative generator
-- **Overall health**: 🟢 Active — TASK-075 policy documentation is complete and ADR-048 activates TASK-076~081. The verified v4 baseline remains intact while v5 implementation proceeds. Deployment and production writes remain excluded.
+- **Next milestone**: TASK-077 verified-source retrieval quality
+- **Overall health**: 🟢 Active — TASK-075 policy and TASK-076 v5 generator are complete; 327 Backend tests pass. TASK-077 is active. The verified v4 baseline remains intact while v5 implementation proceeds. Deployment and production writes remain excluded.
 
 ## Tech Summary
 
@@ -62,6 +62,7 @@ Future Signal/
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | TASK-076 complete: strict six-field v5 narrative generation, specificity/duplication/evidence/wording gates, append-only batch storage, and 327 Backend tests. TASK-077 activated. |
 | 2026-07-11 | TASK-075 complete: ADR-048 records human approval for the evidence-bounded v5 narrative and exact verified-source-link program; TASK-076 is activated. |
 | 2026-07-11 | TASK-065 complete: 50-target development backfill, 46 distinct completed issues, query/result maxima 5/26, zero public candidates after strict gates, 13 successful v4 issue reports with zero safety/evidence mismatch, five live no-candidate and five local fixture candidate Browser flows, and USD 3.00263875 recorded spend. |
 | 2026-07-11 | ADR-047 human-approved: bounded query reformulation may replace exact-string membership when normalized market topic/entity overlap passes; all annotation, independent-verification, and publication gates remain unchanged. TASK-065 resumed. |

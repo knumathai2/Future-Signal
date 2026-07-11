@@ -76,3 +76,9 @@ Harness Version: 1.1
 - TASK-075 documentation is complete. TASK-076 is now active; it must implement
   the v5 generator and quality gates before source retrieval, API, UI, database
   regeneration, and user review proceed sequentially.
+- TASK-076 is complete. The v5 core has six strict authored fields, deterministic
+  safety sections, specificity/duplication/evidence-presence checks, exact
+  evidence references, append-only batch generation, and last-good isolation.
+  Full Backend verification passed with 327 tests and Ruff clean.
+- TASK-077 is active on `data-ai/TASK-077-source-retrieval-quality` and will
+  improve article/official-source discovery without weakening publication gates.
