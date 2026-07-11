@@ -16,7 +16,7 @@ from sqlalchemy import and_, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from app.core.context_research import ContextResearchResult, ResearchInputs
+from app.core.context_research import ContextResearchResult, ResearchInputs, ResearchUsage
 from app.core.context_verification import (
     IndependentVerifierClient,
     VerificationDecision,
@@ -298,19 +298,24 @@ def _persist_candidate(
 def _run_log_usage(
     research: ContextResearchResult | None,
     verifier: IndependentVerifierClient,
+    *,
+    failed_usage: ResearchUsage | None = None,
+    failed_model: str | None = None,
 ) -> dict:
-    if research is None:
+    usage = research.usage if research is not None else failed_usage
+    research_model = research.model if research is not None else failed_model
+    if usage is None:
         return {"verifier_model": verifier.model}
     verifier_usage = verifier.last_usage
     return {
-        "research_model": research.model,
+        "research_model": research_model,
         "verifier_model": verifier.model,
-        "research_input_tokens": research.usage.input_tokens,
-        "research_output_tokens": research.usage.output_tokens,
+        "research_input_tokens": usage.input_tokens,
+        "research_output_tokens": usage.output_tokens,
         "verifier_input_tokens": verifier_usage.input_tokens,
         "verifier_output_tokens": verifier_usage.output_tokens,
-        "web_searches": research.usage.web_search_requests,
-        "research_cost_usd": research.usage.cost_usd,
+        "web_searches": usage.web_search_requests,
+        "research_cost_usd": usage.cost_usd,
         "verifier_cost_usd": verifier_usage.cost_usd,
     }
 
@@ -323,8 +328,13 @@ def _record_failed_run(
     finished_at: datetime,
     verifier: IndependentVerifierClient,
     research: ContextResearchResult | None,
+    research_service: ContextResearchService,
     error_type: str,
 ) -> None:
+    failed_usage = getattr(research_service, "last_usage", None)
+    if not isinstance(failed_usage, ResearchUsage):
+        failed_usage = None
+    failed_model = getattr(research_service, "model", None)
     db.add(
         ContextCollectionRun(
             id=uuid.uuid4(),
@@ -333,10 +343,19 @@ def _record_failed_run(
             started_at=started_at,
             finished_at=finished_at,
             status="failed",
-            query_count=research.usage.web_search_requests if research else 0,
+            query_count=(
+                research.usage.web_search_requests
+                if research
+                else failed_usage.web_search_requests if failed_usage else 0
+            ),
             result_count=len(research.citations) if research else 0,
             accepted_count=0,
-            model_usage=_run_log_usage(research, verifier),
+            model_usage=_run_log_usage(
+                research,
+                verifier,
+                failed_usage=failed_usage,
+                failed_model=failed_model if isinstance(failed_model, str) else None,
+            ),
             error_detail={"type": error_type},
         )
     )
@@ -404,6 +423,7 @@ def run_context_research_batch(
     staleness: timedelta = DEFAULT_STALENESS,
     budget_usd: float = APPROVED_BUDGET_USD,
     cost_reservation_usd: float = DEFAULT_COST_RESERVATION_USD,
+    max_targets: int | None = None,
     clock=lambda: datetime.now(UTC),
 ) -> list[ContextResearchOutcome]:
     """Research, verify, and store each selected market in isolation."""
@@ -415,6 +435,8 @@ def run_context_research_batch(
         change_threshold=change_threshold,
         staleness=staleness,
     )
+    if max_targets is not None:
+        targets = targets[: max(max_targets, 0)]
     outcomes: list[ContextResearchOutcome] = []
     for target in targets:
         started_at = clock()
@@ -501,6 +523,7 @@ def run_context_research_batch(
                     finished_at=finished_at,
                     verifier=verifier,
                     research=research,
+                    research_service=research_client,
                     error_type=type(exc).__name__,
                 )
             except Exception:

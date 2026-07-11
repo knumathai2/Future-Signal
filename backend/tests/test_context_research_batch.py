@@ -355,6 +355,26 @@ def test_backfill_selects_all_latest_metrics(db):
     assert all("backfill" in target.reasons for target in targets)
 
 
+def test_batch_max_targets_caps_deterministic_heat_order(db):
+    for heat in range(4):
+        _seed_market(db, heat=heat)
+    verifier, _ = _verifier()
+    research = FakeResearchClient(empty=True)
+
+    outcomes = run_context_research_batch(
+        db,
+        NOW,
+        research,
+        verifier,
+        backfill=True,
+        max_targets=2,
+        clock=lambda: NOW,
+    )
+
+    assert len(outcomes) == 2
+    assert len(research.calls) == 2
+
+
 def test_build_research_inputs_requires_both_change_windows(db):
     market, metric = _seed_market(db, change_7d=None)
     target = select_context_targets(db, NOW, top_heat_limit=0)[0]

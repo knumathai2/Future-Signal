@@ -919,6 +919,38 @@ API, dependency, provider, infrastructure, or deployment boundary changed.
 
 ---
 
+### ADR-047: Stop TASK-065 bulk calls at the exact-query policy boundary
+
+- **Date**: 2026-07-11
+- **Status**: Proposed — requires human approval to amend ADR-040
+- **Decided by**: Data/AI Implementer + PM / Planner
+
+**Context**: The approved development migration succeeded, but bounded live
+preflights showed that current OpenRouter server tools generate or reformulate
+search queries. Valid annotated responses therefore fail ADR-040's exact
+model-reported-query membership check. Multiple current model families,
+one-query configuration, explicit prompt constraints, and exactly one retry did
+not produce a reliable path.
+
+**Proposed decision**: Retain deterministic metadata suggestions, query/result
+caps, annotation-only evidence, deterministic verification, independent
+provider verification, verified-only storage/API reads, and all wording/evidence
+checks. Replace exact query-string membership with a bounded-count and
+normalized market-metadata overlap check, while storing the reported strings
+for audit.
+
+**Rationale**: OpenRouter documents that the model creates the server-tool
+query. Exact equality is not an enforceable client-side constraint on this
+provider behavior; annotation provenance and candidate hard gates remain the
+actual publication boundary.
+
+**Consequences**: No code implements the proposed relaxation yet. TASK-065 is
+blocked and no further provider calls should run until the user approves or
+rejects this policy change. Migration 002 and existing audit rows remain in the
+approved development DB; deployment and production writes remain excluded.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07

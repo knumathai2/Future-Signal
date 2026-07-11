@@ -115,6 +115,7 @@ USD 100 cap. A local/development first backfill may be requested explicitly:
 ENV=local ./.venv/bin/python -m app.core.scheduled_batch \
   --reports-only \
   --context-backfill \
+  --context-max-markets 50 \
   --confirm-local-dev-write
 ```
 

@@ -341,7 +341,35 @@ Not bugs, but unresolved decisions that can affect later demo or product work:
     remains compatible with raw stored category values.
   - Frontend card-level topic labels remain detailed, so issue cards can still
     show labels such as `우크라이나 전쟁` or future `이란 전쟁` while the top
-    filter stays under `세계`.
+  filter stays under `세계`.
+
+### ISS-012: OpenRouter server-tool query reformulation conflicts with exact allowlist
+- **Severity**: High
+- **Found**: 2026-07-11 during TASK-065 development backfill preflight
+- **Status**: Open — human policy approval required
+- **Evidence**:
+  - Migration 002 is applied to the approved development DB.
+  - Sixteen bounded context runs across five issues produced one normal
+    `no_candidate`, fifteen failures, two rejected candidates, and zero verified
+    candidates; recorded program spend is USD 0.778926.
+  - Current OpenRouter models frequently return valid annotated search results
+    but reformulate the model-reported query or vary the JSON wrapper.
+  - The existing client correctly rejects any reported query outside the exact
+    deterministic suggestion allowlist.
+- **Impact**:
+  - TASK-065 cannot honestly satisfy 30+ completed research runs, verified
+    source URL checks, or five candidate→summary→source demo flows.
+  - Bulk execution is stopped; no public candidate was created.
+- **Safe work completed**:
+  - Added a 30–50-target CLI cap, one retry, and failed-response usage retention.
+  - Tried multiple current provider families and the official `gpt-5.2`
+    server-tool example without weakening annotation or verification gates.
+  - Full Backend suite passes 313 tests.
+- **Decision needed**:
+  - Approve or reject the narrow amendment in
+    `reports/task-065-context-backfill-preflight.md`: bounded query count plus
+    normalized metadata overlap instead of exact query-string equality, while
+    keeping annotation-only evidence and every candidate/publication hard gate.
   - Ran guarded reports-only generation three times against the configured
     local/dev DB. Final checked state: `success|v2|30`, and the default
     top-20 heat-sorted issues all have current v2 report content.

@@ -24,20 +24,30 @@ Harness Version: 1.1
 - Configured environment guard, migration runner requirements, cumulative
   provider usage audit, backfill CLI, and demo-flow acceptance criteria
 
-## Previous Handoff
+## Work Completed
 
-- TASK-064 verdict is Approved after one in-scope UTC normalization fix.
-- Full schema→research→verification→storage→writer→API flow passes locally.
-- Backend: 311 tests and Ruff; Frontend: typecheck/lint/parser/build/Prettier;
-  Browser: 0/1/3 candidates and responsive/safety states all pass.
-- Review report: `reports/task-064-automated-context-integration-review.md`.
+- Confirmed the configured Supabase path is the previously documented
+  development DB and applied migration 002 only.
+- Added a guarded context target cap, one research retry, and usage retention
+  for failed billed responses.
+- Verified current OpenRouter model availability and tested bounded provider
+  family combinations without printing secrets or full prompt/response text.
+- Stopped bulk execution when query reformulation repeatedly failed ADR-040's
+  exact allowlist; no publication gate was weakened.
+- Backend: 313 tests plus Ruff/diff checks pass.
 
-## Approval Boundaries / Follow-up
+## Development Audit State
 
-- User approved migration/schema/API/provider usage up to USD 100 cumulative
-  and local/development DB writes for TASK-065.
-- Confirm the configured database environment is local/development before any
-  migration or backfill write; do not print or modify `.env` or secrets.
-- Reserve/check cost before every provider call and stop before the USD 100 cap.
-- Deployment, infrastructure changes, and production database writes remain
-  excluded. If environment classification cannot be proven, do not write.
+- Context runs: 16 across five issues; one `no_candidate`, fifteen failed.
+- Candidates: two rejected, zero verified; v4 reports: two from writer preflight.
+- Recorded spend: USD 0.778926; conservative total including diagnostics remains
+  well below USD 50 and the approved USD 100 cap.
+
+## Blocking Approval / Follow-up
+
+- TASK-065 remains blocked pending explicit approval or rejection of ADR-047.
+- Recommended amendment: permit bounded server-tool query reformulation with
+  normalized market-metadata overlap, while retaining annotation-only evidence
+  and every verification/publication hard gate.
+- Do not run further provider calls, deployment, infrastructure changes, or
+  production DB writes before that decision.
