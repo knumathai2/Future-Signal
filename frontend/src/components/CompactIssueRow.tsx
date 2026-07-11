@@ -22,7 +22,7 @@ export function CompactIssueRow({
   from,
 }: CompactIssueRowProps) {
   return (
-    <li className="border-b border-line-soft bg-card last:border-b-0">
+    <li className="border-b border-line-soft bg-card transition last:border-b-0 hover:bg-accent-soft">
       <article className="grid min-h-[112px] gap-3 px-4 py-3 sm:min-h-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:py-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -52,7 +52,7 @@ export function CompactIssueRow({
             <dt className="text-[11px] font-semibold text-ink-faint">
               현재 기대값
             </dt>
-            <dd className="mt-1 text-base font-bold text-ink">
+            <dd className="mt-1 text-lg font-extrabold text-accent">
               {formatExpectationValue(issue.currentExpectationValue)}
             </dd>
           </div>
@@ -60,7 +60,7 @@ export function CompactIssueRow({
             <dt className="text-[11px] font-semibold text-ink-faint">
               {windowLabel(windowKey)} 변화
             </dt>
-            <dd className="mt-1 text-base font-bold text-ink">
+            <dd className="mt-1 text-lg font-extrabold text-comparison">
               {formatPercentagePointChange(
                 issueChangeForWindow(issue, windowKey),
               )}

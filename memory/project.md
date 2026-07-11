@@ -51,7 +51,7 @@ Future Signal/
 
 | Area | Current state |
 |---|---|
-| Frontend | TASK-118 divides the issue-detail route into Overview, AI Issue Briefing, Related Materials, and Interpretation Guide tabs. Query-linked state, keyboard navigation, 320px tab scrolling, shared timing/caution context, full v8 report states, candidate timing boundaries, and exact accepted-source cards remain intact. Warm terracotta now emphasizes navigation/current context/chart/action while muted blue distinguishes comparison values without green/red gain-loss semantics. |
+| Frontend | TASK-118 divides the issue-detail route into Overview, AI Issue Briefing, Related Materials, and Interpretation Guide tabs. TASK-119 extends the same restrained terracotta/current-context and muted-blue/comparison hierarchy to the full issue list, including selected filters, result count, row metrics, hover, and pagination. Query state, accessibility, timing/caution, report states, and direction semantics remain intact. |
 | Backend | TASK-062 activates the strict v4 report read contract and returns only reconstructed, evidence-consistent bundles with verified same-episode candidates and approved source fields. Legacy/failed/malformed/mismatched rows remain audit-only. TASK-057's append-only migration was applied to the approved development DB during TASK-065; production remains untouched. |
 | Data/AI | TASK-058/059 provide bounded annotation-only research and deterministic/independent verification. TASK-060 connects them between signals and reports, and TASK-061 adds strict evidence-linked v4 generation with deterministic metric/context fields, same-episode verified candidates, writer-cost accounting, and last-known-good failure isolation. |
 | PM / Safety | The v3 MVP remains frozen. ADR-038 activates TASK-056~065 with verified-only automated context, strict evidence links, a cumulative USD 100 OpenRouter cap, and local/development-only writes. Deployment and production DB writes remain separate gates. |
@@ -63,6 +63,7 @@ Future Signal/
 
 | Date | Change |
 |------|--------|
+| 2026-07-12 | TASK-119 extended the approved emphasis hierarchy to the full issue list: selected filters, result count, current reflected expectation values, comparison values, row hover, and active pagination. Frontend checks and actual desktop/320px Browser QA pass with 44px mobile filters, no overflow, and no console warnings/errors. |
 | 2026-07-12 | TASK-118 visual follow-up applied `#B84416`/`#FFF2E9` terracotta emphasis and `#466AA3`/`#EDF3FB` comparison styling to the detail flow and shared tokens. Frontend checks plus desktop/320px Browser QA pass without overflow or console warnings/errors. |
 | 2026-07-11 | TASK-118 reorganized the issue detail into four query-linked tabs while preserving v8 generation/source/failure states, exact timing boundaries, data-as-of, and caution. All Frontend checks and actual 1280px/390px/320px Browser QA pass with no clean-tab console errors or page overflow. |
 | 2026-07-11 | TASK-116 activated `v8-contextual-wording-1`: six Korean expressions now require explicit negation/inquiry or source-supported visible attribution, while financial/action and future-outcome blocks remain strict. Historical v8 reports reconstruct as stale last-known-good. Backend 482 tests/Ruff pass. |
