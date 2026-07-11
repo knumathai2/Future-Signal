@@ -37,8 +37,10 @@ from app.core.ai_report import (
     build_openai_client,
     build_possible_drivers,
     build_prompt,
+    build_recent_history_summary,
     build_v4_prompt,
     build_v4_stored_payload,
+    build_v5_missing_fields,
     build_v5_prompt,
     build_v5_stored_payload,
     build_what_to_check,
@@ -1145,6 +1147,52 @@ def test_v5_reference_values_are_paired_and_metric_consistent():
             value_24h_ago=0.50,
             value_24h_ago_at=datetime(2026, 7, 10, 8, 0, tzinfo=UTC),
         )
+
+
+def test_v5_history_summary_and_missing_fields_are_deterministic():
+    summary = build_recent_history_summary(
+        [
+            (datetime(2026, 7, 11, 9, 0, tzinfo=UTC), 0.63),
+            (datetime(2026, 7, 10, 9, 0, tzinfo=UTC), 0.55),
+            (datetime(2026, 7, 11, 3, 0, tzinfo=UTC), 0.60),
+        ]
+    )
+    inputs = _v4_inputs(
+        recent_history_summary=summary,
+        value_24h_ago=0.55,
+        value_24h_ago_at=datetime(2026, 7, 10, 9, 0, tzinfo=UTC),
+        value_7d_ago=0.52,
+        value_7d_ago_at=datetime(2026, 7, 4, 9, 0, tzinfo=UTC),
+    )
+    _, user_prompt = build_v5_prompt(inputs)
+
+    assert summary is not None
+    assert summary.start_value == 0.55
+    assert summary.end_value == 0.63
+    assert summary.min_value == 0.55
+    assert summary.max_value == 0.63
+    assert summary.sample_count == 3
+    assert build_v5_missing_fields(inputs) == []
+    assert '"volume_24h":1000.0' in user_prompt
+    assert '"liquidity":2000.0' in user_prompt
+    assert '"sample_count":3' in user_prompt
+
+    missing = _v4_inputs(
+        resolution_rules=None,
+        change_24h=None,
+        change_7d=None,
+        volume_24h=None,
+        liquidity=None,
+        recent_history_summary=None,
+    )
+    assert build_v5_missing_fields(missing) == [
+        "market.resolution_rules.condition_text",
+        "observed_data.24h_reference",
+        "observed_data.7d_reference",
+        "observed_data.volume_24h",
+        "observed_data.liquidity",
+        "observed_data.recent_history_summary",
+    ]
 
 
 @pytest.mark.parametrize(

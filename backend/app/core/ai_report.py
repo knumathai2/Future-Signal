@@ -951,6 +951,32 @@ class ResolutionRulesInput(BaseModel):
     collected_at: datetime
 
 
+class RecentHistorySummary(BaseModel):
+    """Deterministic bounded summary of stored snapshots, never model-computed."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    start_at: datetime
+    start_value: float = Field(ge=0, le=1)
+    end_at: datetime
+    end_value: float = Field(ge=0, le=1)
+    min_value: float = Field(ge=0, le=1)
+    max_value: float = Field(ge=0, le=1)
+    sample_count: int = Field(ge=1)
+
+    @model_validator(mode="after")
+    def validate_summary(self) -> "RecentHistorySummary":
+        if self.start_at > self.end_at:
+            raise ValueError("history summary start must not follow end")
+        if self.min_value > self.max_value:
+            raise ValueError("history summary minimum must not exceed maximum")
+        if not self.min_value <= self.start_value <= self.max_value:
+            raise ValueError("history start value must be inside the range")
+        if not self.min_value <= self.end_value <= self.max_value:
+            raise ValueError("history end value must be inside the range")
+        return self
+
+
 class V4ReportInputs(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
@@ -975,6 +1001,7 @@ class V4ReportInputs(BaseModel):
     value_24h_ago_at: datetime | None = None
     value_7d_ago: float | None = Field(default=None, ge=0, le=1)
     value_7d_ago_at: datetime | None = None
+    recent_history_summary: RecentHistorySummary | None = None
 
     @model_validator(mode="after")
     def validate_reference_values(self) -> "V4ReportInputs":
@@ -1352,6 +1379,49 @@ def determine_input_completeness(
     return "definition_missing_no_context"
 
 
+def build_recent_history_summary(
+    points: list[tuple[datetime, float]],
+) -> RecentHistorySummary | None:
+    """Summarize ordered or unordered stored points with deterministic math."""
+    if not points:
+        return None
+    ordered = sorted(points, key=lambda point: point[0])
+    values = [float(value) for _, value in ordered]
+    return RecentHistorySummary(
+        start_at=ordered[0][0],
+        start_value=values[0],
+        end_at=ordered[-1][0],
+        end_value=values[-1],
+        min_value=min(values),
+        max_value=max(values),
+        sample_count=len(values),
+    )
+
+
+def build_v5_missing_fields(inputs: V4ReportInputs) -> list[str]:
+    """List evidence gaps deterministically for the writer and audit tests."""
+    missing: list[str] = []
+    if inputs.resolution_rules is None or not inputs.resolution_rules.condition_text:
+        missing.append("market.resolution_rules.condition_text")
+    if inputs.end_date is None and (
+        inputs.resolution_rules is None or inputs.resolution_rules.deadline is None
+    ):
+        missing.append("market.deadline")
+    for label, change, value, captured_at in (
+        ("24h", inputs.change_24h, inputs.value_24h_ago, inputs.value_24h_ago_at),
+        ("7d", inputs.change_7d, inputs.value_7d_ago, inputs.value_7d_ago_at),
+    ):
+        if change is None or value is None or captured_at is None:
+            missing.append(f"observed_data.{label}_reference")
+    if inputs.volume_24h is None:
+        missing.append("observed_data.volume_24h")
+    if inputs.liquidity is None:
+        missing.append("observed_data.liquidity")
+    if inputs.recent_history_summary is None:
+        missing.append("observed_data.recent_history_summary")
+    return missing
+
+
 def _scenario_count_matches_completeness(
     fields: V5LLMFields, inputs: V4ReportInputs
 ) -> bool:
@@ -1401,6 +1471,14 @@ def build_v5_prompt(inputs: V4ReportInputs) -> tuple[str, str]:
             "value_7d_ago_at": (
                 inputs.value_7d_ago_at.isoformat() if inputs.value_7d_ago_at else None
             ),
+            "volume_24h": inputs.volume_24h,
+            "liquidity": inputs.liquidity,
+            "recent_history_summary": (
+                inputs.recent_history_summary.model_dump(mode="json")
+                if inputs.recent_history_summary is not None
+                else None
+            ),
+            "missing_fields": build_v5_missing_fields(inputs),
         },
         "verified_context_candidates": [
             {
@@ -1529,7 +1607,14 @@ def _v5_uses_only_evidence_numbers(fields: V5LLMFields, inputs: V4ReportInputs) 
         inputs.value_24h_ago_at.isoformat() if inputs.value_24h_ago_at else None,
         str(inputs.value_7d_ago) if inputs.value_7d_ago is not None else None,
         inputs.value_7d_ago_at.isoformat() if inputs.value_7d_ago_at else None,
+        str(inputs.volume_24h) if inputs.volume_24h is not None else None,
+        str(inputs.liquidity) if inputs.liquidity is not None else None,
     ]
+    if inputs.recent_history_summary is not None:
+        allowed_parts.extend(
+            str(value)
+            for value in inputs.recent_history_summary.model_dump(mode="json").values()
+        )
     if inputs.resolution_rules is not None:
         allowed_parts.extend(
             (

@@ -992,6 +992,10 @@ def test_v4_inputs_load_reference_values_at_or_before_window_boundaries(db):
     assert inputs.value_24h_ago_at == NOW - timedelta(hours=25)
     assert inputs.value_7d_ago == pytest.approx(0.53)
     assert inputs.value_7d_ago_at == NOW - timedelta(days=8)
+    assert inputs.recent_history_summary is not None
+    assert inputs.recent_history_summary.start_value == pytest.approx(0.55)
+    assert inputs.recent_history_summary.end_value == pytest.approx(0.63)
+    assert inputs.recent_history_summary.sample_count == 2
 
 
 def test_v4_success_stores_payload_with_metric_and_candidate_evidence(db):

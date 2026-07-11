@@ -40,6 +40,7 @@ from app.core.ai_report import (
     assemble_v4_report_content,
     assemble_v5_report_content,
     build_prompt,
+    build_recent_history_summary,
     build_v4_prompt,
     build_v4_stored_payload,
     build_v5_prompt,
@@ -298,6 +299,23 @@ def _reference_snapshot(
         .order_by(MarketSnapshot.captured_at.desc(), MarketSnapshot.id.desc())
         .limit(1)
     ).scalar_one_or_none()
+
+
+def _recent_history_summary(
+    db: Session, market_id: uuid.UUID, metric_timestamp: datetime
+):
+    rows = db.execute(
+        select(MarketSnapshot.captured_at, MarketSnapshot.price)
+        .where(
+            MarketSnapshot.market_id == market_id,
+            MarketSnapshot.captured_at >= metric_timestamp - timedelta(days=7),
+            MarketSnapshot.captured_at <= metric_timestamp,
+        )
+        .order_by(MarketSnapshot.captured_at.asc(), MarketSnapshot.id.asc())
+    ).all()
+    return build_recent_history_summary(
+        [(_as_utc_aware(row.captured_at), float(row.price)) for row in rows]
+    )
 
 
 def build_prompt_inputs_for_market(
@@ -681,6 +699,7 @@ def build_v4_inputs_for_market(
         value_7d_ago_at=(
             _as_utc_aware(reference_7d.captured_at) if reference_7d is not None else None
         ),
+        recent_history_summary=_recent_history_summary(db, market.id, metric_timestamp),
     )
 
 

@@ -60,6 +60,7 @@ class LiveV4AiReport:
     candidates: list[ContextCandidate]
     reference_24h: MarketSnapshot | None = None
     reference_7d: MarketSnapshot | None = None
+    recent_history: list[MarketSnapshot] | None = None
 
 
 def _load_reference_snapshot(
@@ -77,6 +78,24 @@ def _load_reference_snapshot(
         .order_by(MarketSnapshot.captured_at.desc(), MarketSnapshot.id.desc())
         .limit(1)
     ).scalar_one_or_none()
+
+
+def _load_recent_history(
+    db: Session, market_id: uuid.UUID, metric_at: datetime
+) -> list[MarketSnapshot]:
+    return list(
+        db.execute(
+            select(MarketSnapshot)
+            .where(
+                MarketSnapshot.market_id == market_id,
+                MarketSnapshot.captured_at >= metric_at - timedelta(days=7),
+                MarketSnapshot.captured_at <= metric_at,
+            )
+            .order_by(MarketSnapshot.captured_at.asc(), MarketSnapshot.id.asc())
+        )
+        .scalars()
+        .all()
+    )
 
 
 def _latest_per_market(rows: list, market_id_attr: str = "market_id") -> dict:
@@ -294,6 +313,7 @@ def load_latest_successful_v4_report(
         reference_7d=_load_reference_snapshot(
             db, market_id, metric.computed_at, timedelta(days=7)
         ),
+        recent_history=_load_recent_history(db, market_id, metric.computed_at),
     )
 
 
@@ -357,6 +377,7 @@ def load_successful_v5_reports(
                 reference_7d=_load_reference_snapshot(
                     db, market_id, metric.computed_at, timedelta(days=7)
                 ),
+                recent_history=_load_recent_history(db, market_id, metric.computed_at),
             )
         )
     return results

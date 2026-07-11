@@ -19,11 +19,11 @@ excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-089 | Activity, liquidity, and deterministic history summary | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-089-observed-data-summary` | assigned |
+| TASK-090 | Basis enum audit contract | Backend + Data/AI + Frontend | Backend Implementer | `backend/TASK-090-report-basis-contract` | assigned |
 
 The user approved TASK-083's database-schema code change and TASK-085/TASK-090's
 public API changes on 2026-07-11. TASK-083 is complete without applying its
-migration to any database. TASK-088 is complete and TASK-089 is next.
+migration to any database. TASK-089 is complete and TASK-090 is next.
 
 Deployment and production writes remain outside the approved program.
 

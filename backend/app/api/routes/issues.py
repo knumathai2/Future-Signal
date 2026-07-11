@@ -39,6 +39,7 @@ from app.core.ai_report import (
     V5LLMFields,
     V5StoredReportPayload,
     assemble_v5_report_content,
+    build_recent_history_summary,
     run_v5_safety_and_semantic_checks,
 )
 from app.core.category_taxonomy import category_matches
@@ -345,6 +346,12 @@ def _issue_report_from_live(
             _as_utc(live_report.reference_7d.captured_at)
             if live_report.reference_7d
             else None
+        ),
+        recent_history_summary=build_recent_history_summary(
+            [
+                (_as_utc(point.captured_at), float(point.price))
+                for point in (live_report.recent_history or [])
+            ]
         ),
     )
     llm_fields = V5LLMFields.model_validate(
