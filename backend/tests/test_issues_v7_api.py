@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import pytest
+from sqlalchemy import event
 
 from app.core.on_demand_briefing import build_v8_input_bundle, process_v8_request
 from app.db.models import (
@@ -183,6 +184,37 @@ def test_report_starts_idle_without_v7_request(live_client, db_session):
     assert response.json() == {"status": "idle"}
 
 
+def test_report_read_never_calls_full_issue_loader_and_scopes_history_tables(
+    live_client, db_session, monkeypatch
+):
+    seed_basic_market(db_session)
+    statements: list[str] = []
+
+    def record_statement(_conn, _cursor, statement, _parameters, _context, _many):
+        statements.append(statement.casefold())
+
+    monkeypatch.setattr(
+        "app.api.routes.issues.load_live_issues",
+        lambda _db: pytest.fail("report endpoint must not call the full issue loader"),
+    )
+    engine = db_session.get_bind()
+    event.listen(engine, "before_cursor_execute", record_statement)
+    try:
+        response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+    finally:
+        event.remove(engine, "before_cursor_execute", record_statement)
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "idle"}
+    scoped_history_queries = [
+        statement
+        for statement in statements
+        if "market_snapshots" in statement or "market_metrics" in statement
+    ]
+    assert scoped_history_queries
+    assert all("market_id =" in statement for statement in scoped_history_queries)
+
+
 def test_generate_joins_duplicate_and_status_endpoint_reports_queue(
     live_client, db_session, worker_launches
 ):
@@ -207,6 +239,63 @@ def test_generate_joins_duplicate_and_status_endpoint_reports_queue(
     assert status_response.status_code == 200
     assert status_response.json()["state"] == "queued"
     assert status_response.json()["attempt_number"] == 0
+
+
+def test_request_status_does_not_read_snapshots_or_metrics(live_client, db_session):
+    seed_basic_market(db_session)
+    request = _enqueue(live_client)
+    statements: list[str] = []
+
+    def record_statement(_conn, _cursor, statement, _parameters, _context, _many):
+        statements.append(statement.casefold())
+
+    engine = db_session.get_bind()
+    event.listen(engine, "before_cursor_execute", record_statement)
+    try:
+        response = live_client.get(
+            f"/api/issues/{MARKET_ID}/report/requests/{request['request_id']}"
+        )
+    finally:
+        event.remove(engine, "before_cursor_execute", record_statement)
+
+    assert response.status_code == 200
+    assert any("ai_report_generation_requests" in statement for statement in statements)
+    assert any("ai_report_generation_events" in statement for statement in statements)
+    assert all("market_snapshots" not in statement for statement in statements)
+    assert all("market_metrics" not in statement for statement in statements)
+
+
+def test_generate_scopes_snapshot_and_metric_queries_to_requested_market(
+    live_client, db_session, monkeypatch
+):
+    seed_basic_market(db_session)
+    statements: list[str] = []
+
+    def record_statement(_conn, _cursor, statement, _parameters, _context, _many):
+        statements.append(statement.casefold())
+
+    monkeypatch.setattr(
+        "app.api.routes.issues.load_live_issues",
+        lambda _db: pytest.fail("generate endpoint must not call the full issue loader"),
+    )
+    engine = db_session.get_bind()
+    event.listen(engine, "before_cursor_execute", record_statement)
+    try:
+        response = live_client.post(
+            f"/api/issues/{MARKET_ID}/report/generate",
+            json={"refresh_context": False},
+        )
+    finally:
+        event.remove(engine, "before_cursor_execute", record_statement)
+
+    assert response.status_code == 202
+    scoped_history_queries = [
+        statement
+        for statement in statements
+        if "market_snapshots" in statement or "market_metrics" in statement
+    ]
+    assert scoped_history_queries
+    assert all("market_id =" in statement for statement in scoped_history_queries)
 
 
 def test_generate_keeps_committed_queue_when_worker_spawn_fails(

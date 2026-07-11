@@ -17,8 +17,8 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy import func, select
+from sqlalchemy.orm import Session, aliased
 
 from app.db.models import (
     AiReport,
@@ -100,79 +100,151 @@ def _load_recent_history(
     )
 
 
-def _latest_per_market(rows: list, market_id_attr: str = "market_id") -> dict:
-    """`rows` must already be ordered DESC by their timestamp column.
-
-    Small-scale (30-50 market) hackathon dataset - a Python-side "first
-    occurrence wins" pass is simpler and just as correct as a per-market
-    window-function query here (Technical Design §6 favors simple SQL over
-    building more machinery than the data volume needs).
-    """
-    latest: dict = {}
-    for row in rows:
-        key = getattr(row, market_id_attr)
-        if key not in latest:
-            latest[key] = row
-    return latest
+def _latest_row_alias(model, *, partition_by, order_by, name: str):
+    ranked = select(
+        model,
+        func.row_number()
+        .over(partition_by=partition_by, order_by=order_by)
+        .label("latest_rank"),
+    ).subquery(name)
+    return aliased(model, ranked), ranked.c.latest_rank
 
 
-def load_live_issues(db: Session) -> tuple[list[LiveIssue], datetime] | None:
+def _live_issue(
+    market: Market,
+    outcome: MarketOutcome,
+    snapshot: MarketSnapshot,
+    metric: MarketMetric | None,
+) -> LiveIssue:
+    return LiveIssue(
+        market=market,
+        outcome_label=outcome.outcome_label,
+        current_value=float(snapshot.price),
+        captured_at=snapshot.captured_at,
+        change_24h=(
+            float(metric.change_24h) if metric and metric.change_24h is not None else None
+        ),
+        change_7d=(
+            float(metric.change_7d) if metric and metric.change_7d is not None else None
+        ),
+        heat_score=(float(metric.heat_score) if metric and metric.heat_score is not None else None),
+        confidence_level=metric.confidence_level if metric else "insufficient_data",
+        updated_at=metric.computed_at if metric else snapshot.captured_at,
+    )
+
+
+def _live_issue_select():
+    latest_snapshot, snapshot_rank = _latest_row_alias(
+        MarketSnapshot,
+        partition_by=MarketSnapshot.market_id,
+        order_by=(MarketSnapshot.captured_at.desc(), MarketSnapshot.id.desc()),
+        name="latest_market_snapshots",
+    )
+    latest_metric, metric_rank = _latest_row_alias(
+        MarketMetric,
+        partition_by=MarketMetric.market_id,
+        order_by=(MarketMetric.computed_at.desc(), MarketMetric.id.desc()),
+        name="latest_market_metrics",
+    )
+    ranked_outcomes = (
+        select(
+            MarketOutcome,
+            func.row_number()
+            .over(partition_by=MarketOutcome.market_id, order_by=MarketOutcome.id.asc())
+            .label("latest_rank"),
+        )
+        .where(MarketOutcome.is_tracked.is_(True))
+        .subquery("tracked_market_outcomes")
+    )
+    tracked_outcome = aliased(MarketOutcome, ranked_outcomes)
+    outcome_rank = ranked_outcomes.c.latest_rank
+    query = (
+        select(Market, tracked_outcome, latest_snapshot, latest_metric)
+        .join(
+            tracked_outcome,
+            (tracked_outcome.market_id == Market.id)
+            & (outcome_rank == 1),
+        )
+        .join(
+            latest_snapshot,
+            (latest_snapshot.market_id == Market.id) & (snapshot_rank == 1),
+        )
+        .outerjoin(
+            latest_metric,
+            (latest_metric.market_id == Market.id) & (metric_rank == 1),
+        )
+    )
+    return query, latest_snapshot, latest_metric
+
+
+def load_live_issue(db: Session, market_id: uuid.UUID) -> LiveIssue | None:
+    """Load one servable issue with only its latest snapshot and metric."""
+    market = db.get(Market, market_id)
+    if market is None:
+        return None
+    outcome = db.execute(
+        select(MarketOutcome)
+        .where(
+            MarketOutcome.market_id == market_id,
+            MarketOutcome.is_tracked.is_(True),
+        )
+        .order_by(MarketOutcome.id.asc())
+        .limit(1)
+    ).scalar_one_or_none()
+    snapshot = db.execute(
+        select(MarketSnapshot)
+        .where(MarketSnapshot.market_id == market_id)
+        .order_by(MarketSnapshot.captured_at.desc(), MarketSnapshot.id.desc())
+        .limit(1)
+    ).scalar_one_or_none()
+    if outcome is None or snapshot is None:
+        return None
+    metric = db.execute(
+        select(MarketMetric)
+        .where(MarketMetric.market_id == market_id)
+        .order_by(MarketMetric.computed_at.desc(), MarketMetric.id.desc())
+        .limit(1)
+    ).scalar_one_or_none()
+    return _live_issue(market, outcome, snapshot, metric)
+
+
+def load_live_issues(
+    db: Session,
+    *,
+    window: str = "24h",
+    sort: str = "heat",
+    limit: int | None = None,
+    offset: int = 0,
+) -> tuple[list[LiveIssue], datetime] | None:
     """Returns `(issues, data_as_of)` from live tables, or `None` when there
     is nothing real to serve yet (no snapshots at all - e.g. TASK-008 has
     not produced data). Callers must fall back to the documented static
     sample path when this returns `None`, not fabricate a response."""
-    snapshots = (
-        db.execute(select(MarketSnapshot).order_by(MarketSnapshot.captured_at.desc()))
-        .scalars()
-        .all()
-    )
-    if not snapshots:
+    data_as_of = db.execute(select(func.max(MarketSnapshot.captured_at))).scalar_one()
+    if data_as_of is None:
         return None
-    data_as_of = snapshots[0].captured_at
-    latest_snapshot_by_market = _latest_per_market(snapshots)
-
-    metrics = (
-        db.execute(select(MarketMetric).order_by(MarketMetric.computed_at.desc())).scalars().all()
-    )
-    latest_metric_by_market = _latest_per_market(metrics)
-
-    tracked_outcomes = (
-        db.execute(select(MarketOutcome).where(MarketOutcome.is_tracked.is_(True))).scalars().all()
-    )
-    tracked_outcome_by_market = {o.market_id: o for o in tracked_outcomes}
-
-    markets = (
-        db.execute(select(Market).where(Market.id.in_(latest_snapshot_by_market.keys())))
-        .scalars()
-        .all()
-    )
-
-    issues: list[LiveIssue] = []
-    for market in markets:
-        snapshot = latest_snapshot_by_market.get(market.id)
-        outcome = tracked_outcome_by_market.get(market.id)
-        if snapshot is None or outcome is None:
-            continue  # incomplete data for this market - exclude, don't fabricate
-        metric = latest_metric_by_market.get(market.id)
-        issues.append(
-            LiveIssue(
-                market=market,
-                outcome_label=outcome.outcome_label,
-                current_value=float(snapshot.price),
-                captured_at=snapshot.captured_at,
-                change_24h=(
-                    float(metric.change_24h) if metric and metric.change_24h is not None else None
-                ),
-                change_7d=(
-                    float(metric.change_7d) if metric and metric.change_7d is not None else None
-                ),
-                heat_score=(
-                    float(metric.heat_score) if metric and metric.heat_score is not None else None
-                ),
-                confidence_level=metric.confidence_level if metric else "insufficient_data",
-                updated_at=metric.computed_at if metric else snapshot.captured_at,
-            )
+    query, latest_snapshot, latest_metric = _live_issue_select()
+    if sort == "heat":
+        query = query.order_by(
+            latest_metric.heat_score.is_(None).asc(),
+            latest_metric.heat_score.desc(),
+            Market.id.asc(),
         )
+    elif sort == "change":
+        change = latest_metric.change_24h if window == "24h" else latest_metric.change_7d
+        query = query.order_by(change.is_(None).asc(), func.abs(change).desc(), Market.id.asc())
+    else:
+        query = query.order_by(
+            func.coalesce(latest_metric.computed_at, latest_snapshot.captured_at).desc(),
+            Market.id.asc(),
+        )
+    if limit is not None:
+        query = query.offset(offset).limit(limit)
+    rows = db.execute(query).tuples().all()
+    issues = [
+        _live_issue(market, outcome, snapshot, metric)
+        for market, outcome, snapshot, metric in rows
+    ]
     return issues, data_as_of
 
 
@@ -194,11 +266,20 @@ def load_related_events_for_market(db: Session, market_id: uuid.UUID) -> list[Re
     )
 
 
-def load_history_points(db: Session, market_id: uuid.UUID, since: datetime) -> list[MarketSnapshot]:
+def load_history_points(
+    db: Session,
+    market_id: uuid.UUID,
+    since: datetime,
+    until: datetime,
+) -> list[MarketSnapshot]:
     return list(
         db.execute(
             select(MarketSnapshot)
-            .where(MarketSnapshot.market_id == market_id, MarketSnapshot.captured_at >= since)
+            .where(
+                MarketSnapshot.market_id == market_id,
+                MarketSnapshot.captured_at >= since,
+                MarketSnapshot.captured_at <= until,
+            )
             .order_by(MarketSnapshot.captured_at.asc())
         )
         .scalars()

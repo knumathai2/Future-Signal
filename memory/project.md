@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.15.1-v8-source-level-2
-- **Phase**: V8 source retrieval refinement implemented; configured-provider annotation compatibility remains open
-- **Next milestone**: Approve and test an annotation-capable research model/configuration, then compare the same issue with the reviewed zero-source result
-- **Overall health**: 🟡 TASK-113 code and regressions pass, but the configured development model returned no standard `url_citation` annotations after web search, so live source-quality acceptance remains blocked by ISS-018.
+- **Version**: v0.15.2-api-query-scope
+- **Phase**: V8 source retrieval refinement and ISS-017 query-scope repair implemented
+- **Next milestone**: Add separately approved orphaned queued-request recovery, and test an annotation-capable research configuration
+- **Overall health**: 🟡 TASK-114 removes the API full-read bottleneck with complete regressions; ISS-017 remains open for orphaned queued-request recovery and ISS-018 remains open for configured-provider citation compatibility.
 
 ## Tech Summary
 
@@ -63,6 +63,7 @@ Future Signal/
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | TASK-114 removed full snapshot/metric materialization from ID routes, bounded history and report evidence reads by market/time/latest row, and moved list/category latest-row selection into portable SQL. Backend 466 tests/Ruff, API/OpenAPI, all Frontend checks, and diff checks pass. ISS-017 remains open only for orphaned queued-request recovery. |
 | 2026-07-11 | TASK-113 widened v8 context retrieval to deterministic 90/180-day horizons, added bounded aliases and exact-excerpt fallback claims, advanced the fingerprint, connected the action to research, and added server-tool/plugin compatibility handling. Backend 459 tests/Ruff and all Frontend checks pass. The approved development run returned no standard annotations, stored no candidate/report, and opened ISS-018. |
 | 2026-07-11 | TASK-112 added and activated the v8 issue-centered prompt, typed output contract, on-demand fingerprint/service/API path, strict Frontend parser, and issue-flow presentation while preserving v7 source and stored rows. Provider-free Backend and Frontend verification passed; no migration, DB write, provider call, deployment, or legacy deletion occurred. |
 | 2026-07-11 | TASK-111 removed v7 numeric-token blocking while retaining structure/reference/source-parent/language/URL gates, advanced policy fingerprinting to v7-positive-evidence-2, and produced the first valid development v7 report in one approved call for USD 0.011714. Stored reconstruction and fresh API serving pass; Backend remains at 446 tests/Ruff. |

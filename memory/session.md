@@ -14,18 +14,41 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: Data/AI Implementer
-- **Session Goal**: Improve v8 public-source retrieval and evidence acceptance while preserving strict publication blockers.
-- **Branch**: `data-ai/TASK-113-v8-source-validation`
+- **Agent Role**: Backend Implementer
+- **Session Goal**: Remove ISS-017 API/DB full-read bottlenecks without changing public contracts.
+- **Branch**: `backend/TASK-114-api-query-scope`
 
 ## Context Read
 
 - Project constitution and Backend implementation role prompt
-- PRD, Service Design, Technical Design, and UX Design indexes and relevant AI/report sections
-- Current project/session/task state, wording policy, glossary, architecture, active report code, API, batch, and validation paths
+- PRD, Service Design, and Technical Design indexes and relevant report/API sections
+- Current project/session/task state, architecture, standards, known issues, decisions, API queries, models, and regression suites
 
 ## Work Completed
 
+- Completed TASK-114 in the required priority order. Request polling now reads
+  one generation request by primary key and one latest event, with no snapshot
+  or metric query. Generation POST, report GET, detail, and history no longer
+  call the full live-issue loader and instead use direct market-scoped reads.
+- Added `load_live_issue()` with tracked-outcome, latest-snapshot, and
+  latest-metric queries bounded by market ID and `LIMIT 1`. History adds both
+  market and selected time-window bounds in SQL.
+- Replaced Python-side reduction of all snapshot/metric history with portable
+  SQLite/PostgreSQL `row_number()` latest-row subqueries. List sorting and
+  pagination run in SQL unless the derived Korean category taxonomy requires
+  post-query classification; categories consume only current servable rows.
+- Preserved static fallback, incomplete-data exclusion, data-as-of, report
+  freshness/failure/last-good states, append-only request/event behavior, and
+  all public response shapes/status codes. No user-facing string changed.
+- Added statement-observation regressions that block snapshot/metric access on
+  status, require market filters on ID routes, require both history bounds, and
+  require latest-row SQL for lists/categories. Verification passed: 466
+  Backend tests, full Ruff, 11 explicit API/OpenAPI regressions, Frontend
+  typecheck/lint/v8 parser/build, and diff checks. The known bundle-size warning
+  remains. No dependency, schema, migration, infrastructure, deployment,
+  provider, or non-test database action occurred.
+- ISS-017 remains open only for orphaned queued-request recovery. TASK-114 did
+  not change request states or add polling/startup recovery, per scope.
 - Completed TASK-113 under explicit user approval. Added deterministic 90-day
   and 180-day issue horizons, bounded cross-wording queries, alias-aware
   relevance, and exact-excerpt fallback claims under

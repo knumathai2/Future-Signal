@@ -52,11 +52,12 @@ from app.core.on_demand_briefing import (
 )
 from app.core.on_demand_worker_launcher import launch_on_demand_worker
 from app.core.snapshot_metrics import as_utc_naive
-from app.db.models import AiReport, AiReportGenerationRequest
+from app.db.models import AiReport, AiReportGenerationRequest, Market
 from app.db.queries import (
     LiveIssue,
     LiveV4AiReport,
     load_history_points,
+    load_live_issue,
     load_live_issues,
     load_related_events_for_market,
     load_signals_for_market,
@@ -155,14 +156,16 @@ def _window_to_timedelta(window: str) -> timedelta:
     }[window]
 
 
-def _resolve_live(db: Session | None) -> tuple[list[LiveIssue], datetime] | None:
+def _resolve_live(
+    db: Session | None, **query_options
+) -> tuple[list[LiveIssue], datetime] | None:
     """Returns `(live_issues, data_as_of)` from the DB, or `None` if the
     caller should fall back to the static sample dataset."""
     if db is None:
         logger.warning("FALLBACK: DATABASE_URL is not set, serving static sample issue data.")
         return None
     try:
-        result = load_live_issues(db)
+        result = load_live_issues(db, **query_options)
     except SQLAlchemyError:
         logger.warning(
             "FALLBACK: live DB query failed, serving static sample issue data.",
@@ -246,10 +249,6 @@ def _issue_detail_from_live(db: Session, live: LiveIssue, data_as_of: datetime) 
     )
 
 
-def _find_live(live_issues: list[LiveIssue], issue_id: str) -> LiveIssue | None:
-    return next((li for li in live_issues if str(li.market.id) == issue_id), None)
-
-
 def _same_timestamp(left: datetime, right: datetime) -> bool:
     return as_utc_naive(left) == as_utc_naive(right)
 
@@ -262,6 +261,13 @@ def _as_utc(value: datetime) -> datetime:
     if value.tzinfo is None or value.utcoffset() is None:
         return value.replace(tzinfo=UTC)
     return value.astimezone(UTC)
+
+
+def _parse_issue_uuid(issue_id: str) -> UUID | None:
+    try:
+        return UUID(issue_id)
+    except ValueError:
+        return None
 
 
 def _issue_report_from_live(
@@ -415,7 +421,13 @@ def list_issues(
     offset: int = Query(default=0, ge=0),
     db: Session | None = Depends(_get_optional_db),
 ) -> IssueListResponse:
-    live = _resolve_live(db)
+    live = _resolve_live(
+        db,
+        window=window,
+        sort=sort,
+        limit=None if category else limit,
+        offset=0 if category else offset,
+    )
     if live is not None:
         live_issues, data_as_of = live
         if category:
@@ -433,8 +445,11 @@ def list_issues(
                 return (change is None, -abs(change or 0.0))
             return (0, -li.updated_at.timestamp())  # sort == "recent"
 
-        live_issues = sorted(live_issues, key=_sort_key)
-        page = live_issues[offset : offset + limit]
+        if category:
+            live_issues = sorted(live_issues, key=_sort_key)
+            page = live_issues[offset : offset + limit]
+        else:
+            page = live_issues
         return IssueListResponse(
             data_as_of=data_as_of,
             issues=[_issue_summary_from_live(li) for li in page],
@@ -464,13 +479,19 @@ def list_issues(
 
 @router.get("/api/issues/{issue_id}", response_model=IssueDetail)
 def get_issue(issue_id: str, db: Session | None = Depends(_get_optional_db)) -> IssueDetail:
-    live = _resolve_live(db)
-    if live is not None:
-        live_issues, data_as_of = live
-        match = _find_live(live_issues, issue_id)
-        if match is None:
-            raise HTTPException(status_code=404, detail="Unknown issue id.")
-        return _issue_detail_from_live(db, match, data_as_of)
+    if db is not None:
+        market_id = _parse_issue_uuid(issue_id)
+        if market_id is not None:
+            try:
+                match = load_live_issue(db, market_id)
+            except SQLAlchemyError:
+                logger.warning(
+                    "FALLBACK: live issue query failed, serving static sample issue data.",
+                    exc_info=True,
+                )
+            else:
+                if match is not None:
+                    return _issue_detail_from_live(db, match, match.captured_at)
 
     issue = _FALLBACK_ISSUES.get(issue_id)
     if issue is None:
@@ -484,29 +505,37 @@ def get_issue_history(
     window: str = Query(default="24h", pattern="^(24h|7d|30d)$"),
     db: Session | None = Depends(_get_optional_db),
 ) -> IssueHistoryResponse:
-    live = _resolve_live(db)
-    if live is not None:
-        live_issues, data_as_of = live
-        match = _find_live(live_issues, issue_id)
-        if match is None:
-            raise HTTPException(status_code=404, detail="Unknown issue id.")
-        since = data_as_of - _window_to_timedelta(window)
-        try:
-            points = load_history_points(db, match.market.id, since)
-        except SQLAlchemyError:
-            logger.warning(
-                "FALLBACK: live history query failed, returning empty history.",
-                exc_info=True,
-            )
-            points = []
-        history_points = [
-            HistoryPoint(captured_at=p.captured_at, value=float(p.price)) for p in points
-        ]
-        return IssueHistoryResponse(
-            data_as_of=data_as_of,
-            window=window,
-            points=history_points,
-        )
+    if db is not None:
+        market_id = _parse_issue_uuid(issue_id)
+        if market_id is not None:
+            try:
+                match = load_live_issue(db, market_id)
+            except SQLAlchemyError:
+                logger.warning(
+                    "FALLBACK: live issue query failed, serving static history data.",
+                    exc_info=True,
+                )
+            else:
+                if match is not None:
+                    data_as_of = match.captured_at
+                    since = data_as_of - _window_to_timedelta(window)
+                    try:
+                        points = load_history_points(db, match.market.id, since, data_as_of)
+                    except SQLAlchemyError:
+                        logger.warning(
+                            "FALLBACK: live history query failed, returning empty history.",
+                            exc_info=True,
+                        )
+                        points = []
+                    history_points = [
+                        HistoryPoint(captured_at=p.captured_at, value=float(p.price))
+                        for p in points
+                    ]
+                    return IssueHistoryResponse(
+                        data_as_of=data_as_of,
+                        window=window,
+                        points=history_points,
+                    )
 
     if issue_id not in _FALLBACK_ISSUES:
         raise HTTPException(status_code=404, detail="Unknown issue id.")
@@ -515,14 +544,6 @@ def get_issue_history(
         window=window,
         points=[],
     )
-
-
-def _issue_exists(issue_id: str, db: Session | None) -> bool:
-    live = _resolve_live(db)
-    if live is not None:
-        live_issues, _ = live
-        return _find_live(live_issues, issue_id) is not None
-    return issue_id in _FALLBACK_ISSUES
 
 
 def _latest_v8_reports(db: Session, market_id: UUID) -> list[AiReport]:
@@ -627,23 +648,28 @@ def _v8_public_report(
 def get_issue_report(
     issue_id: str, db: Session | None = Depends(_get_optional_db)
 ) -> V8IssueReportResponse | ReportIdle | ReportGenerating | ReportFailed:
-    live = _resolve_live(db)
-    if live is not None and db is not None:
-        live_issues, _ = live
-        match = _find_live(live_issues, issue_id)
-        if match is None:
+    if db is not None:
+        market_id = _parse_issue_uuid(issue_id)
+        if market_id is None:
             raise HTTPException(status_code=404, detail="Unknown issue id.")
         try:
-            reports = _latest_v8_reports(db, match.market.id)
-            latest_request = _latest_generation_request(db, match.market.id)
+            market = db.get(Market, market_id)
+            if market is None:
+                if issue_id in _FALLBACK_ISSUES:
+                    return ReportIdle(status="idle")
+                raise HTTPException(status_code=404, detail="Unknown issue id.")
+            reports = _latest_v8_reports(db, market.id)
+            latest_request = _latest_generation_request(db, market.id)
             current_bundle = build_v8_input_bundle(
                 db,
-                match.market.id,
+                market.id,
                 now=datetime.now(UTC),
             )
             current_fingerprint = (
                 v8_input_fingerprint(current_bundle) if current_bundle is not None else None
             )
+        except HTTPException:
+            raise
         except SQLAlchemyError:
             logger.warning(
                 "FALLBACK: live report query failed, returning report empty state.",
@@ -706,19 +732,21 @@ def generate_issue_report(
     """Append or join a request; never call a provider in the API process."""
     if db is None:
         raise HTTPException(status_code=503, detail="Generation storage is unavailable.")
-    live = _resolve_live(db)
-    if live is None:
-        raise HTTPException(status_code=503, detail="Live issue data is unavailable.")
-    match = _find_live(live[0], issue_id)
-    if match is None:
+    market_id = _parse_issue_uuid(issue_id)
+    if market_id is None:
         raise HTTPException(status_code=404, detail="Unknown issue id.")
     try:
+        market = db.get(Market, market_id)
+        if market is None:
+            raise HTTPException(status_code=404, detail="Unknown issue id.")
         result = enqueue_v8_request(
             db,
-            match.market.id,
+            market.id,
             requested_by="user",
             context_refresh_requested=request_body.refresh_context,
         )
+    except HTTPException:
+        raise
     except SQLAlchemyError as exc:
         db.rollback()
         raise HTTPException(status_code=503, detail="Generation request failed.") from exc
@@ -748,14 +776,11 @@ def get_generation_request_status(
 ) -> GenerationRequestStatusResponse:
     if db is None:
         raise HTTPException(status_code=503, detail="Generation storage is unavailable.")
-    live = _resolve_live(db)
-    if live is None:
-        raise HTTPException(status_code=503, detail="Live issue data is unavailable.")
-    match = _find_live(live[0], issue_id)
-    if match is None:
+    market_id = _parse_issue_uuid(issue_id)
+    if market_id is None:
         raise HTTPException(status_code=404, detail="Unknown issue id.")
     request = db.get(AiReportGenerationRequest, request_id)
-    if request is None or request.market_id != match.market.id:
+    if request is None or request.market_id != market_id:
         raise HTTPException(status_code=404, detail="Unknown generation request id.")
     latest = latest_request_event(db, request.id)
     if latest is None:
