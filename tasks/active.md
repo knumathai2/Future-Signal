@@ -19,11 +19,11 @@ excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-084 | Connect resolution rules to writer and research inputs | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-084-resolution-rules-input` | assigned |
+| TASK-085 | Evidence-completeness-aware one-to-four scenarios | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-085-evidence-scaled-scenarios` | assigned |
 
 The user approved TASK-083's database-schema code change and TASK-085/TASK-090's
 public API changes on 2026-07-11. TASK-083 is complete without applying its
-migration to any database. TASK-084 is the next sequential task.
+migration to any database. TASK-084 is complete and TASK-085 is next.
 
 Deployment and production writes remain outside the approved program.
 

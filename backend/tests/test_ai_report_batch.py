@@ -54,6 +54,7 @@ from app.db.models import (
     Market,
     MarketMetric,
     MarketOutcome,
+    MarketResolutionRule,
     MarketSnapshot,
     RelatedEvent,
 )
@@ -136,6 +137,7 @@ def db():
         tables=[
             Market.__table__,
             MarketOutcome.__table__,
+            MarketResolutionRule.__table__,
             MarketSnapshot.__table__,
             MarketMetric.__table__,
             IssueSignal.__table__,

@@ -937,6 +937,20 @@ class V4VerifiedCandidateInput(BaseModel):
     sources: list[V4ContextSource] = Field(min_length=1)
 
 
+class ResolutionRulesInput(BaseModel):
+    """Provenance-preserving market definition supplied to grounded writers."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    condition_text: str | None
+    deadline: datetime | None
+    exclusions: list[str] = Field(default_factory=list)
+    resolution_source: str | None
+    source_description_hash: str | None
+    rules_hash: str
+    collected_at: datetime
+
+
 class V4ReportInputs(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
@@ -956,6 +970,7 @@ class V4ReportInputs(BaseModel):
     volume_24h: float | None
     liquidity: float | None
     context_candidates: list[V4VerifiedCandidateInput] = Field(max_length=3)
+    resolution_rules: ResolutionRulesInput | None = None
 
 
 class V4LLMFields(BaseModel):
@@ -1216,6 +1231,11 @@ when writing Korean prose. Do not expose the internal confidence_level enum or
 raw 0-to-1 decimals when a display value is supplied. Factors and watch items
 must stay tied to the named market condition, outcome label, end date, or
 verified evidence; do not fill them with generic data-methodology reminders.
+Treat market.resolution_rules as the only source for resolution conditions,
+deadlines, exceptions, and recognized source criteria. market.description is
+display copy and is not a resolution rule. When resolution_rules is null or its
+condition_text is null, do not introduce a procedure, institution, schedule, or
+condition from general knowledge.
 conditional_scenarios must contain three or four distinct items. Each item must
 have a short title and a narrative beginning with a Korean conditional expression
 such as "만약" and may describe only conditions present in the supplied market
@@ -1287,6 +1307,7 @@ class V5StoredReportPayload(BaseModel):
     content: V5ReportContent
     evidence_refs: list[str] = Field(min_length=1, max_length=4)
     context_candidate_ids: list[uuid.UUID] = Field(max_length=3)
+    resolution_rules: ResolutionRulesInput | None = None
 
 
 def build_v5_prompt(inputs: V4ReportInputs) -> tuple[str, str]:
@@ -1297,6 +1318,11 @@ def build_v5_prompt(inputs: V4ReportInputs) -> tuple[str, str]:
             "category": inputs.category,
             "outcome_label": inputs.outcome_label,
             "end_date": inputs.end_date.isoformat() if inputs.end_date else None,
+            "resolution_rules": (
+                inputs.resolution_rules.model_dump(mode="json")
+                if inputs.resolution_rules is not None
+                else None
+            ),
         },
         "observed_data": {
             "data_as_of": inputs.data_as_of.isoformat(),
@@ -1366,6 +1392,7 @@ def build_v5_stored_payload(
         evidence_refs=[f"metric:{inputs.metric_id}"]
         + [f"candidate:{candidate_id}" for candidate_id in candidate_ids],
         context_candidate_ids=candidate_ids,
+        resolution_rules=inputs.resolution_rules,
     )
 
 
@@ -1380,7 +1407,19 @@ def _normalized_specific_tokens(text: str) -> set[str]:
 
 def _v5_is_issue_specific(fields: V5LLMFields, inputs: V4ReportInputs) -> bool:
     input_tokens = _normalized_specific_tokens(
-        " ".join(filter(None, (inputs.title, inputs.description, inputs.outcome_label)))
+        " ".join(
+            filter(
+                None,
+                (
+                    inputs.title,
+                    inputs.description,
+                    inputs.outcome_label,
+                    inputs.resolution_rules.condition_text
+                    if inputs.resolution_rules is not None
+                    else None,
+                ),
+            )
+        )
     )
     # The lead section must itself identify the issue. A specific name hidden in
     # a later checklist must not rescue a reusable, generic executive summary.
@@ -1423,6 +1462,16 @@ def _v5_uses_only_evidence_numbers(fields: V5LLMFields, inputs: V4ReportInputs) 
         str(inputs.current_value * 100),
         "24 7",
     ]
+    if inputs.resolution_rules is not None:
+        allowed_parts.extend(
+            (
+                inputs.resolution_rules.condition_text,
+                inputs.resolution_rules.deadline.isoformat()
+                if inputs.resolution_rules.deadline
+                else None,
+                *inputs.resolution_rules.exclusions,
+            )
+        )
     for change in (inputs.change_24h, inputs.change_7d):
         if change is not None:
             allowed_parts.extend((str(change), str(change * 100)))

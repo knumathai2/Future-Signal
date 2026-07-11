@@ -22,6 +22,7 @@ from app.core.ai_report import (
     OpenAIReportClient,
     ReportContent,
     ReportPromptInputs,
+    ResolutionRulesInput,
     V4ContextSource,
     V4LLMFields,
     V4ReportInputs,
@@ -902,6 +903,15 @@ def test_v5_prompt_and_parser_use_exact_six_field_contract():
     inputs = _v4_inputs(
         title="Will JD Vance win the US Presidential Election?",
         description="Tracks whether JD Vance wins the documented election.",
+        resolution_rules=ResolutionRulesInput(
+            condition_text="JD Vance is recorded as the winner in the official result.",
+            deadline=datetime(2026, 12, 31, tzinfo=UTC),
+            exclusions=["An unofficial projection does not satisfy the condition."],
+            resolution_source="https://example.gov/elections/result",
+            source_description_hash="description-hash",
+            rules_hash="rules-hash",
+            collected_at=datetime(2026, 7, 11, 7, 0, tzinfo=UTC),
+        ),
     )
     system_prompt, user_prompt = build_v5_prompt(inputs)
 
@@ -910,6 +920,8 @@ def test_v5_prompt_and_parser_use_exact_six_field_contract():
     assert "verified_context_candidates" in user_prompt
     assert '"display_value_percent":63.0' in user_prompt
     assert '"display_change_24h_percentage_points":8.0' in user_prompt
+    assert '"condition_text":"JD Vance is recorded as the winner' in user_prompt
+    assert '"resolution_source":"https://example.gov/elections/result"' in user_prompt
     raw = json.dumps(_v5_fields().model_dump(), ensure_ascii=False)
     assert parse_v5_llm_fields(raw) == _v5_fields()
     assert (
