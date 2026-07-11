@@ -18,12 +18,11 @@ historical v1-v6 archive followed by separately approved cleanup.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-107 | Review cache, concurrency, evidence, copy, and failure behavior | Reviewer | Reviewer | `review/TASK-107-v7-integration-review` | assigned |
 | TASK-108 | Run a bounded development v6-v7 quality and cost comparison | Data/AI / Reviewer | Data/AI Implementer | `data-ai/TASK-108-v7-development-evaluation` | assigned |
 | TASK-109 | Remove superseded v1-v6 runtime code after v7 acceptance | Reviewer / Implementers | Reviewer | `review/TASK-109-legacy-report-cleanup` | assigned |
 
-TASK-101~106 are complete under the user's approval of TASK-099 items 1-7.
-TASK-107 is next. TASK-108 may use bounded provider calls
+TASK-101~107 are complete under the user's approval of TASK-099 items 1-7.
+TASK-108 is next and may use bounded provider calls
 and append-only local/development writes.
 
 Deployment and production writes remain outside the approved program.

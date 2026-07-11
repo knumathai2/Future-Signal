@@ -80,6 +80,10 @@ for (const raw of [
   { status: "failed", request_id: requestId, error_code: "generation_failed" },
   report(),
   report({
+    generated_at: "2026-07-11T09:05:00+00:00",
+    data_as_of: "2026-07-11T09:00:00.123456Z",
+  }),
+  report({
     status: "stale",
     cache: {
       state: "stale",

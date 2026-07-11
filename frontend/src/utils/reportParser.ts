@@ -61,6 +61,10 @@ function timestamp(value: unknown): string | null {
   return Number.isFinite(Date.parse(value)) ? value : null;
 }
 
+function after(left: string, right: string) {
+  return Date.parse(left) > Date.parse(right);
+}
+
 function uuid(value: unknown): value is string {
   return typeof value === "string" && UUID.test(value);
 }
@@ -107,7 +111,7 @@ function parseSource(raw: unknown, generatedAt: string): V7ReportSource | null {
     !title ||
     !domain ||
     !retrievedAt ||
-    retrievedAt > generatedAt ||
+    after(retrievedAt, generatedAt) ||
     !["A", "B", "C"].includes(String(raw.source_level)) ||
     !Array.isArray(raw.supported_claims) ||
     raw.supported_claims.length < 1 ||
@@ -221,9 +225,9 @@ function parseFull(raw: Record<string, unknown>): V7IssueReportResponse | null {
     !summary ||
     !generatedAt ||
     !dataAsOf ||
-    dataAsOf > generatedAt ||
+    after(dataAsOf, generatedAt) ||
     (raw.context_as_of !== null && !contextAsOf) ||
-    (contextAsOf && contextAsOf > generatedAt) ||
+    (contextAsOf && after(contextAsOf, generatedAt)) ||
     !limitations ||
     !caution ||
     !Array.isArray(raw.sections) ||
