@@ -174,26 +174,58 @@ def _v5_fields(*, with_context=True, **overrides) -> V5LLMFields:
             "JD Vance의 미국 대통령 선거 당선 조건을 다루는 이슈입니다. 공개 데이터에 "
             "저장된 현재 값과 최근 비교 구간의 움직임을 함께 읽되 현실의 결과로 해석하지 않습니다."
         ),
-        "issue_context": (
-            "이 항목은 JD Vance가 정해진 미국 대통령 선거에서 당선되는지라는 문서 조건을 "
-            "기준일까지 확인합니다."
-        ),
-        "change_interpretation": (
+        "current_data_interpretation": (
             "저장된 현재 값과 최근 비교값은 참여자 데이터의 관찰 흐름을 보여줍니다. "
             "이 움직임만으로 현실의 결과나 배경을 판단할 수 없습니다."
         ),
+        "conditional_scenarios": [
+            {
+                "title": "조건 확인",
+                "narrative": (
+                    "만약 JD Vance의 당선 조건이 공식 선거 문서에서 확인된다면 "
+                    "해당 판정 조건과 함께 읽습니다."
+                ),
+            },
+            {
+                "title": "부분 확인",
+                "narrative": (
+                    "만약 JD Vance 관련 문서가 공개되지만 당선 조건을 충족하는지 "
+                    "불분명한 경우 추가 문서를 확인합니다."
+                ),
+            },
+            {
+                "title": "조건 미확인",
+                "narrative": (
+                    "만약 기준일까지 JD Vance의 당선 조건이 공식 문서에서 "
+                    "확인되지 않는다면 미확인 상태로 구분합니다."
+                ),
+            },
+        ],
+        "factors_to_check": [
+            {
+                "title": "판정 문서",
+                "explanation": "JD Vance와 선거 결과를 명시한 공식 문서의 조건을 확인합니다.",
+            },
+            {
+                "title": "기준 시각",
+                "explanation": "문서가 이 이슈의 정해진 기준일 안에 공개됐는지 확인합니다.",
+            },
+        ],
+        "signals_to_watch": [
+            {
+                "title": "공식 문서 공개",
+                "explanation": "JD Vance 관련 공식 선거 문서의 공개 여부를 관찰합니다.",
+            },
+            {
+                "title": "데이터 갱신",
+                "explanation": "공개 예측시장 데이터의 이후 갱신 시각과 값을 별도로 확인합니다.",
+            },
+        ],
         "evidence_synthesis": (
             "같은 검토 구간의 공개 정보 업데이트는 해당 조건과 관련된 기록을 제공합니다. "
             "이 자료와 관찰된 움직임 사이의 관계는 확인되지 않았습니다."
             if with_context
             else None
-        ),
-        "open_questions": (
-            "후속 공식 문서에서 후보와 판정 조건이 어떻게 명시되는지는 아직 확인이 필요합니다."
-        ),
-        "what_to_watch": (
-            "공식 선거 문서와 후보 관련 발표, 이후 공개 데이터의 갱신 내용을 "
-            "차례로 확인할 수 있습니다."
         ),
     }
     values.update(overrides)
@@ -918,10 +950,16 @@ def test_v5_rejects_generic_or_duplicated_narrative():
             "함께 확인하되 현실의 결과를 뜻하는 것으로 해석하지 않습니다. 저장된 근거의 "
             "범위를 벗어난 배경이나 결과는 이 요약에서 판단하지 않습니다."
         ),
-        issue_context=(
-            "정해진 기준일까지 문서 조건이 확인되는지를 살펴보는 일반 항목입니다. "
-            "조건의 충족 여부는 이후 공개되는 문서에서 별도로 확인해야 합니다."
-        ),
+        factors_to_check=[
+            {
+                "title": "문서 확인",
+                "explanation": "정해진 문서 조건을 이후 공개 자료에서 확인합니다.",
+            },
+            {
+                "title": "시각 확인",
+                "explanation": "정해진 기준일 안의 공개 여부를 함께 확인합니다.",
+            },
+        ],
     )
     generic_content = assemble_v5_report_content(inputs, generic)
     generic_payload = build_v5_stored_payload(inputs, generic_content)
@@ -936,8 +974,20 @@ def test_v5_rejects_generic_or_duplicated_narrative():
     )
     duplicated = _v5_fields(
         with_context=False,
-        open_questions=duplicate_text,
-        what_to_watch=duplicate_text,
+        factors_to_check=[
+            {"title": "공식 문서", "explanation": duplicate_text},
+            {
+                "title": "판정 조건",
+                "explanation": "JD Vance 선거 판정 조건을 공식 기록에서 확인합니다.",
+            },
+        ],
+        signals_to_watch=[
+            {"title": "공식 발표", "explanation": duplicate_text},
+            {
+                "title": "데이터 갱신",
+                "explanation": "JD Vance 관련 공개 데이터의 갱신을 확인합니다.",
+            },
+        ],
     )
     duplicated_content = assemble_v5_report_content(inputs, duplicated)
     duplicated_payload = build_v5_stored_payload(inputs, duplicated_content)
@@ -961,3 +1011,23 @@ def test_v5_rejects_evidence_synthesis_without_verified_candidate():
         run_v5_safety_and_semantic_checks(payload, inputs, fields).rule
         == "evidence_synthesis_presence_mismatch"
     )
+
+
+def test_v5_rejects_unsupported_numbers_and_nonconditional_scenarios():
+    inputs = _v4_inputs(with_context=False)
+    fields = _v5_fields(
+        with_context=False,
+        current_data_interpretation=(
+            "저장된 현재 값은 99%이며 최근 비교 구간의 참여자 데이터와 함께 읽습니다. "
+            "이 값만으로 현실의 결과를 판단할 수 없습니다."
+        ),
+    )
+    content = assemble_v5_report_content(inputs, fields)
+    payload = build_v5_stored_payload(inputs, content)
+
+    assert run_v5_safety_and_semantic_checks(payload, inputs, fields).rule == "unsupported_number"
+    invalid = fields.model_dump()
+    invalid["conditional_scenarios"][0]["narrative"] = (
+        "JD Vance 관련 공식 문서와 판정 조건을 순서대로 확인합니다."
+    )
+    assert parse_v5_llm_fields(json.dumps(invalid, ensure_ascii=False)) is None

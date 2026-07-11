@@ -174,13 +174,18 @@ returns exactly six model-authored fields:
 ```json
 {
   "executive_summary": "...",
-  "issue_context": "...",
-  "change_interpretation": "...",
-  "evidence_synthesis": null,
-  "open_questions": "...",
-  "what_to_watch": "..."
+  "current_data_interpretation": "...",
+  "conditional_scenarios": [{"title": "...", "narrative": "..."}],
+  "factors_to_check": [{"title": "...", "explanation": "..."}],
+  "signals_to_watch": [{"title": "...", "explanation": "..."}],
+  "evidence_synthesis": null
 }
 ```
+
+`conditional_scenarios` contains three or four distinct conditional items.
+Every authored number must match the supplied metric/market/evidence values;
+generic lead text, non-conditional scenarios, and market/forecast-page sources
+fail before storage.
 
 The stored envelope also carries the episode, metric ID, verified candidate
 IDs, and ordered evidence references. Deterministic builders add

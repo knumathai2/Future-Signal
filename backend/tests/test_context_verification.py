@@ -268,6 +268,19 @@ def test_republished_content_with_only_spacing_changes_is_not_independent():
     assert gate.reason_code == "insufficient_independent_sources"
 
 
+def test_market_and_forecast_pages_never_count_as_public_evidence():
+    citation = _citation(url="https://polymarket.com/event/example-market")
+
+    gate = deterministic_gate(
+        _inputs(allowed_domains=[], resolution_source=None),
+        _candidate(),
+        [citation],
+    )
+
+    assert gate.passed is False
+    assert gate.reason_code == "market_or_forecast_page"
+
+
 @pytest.mark.parametrize(
     ("candidate", "reason"),
     [
@@ -290,7 +303,7 @@ def test_hard_gate_rejects_model_inventions_and_unsafe_relationships(candidate, 
 def test_source_date_conflict_rejects_candidate():
     citation = _citation(
         title="Published condition update",
-        content="Published condition is confirmed in the record dated July 10, 2026."
+        content="Published condition is confirmed in the record dated July 10, 2026.",
     )
     gate = deterministic_gate(_inputs(), _candidate(), [citation])
 
@@ -345,9 +358,7 @@ def test_verifier_model_must_use_a_different_provider_family():
 
 def test_verifier_malformed_output_and_timeout_fail_closed_without_secrets():
     malformed, _ = _verifier(
-        SimpleNamespace(
-            choices=[SimpleNamespace(message=SimpleNamespace(content='{"wrong": []}'))]
-        )
+        SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content='{"wrong": []}'))])
     )
     with pytest.raises(ContextVerificationError, match="invalid JSON"):
         verify_research_result(_inputs(), _research(), malformed)
@@ -377,9 +388,7 @@ def test_rule_and_verifier_limits_are_deterministic():
     )
 
     assert len(result.verified) == 5
-    assert [item.reason_code for item in result.decisions[5:8]] == [
-        "verifier_candidate_limit"
-    ] * 3
+    assert [item.reason_code for item in result.decisions[5:8]] == ["verifier_candidate_limit"] * 3
     assert result.decisions[8].reason_code == "rule_passing_candidate_limit"
     sent = json.loads(fake.completions.calls[0]["messages"][1]["content"].split("\n", 1)[1])
     assert len(sent) == 5

@@ -19,7 +19,7 @@ excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-077 | Improve verified article and official-source retrieval quality | Data/AI | Data/AI Implementer | `data-ai/TASK-077-source-retrieval-quality` | in_progress |
+| TASK-078 | Implement v5 report storage and public API contract | Backend | Backend Implementer | `backend/TASK-078-narrative-report-api` | in_progress |
 
 Exact dependencies, ownership, acceptance criteria, handoffs, and stop
 conditions are binding in
