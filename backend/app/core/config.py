@@ -57,6 +57,16 @@ def _bounded_int(raw_value: str | None, *, default: int, minimum: int, maximum: 
     return min(max(value, minimum), maximum)
 
 
+def _bounded_float(
+    raw_value: str | None, *, default: float, minimum: float, maximum: float
+) -> float:
+    try:
+        value = float(raw_value) if raw_value is not None else default
+    except ValueError:
+        return default
+    return min(max(value, minimum), maximum)
+
+
 class Settings:
     def __init__(self) -> None:
         self.env: str = os.getenv("ENV", "local")
@@ -125,6 +135,30 @@ class Settings:
             default=CONTEXT_MAX_RESULTS_PER_QUERY,
             minimum=1,
             maximum=25,
+        )
+        self.context_change_threshold: float = _bounded_float(
+            os.getenv("CONTEXT_CHANGE_THRESHOLD"),
+            default=0.05,
+            minimum=0.0,
+            maximum=1.0,
+        )
+        self.context_staleness_hours: int = _bounded_int(
+            os.getenv("CONTEXT_STALENESS_HOURS"),
+            default=24,
+            minimum=1,
+            maximum=168,
+        )
+        self.context_budget_usd: float = _bounded_float(
+            os.getenv("CONTEXT_BUDGET_USD"),
+            default=100.0,
+            minimum=0.0,
+            maximum=100.0,
+        )
+        self.context_cost_reservation_usd: float = _bounded_float(
+            os.getenv("CONTEXT_COST_RESERVATION_USD"),
+            default=2.0,
+            minimum=0.01,
+            maximum=100.0,
         )
 
 

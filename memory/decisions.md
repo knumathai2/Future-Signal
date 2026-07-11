@@ -755,6 +755,39 @@ failures. Fixed-fixture decisions are deterministic.
 
 ---
 
+### ADR-042: Context batch is per-market append-only and budget-reserved
+
+- **Date**: 2026-07-11
+- **Status**: Accepted
+- **Decided by**: Data/AI Implementer within ADR-038 execution approval
+
+**Context**: TASK-060 needed to add paid-capable research to the scheduled
+batch without letting one market failure, duplicate evidence, or provider cost
+damage the existing pipeline.
+
+**Decision**: Select targets by current-run signal, absolute 24-hour change,
+top-10 heat, or missing/stale verified context; backfill may select every latest
+eligible metric. Run research and verification in one isolated market unit,
+store all audit decisions append-only, return only verified candidate IDs, cap
+public candidates at three, and record `no_candidate` as a normal completion.
+Treat duplicate market/episode/evidence rows as idempotent references to the
+existing row. Persist secret-free research/verifier usage and errors per run.
+Before every market, sum recorded research/verifier/writer costs and skip the
+call when current spend plus the configured reservation would exceed the
+ADR-038 USD 100 cap. The scheduled order is signals → context → reports.
+
+**Rationale**: Market isolation preserves last-known-good context and reports,
+while append-only audit rows make cost and publication decisions reproducible.
+Pre-call reservation keeps the program inside the approved external-call
+boundary even before TASK-065 performs a live run.
+
+**Consequences**: Context failure makes the combined log partial but does not
+block other markets or the existing report stage. TASK-061 must consume only
+verified stored candidates and add writer usage to the same cumulative budget
+accounting boundary.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07
