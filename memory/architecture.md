@@ -25,7 +25,7 @@ Polymarket public APIs (Gamma + CLOB)
 Batch Collector (Python) -- fetch -> normalize -> snapshot -> metrics -> signals -> verified context -> evidence-grounded reports -> logs
         |  writes
         v
-PostgreSQL -- existing tables + approved v4 context_candidates / context_collection_runs
+PostgreSQL -- existing tables + context evidence + unapplied resolution-rule extension
         |  reads only
         v
 FastAPI backend (read-only REST API) -- /api/issues /api/issues/:id /api/issues/:id/history /api/issues/:id/report ...
@@ -54,6 +54,10 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
     unique, bounded provider reformulations with normalized distinctive
     topic/entity overlap. Reported queries are retained in run audit JSON; the
     annotation, source, verifier, publication, and budget gates are unchanged
+11. TASK-083 preserves exact source resolution evidence in live normalized
+    collector output and appends changed definitions to
+    `market_resolution_rules`; checked/local JSON artifacts still omit raw
+    source descriptions. Migration 003 is checked in but not applied.
 
 ## Design Decision Summary
 
@@ -75,6 +79,7 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 | Migration format (interim) | Plain SQL (`backend/migrations/*.sql`), not Alembic | 2026-07-08 (ADR-007) |
 | Automated context v4 | Citation annotations + deterministic hard gates + different verifier model + verified-only public reads; cumulative USD 100, local/dev writes only | 2026-07-11 (ADR-038, human-approved) |
 | Evidence-bounded narrative v5 | Six authored narrative fields plus deterministic relationship/limitation/caution fields; verified exact-source links; genericity/evidence/safety gates | 2026-07-11 (ADR-048, human-approved) |
+| Resolution-rule evidence | Separate append-only source condition/deadline/exclusion/source records from display copy; hash-idempotent versions | 2026-07-11 (ADR-049, human-approved code change) |
 | Server-tool query scope | Deterministic anchors + bounded normalized metadata overlap; exact reported strings audited | 2026-07-11 (ADR-047, human-approved) |
 
 ## Architecture Constraints

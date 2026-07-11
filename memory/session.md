@@ -16,7 +16,7 @@ Harness Version: 1.1
 - **Date**: 2026-07-11
 - **Agent Role**: Data/AI Implementer
 - **Session Goal**: Execute the TASK-082~091 AI-report grounding program in dependency order.
-- **Branch**: `data-ai/TASK-082-grounding-contract`
+- **Branch**: `backend/TASK-083-resolution-rules-storage`
 
 ## Context Read
 
@@ -24,6 +24,14 @@ Harness Version: 1.1
 - TASK-065 backfill, audit, API, wording, browser, and budget criteria
 
 ## Work Completed
+
+- Received explicit user approval for the planned database-schema and public
+  API code changes; database application, deployment, and external calls remain
+  excluded.
+- Completed TASK-083 with unapplied migration 003, the append-only ORM model,
+  exact source-rule normalization, safe artifact separation, and idempotent
+  per-market rule storage.
+- Verified 25 focused tests and Ruff; no non-test database was touched.
 
 - Completed TASK-082 without changing product code or guarded contracts.
 - Fixed the resolution-rule provenance model, four evidence classes,

@@ -1,3 +1,4 @@
+import hashlib
 import json
 import logging
 import urllib.error
@@ -99,6 +100,48 @@ def build_display_description(category: str) -> str:
     )
 
 
+def build_resolution_rules(
+    market: dict[str, Any],
+    event: dict[str, Any],
+    *,
+    collected_at: datetime,
+) -> dict[str, Any]:
+    """Preserve source resolution evidence separately from display copy.
+
+    The collector deliberately does not infer exclusions or procedural stages.
+    Only exact source fields are retained; missing source values stay null or
+    empty so downstream completeness gates can fail closed.
+    """
+    condition_text = market.get("description") or event.get("description") or None
+    deadline = market.get("endDate") or event.get("endDate") or None
+    resolution_source = market.get("resolutionSource") or event.get("resolutionSource") or None
+    source_description_hash = (
+        hashlib.sha256(condition_text.encode("utf-8")).hexdigest()
+        if isinstance(condition_text, str) and condition_text
+        else None
+    )
+    canonical = json.dumps(
+        {
+            "condition_text": condition_text,
+            "deadline": deadline,
+            "exclusions": [],
+            "resolution_source": resolution_source,
+        },
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    return {
+        "condition_text": condition_text,
+        "deadline": deadline,
+        "exclusions": [],
+        "resolution_source": resolution_source,
+        "source_description_hash": source_description_hash,
+        "rules_hash": hashlib.sha256(canonical.encode("utf-8")).hexdigest(),
+        "collected_at": collected_at.isoformat(),
+    }
+
+
 def build_market_candidate(
     market: dict[str, Any],
     event_end_date: Any,
@@ -154,8 +197,10 @@ def build_market_candidate(
 def normalize_event(
     item: dict[str, Any],
     as_of_date: date | None = None,
+    collected_at: datetime | None = None,
 ) -> tuple[dict[str, Any] | None, dict[str, Any] | None]:
-    as_of = as_of_date or datetime.now(UTC).date()
+    collected = collected_at or datetime.now(UTC)
+    as_of = as_of_date or collected.date()
     raw_tags = item.get("tags") or []
     slugs = tag_slugs(raw_tags)
     source_text = " ".join(
@@ -224,6 +269,11 @@ def normalize_event(
             ),
             "description_policy": "raw_source_descriptions_omitted",
         },
+        "resolution_rules": build_resolution_rules(
+            valid_market,
+            item,
+            collected_at=collected,
+        ),
     }
     return sample, None
 
@@ -239,6 +289,19 @@ def write_json(path: Path, payload: list[dict[str, Any]]) -> None:
     with path.open("w", encoding="utf-8") as file:
         json.dump(payload, file, indent=2)
         file.write("\n")
+
+
+def build_display_safe_artifact(samples: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Remove internal source-rule text from the reviewable JSON artifact.
+
+    Live collector return values retain ``resolution_rules`` for guarded DB
+    ingestion. The checked/local sample artifact keeps its existing display-safe
+    policy and cannot accidentally become a source of raw user-facing copy.
+    """
+    return [
+        {key: value for key, value in sample.items() if key != "resolution_rules"}
+        for sample in samples
+    ]
 
 
 def fetch_events(
@@ -288,7 +351,10 @@ def fetch_events(
         offset += limit
 
     output_path = Path(output_dir)
-    write_json(output_path / NORMALIZED_SAMPLES_PATH, samples)
+    write_json(
+        output_path / NORMALIZED_SAMPLES_PATH,
+        build_display_safe_artifact(samples),
+    )
     write_json(output_path / SKIPPED_RECORDS_PATH, skipped_records)
 
     logger.info("Successfully extracted %s samples.", len(samples))

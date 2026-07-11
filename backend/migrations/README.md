@@ -20,6 +20,11 @@ idempotent skips: the database rejects the duplicate and callers keep the
 existing row. Both new tables use `ON DELETE CASCADE` with their parent market,
 matching the lifecycle rule in `001_initial_schema.sql`.
 
+`003_market_resolution_rules.sql` is the ADR-049/TASK-083 append-only extension
+for provenance-preserving market resolution evidence. Its code implementation
+is approved, but this task does not apply it to any database. Database
+application remains a separate guarded operation.
+
 Once approved, running it against a real Postgres instance is:
 
 ```bash
