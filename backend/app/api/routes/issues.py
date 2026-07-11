@@ -330,6 +330,22 @@ def _issue_report_from_live(
         liquidity=float(snapshot.liquidity) if snapshot.liquidity is not None else None,
         context_candidates=candidate_inputs,
         resolution_rules=payload.resolution_rules,
+        value_24h_ago=(
+            float(live_report.reference_24h.price) if live_report.reference_24h else None
+        ),
+        value_24h_ago_at=(
+            _as_utc(live_report.reference_24h.captured_at)
+            if live_report.reference_24h
+            else None
+        ),
+        value_7d_ago=(
+            float(live_report.reference_7d.price) if live_report.reference_7d else None
+        ),
+        value_7d_ago_at=(
+            _as_utc(live_report.reference_7d.captured_at)
+            if live_report.reference_7d
+            else None
+        ),
     )
     llm_fields = V5LLMFields.model_validate(
         payload.content.model_dump(

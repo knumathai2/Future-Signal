@@ -62,6 +62,9 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
     context-research inputs. New v5 payloads retain that rule snapshot so API
     reconstruction uses generation-time evidence; legacy payloads default to
     no rule evidence.
+13. TASK-088 reloads the closest snapshot at or before each 24h/7d metric
+    boundary, sends its value and timestamp to the writer, and revalidates that
+    the stored delta is reproducible during generation and API reconstruction.
 
 ## Design Decision Summary
 

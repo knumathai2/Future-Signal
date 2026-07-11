@@ -1126,6 +1126,27 @@ def test_v5_completeness_levels_are_deterministic():
     assert determine_input_completeness(missing_without_context) == "definition_missing_no_context"
 
 
+def test_v5_reference_values_are_paired_and_metric_consistent():
+    inputs = _v4_inputs(
+        value_24h_ago=0.55,
+        value_24h_ago_at=datetime(2026, 7, 10, 8, 0, tzinfo=UTC),
+        value_7d_ago=0.52,
+        value_7d_ago_at=datetime(2026, 7, 4, 8, 0, tzinfo=UTC),
+    )
+    _, user_prompt = build_v5_prompt(inputs)
+
+    assert '"value_24h_ago":0.55' in user_prompt
+    assert '"value_7d_ago":0.52' in user_prompt
+
+    with pytest.raises(ValueError, match="24h reference value and timestamp must be paired"):
+        _v4_inputs(value_24h_ago=0.55)
+    with pytest.raises(ValueError, match="24h reference value does not match stored change"):
+        _v4_inputs(
+            value_24h_ago=0.50,
+            value_24h_ago_at=datetime(2026, 7, 10, 8, 0, tzinfo=UTC),
+        )
+
+
 @pytest.mark.parametrize(
     "executive_summary",
     [

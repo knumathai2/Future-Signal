@@ -979,6 +979,21 @@ def test_v4_inputs_load_only_verified_same_episode_candidates_with_sources(db):
     assert inputs.data_as_of == NOW
 
 
+def test_v4_inputs_load_reference_values_at_or_before_window_boundaries(db):
+    market, metric, _ = _seed_v4_metric_state(db, with_context=False)
+    db.add(_snapshot(MARKET_ID, NOW - timedelta(hours=25), price=0.55))
+    db.add(_snapshot(MARKET_ID, NOW - timedelta(days=8), price=0.53))
+    db.commit()
+
+    inputs = build_v4_inputs_for_market(db, market, metric, NOW)
+
+    assert inputs is not None
+    assert inputs.value_24h_ago == pytest.approx(0.55)
+    assert inputs.value_24h_ago_at == NOW - timedelta(hours=25)
+    assert inputs.value_7d_ago == pytest.approx(0.53)
+    assert inputs.value_7d_ago_at == NOW - timedelta(days=8)
+
+
 def test_v4_success_stores_payload_with_metric_and_candidate_evidence(db):
     _, metric, candidate_id = _seed_v4_metric_state(db)
     client = FakeV4LLMClient([json.dumps(VALID_V4_RESPONSE, ensure_ascii=False)])
