@@ -27,8 +27,10 @@ class FakeCompletions:
         self.response = response
         self.error = error
         self.kwargs = None
+        self.calls = 0
 
     def create(self, **kwargs):
+        self.calls += 1
         self.kwargs = kwargs
         if self.error:
             raise self.error
@@ -242,6 +244,19 @@ def test_malformed_or_out_of_bounds_model_output_fails_closed(content):
 
     with pytest.raises(ContextResearchError, match="invalid JSON"):
         client.research(_inputs())
+
+
+def test_invalid_json_retries_once_and_retains_billed_usage():
+    client, fake = _client(_response(content="not-json", cost=0.05))
+
+    with pytest.raises(ContextResearchError, match="invalid JSON"):
+        client.research(_inputs())
+
+    assert fake.completions.calls == 2
+    assert client.last_usage.input_tokens == 200
+    assert client.last_usage.output_tokens == 40
+    assert client.last_usage.web_search_requests == 2
+    assert client.last_usage.cost_usd == 0.1
 
 
 def test_timeout_is_wrapped_without_prompt_or_key_details():

@@ -219,6 +219,7 @@ def run_scheduled_batch(
     context_research_client: OpenRouterContextResearchClient | None = None,
     context_verifier: IndependentVerifierClient | None = None,
     context_backfill: bool = False,
+    context_max_markets: int | None = None,
     reports_only: bool = False,
     record_log: bool = True,
 ) -> ScheduledBatchResult:
@@ -262,6 +263,7 @@ def run_scheduled_batch(
                 staleness=timedelta(hours=settings.context_staleness_hours),
                 budget_usd=settings.context_budget_usd,
                 cost_reservation_usd=settings.context_cost_reservation_usd,
+                max_targets=context_max_markets,
             )
         else:
             result.context_outcomes = []
@@ -348,6 +350,12 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="Research every latest eligible metric once; local/dev writes only.",
     )
     parser.add_argument(
+        "--context-max-markets",
+        type=int,
+        default=None,
+        help="Cap context research targets for one guarded local/dev run.",
+    )
+    parser.add_argument(
         "--confirm-local-dev-write",
         action="store_true",
         help="Required before this command writes to the configured local/dev DB.",
@@ -420,6 +428,7 @@ def main() -> int:
             context_research_client=context_research_client,
             context_verifier=context_verifier,
             context_backfill=args.context_backfill,
+            context_max_markets=args.context_max_markets,
             reports_only=args.reports_only,
         )
     finally:

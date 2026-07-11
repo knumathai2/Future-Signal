@@ -17,7 +17,7 @@ Deployment and production-database writes remain excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-065 | Run local/dev backfill and record demo evidence | Data/AI Implementer + PM | Data/AI Implementer + PM / Planner | `data-ai/TASK-065-context-backfill` | in_progress |
+| TASK-065 | Run local/dev backfill and record demo evidence | Data/AI Implementer + PM | Data/AI Implementer + PM / Planner | `data-ai/TASK-065-context-backfill` | blocked |
 
 Exact dependencies, file ownership, acceptance criteria, verification commands,
 handoffs, and stop conditions are binding in

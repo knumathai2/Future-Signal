@@ -114,7 +114,7 @@ class _ProviderCandidate(BaseModel):
     title: str = Field(min_length=1)
     event_at: datetime | None
     citation_urls: list[str] = Field(min_length=1, max_length=30)
-    matched_entities: list[str] = Field(default_factory=list, max_length=20)
+    matched_entities: list[str] = Field(max_length=20)
     matched_condition: str = Field(min_length=1)
     temporal_relation: Literal["before_window", "same_window", "after_window"]
 
@@ -211,11 +211,14 @@ def _build_user_prompt(inputs: ResearchInputs, queries: list[str]) -> str:
     payload = inputs.model_dump(mode="json")
     payload["suggested_queries"] = queries
     return (
-        "Research this change episode using only the suggested queries. Return JSON with "
+        "You must execute at least one web search before answering. Research this change "
+        "episode using only the suggested queries. Return JSON with "
         'exactly {"queries": [string], "candidates": [{"candidate_key": string, '
         '"title": string, "event_at": ISO-8601|null, "citation_urls": [string], '
         '"matched_entities": [string], "matched_condition": string, '
         '"temporal_relation": "before_window"|"same_window"|"after_window"}]}. '
+        "The queries array must copy exact strings from suggested_queries; never "
+        "rewrite, translate, or list a tool-generated variant. "
         "Every citation_urls value must exactly match a search-result URL.\n"
         + json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
     )
@@ -283,6 +286,16 @@ def _parse_usage(raw_usage: Any) -> ResearchUsage:
     )
 
 
+def _combine_usage(left: ResearchUsage, right: ResearchUsage) -> ResearchUsage:
+    costs = [cost for cost in (left.cost_usd, right.cost_usd) if cost is not None]
+    return ResearchUsage(
+        input_tokens=left.input_tokens + right.input_tokens,
+        output_tokens=left.output_tokens + right.output_tokens,
+        web_search_requests=left.web_search_requests + right.web_search_requests,
+        cost_usd=round(sum(costs), 8) if costs else None,
+    )
+
+
 class OpenRouterContextResearchClient:
     """OpenAI-SDK transport configured for OpenRouter's web-search server tool."""
 
@@ -300,14 +313,33 @@ class OpenRouterContextResearchClient:
     ) -> None:
         self._client = client
         self._model = model
+        self.model = model
         self._engine = engine
         self._max_search_queries = min(max(max_search_queries, 1), CONTEXT_MAX_SEARCH_QUERIES)
         self._max_search_results = min(max(max_search_results, 1), CONTEXT_MAX_SEARCH_RESULTS)
         self._max_results_per_query = min(max(max_results_per_query, 1), 25)
         self._extra_headers = extra_headers or {}
         self._clock = clock or (lambda: datetime.now(UTC))
+        self.last_usage = ResearchUsage()
 
     def research(self, inputs: ResearchInputs) -> ContextResearchResult:
+        accumulated = ResearchUsage()
+        for attempt in range(2):
+            try:
+                result = self._research_once(inputs)
+            except ContextResearchError:
+                accumulated = _combine_usage(accumulated, self.last_usage)
+                self.last_usage = accumulated
+                if attempt == 1:
+                    raise
+                continue
+            combined = _combine_usage(accumulated, result.usage)
+            self.last_usage = combined
+            return result.model_copy(update={"usage": combined})
+        raise ContextResearchError("OpenRouter context research failed after retry")
+
+    def _research_once(self, inputs: ResearchInputs) -> ContextResearchResult:
+        self.last_usage = ResearchUsage()
         queries = build_search_queries(inputs, limit=self._max_search_queries)
         parameters: dict[str, Any] = {
             "engine": self._engine,
@@ -343,6 +375,9 @@ class OpenRouterContextResearchClient:
                 f"OpenRouter context research failed: {type(exc).__name__}"
             ) from exc
 
+        usage = _parse_usage(getattr(response, "usage", None))
+        self.last_usage = usage
+
         if not response.choices:
             raise ContextResearchError("OpenRouter context research returned no choice")
         message = response.choices[0].message
@@ -357,7 +392,6 @@ class OpenRouterContextResearchClient:
         if not set(raw_output.queries).issubset(queries):
             raise ContextResearchError("OpenRouter reported a query outside the allowlist")
 
-        usage = _parse_usage(getattr(response, "usage", None))
         if usage.web_search_requests > self._max_search_queries:
             raise ContextResearchError("OpenRouter exceeded the search-query limit")
 
