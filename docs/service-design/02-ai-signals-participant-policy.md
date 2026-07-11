@@ -66,8 +66,9 @@ content remains available when the provider fails.
 ### 6.9 Approved v5 narrative-summary contract (ADR-048)
 
 TASK-075~081 supersedes v4's two model-authored fields with six fixed narrative
-fields: `executive_summary`, `issue_context`, `change_interpretation`, nullable
-`evidence_synthesis`, `open_questions`, and `what_to_watch`. The model may write
+fields: `executive_summary`, `current_data_interpretation`,
+`conditional_scenarios`, `factors_to_check`, `signals_to_watch`, and nullable
+`evidence_synthesis`. The model may write
 natural Korean prose inside those fields, but it may use only the supplied
 market definition, stored metric/snapshot values, and same-episode verified
 context candidates. This is structured narrative generation, not evidence-free
@@ -84,6 +85,12 @@ Verified source cards expose the exact stored title, domain, publication time,
 source type, and URL. No verified candidate means `evidence_synthesis=null` and
 an explicit UI state that no source passed the public criteria; the system must
 not substitute an unverified article or generic search link.
+
+TASK-077 further requires three or four explicitly conditional scenarios,
+typed issue-specific check/watch items, title/entity/condition/date/official-
+domain search anchors, and deterministic rejection of market-listing or
+forecast pages. These improvements do not weaken the same-window, official-
+source, independent-source, annotation, or verifier gates.
 
 ---
 

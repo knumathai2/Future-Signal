@@ -391,8 +391,7 @@ _DATA_LIMITATIONS_BASELINE = (
     "이 읽기는 활동량, 유동성, 24시간 변화 폭, 24시간 및 7일 이력 범위의 영향을 받습니다."
 )
 _DATA_LIMITATIONS_MISSING_HISTORY = (
-    "필요한 24시간 또는 7일 비교 지점 중 하나 이상이 없어 방향, 크기, "
-    "연속성을 판단할 수 없습니다."
+    "필요한 24시간 또는 7일 비교 지점 중 하나 이상이 없어 방향, 크기, 연속성을 판단할 수 없습니다."
 )
 _DATA_LIMITATIONS_LOW_ACTIVITY = (
     "24시간 활동량 또는 유동성이 없거나 설정된 하한보다 낮아 관찰된 변화가 "
@@ -1193,28 +1192,64 @@ def run_v4_safety_and_semantic_checks(
 V5_PROMPT_VERSION = "v5"
 V5_SYSTEM_PROMPT = """\
 Write a useful Korean issue summary from only the supplied structured evidence.
-Return strict JSON with exactly six fields: executive_summary, issue_context,
-change_interpretation, evidence_synthesis, open_questions, and what_to_watch.
+Return strict JSON with exactly six fields: executive_summary,
+current_data_interpretation, conditional_scenarios, factors_to_check,
+signals_to_watch, and evidence_synthesis.
 Use natural, issue-specific prose. Do not write generic filler that could apply
 to an unrelated issue. Do not add facts, names, dates, numbers, events, sources,
 URLs, relationships, forecasts, or outcomes that are absent from the evidence.
 Never state or imply that a cited event explains an observed data movement.
+conditional_scenarios must contain three or four distinct items. Each item must
+have a short title and a narrative beginning with a Korean conditional expression
+such as "만약" and may describe only conditions present in the supplied market
+definition or verified evidence. factors_to_check and signals_to_watch must be
+concrete issue-specific arrays, each item pairing a title with an explanation.
 evidence_synthesis must be null when verified_context_candidates is empty and
 must be grounded only in those candidates when they exist. Return JSON only.
 """
+
+
+class V5ConditionalScenario(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    title: str = Field(min_length=2, max_length=100)
+    narrative: str = Field(min_length=30, max_length=900)
+
+    @field_validator("narrative")
+    @classmethod
+    def require_conditional_language(cls, value: str) -> str:
+        if not any(token in value for token in ("만약", "경우", "확인된다면", "확인되지 않는다면")):
+            raise ValueError("V5 scenarios must use explicit conditional language.")
+        if _sentence_count(value) > 5:
+            raise ValueError("V5 scenario narratives must contain at most five sentences.")
+        return value
+
+
+class V5BriefingItem(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    title: str = Field(min_length=2, max_length=120)
+    explanation: str = Field(min_length=20, max_length=700)
+
+    @field_validator("explanation")
+    @classmethod
+    def limit_sentence_count(cls, value: str) -> str:
+        if _sentence_count(value) > 4:
+            raise ValueError("V5 briefing items must contain at most four sentences.")
+        return value
 
 
 class V5LLMFields(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     executive_summary: str = Field(min_length=80, max_length=1200)
-    issue_context: str = Field(min_length=50, max_length=1000)
-    change_interpretation: str = Field(min_length=50, max_length=1000)
+    current_data_interpretation: str = Field(min_length=50, max_length=1200)
+    conditional_scenarios: list[V5ConditionalScenario] = Field(min_length=3, max_length=4)
+    factors_to_check: list[V5BriefingItem] = Field(min_length=2, max_length=6)
+    signals_to_watch: list[V5BriefingItem] = Field(min_length=2, max_length=6)
     evidence_synthesis: str | None = Field(default=..., min_length=50, max_length=1800)
-    open_questions: str = Field(min_length=30, max_length=900)
-    what_to_watch: str = Field(min_length=30, max_length=900)
 
-    @field_validator("*")
+    @field_validator("executive_summary", "current_data_interpretation", "evidence_synthesis")
     @classmethod
     def limit_sentence_count(cls, value: str | None) -> str | None:
         if value is not None and _sentence_count(value) > 5:
@@ -1323,24 +1358,64 @@ def _v5_is_issue_specific(fields: V5LLMFields, inputs: V4ReportInputs) -> bool:
     input_tokens = _normalized_specific_tokens(
         " ".join(filter(None, (inputs.title, inputs.description, inputs.outcome_label)))
     )
-    authored_tokens = _normalized_specific_tokens(
-        f"{fields.executive_summary} {fields.issue_context}"
-    )
+    # The lead section must itself identify the issue. A specific name hidden in
+    # a later checklist must not rescue a reusable, generic executive summary.
+    authored_tokens = _normalized_specific_tokens(fields.executive_summary)
     return bool(input_tokens & authored_tokens)
+
+
+def _v5_authored_text(fields: V5LLMFields) -> str:
+    values = [fields.executive_summary, fields.current_data_interpretation]
+    values.extend(f"{item.title} {item.narrative}" for item in fields.conditional_scenarios)
+    values.extend(f"{item.title} {item.explanation}" for item in fields.factors_to_check)
+    values.extend(f"{item.title} {item.explanation}" for item in fields.signals_to_watch)
+    if fields.evidence_synthesis is not None:
+        values.append(fields.evidence_synthesis)
+    return " ".join(values)
 
 
 def _v5_has_excessive_duplication(fields: V5LLMFields) -> bool:
     values = [
         fields.executive_summary,
-        fields.issue_context,
-        fields.change_interpretation,
-        fields.open_questions,
-        fields.what_to_watch,
+        fields.current_data_interpretation,
     ]
+    values.extend(item.narrative for item in fields.conditional_scenarios)
+    values.extend(item.explanation for item in fields.factors_to_check)
+    values.extend(item.explanation for item in fields.signals_to_watch)
     if fields.evidence_synthesis is not None:
         values.append(fields.evidence_synthesis)
     normalized = [re.sub(r"\s+", " ", value).strip().casefold() for value in values]
     return len(normalized) != len(set(normalized))
+
+
+def _v5_uses_only_evidence_numbers(fields: V5LLMFields, inputs: V4ReportInputs) -> bool:
+    allowed_text = " ".join(
+        filter(
+            None,
+            (
+                inputs.title,
+                inputs.description,
+                inputs.outcome_label,
+                inputs.end_date.isoformat() if inputs.end_date else None,
+                inputs.data_as_of.isoformat(),
+                str(inputs.current_value),
+                str(inputs.current_value * 100),
+                str(inputs.change_24h),
+                str(inputs.change_24h * 100),
+                str(inputs.change_7d),
+                str(inputs.change_7d * 100),
+                *(
+                    f"{candidate.title} {candidate.event_at.isoformat()} "
+                    f"{candidate.neutral_summary} "
+                    + " ".join(source.title for source in candidate.sources)
+                    for candidate in inputs.context_candidates
+                ),
+            ),
+        )
+    )
+    allowed = set(_NUMBER_PATTERN.findall(allowed_text))
+    actual = set(_NUMBER_PATTERN.findall(_v5_authored_text(fields)))
+    return actual.issubset(allowed)
 
 
 def run_v5_safety_and_semantic_checks(
@@ -1348,25 +1423,33 @@ def run_v5_safety_and_semantic_checks(
     inputs: V4ReportInputs,
     llm_fields: V5LLMFields,
 ) -> SafetyFilterResult:
-    for field_name, text in payload.content.model_dump().items():
-        if text is None:
-            continue
-        lowered = text.lower()
-        for phrase, pattern in zip(BANNED_PHRASES, _PHRASE_PATTERNS, strict=True):
-            if pattern.search(lowered):
-                return SafetyFilterResult(False, f"banned_phrase:{phrase}", field_name)
-        for phrase, pattern in zip(KOREAN_BANNED_SUBSTRINGS, _KOREAN_PHRASE_PATTERNS, strict=True):
-            if pattern.search(text):
-                return SafetyFilterResult(False, f"banned_phrase:{phrase}", field_name)
-        for pattern in (*BANNED_PATTERNS, *KOREAN_BANNED_PATTERNS):
-            if pattern.search(text):
-                return SafetyFilterResult(False, f"banned_pattern:{pattern.pattern}", field_name)
+    for field_name, value in payload.content.model_dump().items():
+        texts = [value] if isinstance(value, str) else []
+        if isinstance(value, list):
+            texts = [str(part) for item in value for part in item.values()]
+        for text in texts:
+            if not text:
+                continue
+            lowered = text.lower()
+            for phrase, pattern in zip(BANNED_PHRASES, _PHRASE_PATTERNS, strict=True):
+                if pattern.search(lowered):
+                    return SafetyFilterResult(False, f"banned_phrase:{phrase}", field_name)
+            for phrase, pattern in zip(
+                KOREAN_BANNED_SUBSTRINGS, _KOREAN_PHRASE_PATTERNS, strict=True
+            ):
+                if pattern.search(text):
+                    return SafetyFilterResult(False, f"banned_phrase:{phrase}", field_name)
+            for pattern in (*BANNED_PATTERNS, *KOREAN_BANNED_PATTERNS):
+                if pattern.search(text):
+                    return SafetyFilterResult(
+                        False, f"banned_pattern:{pattern.pattern}", field_name
+                    )
 
-    authored_text = " ".join(
-        value for value in llm_fields.model_dump().values() if value is not None
-    )
+    authored_text = _v5_authored_text(llm_fields)
     if _URL_PATTERN.search(authored_text):
         return SafetyFilterResult(False, "llm_added_url")
+    if not _v5_uses_only_evidence_numbers(llm_fields, inputs):
+        return SafetyFilterResult(False, "unsupported_number")
     if not _v5_is_issue_specific(llm_fields, inputs):
         return SafetyFilterResult(False, "generic_summary", "executive_summary")
     if _v5_has_excessive_duplication(llm_fields):

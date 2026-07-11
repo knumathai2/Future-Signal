@@ -233,21 +233,47 @@ VALID_V5_RESPONSE = {
         "test issue의 문서 조건을 정해진 기준일까지 확인하는 이슈입니다. 저장된 현재 값과 "
         "최근 비교 구간의 움직임을 함께 정리하지만 현실의 결과나 배경을 뜻하지 않습니다."
     ),
-    "issue_context": (
-        "test issue는 공개 문서에 적힌 조건이 기준일까지 충족되는지를 확인하도록 정의된 "
-        "항목이며 판정은 해당 문서 조건을 따릅니다."
-    ),
-    "change_interpretation": (
+    "current_data_interpretation": (
         "저장된 현재 값과 최근 비교값은 참여자 데이터의 관찰 흐름을 보여줍니다. "
         "이 움직임만으로 현실의 결과나 배경을 판단할 수 없습니다."
     ),
+    "conditional_scenarios": [
+        {
+            "title": "조건 확인",
+            "narrative": (
+                "만약 test issue 조건이 공식 문서에서 확인된다면 해당 판정 조건과 함께 읽습니다."
+            ),
+        },
+        {
+            "title": "부분 확인",
+            "narrative": (
+                "만약 test issue 관련 자료가 공개되지만 조건 충족이 "
+                "불분명한 경우 후속 문서를 확인합니다."
+            ),
+        },
+        {
+            "title": "조건 미확인",
+            "narrative": (
+                "만약 기준일까지 test issue 조건이 공식 문서에서 확인되지 않는다면 "
+                "미확인 상태로 구분합니다."
+            ),
+        },
+    ],
+    "factors_to_check": [
+        {"title": "판정 문서", "explanation": "test issue의 조건을 명시한 공식 문서를 확인합니다."},
+        {"title": "기준 시각", "explanation": "자료가 정해진 기준일 안에 공개됐는지 확인합니다."},
+    ],
+    "signals_to_watch": [
+        {
+            "title": "공식 자료",
+            "explanation": "test issue 관련 공식 문서의 공개 여부를 관찰합니다.",
+        },
+        {
+            "title": "데이터 갱신",
+            "explanation": "공개 예측시장 데이터의 이후 갱신을 별도로 확인합니다.",
+        },
+    ],
     "evidence_synthesis": None,
-    "open_questions": (
-        "후속 공식 문서에서 test issue의 판정 조건이 어떻게 확인되는지는 아직 남아 있습니다."
-    ),
-    "what_to_watch": (
-        "공식 문서의 조건 문구와 이후 공개 데이터의 갱신 내용을 차례로 확인할 수 있습니다."
-    ),
 }
 
 
@@ -992,10 +1018,10 @@ def test_v5_generic_summary_is_filtered_and_not_stored(db):
         "이 항목은 문서 조건을 기준일까지 확인하는 일반적인 이슈입니다. 저장된 현재 값과 "
         "최근 비교 구간을 함께 정리하지만 현실의 결과나 배경을 뜻하지 않습니다."
     )
-    generic["issue_context"] = (
-        "이 항목은 공개 문서에 적힌 조건이 기준일까지 충족되는지를 확인하며 판정은 해당 "
-        "문서 조건을 따릅니다."
-    )
+    generic["factors_to_check"] = [
+        {"title": "문서 확인", "explanation": "정해진 문서 조건을 이후 공개 자료에서 확인합니다."},
+        {"title": "시각 확인", "explanation": "정해진 기준일 안의 공개 여부를 확인합니다."},
+    ]
     client = FakeV4LLMClient([json.dumps(generic, ensure_ascii=False)])
 
     outcomes = run_v5_ai_report_batch(db, NOW, client, "openai/writer")

@@ -14,9 +14,9 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: PM / Planner → Data/AI Implementer
+- **Agent Role**: Data/AI Implementer → Backend Implementer
 - **Session Goal**: Activate and implement the approved TASK-075~081 narrative-summary/source-link program.
-- **Branch**: `pm/TASK-075-narrative-summary-policy` → `data-ai/TASK-076-narrative-summary-generator`
+- **Branch**: `data-ai/TASK-077-source-retrieval-quality` → `backend/TASK-078-narrative-report-api`
 
 ## Context Read
 
@@ -82,3 +82,12 @@ Harness Version: 1.1
   Full Backend verification passed with 327 tests and Ruff clean.
 - TASK-077 is active on `data-ai/TASK-077-source-retrieval-quality` and will
   improve article/official-source discovery without weakening publication gates.
+- TASK-077 is complete. The exact user-approved v5 fields now replace the
+  interim contract; scenarios are typed and conditional, unsupported numbers
+  fail, searches use title/entity/condition/date/official-domain anchors, and
+  market/forecast pages fail deterministically. Seven guarded development
+  research rows completed with zero failures and zero qualifying candidates.
+  TASK spend was USD 0.18057005; DB-recorded cumulative program spend is USD
+  3.09164205. Backend verification passed with 331 tests and Ruff clean.
+- TASK-078 is active and must implement strict v5 read-time reconstruction and
+  the approved public API contract without a schema migration.

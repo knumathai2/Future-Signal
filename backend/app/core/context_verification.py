@@ -101,6 +101,13 @@ _MULTIPART_PUBLIC_SUFFIXES = {
     "gov.uk",
     "org.uk",
 }
+_DISALLOWED_MARKET_DOMAINS = {
+    "polymarket.com",
+    "kalshi.com",
+    "predictit.org",
+    "metaculus.com",
+    "manifold.markets",
+}
 
 
 class ContextVerificationError(RuntimeError):
@@ -305,6 +312,14 @@ def _is_official_domain(domain: str, inputs: ResearchInputs) -> bool:
     return bool(labels & {"gov", "mil"}) or normalized.endswith(".int")
 
 
+def _is_disallowed_market_or_forecast_page(domain: str) -> bool:
+    normalized = domain.casefold().removeprefix("www.")
+    return any(
+        normalized == blocked or normalized.endswith(f".{blocked}")
+        for blocked in _DISALLOWED_MARKET_DOMAINS
+    )
+
+
 def _contains_unsafe_language(*values: str) -> bool:
     text = "\n".join(values)
     return any(pattern.search(text) for pattern in _UNSAFE_PATTERNS)
@@ -378,6 +393,13 @@ def deterministic_gate(
             candidate_key=candidate.candidate_key,
             passed=False,
             reason_code="invalid_source_url",
+        )
+    if any(_is_disallowed_market_or_forecast_page(source.domain) for source in sources):
+        return DeterministicGateResult(
+            candidate_key=candidate.candidate_key,
+            passed=False,
+            reason_code="market_or_forecast_page",
+            sources=sources,
         )
 
     market_text = " ".join(
@@ -531,8 +553,10 @@ class IndependentVerifierClient:
         research_model: str,
         extra_headers: dict[str, str] | None = None,
     ) -> None:
-        if not model or model == research_model or _model_family(model) == _model_family(
-            research_model
+        if (
+            not model
+            or model == research_model
+            or _model_family(model) == _model_family(research_model)
         ):
             raise ContextVerificationError(
                 "Verifier model must use a different provider family from research"
