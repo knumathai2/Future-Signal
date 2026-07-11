@@ -210,12 +210,16 @@ favor of the previous valid v8 row. V1-v7 are audit-only.
 
 ## `POST /api/issues/{id}/report/generate`
 
-Request: `{"refresh_context": false}`. The API creates or joins one immutable
-market/fingerprint request and queued event and returns HTTP 202 with
-`request_id`, `status`, `created`, and `input_fingerprint`. In local/development,
-a queued result starts a request-scoped child worker after the commit. The API
-process performs no provider call; child-launch failure leaves the request
-queued for a later automatic or manual worker run.
+Request: `{"refresh_context": true|false}`. The v8 Frontend uses `true` so the
+worker first runs the bounded source-refresh path. The API creates or joins one
+immutable market/fingerprint request and queued event and returns HTTP 202 with
+`request_id`, `status`, `created`, and `input_fingerprint`. In
+local/development, a queued result starts a request-scoped child worker after
+the commit. The API process performs no provider call; child-launch failure
+leaves the request queued for a later automatic or manual worker run. If
+refreshed evidence changes the fingerprint, the original request records the
+existing successor ID and the request-scoped worker processes that immutable
+successor before exiting.
 
 ## `GET /api/issues/{id}/report/requests/{request_id}`
 

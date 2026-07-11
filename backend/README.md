@@ -56,6 +56,11 @@ ENV=local ./.venv/bin/python -m app.core.on_demand_worker \
   --confirm-local-dev-write
 ```
 
+The v8 Frontend sends `refresh_context=true`. The child lazily builds the
+bounded 90/180-day research path, checks the cumulative context reservation,
+stores only accepted exact-excerpt evidence, and follows the immutable
+successor request when refreshed evidence changes the input fingerprint.
+
 Production auto-start remains disabled until a separately approved worker
 deployment exists.
 

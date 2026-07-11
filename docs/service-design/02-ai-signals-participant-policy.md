@@ -167,6 +167,26 @@ still require their context parent, authored links remain blocked, prohibited
 language remains blocked, and the writer cannot infer a background for an
 observed change. V1-v7 rows remain append-only audit history.
 
+### 6.13 Approved v8 source-retrieval refinement
+
+TASK-113 keeps the v8 publication blockers but widens discovery before those
+blockers run. Research uses a deterministic 90-day or 180-day issue horizon,
+adds bounded cross-wording queries for common entity and issue concepts, and
+tests relevance across the source title plus exact annotation excerpt. If the
+source is relevant but its excerpt does not support the provider's broader
+candidate wording, the exact excerpt becomes the supported claim instead.
+
+Only OpenRouter `url_citation` annotations with safe URLs, a visible publisher
+domain and title, and a non-empty excerpt can enter classification. A-C source
+levels, source-parent linkage, blocked domains, duplicate/conflict handling,
+conditional verification, attribution, and the prohibition on inferred
+relationships with an observed movement remain unchanged. The active context
+policy fingerprint is `v8-source-level-2`.
+If a successful server-tool response contains exact citation annotations but
+not the requested JSON body, v8 ignores body links and creates narrow
+annotation-only candidates from the citation title, URL, and excerpt before
+running the same relevance and publication gates.
+
 ---
 
 ## 7. Sudden Change Signal Design

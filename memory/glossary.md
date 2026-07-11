@@ -29,6 +29,7 @@ _Last updated: 2026-07-11_
 | v4 evidence-grounded report | The TASK-056 seven-field structured report with metric/candidate evidence references; it excludes legacy v1-v3 rows, rejects unsupported values or context, and uses `context_summary=null` when no verified candidate exists |
 | Fail closed | Withhold a candidate or report from the public API whenever citation provenance, hard-gate verification, independent verification, evidence references, schema, timing, or safety validation is missing or inconsistent |
 | v8 issue-centered briefing | The TASK-112 report shape that preserves v7 evidence/source controls while organizing the narrative around current situation, recent change, interpretation, key conditions, later information, and optional limitations. |
+| v8 source-level-2 context | The TASK-113 retrieval policy that uses a bounded 90/180-day horizon and deterministic aliases while keeping every public claim tied to an exact accepted annotation excerpt and visible A-C source attribution. |
 
 ## Abbreviations
 

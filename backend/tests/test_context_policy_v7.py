@@ -10,8 +10,10 @@ from app.core.context_policy_v7 import (
     V7ContextPolicyError,
     V7VerifierDecision,
     apply_v7_conditional_verifier,
+    broaden_v8_research_inputs,
     classify_v7_candidate,
     collect_v7_context,
+    collect_v8_context,
 )
 from app.core.context_research import (
     ContextResearchResult,
@@ -253,3 +255,103 @@ def test_collection_calls_research_once_and_routes_only_triggered_candidate():
     assert verifier.calls == 1
     assert len(result.accepted) == 1
     assert result.policy_version == "v7-source-level-1"
+
+
+def test_v8_uses_180_days_for_slow_issue_and_90_for_short_issue():
+    slow = broaden_v8_research_inputs(
+        _inputs(
+            title="Will the United States and Russia reach a nuclear agreement?",
+            tracked_condition="A nuclear agreement is formally announced",
+        )
+    )
+    short = broaden_v8_research_inputs(
+        _inputs(
+            title="Will the agency publish its daily update?",
+            description="Tracks one daily agency update.",
+            category="operations",
+            tracked_condition="Agency publishes the daily update",
+        )
+    )
+
+    assert slow.search_window_start == NOW - timedelta(days=180)
+    assert short.search_window_start == NOW - timedelta(days=90)
+    assert slow.inflection_at is None
+
+
+def test_v8_accepts_cross_wording_issue_aliases_with_exact_excerpt_support():
+    excerpt = (
+        "United States and Russian officials held nuclear negotiations and said "
+        "further meetings would follow."
+    )
+    citation = _citation("citation:alias", "agency.gov", excerpt=excerpt)
+    candidate = ResearchCandidateDraft(
+        candidate_key="candidate:alias",
+        title="미·러 핵 협상 일정",
+        event_at=NOW - timedelta(days=2),
+        citation_ids=[citation.citation_id],
+        matched_entities=["미국", "러시아"],
+        matched_condition="양국 관계자가 핵 협상과 후속 회의를 언급함",
+        temporal_relation="before_window",
+    )
+    inputs = _inputs(
+        title="미·러 핵 합의가 연말까지 이뤄질까?",
+        description="미국과 러시아의 핵 합의 여부를 다루는 이슈입니다.",
+        category="외교",
+        tracked_condition="미국과 러시아가 핵 합의를 공식 발표함",
+        allowed_domains=["agency.gov"],
+    )
+
+    result = classify_v7_candidate(
+        candidate,
+        {citation.citation_id: citation},
+        inputs,
+    )
+
+    assert result.state == "accepted"
+    assert result.public_sources[0].level == "A"
+    assert result.public_sources[0].supported_claims[0].excerpt == excerpt
+
+
+def test_v8_falls_back_to_exact_excerpt_when_candidate_condition_is_broader():
+    excerpt = "United States and Russian officials resumed nuclear negotiations."
+    citation = _citation("citation:narrow", "agency.gov", excerpt=excerpt)
+    candidate = ResearchCandidateDraft(
+        candidate_key="candidate:narrow",
+        title="United States Russia nuclear update",
+        event_at=NOW - timedelta(days=1),
+        citation_ids=[citation.citation_id],
+        matched_entities=["United States", "Russia"],
+        matched_condition="A final nuclear agreement was announced",
+        temporal_relation="before_window",
+    )
+    inputs = _inputs(
+        title="Will the United States and Russia reach a nuclear agreement?",
+        tracked_condition="A final nuclear agreement is formally announced",
+    )
+
+    result = classify_v7_candidate(
+        candidate,
+        {citation.citation_id: citation},
+        inputs,
+    )
+
+    assert result.state == "accepted"
+    assert result.public_sources[0].supported_claims[0].text == excerpt
+
+
+def test_v8_collection_advances_policy_and_research_horizon():
+    citation = _citation("citation:v8", "agency.gov")
+    research = ContextResearchResult(
+        model="openai/research-test",
+        queries=["agency documented decision"],
+        citations=[citation],
+        candidates=[_candidate(citation.citation_id)],
+        usage=ResearchUsage(web_search_requests=1),
+    )
+    client = FakeResearchClient(research)
+
+    result = collect_v8_context(_inputs(), client)
+
+    assert client.inputs.search_window_start == NOW - timedelta(days=180)
+    assert result.policy_version == "v8-source-level-2"
+    assert len(result.accepted) == 1
