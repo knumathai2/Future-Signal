@@ -29,6 +29,8 @@ from app.core.ai_report_batch import (
     ReportOutcome,
     run_ai_report_batch,
     run_ai_report_batch_for_latest_metrics,
+    run_v4_ai_report_batch,
+    run_v4_ai_report_batch_for_latest_metrics,
 )
 from app.core.collector import fetch_events
 from app.core.config import settings
@@ -99,6 +101,17 @@ class ScheduledBatchResult:
     def context_candidates_accepted(self) -> int:
         return sum(outcome.accepted_count for outcome in self.context_outcomes or [])
 
+    @property
+    def v4_writer_cost_usd(self) -> float:
+        return round(
+            sum(
+                float(outcome.model_usage.get("writer_cost_usd") or 0)
+                for outcome in self.report_outcomes or []
+                if outcome.model_usage
+            ),
+            8,
+        )
+
 
 def load_normalized_markets(path: Path) -> list[dict[str, Any]]:
     with path.open(encoding="utf-8") as fh:
@@ -137,6 +150,7 @@ def record_scheduled_batch_log(db: Session, result: ScheduledBatchResult) -> Non
                 "reports_success": result.reports_success,
                 "reports_failed_or_filtered": result.reports_failed_or_filtered,
                 "reports_skipped": result.reports_skipped,
+                "v4_writer_cost_usd": result.v4_writer_cost_usd,
                 "error": result.error,
             },
         )
@@ -153,10 +167,23 @@ def run_reports_for_timestamp(
     run_timestamp: datetime,
     llm_client: LLMClient | None,
     model_name: str,
+    *,
+    use_v4: bool = False,
+    failed_context_market_ids: set | None = None,
 ) -> list[ReportOutcome]:
     if llm_client is None:
         logger.info("Skipping AI reports: no LLM client configured.")
         return []
+    if use_v4:
+        return run_v4_ai_report_batch(
+            db,
+            run_timestamp,
+            llm_client,
+            model_name,
+            failed_context_market_ids=failed_context_market_ids,
+            budget_usd=settings.context_budget_usd,
+            writer_cost_reservation_usd=settings.context_writer_cost_reservation_usd,
+        )
     return run_ai_report_batch(db, run_timestamp, llm_client, model_name)
 
 
@@ -164,10 +191,22 @@ def run_reports_for_current_db(
     db: Session,
     llm_client: LLMClient | None,
     model_name: str,
+    *,
+    use_v4: bool = False,
+    failed_context_market_ids: set | None = None,
 ) -> list[ReportOutcome]:
     if llm_client is None:
         logger.info("Skipping AI reports: no LLM client configured.")
         return []
+    if use_v4:
+        return run_v4_ai_report_batch_for_latest_metrics(
+            db,
+            llm_client,
+            model_name,
+            failed_context_market_ids=failed_context_market_ids,
+            budget_usd=settings.context_budget_usd,
+            writer_cost_reservation_usd=settings.context_writer_cost_reservation_usd,
+        )
     return run_ai_report_batch_for_latest_metrics(db, llm_client, model_name)
 
 
@@ -227,11 +266,19 @@ def run_scheduled_batch(
         else:
             result.context_outcomes = []
 
+        use_v4_reports = context_research_client is not None and context_verifier is not None
+        failed_context_market_ids = {
+            outcome.market_id
+            for outcome in result.context_outcomes or []
+            if outcome.status == "failed"
+        }
         if reports_only:
             result.report_outcomes = run_reports_for_current_db(
                 db,
                 llm_client,
                 model_name,
+                use_v4=use_v4_reports,
+                failed_context_market_ids=failed_context_market_ids,
             )
         elif not result.skipped_duplicate_run and result.run_timestamp is not None:
             result.report_outcomes = run_reports_for_timestamp(
@@ -239,6 +286,8 @@ def run_scheduled_batch(
                 result.run_timestamp,
                 llm_client,
                 model_name,
+                use_v4=use_v4_reports,
+                failed_context_market_ids=failed_context_market_ids,
             )
         else:
             result.report_outcomes = []

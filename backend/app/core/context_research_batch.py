@@ -26,6 +26,7 @@ from app.core.snapshot_metrics import as_utc_naive
 from app.db.models import (
     ContextCandidate,
     ContextCollectionRun,
+    DataCollectionLog,
     IssueSignal,
     Market,
     MarketMetric,
@@ -352,6 +353,11 @@ def context_spend_usd(db: Session) -> float:
             value = usage.get(key)
             if isinstance(value, int | float):
                 total += float(value)
+    for detail in db.execute(select(DataCollectionLog.error_detail)).scalars():
+        if isinstance(detail, dict):
+            writer_cost = detail.get("v4_writer_cost_usd")
+            if isinstance(writer_cost, int | float):
+                total += float(writer_cost)
     return round(total, 8)
 
 
