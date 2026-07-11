@@ -311,6 +311,23 @@ Help users understand the context around an inflection point.
   every metric sentence references a stored metric ID.
 - Deployment and production-database writes remain outside this extension.
 
+#### Approved post-MVP v5 narrative extension (TASK-075~081)
+
+- Replace v4's two authored fields with an evidence-bounded structured
+  narrative that gives users a concise overview, issue context, stored-change
+  interpretation, optional verified-evidence synthesis, open questions, and
+  concrete follow-up materials to check.
+- Separate AI-authored prose from deterministic metrics, relationship
+  boundaries, limitations, and caution copy in both the API and UI.
+- Show exact stored links only for verified articles, official releases, and
+  public documents. Never substitute unverified results or generic searches.
+- Treat generic, unsupported, duplicated, incomplete, causal, outcome-asserting,
+  or prohibited-language output as a failed generation.
+- Regenerate representative reports only in the approved development database
+  and place real results in front of the user for a final quality decision.
+- Deployment, production writes, infrastructure changes, new dependencies,
+  and unrelated schema/API changes remain outside this extension.
+
 ### 8.10 Data as-of timestamp and disclaimer text
 
 #### Requirements

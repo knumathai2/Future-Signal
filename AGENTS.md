@@ -76,7 +76,7 @@ Even if the user explicitly requests them, ask for confirmation first:
       remains manual-only.
 - [ ] Shipping any data-bearing screen without a data-as-of timestamp AND an interpretation-caution badge/text
 - [ ] Adding login, accounts, saving/watchlist, notifications, weekly reports, or team sharing — these are explicitly P2/Phase-2+ (PRD §6.5) and out of hackathon scope
-- [ ] Letting the AI report generator produce free-form/open-ended analysis — output must be template-constrained and pass the banned-phrase filter before storage (Service Design §6, Technical Design §10.4)
+- [ ] Letting the AI report generator produce unconstrained or evidence-free analysis — ADR-048 permits only the TASK-075~081 v5 evidence-bounded structured narrative; every output must retain fixed fields, evidence validation, deterministic caution boundaries, and the banned-phrase filter before storage
 
 ---
 
@@ -103,6 +103,17 @@ local or development databases. This approval does not authorize deployment,
 infrastructure mutation, production-database writes, unrelated public API or
 schema changes, a new dependency, or changes outside TASK-056's recorded
 contract. Any of those still requires separate human approval.
+
+### TASK-075 approved program boundary
+
+The user's 2026-07-11 approval authorizes TASK-075~081 to replace v4's two
+model-authored fields with the ADR-048 evidence-bounded v5 structured narrative,
+improve verified source retrieval, change the approved report API/UI contract,
+call the existing approved OpenRouter path within the cumulative USD 100
+program ceiling, and append new report/context/audit records only to local or
+development databases. It does not authorize unconstrained analysis,
+deployment, production writes, infrastructure mutation, new dependencies,
+existing-migration edits, or unrelated schema/API changes.
 
 ---
 

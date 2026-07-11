@@ -26,8 +26,10 @@ from app.core.ai_report import (
     V4LLMFields,
     V4ReportInputs,
     V4VerifiedCandidateInput,
+    V5LLMFields,
     assemble_report_content,
     assemble_v4_report_content,
+    assemble_v5_report_content,
     build_caution_note,
     build_data_limitations,
     build_external_context,
@@ -36,12 +38,16 @@ from app.core.ai_report import (
     build_prompt,
     build_v4_prompt,
     build_v4_stored_payload,
+    build_v5_prompt,
+    build_v5_stored_payload,
     build_what_to_check,
     parse_llm_fields,
     parse_v4_llm_fields,
+    parse_v5_llm_fields,
     run_safety_filter,
     run_semantic_checks,
     run_v4_safety_and_semantic_checks,
+    run_v5_safety_and_semantic_checks,
 )
 from app.core.config import (
     OPENROUTER_BASE_URL,
@@ -160,6 +166,70 @@ def _v4_fields(**overrides) -> V4LLMFields:
     }
     values.update(overrides)
     return V4LLMFields(**values)
+
+
+def _v5_fields(*, with_context=True, **overrides) -> V5LLMFields:
+    values = {
+        "executive_summary": (
+            "JD Vance의 미국 대통령 선거 당선 조건을 다루는 이슈입니다. 공개 데이터에 "
+            "저장된 현재 값과 최근 비교 구간의 움직임을 함께 읽되 현실의 결과로 해석하지 않습니다."
+        ),
+        "current_data_interpretation": (
+            "저장된 현재 값과 최근 비교값은 참여자 데이터의 관찰 흐름을 보여줍니다. "
+            "이 움직임만으로 현실의 결과나 배경을 판단할 수 없습니다."
+        ),
+        "conditional_scenarios": [
+            {
+                "title": "조건 확인",
+                "narrative": (
+                    "만약 JD Vance의 당선 조건이 공식 선거 문서에서 확인된다면 "
+                    "해당 판정 조건과 함께 읽습니다."
+                ),
+            },
+            {
+                "title": "부분 확인",
+                "narrative": (
+                    "만약 JD Vance 관련 문서가 공개되지만 당선 조건을 충족하는지 "
+                    "불분명한 경우 추가 문서를 확인합니다."
+                ),
+            },
+            {
+                "title": "조건 미확인",
+                "narrative": (
+                    "만약 기준일까지 JD Vance의 당선 조건이 공식 문서에서 "
+                    "확인되지 않는다면 미확인 상태로 구분합니다."
+                ),
+            },
+        ],
+        "factors_to_check": [
+            {
+                "title": "판정 문서",
+                "explanation": "JD Vance와 선거 결과를 명시한 공식 문서의 조건을 확인합니다.",
+            },
+            {
+                "title": "기준 시각",
+                "explanation": "문서가 이 이슈의 정해진 기준일 안에 공개됐는지 확인합니다.",
+            },
+        ],
+        "signals_to_watch": [
+            {
+                "title": "공식 문서 공개",
+                "explanation": "JD Vance 관련 공식 선거 문서의 공개 여부를 관찰합니다.",
+            },
+            {
+                "title": "데이터 갱신",
+                "explanation": "공개 예측시장 데이터의 이후 갱신 시각과 값을 별도로 확인합니다.",
+            },
+        ],
+        "evidence_synthesis": (
+            "같은 검토 구간의 공개 정보 업데이트는 해당 조건과 관련된 기록을 제공합니다. "
+            "이 자료와 관찰된 움직임 사이의 관계는 확인되지 않았습니다."
+            if with_context
+            else None
+        ),
+    }
+    values.update(overrides)
+    return V5LLMFields(**values)
 
 
 # --- build_prompt -------------------------------------------------------
@@ -367,9 +437,7 @@ def test_assemble_report_content_rejects_llm_field_below_minimum_length():
 
 
 def test_assemble_report_content_rejects_unknown_confidence_level():
-    content = assemble_report_content(
-        _inputs(confidence_level="not_a_real_level"), _llm_fields()
-    )
+    content = assemble_report_content(_inputs(confidence_level="not_a_real_level"), _llm_fields())
     assert content is None
 
 
@@ -659,9 +727,7 @@ def test_openrouter_model_slug_is_preserved_when_already_qualified():
         _resolve_ai_model("openrouter", raw_model="anthropic/claude-3.5-sonnet")
         == "anthropic/claude-3.5-sonnet"
     )
-    assert _resolve_ai_model("openrouter", raw_model="~openai/gpt-latest") == (
-        "~openai/gpt-latest"
-    )
+    assert _resolve_ai_model("openrouter", raw_model="~openai/gpt-latest") == ("~openai/gpt-latest")
 
 
 class _CapturingChatCompletions:
@@ -705,9 +771,7 @@ def test_build_openai_client_passes_openrouter_base_url_and_headers(monkeypatch)
         "base_url": OPENROUTER_BASE_URL,
     }
     assert stub.completions.kwargs["model"] == "openai/gpt-4o-mini"
-    assert stub.completions.kwargs["extra_headers"] == {
-        "X-OpenRouter-Title": "Outlook Signals"
-    }
+    assert stub.completions.kwargs["extra_headers"] == {"X-OpenRouter-Title": "Outlook Signals"}
 
 
 # --- ADR-038 v4 evidence-grounded report ---------------------------------
@@ -787,9 +851,7 @@ def test_v4_rejects_metric_or_context_text_that_differs_from_inputs():
         update={
             "content": payload.content.model_copy(
                 update={
-                    "observed_change": payload.content.observed_change.replace(
-                        "63.0%", "73.0%"
-                    )
+                    "observed_change": payload.content.observed_change.replace("63.0%", "73.0%")
                 }
             )
         }
@@ -802,12 +864,11 @@ def test_v4_rejects_metric_or_context_text_that_differs_from_inputs():
         }
     )
 
-    assert run_v4_safety_and_semantic_checks(
-        metric_payload, inputs, _v4_fields()
-    ).rule == "metric_content_mismatch"
-    assert run_v4_safety_and_semantic_checks(
-        context_payload, inputs, _v4_fields()
-    ).passed is False
+    assert (
+        run_v4_safety_and_semantic_checks(metric_payload, inputs, _v4_fields()).rule
+        == "metric_content_mismatch"
+    )
+    assert run_v4_safety_and_semantic_checks(context_payload, inputs, _v4_fields()).passed is False
 
 
 @pytest.mark.parametrize(
@@ -832,3 +893,157 @@ def test_v4_unknown_caution_level_cannot_assemble():
             _v4_inputs(confidence_level="unknown"),
             _v4_fields(),
         )
+
+
+# --- ADR-048 v5 evidence-bounded narrative -----------------------------
+
+
+def test_v5_prompt_and_parser_use_exact_six_field_contract():
+    inputs = _v4_inputs(
+        title="Will JD Vance win the US Presidential Election?",
+        description="Tracks whether JD Vance wins the documented election.",
+    )
+    system_prompt, user_prompt = build_v5_prompt(inputs)
+
+    assert "exactly six fields" in system_prompt
+    assert "JD Vance" in user_prompt
+    assert "verified_context_candidates" in user_prompt
+    assert '"display_value_percent":63.0' in user_prompt
+    assert '"display_change_24h_percentage_points":8.0' in user_prompt
+    raw = json.dumps(_v5_fields().model_dump(), ensure_ascii=False)
+    assert parse_v5_llm_fields(raw) == _v5_fields()
+    assert (
+        parse_v5_llm_fields(
+            json.dumps({**_v5_fields().model_dump(), "extra": "x"}, ensure_ascii=False)
+        )
+        is None
+    )
+
+
+@pytest.mark.parametrize("with_context", [False, True])
+def test_v5_assembles_deterministic_boundaries_and_evidence_refs(with_context):
+    inputs = _v4_inputs(
+        with_context=with_context,
+        title="Will JD Vance win the US Presidential Election?",
+        description="Tracks whether JD Vance wins the documented election.",
+    )
+    fields = _v5_fields(with_context=with_context)
+    content = assemble_v5_report_content(inputs, fields)
+    payload = build_v5_stored_payload(inputs, content)
+
+    assert payload.content.relationship_boundary
+    assert payload.content.data_limitations
+    assert payload.content.caution_note
+    assert payload.evidence_refs[0] == "metric:123"
+    assert len(payload.context_candidate_ids) == int(with_context)
+    assert run_v5_safety_and_semantic_checks(payload, inputs, fields).passed
+
+
+def test_v5_rejects_generic_or_duplicated_narrative():
+    inputs = _v4_inputs(
+        with_context=False,
+        title="Will JD Vance win the US Presidential Election?",
+        description="Tracks whether JD Vance wins the documented election.",
+    )
+    generic = _v5_fields(
+        with_context=False,
+        executive_summary=(
+            "이 항목은 문서에 적힌 조건을 살펴보는 내용입니다. 공개 데이터와 이후 자료를 "
+            "함께 확인하되 현실의 결과를 뜻하는 것으로 해석하지 않습니다. 저장된 근거의 "
+            "범위를 벗어난 배경이나 결과는 이 요약에서 판단하지 않습니다."
+        ),
+        factors_to_check=[
+            {
+                "title": "문서 확인",
+                "explanation": "정해진 문서 조건을 이후 공개 자료에서 확인합니다.",
+            },
+            {
+                "title": "시각 확인",
+                "explanation": "정해진 기준일 안의 공개 여부를 함께 확인합니다.",
+            },
+        ],
+    )
+    generic_content = assemble_v5_report_content(inputs, generic)
+    generic_payload = build_v5_stored_payload(inputs, generic_content)
+
+    assert (
+        run_v5_safety_and_semantic_checks(generic_payload, inputs, generic).rule
+        == "generic_summary"
+    )
+
+    duplicate_text = (
+        "JD Vance 관련 공식 문서와 선거 조건의 후속 갱신 내용을 차례로 확인할 필요가 있습니다."
+    )
+    duplicated = _v5_fields(
+        with_context=False,
+        factors_to_check=[
+            {"title": "공식 문서", "explanation": duplicate_text},
+            {
+                "title": "판정 조건",
+                "explanation": "JD Vance 선거 판정 조건을 공식 기록에서 확인합니다.",
+            },
+        ],
+        signals_to_watch=[
+            {"title": "공식 발표", "explanation": duplicate_text},
+            {
+                "title": "데이터 갱신",
+                "explanation": "JD Vance 관련 공개 데이터의 갱신을 확인합니다.",
+            },
+        ],
+    )
+    duplicated_content = assemble_v5_report_content(inputs, duplicated)
+    duplicated_payload = build_v5_stored_payload(inputs, duplicated_content)
+    assert (
+        run_v5_safety_and_semantic_checks(duplicated_payload, inputs, duplicated).rule
+        == "duplicate_narrative_fields"
+    )
+
+
+def test_v5_rejects_evidence_synthesis_without_verified_candidate():
+    inputs = _v4_inputs(
+        with_context=False,
+        title="Will JD Vance win the US Presidential Election?",
+        description="Tracks whether JD Vance wins the documented election.",
+    )
+    fields = _v5_fields(with_context=True)
+    content = assemble_v5_report_content(inputs, fields)
+    payload = build_v5_stored_payload(inputs, content)
+
+    assert (
+        run_v5_safety_and_semantic_checks(payload, inputs, fields).rule
+        == "evidence_synthesis_presence_mismatch"
+    )
+
+
+def test_v5_rejects_unsupported_numbers_and_nonconditional_scenarios():
+    inputs = _v4_inputs(with_context=False)
+    fields = _v5_fields(
+        with_context=False,
+        current_data_interpretation=(
+            "저장된 현재 값은 99%이며 최근 비교 구간의 참여자 데이터와 함께 읽습니다. "
+            "이 값만으로 현실의 결과를 판단할 수 없습니다."
+        ),
+    )
+    content = assemble_v5_report_content(inputs, fields)
+    payload = build_v5_stored_payload(inputs, content)
+
+    assert run_v5_safety_and_semantic_checks(payload, inputs, fields).rule == "unsupported_number"
+    invalid = fields.model_dump()
+    invalid["conditional_scenarios"][0]["narrative"] = (
+        "JD Vance 관련 공식 문서와 판정 조건을 순서대로 확인합니다."
+    )
+    assert parse_v5_llm_fields(json.dumps(invalid, ensure_ascii=False)) is None
+
+
+def test_v5_number_validation_handles_missing_change_window():
+    inputs = _v4_inputs(
+        with_context=False,
+        change_7d=None,
+        title="Will JD Vance win the US Presidential Election?",
+        description="Tracks whether JD Vance wins the documented election.",
+    )
+    fields = _v5_fields(with_context=False)
+    content = assemble_v5_report_content(inputs, fields)
+    payload = build_v5_stored_payload(inputs, content)
+
+    assert run_v5_safety_and_semantic_checks(payload, inputs, fields).passed

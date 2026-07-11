@@ -68,7 +68,9 @@ def _inputs(**overrides) -> ResearchInputs:
 def _provider_content(*, candidates=None, queries=None, extra=None) -> str:
     payload = {
         "queries": queries if queries is not None else build_search_queries(_inputs())[:1],
-        "candidates": candidates if candidates is not None else [
+        "candidates": candidates
+        if candidates is not None
+        else [
             {
                 "candidate_key": "candidate:local-1",
                 "title": "Official update recorded",
@@ -138,6 +140,43 @@ def test_build_search_queries_is_deterministic_deduplicated_and_bounded():
     assert any("site:example.gov" in query for query in queries)
 
 
+def test_search_queries_prioritize_entity_condition_window_and_official_domain():
+    queries = build_search_queries(
+        _inputs(
+            title="Will JD Vance win the US Presidential Election?",
+            description="Tracks JD Vance and the documented presidential election result.",
+            tracked_condition="JD Vance wins the US Presidential Election",
+            allowed_domains=["fec.gov", "archives.gov"],
+        )
+    )
+
+    joined = "\n".join(queries)
+    assert '"JD Vance"' in joined
+    assert "2026-07-10" in joined and "2026-07-11" in joined
+    assert "site:fec.gov" in joined or "site:archives.gov" in joined
+    assert any("official announcement document" in query for query in queries)
+
+
+def test_generic_stored_condition_does_not_become_search_entity_or_anchor():
+    queries = build_search_queries(
+        _inputs(
+            title="Will Hamas agree to disarm by December 31?",
+            description="Tracks reflected expectation in public data.",
+            tracked_condition=(
+                "Tracks reflected expectation in public prediction-market data. "
+                "Interpret changes with caution. Tracked outcome: Yes."
+            ),
+            allowed_domains=[],
+            resolution_source=None,
+        )
+    )
+
+    joined = "\n".join(queries)
+    assert '"Hamas"' in joined
+    assert '"Interpret"' not in joined
+    assert "reflected expectation interpret caution" not in joined
+
+
 @pytest.mark.parametrize("domain", ["https://example.gov", "example.gov/path", ""])
 def test_research_inputs_reject_non_domain_filters(domain):
     with pytest.raises(ValidationError):
@@ -178,9 +217,7 @@ def test_success_uses_server_tool_and_normalizes_only_annotation_citations():
     assert tool["parameters"]["max_total_results"] == 30
     assert tool["parameters"]["allowed_domains"] == ["example.gov"]
     assert request["response_format"] == {"type": "json_object"}
-    assert "Market listing, price, forecast, and mirror pages" in request["messages"][0][
-        "content"
-    ]
+    assert "Market listing, price, forecast, and mirror pages" in request["messages"][0]["content"]
 
 
 def test_flat_annotation_shape_is_supported():
@@ -322,9 +359,7 @@ def test_reported_query_without_distinct_market_metadata_overlap_fails_closed(qu
 
 
 def test_more_than_thirty_unique_citations_fails_closed():
-    annotations = [
-        _annotation(url=f"https://example.gov/source-{index}") for index in range(31)
-    ]
+    annotations = [_annotation(url=f"https://example.gov/source-{index}") for index in range(31)]
     client, _ = _client(_response(annotations=annotations))
 
     with pytest.raises(ContextResearchError, match="citation-result limit"):

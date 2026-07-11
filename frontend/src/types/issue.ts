@@ -65,11 +65,13 @@ export type CategorySummary = {
 };
 
 export type IssueReportContent = {
-  issue_overview: string;
-  observed_change: string;
-  context_summary: string | null;
+  executive_summary: string;
+  current_data_interpretation: string;
+  conditional_scenarios: Array<{ title: string; narrative: string }>;
+  factors_to_check: Array<{ title: string; explanation: string }>;
+  signals_to_watch: Array<{ title: string; explanation: string }>;
+  evidence_synthesis: string | null;
   relationship_boundary: string;
-  what_to_check: string;
   data_limitations: string;
   caution_note: string;
 };
@@ -93,7 +95,7 @@ export type IssueReportContextCandidate = {
 export type IssueReportSuccessResponse = {
   id: string;
   status: "success";
-  report_version: "v4";
+  report_version: "v5";
   generated_at: string;
   data_as_of: string;
   episode_at: string;

@@ -11,19 +11,21 @@ _Last updated: 2026-07-11_
 
 ## In Progress
 
-ADR-038 records the user's policy, schema, API, OpenRouter budget, and
-local/development-write approval for the sequential TASK-056~065 program.
-Deployment and production-database writes remain excluded.
+ADR-048 records the user's approval for the sequential TASK-075~081 richer
+narrative-summary and verified-source-link program. Existing evidence,
+wording, no-causality, fail-closed, local/development-only write, and USD 100
+program boundaries remain in force. Deployment and production writes remain
+excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
+| — | No tasks currently in progress; TASK-075~081 are complete | — | — | — | completed |
 
-No tasks are currently active. Deployment, production DB writes, and optional
-TASK-066+ work remain separately approval-gated.
+Deployment and production writes remain outside the approved program.
 
-Exact dependencies, file ownership, acceptance criteria, verification commands,
-handoffs, and stop conditions are binding in
-`reports/task-055-automated-context-execution-plan.md`. Only one task may be
+Exact dependencies, ownership, acceptance criteria, handoffs, and stop
+conditions are binding in
+`reports/task-075-narrative-summary-source-program.md`. Only one task may be
 `in_progress` at a time; each successor starts from the verified predecessor.
 
 ## Status Values

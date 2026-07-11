@@ -224,9 +224,7 @@ def _parse_llm_usage(value: object) -> LLMUsage:
     cost = usage.get("cost")
     return LLMUsage(
         input_tokens=int(usage.get("prompt_tokens") or usage.get("input_tokens") or 0),
-        output_tokens=int(
-            usage.get("completion_tokens") or usage.get("output_tokens") or 0
-        ),
+        output_tokens=int(usage.get("completion_tokens") or usage.get("output_tokens") or 0),
         cost_usd=float(cost) if cost is not None else None,
     )
 
@@ -271,9 +269,7 @@ class OpenAICompatibleReportClient:
             response = self._client.chat.completions.create(**kwargs)
         except OpenAIError as exc:
             # standards.md: never log full LLM prompts/responses.
-            raise LLMCallError(
-                f"{self._provider_name} call failed: {type(exc).__name__}"
-            ) from exc
+            raise LLMCallError(f"{self._provider_name} call failed: {type(exc).__name__}") from exc
 
         content = response.choices[0].message.content if response.choices else None
         if not content:
@@ -395,8 +391,7 @@ _DATA_LIMITATIONS_BASELINE = (
     "이 읽기는 활동량, 유동성, 24시간 변화 폭, 24시간 및 7일 이력 범위의 영향을 받습니다."
 )
 _DATA_LIMITATIONS_MISSING_HISTORY = (
-    "필요한 24시간 또는 7일 비교 지점 중 하나 이상이 없어 방향, 크기, "
-    "연속성을 판단할 수 없습니다."
+    "필요한 24시간 또는 7일 비교 지점 중 하나 이상이 없어 방향, 크기, 연속성을 판단할 수 없습니다."
 )
 _DATA_LIMITATIONS_LOW_ACTIVITY = (
     "24시간 활동량 또는 유동성이 없거나 설정된 하한보다 낮아 관찰된 변화가 "
@@ -492,9 +487,7 @@ def build_what_to_check(inputs: ReportPromptInputs) -> str:
         else "문서에 기록된 기준일"
     )
     context_clause = (
-        ", 수동 검토를 마친 맥락 후보의 기록 날짜"
-        if _has_reviewed_candidate(inputs)
-        else ""
+        ", 수동 검토를 마친 맥락 후보의 기록 날짜" if _has_reviewed_candidate(inputs) else ""
     )
     return (
         f"이슈에 적힌 조건과 {end_date_clause}{context_clause}, "
@@ -515,8 +508,7 @@ def build_data_limitations(inputs: ReportPromptInputs) -> str:
         or inputs.liquidity < CAUTION_LOW_ACTIVITY_LIQUIDITY_THRESHOLD
     )
     high_volatility = (
-        inputs.change_24h is not None
-        and abs(inputs.change_24h) > CAUTION_HIGH_VOLATILITY_THRESHOLD
+        inputs.change_24h is not None and abs(inputs.change_24h) > CAUTION_HIGH_VOLATILITY_THRESHOLD
     )
 
     sentences = [
@@ -718,13 +710,9 @@ def run_safety_filter(content: ReportContent) -> SafetyFilterResult:
         for phrase, pattern in zip(BANNED_PHRASES, _PHRASE_PATTERNS, strict=True):
             if pattern.search(text):
                 return SafetyFilterResult(passed=False, rule=f"banned_phrase:{phrase}", field=field)
-        for phrase, pattern in zip(
-            KOREAN_BANNED_SUBSTRINGS, _KOREAN_PHRASE_PATTERNS, strict=True
-        ):
+        for phrase, pattern in zip(KOREAN_BANNED_SUBSTRINGS, _KOREAN_PHRASE_PATTERNS, strict=True):
             if pattern.search(text):
-                return SafetyFilterResult(
-                    passed=False, rule=f"banned_phrase:{phrase}", field=field
-                )
+                return SafetyFilterResult(passed=False, rule=f"banned_phrase:{phrase}", field=field)
         for pattern in BANNED_PATTERNS:
             if pattern.search(text):
                 return SafetyFilterResult(
@@ -786,9 +774,7 @@ def _approximately_matches(actual: float, expected: float) -> bool:
     return abs(actual - expected) <= 0.06
 
 
-def _current_data_reading_matches_inputs(
-    text: str, inputs: ReportPromptInputs
-) -> bool:
+def _current_data_reading_matches_inputs(text: str, inputs: ReportPromptInputs) -> bool:
     """Reject metric-bearing model prose that contradicts structured inputs.
 
     The model may omit a metric when it uses a neutral non-numeric sentence,
@@ -798,15 +784,12 @@ def _current_data_reading_matches_inputs(
     """
     percent_values = _parse_numeric_tokens(_PERCENT_VALUE_PATTERN, text)
     if any(
-        not _approximately_matches(value, inputs.current_value * 100)
-        for value in percent_values
+        not _approximately_matches(value, inputs.current_value * 100) for value in percent_values
     ):
         return False
 
     available_changes = [
-        change * 100
-        for change in (inputs.change_24h, inputs.change_7d)
-        if change is not None
+        change * 100 for change in (inputs.change_24h, inputs.change_7d) if change is not None
     ]
     point_values = _parse_numeric_tokens(_PERCENT_POINT_VALUE_PATTERN, text)
     if any(
@@ -830,11 +813,11 @@ def _current_data_reading_matches_inputs(
 def _has_public_participant_data_scope(text: str) -> bool:
     """Require the report to identify the reading as scoped public data."""
     lowered = text.lower()
-    korean_scope = "공개" in text and "데이터" in text and (
-        "참여자" in text or "예측시장" in text
-    )
-    english_scope = "public" in lowered and "data" in lowered and (
-        "participant" in lowered or "prediction market" in lowered
+    korean_scope = "공개" in text and "데이터" in text and ("참여자" in text or "예측시장" in text)
+    english_scope = (
+        "public" in lowered
+        and "data" in lowered
+        and ("participant" in lowered or "prediction market" in lowered)
     )
     return korean_scope or english_scope
 
@@ -1090,10 +1073,7 @@ def build_v4_data_limitations(inputs: V4ReportInputs) -> str:
         or inputs.liquidity < CAUTION_LOW_ACTIVITY_LIQUIDITY_THRESHOLD
     ):
         limitations.append("활동량 또는 유동성이 설정된 하한보다 낮거나 확인되지 않았습니다.")
-    if (
-        inputs.change_24h is not None
-        and abs(inputs.change_24h) > CAUTION_HIGH_VOLATILITY_THRESHOLD
-    ):
+    if inputs.change_24h is not None and abs(inputs.change_24h) > CAUTION_HIGH_VOLATILITY_THRESHOLD:
         limitations.append("24시간 변화 폭이 커서 단기 변동에 민감할 수 있습니다.")
     return " ".join(limitations)
 
@@ -1135,9 +1115,7 @@ _URL_PATTERN = re.compile(r"https?://|www\.", re.IGNORECASE)
 _NUMBER_PATTERN = re.compile(r"\d+(?:[.,]\d+)?")
 
 
-def _v4_llm_fields_use_only_input_numbers(
-    fields: V4LLMFields, inputs: V4ReportInputs
-) -> bool:
+def _v4_llm_fields_use_only_input_numbers(fields: V4LLMFields, inputs: V4ReportInputs) -> bool:
     allowed_text = " ".join(
         value
         for value in (
@@ -1152,9 +1130,7 @@ def _v4_llm_fields_use_only_input_numbers(
         if value
     )
     allowed_numbers = set(_NUMBER_PATTERN.findall(allowed_text))
-    actual_numbers = set(
-        _NUMBER_PATTERN.findall(f"{fields.issue_overview} {fields.what_to_check}")
-    )
+    actual_numbers = set(_NUMBER_PATTERN.findall(f"{fields.issue_overview} {fields.what_to_check}"))
     return actual_numbers.issubset(allowed_numbers)
 
 
@@ -1172,9 +1148,7 @@ def run_v4_safety_and_semantic_checks(
                 return SafetyFilterResult(
                     passed=False, rule=f"banned_phrase:{phrase}", field=field_name
                 )
-        for phrase, pattern in zip(
-            KOREAN_BANNED_SUBSTRINGS, _KOREAN_PHRASE_PATTERNS, strict=True
-        ):
+        for phrase, pattern in zip(KOREAN_BANNED_SUBSTRINGS, _KOREAN_PHRASE_PATTERNS, strict=True):
             if pattern.search(text):
                 return SafetyFilterResult(
                     passed=False, rule=f"banned_phrase:{phrase}", field=field_name
@@ -1194,9 +1168,7 @@ def run_v4_safety_and_semantic_checks(
     ]
     if payload.evidence_refs != expected_refs:
         return SafetyFilterResult(passed=False, rule="evidence_ref_mismatch")
-    if payload.context_candidate_ids != [
-        candidate.id for candidate in inputs.context_candidates
-    ]:
+    if payload.context_candidate_ids != [candidate.id for candidate in inputs.context_candidates]:
         return SafetyFilterResult(passed=False, rule="candidate_id_mismatch")
     if payload.content.observed_change != build_v4_observed_change(inputs):
         return SafetyFilterResult(passed=False, rule="metric_content_mismatch")
@@ -1211,3 +1183,309 @@ def run_v4_safety_and_semantic_checks(
     if not inputs.context_candidates and payload.content.context_summary is not None:
         return SafetyFilterResult(passed=False, rule="unexpected_context_summary")
     return SafetyFilterResult(passed=True)
+
+
+# --------------------------------------------------------------------------
+# ADR-048 v5 evidence-bounded structured narrative contract.
+# --------------------------------------------------------------------------
+
+V5_PROMPT_VERSION = "v5"
+V5_SYSTEM_PROMPT = """\
+Write a useful Korean issue summary from only the supplied structured evidence.
+Return strict JSON with exactly six fields: executive_summary,
+current_data_interpretation, conditional_scenarios, factors_to_check,
+signals_to_watch, and evidence_synthesis.
+Use natural, issue-specific prose. Do not write generic filler that could apply
+to an unrelated issue. Do not add facts, names, dates, numbers, events, sources,
+URLs, relationships, forecasts, or outcomes that are absent from the evidence.
+Include the exact supplied market.title once in executive_summary so the lead
+section remains auditable and issue-specific; explain it in natural Korean
+around that unchanged title.
+Never state or imply that a cited event explains an observed data movement.
+Do not use the Korean words 원인, 전망, 확정, 추천, or 수익 anywhere, even in
+negative or cautionary sentences. Use 배경은 확인되지 않았습니다, 조건부
+시나리오, 현실 결과를 뜻하지 않습니다, or independently verified wording
+instead. Do not number scenarios or checklist items in the JSON text. Use only
+the exact numbers and dates supplied in market, observed_data, or verified
+candidate evidence; do not calculate, round, or introduce counts.
+Do not say 상승이 이어진다, 하락이 이어진다, 움직임이 계속된다, or any
+equivalent future direction. Scenarios may describe only whether the documented
+market condition is confirmed, partially documented, or not confirmed.
+Prefer the supplied display_value_percent and display_change_*_percentage_points
+when writing Korean prose. Do not expose the internal confidence_level enum or
+raw 0-to-1 decimals when a display value is supplied. Factors and watch items
+must stay tied to the named market condition, outcome label, end date, or
+verified evidence; do not fill them with generic data-methodology reminders.
+conditional_scenarios must contain three or four distinct items. Each item must
+have a short title and a narrative beginning with a Korean conditional expression
+such as "만약" and may describe only conditions present in the supplied market
+definition or verified evidence. factors_to_check and signals_to_watch must be
+concrete issue-specific arrays, each item pairing a title with an explanation.
+evidence_synthesis must be null when verified_context_candidates is empty and
+must be grounded only in those candidates when they exist. Return JSON only.
+"""
+
+
+class V5ConditionalScenario(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    title: str = Field(min_length=2, max_length=100)
+    narrative: str = Field(min_length=30, max_length=900)
+
+    @field_validator("narrative")
+    @classmethod
+    def require_conditional_language(cls, value: str) -> str:
+        if not any(token in value for token in ("만약", "경우", "확인된다면", "확인되지 않는다면")):
+            raise ValueError("V5 scenarios must use explicit conditional language.")
+        if _sentence_count(value) > 5:
+            raise ValueError("V5 scenario narratives must contain at most five sentences.")
+        return value
+
+
+class V5BriefingItem(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    title: str = Field(min_length=2, max_length=120)
+    explanation: str = Field(min_length=20, max_length=700)
+
+    @field_validator("explanation")
+    @classmethod
+    def limit_sentence_count(cls, value: str) -> str:
+        if _sentence_count(value) > 4:
+            raise ValueError("V5 briefing items must contain at most four sentences.")
+        return value
+
+
+class V5LLMFields(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    executive_summary: str = Field(min_length=80, max_length=1200)
+    current_data_interpretation: str = Field(min_length=50, max_length=1200)
+    conditional_scenarios: list[V5ConditionalScenario] = Field(min_length=3, max_length=4)
+    factors_to_check: list[V5BriefingItem] = Field(min_length=2, max_length=6)
+    signals_to_watch: list[V5BriefingItem] = Field(min_length=2, max_length=6)
+    evidence_synthesis: str | None = Field(default=..., min_length=50, max_length=1800)
+
+    @field_validator("executive_summary", "current_data_interpretation", "evidence_synthesis")
+    @classmethod
+    def limit_sentence_count(cls, value: str | None) -> str | None:
+        if value is not None and _sentence_count(value) > 5:
+            raise ValueError("V5 narrative fields must contain at most five sentences.")
+        return value
+
+
+class V5ReportContent(V5LLMFields):
+    relationship_boundary: str = Field(min_length=50, max_length=500)
+    data_limitations: str = Field(min_length=50, max_length=900)
+    caution_note: str = Field(min_length=120, max_length=700)
+
+
+class V5StoredReportPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    episode_at: datetime
+    content: V5ReportContent
+    evidence_refs: list[str] = Field(min_length=1, max_length=4)
+    context_candidate_ids: list[uuid.UUID] = Field(max_length=3)
+
+
+def build_v5_prompt(inputs: V4ReportInputs) -> tuple[str, str]:
+    payload = {
+        "market": {
+            "title": inputs.title,
+            "description": inputs.description,
+            "category": inputs.category,
+            "outcome_label": inputs.outcome_label,
+            "end_date": inputs.end_date.isoformat() if inputs.end_date else None,
+        },
+        "observed_data": {
+            "data_as_of": inputs.data_as_of.isoformat(),
+            "current_value": inputs.current_value,
+            "display_value_percent": round(inputs.current_value * 100, 4),
+            "change_24h": inputs.change_24h,
+            "change_7d": inputs.change_7d,
+            "display_change_24h_percentage_points": (
+                round(inputs.change_24h * 100, 4) if inputs.change_24h is not None else None
+            ),
+            "display_change_7d_percentage_points": (
+                round(inputs.change_7d * 100, 4) if inputs.change_7d is not None else None
+            ),
+            "confidence_level": inputs.confidence_level,
+        },
+        "verified_context_candidates": [
+            {
+                "title": candidate.title,
+                "event_at": candidate.event_at.isoformat(),
+                "neutral_summary": candidate.neutral_summary,
+                "sources": [
+                    {
+                        "title": source.title,
+                        "domain": source.domain,
+                        "source_type": source.source_type,
+                    }
+                    for source in candidate.sources
+                ],
+            }
+            for candidate in inputs.context_candidates
+        ],
+    }
+    return V5_SYSTEM_PROMPT, json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+
+
+def parse_v5_llm_fields(raw_text: str) -> V5LLMFields | None:
+    try:
+        return V5LLMFields.model_validate_json(raw_text)
+    except ValidationError:
+        return None
+
+
+def assemble_v5_report_content(
+    inputs: V4ReportInputs, fields: V5LLMFields
+) -> V5ReportContent | None:
+    caution_note = build_caution_note(inputs.confidence_level)
+    if caution_note is None:
+        return None
+    try:
+        return V5ReportContent(
+            **fields.model_dump(),
+            relationship_boundary=V4_RELATIONSHIP_BOUNDARY,
+            data_limitations=build_v4_data_limitations(inputs),
+            caution_note=caution_note,
+        )
+    except ValidationError:
+        return None
+
+
+def build_v5_stored_payload(
+    inputs: V4ReportInputs, content: V5ReportContent
+) -> V5StoredReportPayload:
+    candidate_ids = [candidate.id for candidate in inputs.context_candidates]
+    return V5StoredReportPayload(
+        episode_at=inputs.episode_at,
+        content=content,
+        evidence_refs=[f"metric:{inputs.metric_id}"]
+        + [f"candidate:{candidate_id}" for candidate_id in candidate_ids],
+        context_candidate_ids=candidate_ids,
+    )
+
+
+def _normalized_specific_tokens(text: str) -> set[str]:
+    return {
+        token.casefold()
+        for token in re.findall(r"[A-Za-z]{3,}|[가-힣]{2,}", text)
+        if token.casefold()
+        not in {"this", "will", "issue", "market", "whether", "대한", "관련", "이슈"}
+    }
+
+
+def _v5_is_issue_specific(fields: V5LLMFields, inputs: V4ReportInputs) -> bool:
+    input_tokens = _normalized_specific_tokens(
+        " ".join(filter(None, (inputs.title, inputs.description, inputs.outcome_label)))
+    )
+    # The lead section must itself identify the issue. A specific name hidden in
+    # a later checklist must not rescue a reusable, generic executive summary.
+    authored_tokens = _normalized_specific_tokens(fields.executive_summary)
+    return bool(input_tokens & authored_tokens)
+
+
+def _v5_authored_text(fields: V5LLMFields) -> str:
+    values = [fields.executive_summary, fields.current_data_interpretation]
+    values.extend(f"{item.title} {item.narrative}" for item in fields.conditional_scenarios)
+    values.extend(f"{item.title} {item.explanation}" for item in fields.factors_to_check)
+    values.extend(f"{item.title} {item.explanation}" for item in fields.signals_to_watch)
+    if fields.evidence_synthesis is not None:
+        values.append(fields.evidence_synthesis)
+    return " ".join(values)
+
+
+def _v5_has_excessive_duplication(fields: V5LLMFields) -> bool:
+    values = [
+        fields.executive_summary,
+        fields.current_data_interpretation,
+    ]
+    values.extend(item.narrative for item in fields.conditional_scenarios)
+    values.extend(item.explanation for item in fields.factors_to_check)
+    values.extend(item.explanation for item in fields.signals_to_watch)
+    if fields.evidence_synthesis is not None:
+        values.append(fields.evidence_synthesis)
+    normalized = [re.sub(r"\s+", " ", value).strip().casefold() for value in values]
+    return len(normalized) != len(set(normalized))
+
+
+def _v5_uses_only_evidence_numbers(fields: V5LLMFields, inputs: V4ReportInputs) -> bool:
+    allowed_parts = [
+        inputs.title,
+        inputs.description,
+        inputs.outcome_label,
+        inputs.end_date.isoformat() if inputs.end_date else None,
+        inputs.data_as_of.isoformat(),
+        str(inputs.current_value),
+        str(inputs.current_value * 100),
+        "24 7",
+    ]
+    for change in (inputs.change_24h, inputs.change_7d):
+        if change is not None:
+            allowed_parts.extend((str(change), str(change * 100)))
+    allowed_parts.extend(
+        f"{candidate.title} {candidate.event_at.isoformat()} "
+        f"{candidate.neutral_summary} " + " ".join(source.title for source in candidate.sources)
+        for candidate in inputs.context_candidates
+    )
+    allowed_text = " ".join(part for part in allowed_parts if part)
+    allowed = set(_NUMBER_PATTERN.findall(allowed_text))
+    actual = set(_NUMBER_PATTERN.findall(_v5_authored_text(fields)))
+    return actual.issubset(allowed)
+
+
+def run_v5_safety_and_semantic_checks(
+    payload: V5StoredReportPayload,
+    inputs: V4ReportInputs,
+    llm_fields: V5LLMFields,
+) -> SafetyFilterResult:
+    for field_name, value in payload.content.model_dump().items():
+        texts = [value] if isinstance(value, str) else []
+        if isinstance(value, list):
+            texts = [str(part) for item in value for part in item.values()]
+        for text in texts:
+            if not text:
+                continue
+            lowered = text.lower()
+            for phrase, pattern in zip(BANNED_PHRASES, _PHRASE_PATTERNS, strict=True):
+                if pattern.search(lowered):
+                    return SafetyFilterResult(False, f"banned_phrase:{phrase}", field_name)
+            for phrase, pattern in zip(
+                KOREAN_BANNED_SUBSTRINGS, _KOREAN_PHRASE_PATTERNS, strict=True
+            ):
+                if pattern.search(text):
+                    return SafetyFilterResult(False, f"banned_phrase:{phrase}", field_name)
+            for pattern in (*BANNED_PATTERNS, *KOREAN_BANNED_PATTERNS):
+                if pattern.search(text):
+                    return SafetyFilterResult(
+                        False, f"banned_pattern:{pattern.pattern}", field_name
+                    )
+
+    authored_text = _v5_authored_text(llm_fields)
+    if _URL_PATTERN.search(authored_text):
+        return SafetyFilterResult(False, "llm_added_url")
+    if not _v5_uses_only_evidence_numbers(llm_fields, inputs):
+        return SafetyFilterResult(False, "unsupported_number")
+    if not _v5_is_issue_specific(llm_fields, inputs):
+        return SafetyFilterResult(False, "generic_summary", "executive_summary")
+    if _v5_has_excessive_duplication(llm_fields):
+        return SafetyFilterResult(False, "duplicate_narrative_fields")
+    if bool(inputs.context_candidates) != (llm_fields.evidence_synthesis is not None):
+        return SafetyFilterResult(False, "evidence_synthesis_presence_mismatch")
+    expected_refs = [f"metric:{inputs.metric_id}"] + [
+        f"candidate:{candidate.id}" for candidate in inputs.context_candidates
+    ]
+    if payload.evidence_refs != expected_refs:
+        return SafetyFilterResult(False, "evidence_ref_mismatch")
+    if payload.context_candidate_ids != [candidate.id for candidate in inputs.context_candidates]:
+        return SafetyFilterResult(False, "candidate_id_mismatch")
+    if payload.content.relationship_boundary != V4_RELATIONSHIP_BOUNDARY:
+        return SafetyFilterResult(False, "relationship_boundary_mismatch")
+    if payload.content.data_limitations != build_v4_data_limitations(inputs):
+        return SafetyFilterResult(False, "data_limitations_mismatch")
+    if payload.content.caution_note != CAUTION_NOTE_BY_LEVEL.get(inputs.confidence_level):
+        return SafetyFilterResult(False, "caution_note_literal_mismatch")
+    return SafetyFilterResult(True)

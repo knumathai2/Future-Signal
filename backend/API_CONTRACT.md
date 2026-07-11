@@ -145,7 +145,38 @@ rather than Technical Design §5's originally proposed `204` (HTTP `204 No
 Content` cannot carry a body per spec, so most clients would discard the
 hint). This is accepted as final, not an open item.
 
-## `GET /api/issues/{id}/report` — current strict v4 runtime
+## `GET /api/issues/{id}/report` — current strict v5 runtime
+
+The endpoint serves only a recent successful `prompt_version="v5"` row that can
+be reconstructed from its linked metric, latest snapshot at or before the
+metric, and exact same-episode verified candidates. Its top-level shape keeps
+`id`, `status`, `generated_at`, `data_as_of`, `episode_at`, `evidence_refs`, and
+`context_candidates`, with `report_version="v5"` and this exact content shape:
+
+```json
+{
+  "executive_summary": "...",
+  "current_data_interpretation": "...",
+  "conditional_scenarios": [{"title": "...", "narrative": "..."}],
+  "factors_to_check": [{"title": "...", "explanation": "..."}],
+  "signals_to_watch": [{"title": "...", "explanation": "..."}],
+  "evidence_synthesis": null,
+  "relationship_boundary": "...",
+  "data_limitations": "...",
+  "caution_note": "..."
+}
+```
+
+`conditional_scenarios` contains three or four items; the two checklist arrays
+contain two to six items. `evidence_synthesis` is non-null exactly when the
+response has verified candidates. Candidate/source shape remains the strict
+stored-URL shape documented below. Read-time validation reruns schema, wording,
+number, evidence-reference, candidate, URL/domain, deterministic-copy, and
+timestamp checks. If the latest successful row fails, the reader tries earlier
+successful v5 rows and preserves the latest valid result. If none validates it
+returns `200 {"status":"not_yet_generated"}`. V1–v4 rows remain audit-only.
+
+## Historical strict v4 runtime (superseded by v5)
 
 The path remains `GET /api/issues/{id}/report`; no new public endpoint was
 added. The endpoint serves only the latest

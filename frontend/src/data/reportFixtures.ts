@@ -1,4 +1,4 @@
-/** Development-only v4 bundles for responsive/browser verification. */
+/** Development-only v5 bundles for responsive/browser verification. */
 import type {
   IssueReportContent,
   IssueReportContextCandidate,
@@ -6,15 +6,26 @@ import type {
 } from "../types/issue";
 
 const BASE_CONTENT: IssueReportContent = {
-  issue_overview:
-    "이 이슈는 공개 문서에 적힌 조건의 충족 여부를 정해진 기한 기준으로 추적합니다.",
-  observed_change:
+  executive_summary:
+    "이 이슈는 공개 문서에 적힌 조건의 충족 여부를 정해진 기한 기준으로 살펴봅니다. 현재 공개 데이터에 반영된 기대값과 최근 비교 구간을 함께 읽되 현실의 결과를 뜻하는 것으로 해석하지 않습니다.",
+  current_data_interpretation:
     "데이터 기준 시각에 공개 예측시장 참여자 데이터에 반영된 기대값은 43.2%입니다. 관찰된 비교값은 24시간 변화 -6.1퍼센트포인트, 7일 변화 -9.4퍼센트포인트입니다.",
-  context_summary: null,
+  conditional_scenarios: [
+    { title: "조건 확인", narrative: "만약 정해진 기준일까지 문서 조건이 확인된다면 해당 판정 문구와 함께 읽습니다." },
+    { title: "부분 확인", narrative: "만약 관련 자료가 공개되지만 조건 충족이 불분명한 경우 후속 문서를 확인합니다." },
+    { title: "조건 미확인", narrative: "만약 기준일까지 문서 조건이 확인되지 않는다면 미확인 상태로 구분합니다." },
+  ],
+  factors_to_check: [
+    { title: "판정 문서", explanation: "이슈의 조건을 명시한 공개 문서와 기준 시각을 확인합니다." },
+    { title: "데이터 비교", explanation: "현재 값과 24시간·7일 비교값을 같은 기준에서 확인합니다." },
+  ],
+  signals_to_watch: [
+    { title: "공식 자료", explanation: "조건과 직접 연결된 공식 문서의 공개 여부를 관찰합니다." },
+    { title: "후속 갱신", explanation: "공개 데이터의 이후 갱신 시각과 값 변화를 별도로 확인합니다." },
+  ],
+  evidence_synthesis: null,
   relationship_boundary:
     "관찰된 움직임은 공개 데이터에 기록된 흐름이며, 현실의 결과 또는 함께 제시된 공개 정보와의 관계를 입증하지 않습니다.",
-  what_to_check:
-    "게시된 조건 문구와 기준 시각 이후 공개 자료의 갱신 내용을 추가로 확인해야 합니다.",
   data_limitations:
     "공개 예측시장 참여자 데이터는 전체 대중의 판단을 대표하지 않습니다. 수치와 맥락은 해당 기준 시각에 저장된 근거 범위에서만 해석해야 합니다.",
   caution_note:
@@ -85,13 +96,13 @@ function fixture(
   return {
     id,
     status: "success",
-    report_version: "v4",
+    report_version: "v5",
     generated_at: "2026-07-08T00:05:00Z",
     data_as_of: "2026-07-07T23:00:00Z",
     episode_at: "2026-07-07T23:00:00Z",
     content: {
       ...BASE_CONTENT,
-      context_summary:
+      evidence_synthesis:
         candidates.length === 0
           ? null
           : "같은 검토 구간에 기록된 공개 정보 후보를 근거 범위 안에서 정리했습니다. " +
@@ -105,15 +116,15 @@ function fixture(
   };
 }
 
-export const V4_FIXTURE_ZERO = fixture(
+export const V5_FIXTURE_ZERO = fixture(
   "77777777-7777-4777-8777-777777777770",
   [],
 );
-export const V4_FIXTURE_ONE = fixture(
+export const V5_FIXTURE_ONE = fixture(
   "77777777-7777-4777-8777-777777777771",
   CANDIDATES.slice(0, 1),
 );
-export const V4_FIXTURE_THREE = fixture(
+export const V5_FIXTURE_THREE = fixture(
   "77777777-7777-4777-8777-777777777773",
   CANDIDATES,
 );
@@ -128,8 +139,8 @@ export function getDevelopmentReportFixture(
   ) {
     return null;
   }
-  if (name === "v4-0") return V4_FIXTURE_ZERO;
-  if (name === "v4-1") return V4_FIXTURE_ONE;
-  if (name === "v4-3") return V4_FIXTURE_THREE;
+  if (name === "v5-0") return V5_FIXTURE_ZERO;
+  if (name === "v5-1") return V5_FIXTURE_ONE;
+  if (name === "v5-3") return V5_FIXTURE_THREE;
   return null;
 }

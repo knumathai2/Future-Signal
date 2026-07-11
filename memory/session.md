@@ -14,9 +14,9 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: Data/AI Implementer + PM / Planner
-- **Session Goal**: Complete TASK-065 guarded local/development backfill and demo evidence.
-- **Branch**: `data-ai/TASK-065-context-backfill`
+- **Agent Role**: Reviewer + Data/AI Implementer → PM / Planner
+- **Session Goal**: Complete the approved TASK-075~081 narrative-summary/source-link program and open actual development results for review.
+- **Branch**: `pm/TASK-081-summary-quality-review`
 
 ## Context Read
 
@@ -65,3 +65,55 @@ Harness Version: 1.1
   changes, and optional TASK-066+ work require separate user direction.
 - ISS-013 records the non-blocking development DB session-pool saturation seen
   only during rapid Browser QA; serialized clean reruns passed.
+
+## TASK-075~081 Program Activation
+
+- The user inspected a real development v4 report and approved a richer AI
+  summary plus direct links to verified articles and official/public sources.
+- ADR-048 and `reports/task-075-narrative-summary-source-program.md` define six
+  evidence-bounded narrative fields, deterministic safety sections, exact
+  verified-source links, and an explicit no-source state.
+- TASK-075 documentation is complete. TASK-076 is now active; it must implement
+  the v5 generator and quality gates before source retrieval, API, UI, database
+  regeneration, and user review proceed sequentially.
+- TASK-076 is complete. The v5 core has six strict authored fields, deterministic
+  safety sections, specificity/duplication/evidence-presence checks, exact
+  evidence references, append-only batch generation, and last-good isolation.
+  Full Backend verification passed with 327 tests and Ruff clean.
+- TASK-077 is active on `data-ai/TASK-077-source-retrieval-quality` and will
+  improve article/official-source discovery without weakening publication gates.
+- TASK-077 is complete. The exact user-approved v5 fields now replace the
+  interim contract; scenarios are typed and conditional, unsupported numbers
+  fail, searches use title/entity/condition/date/official-domain anchors, and
+  market/forecast pages fail deterministically. Seven guarded development
+  research rows completed with zero failures and zero qualifying candidates.
+  TASK spend was USD 0.18057005; DB-recorded cumulative program spend is USD
+  3.09164205. Backend verification passed with 331 tests and Ruff clean.
+- TASK-078 is active and must implement strict v5 read-time reconstruction and
+  the approved public API contract without a schema migration.
+- TASK-078 is complete. The report API serves reconstructed v5 only, validates
+  metric/snapshot/candidate/source/timing/deterministic content again on read,
+  and falls back to the previous valid v5 if a newer successful row is invalid.
+  OpenAPI and integration coverage pass with 332 Backend tests and Ruff clean.
+- TASK-079 is active and must render the approved briefing order, verified
+  source/no-source states, safe exact links, report timing, and caution.
+- TASK-079 is complete. The detail report follows the approved briefing order,
+  renders typed scenario/check/watch cards, shows a visible zero-source state,
+  and opens exact stored links safely. Typecheck, lint, parser, build, responsive
+  zero/one/three-source Browser QA, overflow, and clean-console checks passed.
+- TASK-080 is active and must generate at least ten real development v5 reports,
+  audit stored content/evidence/cost, and rerun integrated Browser states.
+- TASK-080 is complete. Development now has 14 successful v5 rows across 13
+  distinct issues; all latest rows reconstruct cleanly and all have the honest
+  no-source state because verified candidates remain zero. Observed v5 writer
+  spend is USD 0.268466. Backend 333 tests/Ruff, all Frontend checks, actual DB
+  and fixture Browser states, responsive sizes, links, console, and overflow pass.
+- TASK-081 is active and must compare real v4/v5 results, document quality and
+  limits, and leave the actual local development v5 page open for the user.
+- TASK-081 is complete. The real Israeli-parliament case was compared across
+  v4/v5, display values were refined to percent/percentage-point prose, and ten
+  representative append-only regenerations produced six new valid rows while
+  four validation failures preserved their previous valid reports. Total
+  observed v5 writer spend is USD 0.376609. Development verified sources remain
+  zero, so the actual screen shows the explicit no-source state. The local
+  browser is left on the real v5 result for user review.
