@@ -15,16 +15,29 @@ Harness Version: 1.1
 
 - **Date**: 2026-07-11
 - **Agent Role**: PM / Planner
-- **Session Goal**: Define the TASK-092 v6 evidence-aware briefing policy and
-  approval boundary before sequential TASK-093~098 implementation.
-- **Branch**: `pm/TASK-092-evidence-aware-briefing-policy`
+- **Session Goal**: Document and prepare the positive-first, on-demand v7 issue briefing program without changing runtime behavior.
+- **Branch**: `pm/TASK-099-ai-briefing-policy-reset`
 
 ## Context Read
 
-- ADR-038 through human-approved ADR-047 and TASK-056~064 evidence
-- TASK-065 backfill, audit, API, wording, browser, and budget criteria
+- Project constitution and PM role prompt
+- PRD, Service Design, Technical Design, and UX Design indexes and relevant AI/report sections
+- Current project/session/task state, wording policy, glossary, architecture, active report code, API, batch, and validation paths
 
 ## Work Completed
+
+- Preserved the completed and reopened v6 implementation state while preparing
+  the user-directed v7 reset on a separate task branch.
+- Completed TASK-099 documentation in
+  `reports/task-099-on-demand-briefing-policy-reset.md`.
+- Recorded the button-triggered cache flow, independent market/context/writer
+  responsibilities, positive-first prompt direction, broad flexible section
+  envelope, A-D source levels, conditional verifier use, blocking-vs-quality
+  validation split, and v1-v6 archive/cleanup sequence.
+- Added proposed ADR-051 and prepared TASK-100~109 with explicit policy,
+  schema, workflow, API, provider, database, deployment, and deletion gates.
+- No product code, schema, API, workflow, provider, database, dependency,
+  infrastructure, deployment, or binding active-policy text changed.
 
 - Completed TASK-095: v6-only API reconstruction, all four mode responses,
   exact metric/snapshot/reference/history/rule/candidate/source revalidation,

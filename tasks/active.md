@@ -11,41 +11,36 @@ _Last updated: 2026-07-11_
 
 ## In Progress
 
-The user-approved evidence-aware briefing objective is decomposed into
-TASK-092~098 below. Existing evidence, wording, no-causality, fail-closed,
-local/development-only write, and cumulative USD 100 program boundaries remain
-in force. Deployment and production writes remain excluded.
+TASK-099 records the user-directed v7 planning reset: positive-first prompts,
+button-triggered cache-backed briefing generation, independent broad context
+collection with simpler evidence levels, flexible broad-section output, and a
+historical v1-v6 archive followed by separately approved cleanup.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-097 | Regenerate and evaluate v6 reports in development | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-097-v6-development-regeneration` | in_progress |
-| TASK-098 | Review the integrated v6 flow and leave the development UI ready for user review | Reviewer | Reviewer | `review/TASK-098-evidence-aware-briefing-integration` | assigned |
+| TASK-100 | Inventory active constraints and archive the v1-v6 contract map | PM / Reviewer | PM / Planner | `pm/TASK-100-ai-contract-archive` | assigned |
+| TASK-101 | Finalize the positive-first v7 prompt, flexible section envelope, and A-D source-level policy | PM / Data-AI | Data/AI Implementer | `data-ai/TASK-101-v7-briefing-contract` | assigned |
+| TASK-102 | Design the append-only generation-request schema, worker lease, cache fingerprint, and recovery contract | Backend | Backend Implementer | `backend/TASK-102-on-demand-request-schema` | assigned |
+| TASK-103 | Implement broad context collection and lightweight evidence classification | Data/AI | Data/AI Implementer | `data-ai/TASK-103-broad-context-collection` | assigned |
+| TASK-104 | Separate briefing generation from normal collection and add the on-demand generation service | Backend / Data-AI | Backend Implementer | `backend/TASK-104-on-demand-generation-service` | assigned |
+| TASK-105 | Implement report generation, status, cache, and last-good public API contracts | Backend | Backend Implementer | `backend/TASK-105-on-demand-report-api` | assigned |
+| TASK-106 | Add the explicit briefing button and flexible report/source states | Frontend | Frontend Implementer | `frontend/TASK-106-on-demand-briefing-ui` | assigned |
+| TASK-107 | Review cache, concurrency, evidence, copy, and failure behavior | Reviewer | Reviewer | `review/TASK-107-v7-integration-review` | assigned |
+| TASK-108 | Run a bounded development v6-v7 quality and cost comparison | Data/AI / Reviewer | Data/AI Implementer | `data-ai/TASK-108-v7-development-evaluation` | assigned |
+| TASK-109 | Remove superseded v1-v6 runtime code after v7 acceptance | Reviewer / Implementers | Reviewer | `review/TASK-109-legacy-report-cleanup` | assigned |
 
-
-TASK-092~098 must run in dependency order:
-
-1. TASK-092 completes the four-mode policy, deterministic decision rules,
-   section ownership, duplication rules, disclosure contract, and exact
-   approval boundary.
-2. TASK-093 starts only after TASK-092 and any required AI-policy approval.
-3. TASK-094 may start after TASK-092, but workflow/runtime configuration
-   changes remain separately approval-gated.
-4. TASK-095 starts only after TASK-093 and explicit public API approval.
-5. TASK-096 starts only after TASK-095.
-6. TASK-097 starts only after TASK-093~096 and may write only append-only local
-   or development records within the recorded cumulative budget.
-7. TASK-098 starts only after TASK-092~097 pass their own acceptance checks.
-
-Only one task may be `in_progress` at a time. Existing user worktree changes
-from the grounding/regeneration session must be preserved. No new dependency,
-schema migration, production write, deployment, or infrastructure mutation is
-authorized by this task list.
+No v7 implementation task is currently in progress. TASK-100 may start after
+the TASK-099 planning packet is accepted. TASK-101 requires explicit wording
+and AI-policy approval. TASK-102 requires schema approval. TASK-104 requires
+workflow/runtime approval. TASK-105 requires public API approval. TASK-103 and
+TASK-108 require bounded provider-call and local/development-write approval.
 
 Deployment and production writes remain outside the approved program.
 
-The detailed TASK-092~098 acceptance criteria and stop conditions are binding
-in the user-provided goal objective and the TASK-092 contract report once
-accepted.
+The binding proposed sequence, acceptance criteria, and approval packet are in
+`reports/task-099-on-demand-briefing-policy-reset.md`. Only one task may be
+`in_progress` at a time. Existing v6 worktree changes must be preserved until
+TASK-100 records their archive or supersession state.
 
 ## Status Values
 
