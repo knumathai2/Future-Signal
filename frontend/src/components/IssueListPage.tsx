@@ -16,6 +16,10 @@ import {
 type IssueListPageProps = { categories: string[] };
 
 const PAGE_SIZE = 10;
+const ACTIVE_FILTER_CLASS =
+  "inline-flex min-h-11 items-center rounded-full border border-accent bg-accent-soft px-4 text-xs font-bold text-accent";
+const INACTIVE_FILTER_CLASS =
+  "inline-flex min-h-11 items-center rounded-full border border-line bg-card px-4 text-xs font-bold text-ink-soft transition hover:border-accent hover:text-accent";
 
 function sortLabel(sort: IssueListSort): string {
   if (sort === "change") {
@@ -214,12 +218,18 @@ export function IssueListPage({ categories }: IssueListPageProps) {
         className="outline-none"
       >
         <section className="mt-6">
-          <h1
-            id="issues-title"
-            className="text-2xl font-bold text-ink sm:text-3xl"
-          >
-            전체 이슈
-          </h1>
+          <div className="flex items-center gap-3">
+            <span
+              aria-hidden="true"
+              className="h-8 w-1 rounded-full bg-accent"
+            />
+            <h1
+              id="issues-title"
+              className="text-2xl font-bold text-ink sm:text-3xl"
+            >
+              전체 이슈
+            </h1>
+          </div>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-soft">
             현재 관찰 중인 이슈를 검색하고 기간·분류·정렬 기준으로 살펴봅니다.
           </p>
@@ -243,7 +253,7 @@ export function IssueListPage({ categories }: IssueListPageProps) {
                 value={query}
                 onChange={(event) => updateParam("q", event.target.value, true)}
                 placeholder="이슈 검색"
-                className="min-h-11 w-full rounded-xl border border-line bg-card px-4 text-sm text-ink outline-none placeholder:text-ink-faint focus:border-accent"
+                className="min-h-11 w-full rounded-xl border border-line bg-card px-4 text-sm text-ink outline-none transition placeholder:text-ink-faint focus:border-accent focus:ring-2 focus:ring-accent-soft"
               />
             </label>
             <button
@@ -251,7 +261,7 @@ export function IssueListPage({ categories }: IssueListPageProps) {
               onClick={() => setFiltersOpen((value) => !value)}
               aria-expanded={filtersOpen}
               aria-controls="issue-filters"
-              className="inline-flex min-h-11 items-center rounded-xl border border-line bg-card px-4 text-xs font-bold text-ink md:hidden"
+              className="inline-flex min-h-11 items-center rounded-xl border border-accent bg-accent-soft px-4 text-xs font-bold text-accent md:hidden"
             >
               필터
             </button>
@@ -276,8 +286,8 @@ export function IssueListPage({ categories }: IssueListPageProps) {
                   aria-pressed={!activeCategory}
                   className={
                     !activeCategory
-                      ? "inline-flex min-h-11 items-center rounded-full border border-ink bg-ink px-4 text-xs font-bold text-card"
-                      : "inline-flex min-h-11 items-center rounded-full border border-line px-4 text-xs font-bold text-ink-soft hover:border-accent hover:text-accent"
+                      ? ACTIVE_FILTER_CLASS
+                      : INACTIVE_FILTER_CLASS
                   }
                 >
                   전체
@@ -292,8 +302,8 @@ export function IssueListPage({ categories }: IssueListPageProps) {
                       aria-pressed={activeCategory === label}
                       className={
                         activeCategory === label
-                          ? "inline-flex min-h-11 items-center rounded-full border border-ink bg-ink px-4 text-xs font-bold text-card"
-                          : "inline-flex min-h-11 items-center rounded-full border border-line px-4 text-xs font-bold text-ink-soft hover:border-accent hover:text-accent"
+                          ? ACTIVE_FILTER_CLASS
+                          : INACTIVE_FILTER_CLASS
                       }
                     >
                       {label}
@@ -321,8 +331,8 @@ export function IssueListPage({ categories }: IssueListPageProps) {
                       aria-pressed={activeWindow === windowKey}
                       className={
                         activeWindow === windowKey
-                          ? "inline-flex min-h-11 items-center rounded-full border border-ink bg-ink px-4 text-xs font-bold text-card"
-                          : "inline-flex min-h-11 items-center rounded-full border border-line px-4 text-xs font-bold text-ink-soft hover:border-accent hover:text-accent"
+                          ? ACTIVE_FILTER_CLASS
+                          : INACTIVE_FILTER_CLASS
                       }
                     >
                       {windowLabel(windowKey)}
@@ -348,8 +358,8 @@ export function IssueListPage({ categories }: IssueListPageProps) {
                       aria-pressed={activeSort === sort}
                       className={
                         activeSort === sort
-                          ? "inline-flex min-h-11 items-center rounded-full border border-ink bg-ink px-4 text-xs font-bold text-card"
-                          : "inline-flex min-h-11 items-center rounded-full border border-line px-4 text-xs font-bold text-ink-soft hover:border-accent hover:text-accent"
+                          ? ACTIVE_FILTER_CLASS
+                          : INACTIVE_FILTER_CLASS
                       }
                     >
                       {sortLabel(sort)}
@@ -367,7 +377,7 @@ export function IssueListPage({ categories }: IssueListPageProps) {
               검색 결과
             </h2>
             <p
-              className="text-sm font-semibold text-ink-soft"
+              className="rounded-full bg-accent-soft px-3 py-1.5 text-sm font-bold text-accent"
               aria-live="polite"
             >
               {matchingIssues.length}개 이슈
@@ -425,7 +435,7 @@ export function IssueListPage({ categories }: IssueListPageProps) {
                     aria-current={page === activePage ? "page" : undefined}
                     className={
                       page === activePage
-                        ? "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-ink text-xs font-bold text-card"
+                        ? "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full bg-accent text-xs font-bold text-card"
                         : "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-line text-xs font-bold text-ink-soft hover:border-accent hover:text-accent"
                     }
                   >

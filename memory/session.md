@@ -15,8 +15,8 @@ Harness Version: 1.1
 
 - **Date**: 2026-07-12
 - **Agent Role**: Frontend Implementer with PM / safety review
-- **Session Goal**: Split the issue detail into four question-led tabs.
-- **Branch**: `frontend/TASK-118-issue-detail-tabs`
+- **Session Goal**: Extend the approved emphasis hierarchy to detail and full issue-list surfaces.
+- **Branch**: `frontend/TASK-119-issue-list-emphasis`
 
 ## Context Read
 
@@ -24,6 +24,22 @@ Harness Version: 1.1
 - Current project/session/task state, standards, glossary, detail/report components, types, and browser QA guidance
 
 ## Work Completed
+
+- Completed TASK-119 at the user's direction. Extended the approved
+  terracotta/current-context and muted-blue/comparison hierarchy to the full
+  issue list without changing search, filters, sorting, pagination, list data,
+  or route behavior.
+- Added a restrained heading marker, soft selected-filter pills, focused search
+  ring, accented result-count badge, terracotta current reflected expectation
+  values, muted-blue observed changes, soft row hover, and accented active
+  pagination.
+- Frontend typecheck, lint, parser regression, build, desktop full-list Browser
+  review, and 320px Browser QA pass. Mobile selected filters retain 44px
+  controls; the page has no horizontal overflow and the clean console has zero
+  warnings/errors. The known bundle-size warning remains.
+- No dependency, public API, schema, database write, provider call,
+  infrastructure, deployment, production action, wording-policy change, or
+  legacy deletion occurred.
 
 - Applied the user's TASK-118 visual follow-up. Updated the shared accent, soft
   accent, ink, and muted comparison tokens; aligned the brand and chart's

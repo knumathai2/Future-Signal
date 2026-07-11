@@ -88,6 +88,11 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
 - **Hide/minimize**: Any sort option framed as "best opportunity" or "biggest swing to catch" — sort labels should read "Largest change (24h)," not "Biggest movers to watch."
 - **Betting-perception risk**: **Medium** — a sortable list with percentages is visually close to an odds board. Mitigate with typography/layout that looks like a research index, not a trading screen (e.g., no monospace ticker font, no dense multi-column price-grid look).
 - **UX direction**: Card or row list with generous whitespace, editorial typography, not a dense grid of numbers.
+- **TASK-119 visual emphasis**: Use a small terracotta heading marker, soft
+  terracotta selected filters/result count/current reflected expectation
+  values, and muted-blue comparison values. List-row hover may use the soft
+  terracotta surface, but the entire resting list remains neutral. Direction
+  continues to rely on the sign and label rather than green/red coding.
 
 ### 3.3 Market / Issue Detail
 
