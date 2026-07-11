@@ -8,6 +8,9 @@ load_dotenv()
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
 OPENAI_DEFAULT_MODEL = "gpt-4o-mini"
 OPENROUTER_DEFAULT_MODEL = "openai/gpt-4o-mini"
+CONTEXT_MAX_SEARCH_QUERIES = 6
+CONTEXT_MAX_SEARCH_RESULTS = 30
+CONTEXT_MAX_RESULTS_PER_QUERY = 5
 
 
 def _is_openrouter_key(api_key: str | None) -> bool:
@@ -46,6 +49,14 @@ def _resolve_ai_base_url(provider: str, raw_base_url: str | None) -> str | None:
     return None
 
 
+def _bounded_int(raw_value: str | None, *, default: int, minimum: int, maximum: int) -> int:
+    try:
+        value = int(raw_value) if raw_value is not None else default
+    except ValueError:
+        return default
+    return min(max(value, minimum), maximum)
+
+
 class Settings:
     def __init__(self) -> None:
         self.env: str = os.getenv("ENV", "local")
@@ -82,6 +93,37 @@ class Settings:
         self.openrouter_http_referer: str | None = os.getenv("OPENROUTER_HTTP_REFERER")
         self.openrouter_app_title: str | None = os.getenv(
             "OPENROUTER_APP_TITLE", "Outlook Signals"
+        )
+        # TASK-058: bounded OpenRouter server-tool research. These limits are
+        # clamped at the ADR-038/TASK-055 maxima even if environment values are
+        # larger, so configuration cannot silently expand paid research scope.
+        self.context_research_model: str = _resolve_ai_model(
+            "openrouter",
+            os.getenv("CONTEXT_RESEARCH_MODEL") or self.openai_model,
+        )
+        raw_engine = os.getenv("CONTEXT_SEARCH_ENGINE", "auto").strip().lower()
+        self.context_search_engine: str = (
+            raw_engine
+            if raw_engine in {"auto", "native", "exa", "firecrawl", "parallel", "perplexity"}
+            else "auto"
+        )
+        self.context_max_search_queries: int = _bounded_int(
+            os.getenv("CONTEXT_MAX_SEARCH_QUERIES"),
+            default=CONTEXT_MAX_SEARCH_QUERIES,
+            minimum=1,
+            maximum=CONTEXT_MAX_SEARCH_QUERIES,
+        )
+        self.context_max_search_results: int = _bounded_int(
+            os.getenv("CONTEXT_MAX_SEARCH_RESULTS"),
+            default=CONTEXT_MAX_SEARCH_RESULTS,
+            minimum=1,
+            maximum=CONTEXT_MAX_SEARCH_RESULTS,
+        )
+        self.context_max_results_per_query: int = _bounded_int(
+            os.getenv("CONTEXT_MAX_RESULTS_PER_QUERY"),
+            default=CONTEXT_MAX_RESULTS_PER_QUERY,
+            minimum=1,
+            maximum=25,
         )
 
 
