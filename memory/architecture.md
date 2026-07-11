@@ -96,6 +96,7 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 | Resolution-rule evidence | Separate append-only source condition/deadline/exclusion/source records from display copy; hash-idempotent versions | 2026-07-11 (ADR-049, human-approved code change) |
 | Server-tool query scope | Deterministic anchors + bounded normalized metadata overlap; exact reported strings audited | 2026-07-11 (ADR-047, human-approved) |
 | V7 briefing boundary | Positive-first flexible sections with opaque evidence refs; backend-owned metrics/source/timing/cache; A-C public source levels | 2026-07-11 (ADR-051, human-approved) |
+| V7 request lifecycle | Immutable market/fingerprint request plus append-only queued/running/succeeded/failed events with expiring leases | 2026-07-11 (TASK-102, human-approved) |
 | Evidence-aware briefing v6 | Four deterministic change/evidence modes, strict basis union, one-owner metric/rule display, and v6-only fallback | 2026-07-11 (ADR-050, human-approved and implemented) |
 
 ## V6 evidence-aware briefing implementation (TASK-092~098)
