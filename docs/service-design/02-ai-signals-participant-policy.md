@@ -63,6 +63,28 @@ TASK-056~065. Per-run usage is audited without storing secrets, prompts, or full
 responses. `no_candidate` is a successful result, and prior successful public
 content remains available when the provider fails.
 
+### 6.9 Approved v5 narrative-summary contract (ADR-048)
+
+TASK-075~081 supersedes v4's two model-authored fields with six fixed narrative
+fields: `executive_summary`, `issue_context`, `change_interpretation`, nullable
+`evidence_synthesis`, `open_questions`, and `what_to_watch`. The model may write
+natural Korean prose inside those fields, but it may use only the supplied
+market definition, stored metric/snapshot values, and same-episode verified
+context candidates. This is structured narrative generation, not evidence-free
+or open-ended analysis.
+
+Every number, date, named entity, event, and source statement must be traceable
+to an input evidence reference. Generic prose that could be reused across
+unrelated issues, unsupported claims, causal language, outcome assertions,
+duplicated sections, incomplete Korean sentences, and prohibited wording block
+storage. Deterministic relationship-boundary, data-limitation, and caution
+fields remain mandatory and are reconstructed at read time.
+
+Verified source cards expose the exact stored title, domain, publication time,
+source type, and URL. No verified candidate means `evidence_synthesis=null` and
+an explicit UI state that no source passed the public criteria; the system must
+not substitute an unverified article or generic search link.
+
 ---
 
 ## 7. Sudden Change Signal Design

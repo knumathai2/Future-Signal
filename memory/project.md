@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.9.0-v4-context-program-complete
-- **Phase**: Approved post-MVP v4 automated-context program complete
-- **Next milestone**: Separate human decision for deployment or optional TASK-066+ stretch work
-- **Overall health**: 🟢 Verified — TASK-056~065 are complete. The 50-target development backfill completed 46 distinct issues, strict v4/API/browser audits passed, and DB-recorded spend is USD 3.00263875. Deployment and production writes remain excluded.
+- **Version**: v0.10.0-v5-narrative-program-active
+- **Phase**: Approved post-MVP v5 narrative-summary/source-link program active
+- **Next milestone**: TASK-076 evidence-bounded narrative generator
+- **Overall health**: 🟢 Active — TASK-075 policy documentation is complete and ADR-048 activates TASK-076~081. The verified v4 baseline remains intact while v5 implementation proceeds. Deployment and production writes remain excluded.
 
 ## Tech Summary
 
@@ -56,11 +56,13 @@ Future Signal/
 | Data/AI | TASK-058/059 provide bounded annotation-only research and deterministic/independent verification. TASK-060 connects them between signals and reports, and TASK-061 adds strict evidence-linked v4 generation with deterministic metric/context fields, same-episode verified candidates, writer-cost accounting, and last-known-good failure isolation. |
 | PM / Safety | The v3 MVP remains frozen. ADR-038 activates TASK-056~065 with verified-only automated context, strict evidence links, a cumulative USD 100 OpenRouter cap, and local/development-only writes. Deployment and production DB writes remain separate gates. |
 | v4 program | TASK-056~065 are complete. Migration 002 exists only in the approved development DB. ADR-047 permits bounded provider query reformulation with normalized market-metadata overlap while every evidence/publication gate remains unchanged. Fifty backfill targets yielded 46 completed distinct issues, seven rejected candidates, zero public candidates, and 14 successful v4 rows across 13 issues. |
+| v5 program | ADR-048 expands the two authored v4 fields into six evidence-bounded narrative fields, adds explicit verified-source/no-source presentation, and activates sequential TASK-075~081 for implementation, development regeneration, and user quality review. |
 
 ## Recent Changes
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | TASK-075 complete: ADR-048 records human approval for the evidence-bounded v5 narrative and exact verified-source-link program; TASK-076 is activated. |
 | 2026-07-11 | TASK-065 complete: 50-target development backfill, 46 distinct completed issues, query/result maxima 5/26, zero public candidates after strict gates, 13 successful v4 issue reports with zero safety/evidence mismatch, five live no-candidate and five local fixture candidate Browser flows, and USD 3.00263875 recorded spend. |
 | 2026-07-11 | ADR-047 human-approved: bounded query reformulation may replace exact-string membership when normalized market topic/entity overlap passes; all annotation, independent-verification, and publication gates remain unchanged. TASK-065 resumed. |
 | 2026-07-11 | Historical TASK-065 checkpoint: development migration applied; 16 bounded preflight runs across five issues recorded USD 0.778926. Bulk backfill paused until the later ADR-047 approval recorded above. |

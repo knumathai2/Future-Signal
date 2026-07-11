@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Decision Log — Outlook Signals
 
-_Last updated: 2026-07-10_
+_Last updated: 2026-07-11_
 
 ## Template
 
@@ -23,6 +23,51 @@ _Last updated: 2026-07-10_
 **Trade-offs**: What are the downsides?
 **Consequences**: What changed as a result?
 ```
+
+---
+
+### ADR-048: Expand v4's two authored fields into evidence-bounded narrative summaries
+
+- **Date**: 2026-07-11
+- **Status**: Accepted ⚠️ HUMAN APPROVAL
+- **Decided by**: User (human), PM / Planner
+
+**Context**: The user inspected an actual TASK-065 development-DB v4 report in
+the local UI. Although generation and display worked, only `issue_overview` and
+`what_to_check` were model-authored. The result was generic, awkward, and hard
+to distinguish from deterministic template copy. Verified source links were
+already supported conditionally, but no candidate passed the development
+backfill gates, so no real source card was visible.
+
+**Decision**: Approve TASK-075~081 to introduce a richer v5 structured narrative
+report, improve verified article/official-document retrieval, expose exact
+stored source links, regenerate representative development reports, and place
+the real results in front of the user for a final quality decision. The model
+may choose prose and organization within six named narrative fields, but every
+fact, number, date, named entity, and source claim must resolve to supplied
+metric/market/verified-candidate evidence. Deterministic relationship,
+limitation, and caution fields remain mandatory. Generic, duplicated,
+incomplete, unsupported, causal, outcome-asserting, or prohibited-language
+output is rejected before storage.
+
+**Rationale**: Perceived AI value comes from useful evidence transformation,
+not from an AI label. Wider prose freedom can improve readability and
+specificity without relaxing the product's epistemic or publication boundary.
+Direct verified-source links let users inspect the material behind a summary.
+
+**Trade-offs**: Longer output costs more, has more failure modes, and requires
+new quality gates plus a public API/UI version change. When no candidate passes
+verification, the report must remain a metric-grounded summary and cannot
+claim external context depth.
+
+**Consequences**: ADR-003's blanket phrase "never free-form analysis" is
+superseded only by this evidence-bounded structured-narrative contract. The
+prohibition on unconstrained or evidence-free analysis remains. TASK-075~081
+may change the report policy and approved public API/UI shape and may write new
+reports/context audit rows only to local/development databases within the
+existing cumulative USD 100 program ceiling. Deployment, production writes,
+infrastructure changes, new dependencies, unrelated schema/API changes, and
+existing-migration edits remain outside approval.
 
 ---
 

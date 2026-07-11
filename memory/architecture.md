@@ -74,6 +74,7 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 | Postgres URL compatibility | `psycopg2-binary==2.9.10` for provider-copied `postgresql://...` URLs | 2026-07-09 (ADR-023, human-approved) |
 | Migration format (interim) | Plain SQL (`backend/migrations/*.sql`), not Alembic | 2026-07-08 (ADR-007) |
 | Automated context v4 | Citation annotations + deterministic hard gates + different verifier model + verified-only public reads; cumulative USD 100, local/dev writes only | 2026-07-11 (ADR-038, human-approved) |
+| Evidence-bounded narrative v5 | Six authored narrative fields plus deterministic relationship/limitation/caution fields; verified exact-source links; genericity/evidence/safety gates | 2026-07-11 (ADR-048, human-approved) |
 | Server-tool query scope | Deterministic anchors + bounded normalized metadata overlap; exact reported strings audited | 2026-07-11 (ADR-047, human-approved) |
 
 ## Architecture Constraints
@@ -155,6 +156,12 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
   inputs now normalize snapshot, episode, candidate-event, and end-date values
   to UTC-aware timestamps before deterministic assembly, matching PostgreSQL
   and the API's independent reconstruction boundary.
+- `TASK-075` activates the ADR-048 v5 program. The generator may author six
+  named narrative fields, while every fact remains bound to market, metric, or
+  verified-candidate evidence. Exact stored source links are public only for
+  verified candidates; zero-candidate reports expose an explicit no-source
+  state. TASK-076~081 implement, regenerate, verify, and present real results
+  for user review without deployment or production writes.
 - `TASK-065` has applied migration 002 to the approved development DB. The
   guarded batch now supports `--context-max-markets`, retries research once,
   and retains usage from failed billed responses. Bulk execution is stopped:

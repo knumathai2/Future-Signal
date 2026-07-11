@@ -14,9 +14,9 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: Data/AI Implementer + PM / Planner
-- **Session Goal**: Complete TASK-065 guarded local/development backfill and demo evidence.
-- **Branch**: `data-ai/TASK-065-context-backfill`
+- **Agent Role**: PM / Planner → Data/AI Implementer
+- **Session Goal**: Activate and implement the approved TASK-075~081 narrative-summary/source-link program.
+- **Branch**: `pm/TASK-075-narrative-summary-policy` → `data-ai/TASK-076-narrative-summary-generator`
 
 ## Context Read
 
@@ -65,3 +65,14 @@ Harness Version: 1.1
   changes, and optional TASK-066+ work require separate user direction.
 - ISS-013 records the non-blocking development DB session-pool saturation seen
   only during rapid Browser QA; serialized clean reruns passed.
+
+## TASK-075~081 Program Activation
+
+- The user inspected a real development v4 report and approved a richer AI
+  summary plus direct links to verified articles and official/public sources.
+- ADR-048 and `reports/task-075-narrative-summary-source-program.md` define six
+  evidence-bounded narrative fields, deterministic safety sections, exact
+  verified-source links, and an explicit no-source state.
+- TASK-075 documentation is complete. TASK-076 is now active; it must implement
+  the v5 generator and quality gates before source retrieval, API, UI, database
+  regeneration, and user review proceed sequentially.
