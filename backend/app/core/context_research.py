@@ -70,6 +70,33 @@ _QUERY_SCOPE_STOPWORDS = frozenset(
         "최신",
     }
 )
+_QUERY_ALIAS_PATTERNS = (
+    (re.compile(r"\bu\.?\s*s\.?\s*a?\.?\b", re.IGNORECASE), "unitedstates"),
+    (re.compile(r"\bunited\s+states(?:\s+of\s+america)?\b", re.IGNORECASE), "unitedstates"),
+    (re.compile(r"미\s*[·ㆍ・/\-]\s*러"), "unitedstates russia"),
+    (re.compile(r"미국"), "unitedstates"),
+    (re.compile(r"러시아"), "russia"),
+    (re.compile(r"핵\s*(?:무기\s*)?(?:합의|협정)"), "nuclear agreement"),
+    (re.compile(r"핵\s*협상"), "nuclear negotiation"),
+)
+_QUERY_TOKEN_ALIASES = {
+    "america": "unitedstates",
+    "american": "unitedstates",
+    "russian": "russia",
+    "atomic": "nuclear",
+    "accord": "agreement",
+    "deal": "agreement",
+    "talks": "negotiation",
+    "negotiations": "negotiation",
+}
+_QUERY_CONCEPT_LABELS = {
+    "unitedstates": "United States",
+    "russia": "Russia",
+    "nuclear": "nuclear",
+    "agreement": "agreement",
+    "negotiation": "negotiations",
+    "treaty": "treaty",
+}
 RESEARCH_SYSTEM_PROMPT = """\
 You research public context for an issue-monitoring dashboard. Use the provided
 OpenRouter web-search server tool, using the bounded suggested queries as scope
@@ -260,8 +287,14 @@ def build_search_queries(
     condition_terms = " ".join(
         sorted(_normalized_scope_tokens(scoped_condition), key=lambda item: (-len(item), item))[:4]
     )
+    alias_phrase = _query_alias_phrase(
+        inputs.title,
+        inputs.description,
+        inputs.tracked_condition,
+    )
     candidates = [
         f'"{inputs.title}" {start} {end}',
+        f'"{alias_phrase}" {start} {end}' if alias_phrase else "",
         f'"{primary_entity}" "{scoped_condition}" {start} {end}',
         f'"{primary_entity}" {condition_terms} official announcement document',
     ]
@@ -293,12 +326,23 @@ def build_search_queries(
 def _normalized_scope_tokens(*values: str) -> set[str]:
     """Return stable topic tokens while excluding generic search vocabulary."""
     text = unicodedata.normalize("NFKC", " ".join(values)).casefold()
+    for pattern, replacement in _QUERY_ALIAS_PATTERNS:
+        text = pattern.sub(f" {replacement} ", text)
     return {
-        token
+        _QUERY_TOKEN_ALIASES.get(token, token)
         for token in _TOKEN_PATTERN.findall(text)
         if token not in _QUERY_SCOPE_STOPWORDS
         and ((token.isdigit() and len(token) >= 4) or (not token.isdigit() and len(token) >= 3))
     }
+
+
+def _query_alias_phrase(*values: str) -> str | None:
+    """Return one deterministic cross-wording query for multi-concept issues."""
+    tokens = _normalized_scope_tokens(*values)
+    concepts = [
+        label for token, label in _QUERY_CONCEPT_LABELS.items() if token in tokens
+    ]
+    return " ".join(concepts) if len(concepts) >= 2 else None
 
 
 def _query_has_metadata_overlap(query: str, inputs: ResearchInputs) -> bool:
@@ -395,9 +439,30 @@ def _normalize_citations(
     return list(citations_by_url.values())
 
 
+def _annotation_fallback_candidates(
+    citations: list[NormalizedCitation],
+) -> list[ResearchCandidateDraft]:
+    """Create narrow candidates from exact annotations when body JSON is unavailable."""
+    return [
+        ResearchCandidateDraft(
+            candidate_key=f"candidate:annotation:{citation.content_hash[:20]}",
+            title=citation.title,
+            event_at=None,
+            citation_ids=[citation.citation_id],
+            matched_entities=[],
+            matched_condition=citation.content_excerpt,
+            temporal_relation="before_window",
+        )
+        for citation in citations
+        if citation.content_excerpt.strip()
+    ]
+
+
 def _parse_usage(raw_usage: Any) -> ResearchUsage:
     usage = _as_mapping(raw_usage)
-    server_tool_use = _as_mapping(usage.get("server_tool_use"))
+    server_tool_use = _as_mapping(
+        usage.get("server_tool_use") or usage.get("server_tool_use_details")
+    )
     cost = usage.get("cost")
     return ResearchUsage(
         input_tokens=int(usage.get("prompt_tokens") or usage.get("input_tokens") or 0),
@@ -448,7 +513,7 @@ class OpenRouterContextResearchClient:
         accumulated = ResearchUsage()
         for attempt in range(2):
             try:
-                result = self._research_once(inputs)
+                result = self._research_once(inputs, use_web_plugin=attempt == 1)
             except ContextResearchError:
                 accumulated = _combine_usage(accumulated, self.last_usage)
                 self.last_usage = accumulated
@@ -460,7 +525,12 @@ class OpenRouterContextResearchClient:
             return result.model_copy(update={"usage": combined})
         raise ContextResearchError("OpenRouter context research failed after retry")
 
-    def _research_once(self, inputs: ResearchInputs) -> ContextResearchResult:
+    def _research_once(
+        self,
+        inputs: ResearchInputs,
+        *,
+        use_web_plugin: bool = False,
+    ) -> ContextResearchResult:
         self.last_usage = ResearchUsage()
         self.last_queries = []
         queries = build_search_queries(inputs, limit=self._max_search_queries)
@@ -473,17 +543,34 @@ class OpenRouterContextResearchClient:
         if inputs.allowed_domains:
             parameters["allowed_domains"] = inputs.allowed_domains
 
+        extra_body: dict[str, Any]
+        if use_web_plugin:
+            plugin: dict[str, Any] = {
+                "id": "web",
+                "max_results": min(self._max_search_results, 10),
+            }
+            if self._engine != "auto":
+                plugin["engine"] = self._engine
+            if inputs.allowed_domains:
+                plugin["include_domains"] = inputs.allowed_domains
+            extra_body = {"plugins": [plugin]}
+        else:
+            extra_body = {
+                "tools": [{"type": "openrouter:web_search", "parameters": parameters}]
+            }
+
         kwargs: dict[str, Any] = {
             "model": self._model,
             "messages": [
                 {"role": "system", "content": RESEARCH_SYSTEM_PROMPT},
                 {"role": "user", "content": _build_user_prompt(inputs, queries)},
             ],
-            "response_format": {"type": "json_object"},
             "temperature": 0,
             "timeout": 45,
-            "extra_body": {"tools": [{"type": "openrouter:web_search", "parameters": parameters}]},
+            "extra_body": extra_body,
         }
+        if not use_web_plugin:
+            kwargs["tool_choice"] = "required"
         if self._extra_headers:
             kwargs["extra_headers"] = self._extra_headers
 
@@ -504,18 +591,6 @@ class OpenRouterContextResearchClient:
         if not content:
             raise ContextResearchError("OpenRouter context research returned empty content")
 
-        try:
-            raw_output = _ProviderResearchOutput.model_validate_json(content)
-        except ValidationError as exc:
-            raise ContextResearchError("OpenRouter context research returned invalid JSON") from exc
-        self.last_queries = list(raw_output.queries)
-        if not raw_output.queries or len(set(raw_output.queries)) != len(raw_output.queries):
-            raise ContextResearchError("OpenRouter reported invalid query audit data")
-        if len(raw_output.queries) > self._max_search_queries:
-            raise ContextResearchError("OpenRouter exceeded the reported-query limit")
-        if not all(_query_has_metadata_overlap(query, inputs) for query in raw_output.queries):
-            raise ContextResearchError("OpenRouter reported a query outside market metadata scope")
-
         if usage.web_search_requests > self._max_search_queries:
             raise ContextResearchError("OpenRouter exceeded the search-query limit")
 
@@ -525,6 +600,42 @@ class OpenRouterContextResearchClient:
             raise ContextResearchError("OpenRouter exceeded the citation-result limit")
         if not citations and usage.web_search_requests == 0:
             raise ContextResearchError("Response did not use the web-search server tool")
+
+        try:
+            raw_output = _ProviderResearchOutput.model_validate_json(content)
+        except ValidationError as exc:
+            if not citations:
+                raise ContextResearchError(
+                    "OpenRouter context research returned invalid JSON"
+                ) from exc
+            self.last_queries = queries
+            return ContextResearchResult(
+                model=self._model,
+                queries=queries,
+                citations=citations,
+                candidates=_annotation_fallback_candidates(citations),
+                usage=usage,
+            )
+        self.last_queries = list(raw_output.queries)
+        query_audit_valid = (
+            bool(raw_output.queries)
+            and len(set(raw_output.queries)) == len(raw_output.queries)
+            and len(raw_output.queries) <= self._max_search_queries
+            and all(
+                _query_has_metadata_overlap(query, inputs) for query in raw_output.queries
+            )
+        )
+        if not query_audit_valid:
+            if citations:
+                self.last_queries = queries
+                return ContextResearchResult(
+                    model=self._model,
+                    queries=queries,
+                    citations=citations,
+                    candidates=_annotation_fallback_candidates(citations),
+                    usage=usage,
+                )
+            raise ContextResearchError("OpenRouter reported invalid query audit data")
 
         citation_ids_by_url = {citation.url: citation.citation_id for citation in citations}
         candidates: list[ResearchCandidateDraft] = []

@@ -97,6 +97,11 @@ Every user-facing string and every AI/template output must be checked against th
   are mandatory, section types are unique, limitations may appear once, and
   the public UI must not repeat the deterministic limitations block when the
   authored limitations section is present.
+- TASK-113 may widen v8 discovery to a deterministic 90-day or 180-day horizon
+  and common entity/issue aliases. Publication still requires an exact safe
+  annotation URL, publisher title/domain, non-empty excerpt, issue relevance,
+  narrow supported claim, source-parent linkage, A-C attribution, and all
+  conflict, conditional-verifier, wording, and no-causal-inference gates.
 - Policy/lint docs and tests may quote prohibited expressions only to define or verify the blocking rule; demo-visible docs and product copy may not normalize those terms as user-facing language
 
 ## Documentation Standards

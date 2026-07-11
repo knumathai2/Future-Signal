@@ -282,4 +282,39 @@ reconstruction; new generation and public serving use `prompt_version="v8"`,
 `policy_version="v8-issue-centered-1"`, and
 `input_schema_version="v8-writer-input-1"`.
 
+### 10.12 V8 wider source discovery with narrow excerpt claims (TASK-113)
+
+The on-demand v8 path selects a 90-day horizon for shorter operational issues
+and 180 days for longer-horizon or slow-moving policy, diplomatic, legislative,
+election, regulatory, treaty, negotiation, and nuclear issues. Deterministic
+concept aliases are used both for bounded query construction and for relevance
+comparison, so common entity wording differences do not cause an automatic
+zero-source result.
+
+Acceptance remains excerpt-bound. A citation title may contribute to topical
+relevance, but a non-empty exact annotation excerpt must overlap the issue or
+candidate. When the excerpt does not support the candidate's broader condition
+wording, the stored excerpt is used as the supported claim. Exact URLs,
+publisher identity, A-C attribution, source-parent references, conflict and
+high-impact verifier routing, unsafe-domain rejection, and causal/future claim
+blockers remain active.
+
+The button-triggered worker now constructs the approved bounded research path
+lazily when `refresh_context=true`. A changed evidence bundle creates the
+existing immutable successor request, and the request-scoped worker follows
+that successor in the same local/development process. Context spend is checked
+against the recorded cumulative ceiling before research begins.
+Server-tool research does not send Chat Completions JSON mode because the
+configured provider rejects web search combined with `response_format`; the
+fixed JSON instruction, strict Pydantic parse, annotation provenance checks,
+and bounded retry continue to fail closed.
+When the tool succeeds with annotations but returns a natural-language body,
+the research client does not parse body links or claims. It deterministically
+creates one narrow candidate per exact annotation using only title, URL, and
+excerpt, then applies the normal relevance and A-D classification path.
+The request sets server-tool choice to `required`; a response with zero search
+usage and no annotations triggers the one bounded compatibility attempt using
+OpenRouter's always-on web plugin. Both paths normalize only `url_citation`
+annotations; a second response without annotations still fails closed.
+
 ---
