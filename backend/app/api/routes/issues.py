@@ -16,10 +16,11 @@ never become a silent, permanent substitute for live data - once TASK-008
 produces real rows the live path takes over automatically, no code change
 needed here. See reports/task-010-core-api-notes.md for detail.
 
-`/api/issues/{id}/report` reads the latest successful `ai_reports` row in
-live mode. When no successful report exists, or when the report query fails,
-it preserves the accepted `not_yet_generated` empty state. The static fallback
-path keeps one demo-safe sample report when no live data is available.
+`/api/issues/{id}/report` serves only a latest successful v4 evidence bundle
+whose stored metric, episode, verified candidates, and citation sources all
+validate. Missing, legacy, failed, malformed, or mismatched bundles preserve
+the accepted `not_yet_generated` empty state. Static fallback data does not
+fabricate a v4 report.
 """
 import logging
 from collections.abc import Generator
@@ -30,19 +31,31 @@ from pydantic import ValidationError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.core.ai_report import (
+    V4ContextSource,
+    V4LLMFields,
+    V4ReportInputs,
+    V4StoredReportPayload,
+    V4VerifiedCandidateInput,
+    assemble_v4_report_content,
+    run_v4_safety_and_semantic_checks,
+)
 from app.core.category_taxonomy import category_matches
 from app.core.config import settings
+from app.core.snapshot_metrics import as_utc_naive
 from app.db.queries import (
-    LiveAiReport,
     LiveIssue,
+    LiveV4AiReport,
     load_history_points,
-    load_latest_successful_report,
+    load_latest_successful_v4_report,
     load_live_issues,
     load_related_events_for_market,
     load_signals_for_market,
 )
 from app.db.session import get_db
 from app.schemas.issues import (
+    ContextCandidateOut,
+    ContextSourceOut,
     HistoryPoint,
     IssueDetail,
     IssueHistoryResponse,
@@ -50,7 +63,6 @@ from app.schemas.issues import (
     IssueReportResponse,
     IssueSummary,
     RelatedEventCandidate,
-    ReportContent,
     ReportNotYetGenerated,
     SignalOut,
 )
@@ -226,14 +238,123 @@ def _find_live(live_issues: list[LiveIssue], issue_id: str) -> LiveIssue | None:
     return next((li for li in live_issues if str(li.market.id) == issue_id), None)
 
 
-def _issue_report_from_live(live_report: LiveAiReport) -> IssueReportResponse:
+def _same_timestamp(left: datetime, right: datetime) -> bool:
+    return as_utc_naive(left) == as_utc_naive(right)
+
+
+def _not_after(left: datetime, right: datetime) -> bool:
+    return as_utc_naive(left) <= as_utc_naive(right)
+
+
+def _as_utc(value: datetime) -> datetime:
+    if value.tzinfo is None or value.utcoffset() is None:
+        return value.replace(tzinfo=UTC)
+    return value.astimezone(UTC)
+
+
+def _issue_report_from_live(
+    live_report: LiveV4AiReport,
+    live_issue: LiveIssue,
+) -> IssueReportResponse:
+    report = live_report.report
+    metric = live_report.metric
+    snapshot = live_report.snapshot
+    payload = V4StoredReportPayload.model_validate(report.content)
+
+    if report.input_metrics_id != metric.id or metric.market_id != live_issue.market.id:
+        raise ValueError("V4 report metric does not belong to the requested issue")
+    if not _not_after(snapshot.captured_at, report.generated_at):
+        raise ValueError("V4 report data timestamp is later than generation")
+    if not _not_after(payload.episode_at, report.generated_at):
+        raise ValueError("V4 report episode is later than generation")
+    if len(payload.context_candidate_ids) != len(set(payload.context_candidate_ids)):
+        raise ValueError("V4 candidate IDs must be unique")
+
+    candidate_by_id = {candidate.id: candidate for candidate in live_report.candidates}
+    candidate_inputs: list[V4VerifiedCandidateInput] = []
+    candidate_outputs: list[ContextCandidateOut] = []
+    for candidate_id in payload.context_candidate_ids:
+        candidate = candidate_by_id.get(candidate_id)
+        if (
+            candidate is None
+            or candidate.verification_state != "verified"
+            or candidate.event_at is None
+            or not _same_timestamp(candidate.episode_at, payload.episode_at)
+            or not candidate.sources
+        ):
+            raise ValueError("V4 candidate evidence is missing or not public")
+        sources = [V4ContextSource.model_validate(source) for source in candidate.sources]
+        candidate_inputs.append(
+            V4VerifiedCandidateInput(
+                id=candidate.id,
+                title=candidate.event_title,
+                event_at=_as_utc(candidate.event_at),
+                neutral_summary=candidate.neutral_summary,
+                sources=sources,
+            )
+        )
+        candidate_outputs.append(
+            ContextCandidateOut(
+                id=str(candidate.id),
+                title=candidate.event_title,
+                event_at=_as_utc(candidate.event_at),
+                summary=candidate.neutral_summary,
+                sources=[
+                    ContextSourceOut(
+                        title=source.title,
+                        url=source.url,
+                        domain=source.domain,
+                        published_at=None,
+                        source_type=source.source_type,
+                    )
+                    for source in sources
+                ],
+            )
+        )
+
+    inputs = V4ReportInputs(
+        market_id=live_issue.market.id,
+        metric_id=metric.id,
+        episode_at=payload.episode_at,
+        data_as_of=_as_utc(snapshot.captured_at),
+        title=live_issue.market.title,
+        description=live_issue.market.description or live_issue.market.title,
+        category=live_issue.market.category,
+        outcome_label=live_issue.outcome_label,
+        end_date=(
+            _as_utc(live_issue.market.end_date)
+            if live_issue.market.end_date is not None
+            else None
+        ),
+        current_value=float(snapshot.price),
+        change_24h=float(metric.change_24h) if metric.change_24h is not None else None,
+        change_7d=float(metric.change_7d) if metric.change_7d is not None else None,
+        confidence_level=metric.confidence_level,
+        volume_24h=float(snapshot.volume_24h) if snapshot.volume_24h is not None else None,
+        liquidity=float(snapshot.liquidity) if snapshot.liquidity is not None else None,
+        context_candidates=candidate_inputs,
+    )
+    llm_fields = V4LLMFields(
+        issue_overview=payload.content.issue_overview,
+        what_to_check=payload.content.what_to_check,
+    )
+    expected_content = assemble_v4_report_content(inputs, llm_fields)
+    validation = run_v4_safety_and_semantic_checks(payload, inputs, llm_fields)
+    if expected_content != payload.content:
+        raise ValueError("V4 deterministic content does not match stored evidence")
+    if not validation.passed:
+        raise ValueError(f"V4 semantic check failed: {validation.rule}")
+
     return IssueReportResponse(
-        id=str(live_report.report.id),
-        generated_at=live_report.report.generated_at,
-        data_as_of=live_report.data_as_of,
+        id=str(report.id),
+        generated_at=_as_utc(report.generated_at),
+        data_as_of=_as_utc(snapshot.captured_at),
+        episode_at=_as_utc(payload.episode_at),
         status="success",
-        report_version="v3",
-        content=ReportContent(**live_report.report.content),
+        report_version="v4",
+        content=payload.content.model_dump(),
+        evidence_refs=payload.evidence_refs,
+        context_candidates=candidate_outputs,
     )
 
 
@@ -370,11 +491,7 @@ def get_issue_report(
         if match is None:
             raise HTTPException(status_code=404, detail="Unknown issue id.")
         try:
-            live_report = load_latest_successful_report(
-                db,
-                match.market.id,
-                preferred_prompt_version="v3",
-            )
+            live_report = load_latest_successful_v4_report(db, match.market.id)
         except SQLAlchemyError:
             logger.warning(
                 "FALLBACK: live report query failed, returning report empty state.",
@@ -384,21 +501,11 @@ def get_issue_report(
         if live_report is None:
             return ReportNotYetGenerated(status="not_yet_generated")
 
-        if (
-            live_report.data_as_of is None
-            or live_report.data_as_of > live_report.report.generated_at
-        ):
-            logger.warning(
-                "Report data_as_of is unavailable or in the future compared to generated_at; "
-                "returning report empty state."
-            )
-            return ReportNotYetGenerated(status="not_yet_generated")
-
         try:
-            return _issue_report_from_live(live_report)
-        except ValidationError:
+            return _issue_report_from_live(live_report, match)
+        except (ValidationError, ValueError):
             logger.warning(
-                "Live report content does not match the current report schema; "
+                "Live v4 report does not match its schema or stored evidence; "
                 "returning report empty state.",
                 exc_info=True,
             )
@@ -406,45 +513,4 @@ def get_issue_report(
 
     if issue_id not in _FALLBACK_ISSUES:
         raise HTTPException(status_code=404, detail="Unknown issue id.")
-    if issue_id != "b3f1c2a4-0000-4000-8000-000000000001":
-        return ReportNotYetGenerated(status="not_yet_generated")
-    return IssueReportResponse(
-        id="7c2e1a90-0000-4000-8000-0000000000aa",
-        generated_at=_NOW,
-        data_as_of=_NOW,
-        status="success",
-        report_version="v3",
-        content=ReportContent(
-            issue_overview="이 이슈는 공개된 기한까지 문서에 적힌 조건이 충족되는지를 추적합니다.",
-            current_data_reading=(
-                "데이터 기준 시각에 공개 예측시장 참여자 데이터에 반영된 기대값은 63%이며, "
-                "24시간 전보다 8.2퍼센트포인트 높게 관찰되었습니다."
-            ),
-            possible_outlook=(
-                "이후 공개 데이터에서 관찰된 움직임의 지속, 확대 또는 완화가 확인되더라도, "
-                "이는 데이터의 흐름만 설명하며 현실의 결과나 변화의 이유를 입증하지 않습니다."
-            ),
-            possible_drivers=(
-                "이 움직임과 함께 비교할 수 있도록 수동 검토를 마친 맥락 후보가 없습니다. "
-                "현재 데이터는 관찰된 움직임만 보여 주며, 추가 맥락은 다른 자료를 통해 "
-                "독립적으로 확인해야 합니다."
-            ),
-            external_context=None,
-            what_to_check=(
-                "게시된 이슈 문구와 기록된 기한, 데이터 기준 시각, "
-                "이후 공개 데이터 갱신 내용을 추가로 확인해야 합니다."
-            ),
-            data_limitations=(
-                "이 읽기는 활동량, 유동성, 24시간 변화 폭, 24시간 및 "
-                "7일 이력 범위의 영향을 받습니다. "
-                "공개 예측시장 참여자 데이터는 전체 대중의 판단을 대표하지 않습니다."
-            ),
-            caution_note=(
-                "이 내용은 공개 예측시장 참여자 데이터에 나타난 흐름을 정리한 것이며, "
-                "전체 대중의 판단을 대표하거나 현실의 결과를 입증하지 않습니다. "
-                "24시간 및 7일 비교 지점이 있고 활동량과 유동성이 설정된 하한보다 낮지 않으며 "
-                "24시간 변화 폭이 큰 움직임 기준을 넘지 않지만, "
-                "다른 자료를 통해 독립적으로 확인해야 합니다."
-            ),
-        ),
-    )
+    return ReportNotYetGenerated(status="not_yet_generated")

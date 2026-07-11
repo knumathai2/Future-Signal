@@ -824,6 +824,41 @@ references all still validate.
 
 ---
 
+### ADR-044: V4 report reads revalidate the stored evidence bundle
+
+- **Date**: 2026-07-11
+- **Status**: Accepted
+- **Decided by**: Backend Implementer within ADR-038 execution approval
+
+**Context**: A successful stored v4 row is not sufficient by itself for public
+output. TASK-062 had to prevent stale legacy shapes, altered JSON, missing
+candidate rows, non-public verification states, and source-field drift from
+crossing the read boundary.
+
+**Decision**: Query only successful `prompt_version="v4"` rows joined to a
+metric belonging to the requested issue, load the latest snapshot at or before
+that metric, and load only verified candidates. Strictly parse the internal
+envelope, resolve its ordered candidate IDs, require same-market and exact
+episode linkage, validate every stored internal source field, and reconstruct
+all deterministic content from DB values. Return the report only when the
+reconstruction, semantic checks, evidence-reference order, source URL/domain,
+and `data_as_of`/episode timing all match. Public source output includes only
+title, URL, domain, nullable publication time, and source type. Static fallback
+and v1-v3/failed/malformed/missing-evidence rows return the accepted 200 empty
+state; unknown issues remain 404.
+
+**Rationale**: Revalidation makes the read API an independent fail-closed
+boundary rather than assuming that append-only storage can never be incomplete
+or altered. Deriving the public source object from the validated stored record
+also prevents internal audit fields from leaking.
+
+**Consequences**: The Frontend must consume only report version v4 in TASK-063.
+Until migration and backfill run in TASK-065, development data with only v3
+rows naturally shows the neutral not-yet-generated state. No API request calls
+an external provider or writes to the database.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07
