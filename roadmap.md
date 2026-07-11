@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # roadmap.md — Outlook Signals Roadmap
 
-_Last updated: 2026-07-10_
+_Last updated: 2026-07-11_
 _Source: PRD §14 (5-Day Development Schedule) — this file tracks execution against it._
 
 ## Goal
@@ -82,9 +82,21 @@ Ship a genuinely working web MVP within 5 days that lets a user check today's mo
 - Attention Spike / Unusual Market Activity signals (need historical baselines this hackathon won't have)
 - Full multi-outcome market support
 
+## Approved post-MVP program — TASK-056~065
+
+The user approved the automated-context v4 program on 2026-07-11. Work runs
+sequentially from policy lock through local/development backfill. It is bounded
+to citation annotations returned by OpenRouter, deterministic and independent
+AI verification, verified-only public output, evidence-linked v4 reports, an
+append-only migration, and a cumulative OpenRouter budget of USD 100.
+
+Deployment and production-database writes remain excluded. TASK-066~074 stay
+inactive stretch work.
+
 ## Out of Scope (excluded outright, not just deferred)
 
-- Automated news-to-market matching (causal-misinterpretation risk — manual curation only)
+- Unverified, source-less, or causal news-to-market matching. The narrowly
+  approved TASK-056~065 v4 path is the only automated-context exception.
 - Free-form AI analysis as a core feature (template-constrained only)
 - Any wallet-level browsable/searchable participant view
 - Any participant ranking, leaderboard, or "follow this trader" feature

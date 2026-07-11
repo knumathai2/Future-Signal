@@ -23,7 +23,9 @@ The earlier version of this PRD was closer to a "global issue outlook analysis p
 2. Fix the core experience to: "check today's most-changed issues -> view the detail chart -> read the template summary and interpretation-caution notice."
 3. Limit data scope to roughly 30-50 active binary markets.
 4. Provide AI output as a numeric, template-based summary rather than free-form analysis.
-5. Limit related-event candidates to 3-5 representative issues, entered manually rather than auto-matched.
+5. Freeze the hackathon v3 path to 3-5 manually entered related-event candidates.
+   The post-MVP TASK-056~065 v4 exception may surface only verified context
+   candidates under ADR-038; it does not change the historical v3 scope.
 6. Exclude saving, notifications, weekly reports, team sharing, and chart-image export from the hackathon MVP.
 
 ### 1.3 Core product concept
@@ -82,7 +84,9 @@ Users want to quickly understand how expectations are changing around global iss
 1. Does not assert future outcomes with certainty.
 2. Does not encourage choosing a particular outcome.
 3. Does not track any specific participant's or account's activity.
-4. Does not assert a cause of change via automated news matching.
+4. Does not assert a cause of change. Automated v4 context may compare timing
+   only after citation provenance, deterministic hard gates, and independent
+   verification pass.
 5. Does not present Polymarket participants' judgment as the judgment of the public at large.
 6. Does not provide action-inducing CTAs, performance-based rankings, or features that push users toward external platforms.
 7. In the hackathon MVP, does not provide login, saving, notifications, weekly reports, or team sharing.
@@ -164,7 +168,9 @@ For the hackathon demo, the representative user is "a knowledge worker who needs
 1. Does not cover every Polymarket market.
 2. Does not fully support multi-outcome markets.
 3. Does not treat real-time data refresh as a core requirement.
-4. Does not implement automated news matching.
+4. The frozen hackathon v3 does not implement automated context matching. The
+   approved post-MVP v4 program is limited to ADR-038's verified, fail-closed
+   context-candidate path.
 5. Does not offer free-form AI analysis as a core feature.
 6. Does not implement login-based saving, notifications, report generation, or team sharing.
 7. Does not imply a specific outcome choice, external action, or profit potential.

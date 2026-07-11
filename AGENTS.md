@@ -11,7 +11,7 @@ Harness Version: 1.1
 > In case of conflict, this document takes highest priority.
 > Product-level source of truth lives in [PRD](docs/prd/README.md), [Service Design](docs/service-design/README.md), [Technical Design](docs/tech-design/README.md), [UX Design](docs/ux-design/README.md) — this file governs *how agents work*, those four govern *what the product is*.
 
-_Last updated: 2026-07-07_
+_Last updated: 2026-07-11_
 
 ---
 
@@ -69,7 +69,11 @@ Even if the user explicitly requests them, ask for confirmation first:
 - [ ] Using prohibited wording anywhere it could ship (UI copy, AI/template output, code comments that could leak to users, marketing text): `bet, buy, sell, trade, position, long, short, profit, win rate, odds, guaranteed, recommend, follow/copy trader, best pick, signal to act, high-return opportunity`. Full list: [`memory/glossary.md`](memory/glossary.md) and `standards.md`.
 - [ ] Asserting a future outcome, asserting a cause of a market's change, or implying the product predicts real-world events
 - [ ] Exposing wallet-level or individual-participant browsable/searchable data — aggregate-only, per Service Design §8
-- [ ] Building automated news-to-market matching — related events are manually curated (3–5 demo issues) only, per PRD §8.9
+- [ ] Building unverified or causal news-to-market matching. TASK-056 permits only
+      the TASK-057~065 v4 automated-context path: OpenRouter `url_citation`
+      annotations, deterministic hard gates, an independent verifier model,
+      verified-only public output, and fail-closed handling. The frozen v3 MVP
+      remains manual-only.
 - [ ] Shipping any data-bearing screen without a data-as-of timestamp AND an interpretation-caution badge/text
 - [ ] Adding login, accounts, saving/watchlist, notifications, weekly reports, or team sharing — these are explicitly P2/Phase-2+ (PRD §6.5) and out of hackathon scope
 - [ ] Letting the AI report generator produce free-form/open-ended analysis — output must be template-constrained and pass the banned-phrase filter before storage (Service Design §6, Technical Design §10.4)
@@ -87,6 +91,18 @@ Always confirm with the user before proceeding:
 - Any deployment (including staging)
 - Pulling a P1/P2 feature back into the hackathon MVP scope (PM is the scope gatekeeper per PRD §13.1)
 - Changing the wording/safety policy (banned-phrase list, disclaimer copy)
+
+### TASK-056 approved program boundary
+
+The user's 2026-07-11 approval authorizes TASK-056~065 to change the
+automated-context policy, add the append-only `002_context_candidates.sql`
+migration, implement the approved v4 report/API/UI contract, call OpenRouter
+for research, independent verification, and report writing up to a cumulative
+program budget of USD 100, and write context/report/backfill records only to
+local or development databases. This approval does not authorize deployment,
+infrastructure mutation, production-database writes, unrelated public API or
+schema changes, a new dependency, or changes outside TASK-056's recorded
+contract. Any of those still requires separate human approval.
 
 ---
 

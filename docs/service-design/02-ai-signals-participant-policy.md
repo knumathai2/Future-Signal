@@ -14,7 +14,9 @@ _Source: former project-root Service Design sections 6-8._
 - Probability history for the selected window
 - Volume history for the selected window
 - Computed metrics: change %, volatility, attention, heat, confidence/caution level
-- Manually curated related-event candidates (MVP: only for the 3–5 demo issues; never auto-fetched news)
+- v3 manually curated related-event candidates; v4 verified context candidates
+  may be included only from stored `url_citation` evidence accepted under
+  ADR-038
 - User-selected time range
 - Data-as-of timestamp
 
@@ -25,7 +27,7 @@ _Source: former project-root Service Design sections 6-8._
 | Issue summary | One-paragraph plain-language framing of what the market question is about | Title, description, category | 2–3 sentences | "This market tracks whether [event] will be resolved as 'Yes' by [date], based on public trading activity on Polymarket." | Can't add outside context the description doesn't contain | Must not restate the question as if it were a real-world fact |
 | Probability movement explanation | Describes the size/direction/timing of a change | Price history, change %, inflection points | Template with computed values filled in (matches PRD §8.8 template exactly) | "Over the past 7 days, the expectation reflected in this market rose by 8.2 percentage points, with the largest shift occurring around [date]." | Says *what* moved, never *why* with certainty | No causal verbs ("because," "due to," "caused by") — use "coincides with," "occurred alongside" |
 | Key change factors | Surfaces the manually curated related-event candidate, if one exists for this market | Related-event candidate list | 1 sentence, clearly labeled as a candidate | "A related event candidate around this time: [event]. This is offered as context, not as a confirmed cause." | Only available for the curated demo set in MVP | Must always carry the "candidate, not cause" qualifier — no exceptions |
-| Neutral event analysis | Same as above at greater depth for Phase 2 (once real news linkage exists) | Related-event data, price history | Short paragraph | — | Deferred to Phase 2 | Same causal-language ban applies |
+| Neutral context comparison | Compare verified public information with a change episode without asserting a relationship | Verified candidate sources, price history, evidence IDs | Short structured section | — | Approved for TASK-056~065 v4 | Same causal-language ban applies; missing evidence fails closed |
 | Market trend summary | Rolls up change/volatility/attention into one readable status line | All computed metrics | 1 sentence | "This issue has seen a moderate, steady increase in reflected expectation over the past week, with typical trading activity." | Purely descriptive of computed values | Must not use words like "trending toward" a specific outcome |
 | Sudden change explanation | Explains a triggered signal (Section 7) in plain language | Signal type, magnitude, window | 1–2 sentences | "A larger-than-usual shift in reflected expectation was detected in the last 6 hours, alongside increased trading activity." | Only as good as the threshold tuning | Must use the neutral signal vocabulary from Section 7, never "alert" framing |
 | Risk / uncertainty summary | States the interpretation-caution basis in plain language | Confidence/uncertainty score inputs | 1 sentence | "Trading activity on this market has been limited recently, so this change should be interpreted with caution." | Can't quantify precisely how much caution is "enough" — stays qualitative | Always appears attached to the metric it qualifies, never standalone |
@@ -42,6 +44,25 @@ _Source: former project-root Service Design sections 6-8._
 - No financial or betting advice, explicit or implied.
 - Every output that touches a specific market must carry a caution qualifier if the underlying confidence/uncertainty score is below the "sufficient data" threshold.
 
+### 6.1 Approved v4 research and verification contract
+
+TASK-056~065 adds a bounded research step between signal detection and report
+generation. It uses one research model with OpenRouter web search, parses only
+API `url_citation` annotations, applies deterministic URL/domain/date/entity/
+source-independence gates, and then uses a different model without web access
+for independent verification. A model cannot override a failed hard gate.
+
+Public candidates require either one official source directly supporting the
+tracked condition or at least two independent sources supporting the same
+event and date. Conflicts, weak entity/condition matches, generated URLs,
+unsupported claims, verifier disagreement, and unsafe relationship language
+produce `withheld` or `rejected` state and remain outside the public API.
+
+Research, verification, and v4 writing share a cumulative USD 100 budget for
+TASK-056~065. Per-run usage is audited without storing secrets, prompts, or full
+responses. `no_candidate` is a successful result, and prior successful public
+content remains available when the provider fails.
+
 ---
 
 ## 7. Sudden Change Signal Design
@@ -56,7 +77,7 @@ Signals answer "where should a monitoring user look first," not "what should you
 | Issue Reassessment Signal | Sustained directional movement across multiple consecutive windows (not just one spike) | Price history | e.g. same-direction Δ in 3 consecutive 24h windows, cumulative ≥ 10pp | High | Can still be a slow drift rather than a "reassessment" — label carefully | Chart segment highlight | **P1–P2** |
 | Unusual Market Activity | Combination trigger: volatility increase + attention spike occurring together | Price history, volume history | e.g. volatility > 2x its own 30-day baseline AND volume spike also triggered | Critical | Compound conditions reduce false positives but need real historical baselines to tune — not reliably tunable on a 5-day-old MVP dataset | Most prominent card-level indicator, reserved for rare cases | **Phase 2** (needs baseline history depth this hackathon won't have) |
 | Cross-market correlation signal | Two related markets move together | Requires a defined "related markets" mapping | Not defined for MVP | — | High — correlation ≠ meaningful relationship, easy to overstate | N/A | **Excluded from MVP**, revisit only with the curated related-market set already planned for the demo issues |
-| News-event timing overlay | Price movement coincides with a manually tagged event candidate | Curated event list, price history | N/A — display only, not a computed trigger | — | Highest causal-misread risk of any element in the product | Always shown as "candidate," directly under the movement explanation, never as a trigger itself | **MVP, but manual-only** (matches PRD §8.9 — 3–5 curated issues) |
+| Context-candidate timing overlay | A change episode and a verified candidate occupy a compatible review window | Stored episode, verified candidate, citation sources | N/A — display only, not a computed trigger | — | Highest causal-misread risk of any element in the product | Always shown as a candidate with an explicit no-relationship boundary | **v3 manual; v4 automated only under ADR-038** |
 
 ### Severity tiers (naming)
 - **Low signal** → not surfaced as a badge; just the default number.

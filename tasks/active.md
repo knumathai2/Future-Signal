@@ -7,13 +7,30 @@ Harness Version: 1.1
 
 # Active Tasks — Outlook Signals
 
-_Last updated: 2026-07-10_
+_Last updated: 2026-07-11_
 
 ## In Progress
 
-No implementation tasks remain active. Day 5 is closed as a technical MVP
-milestone by ADR-037. Deployment and final presentation operations are deferred
-as `TASK-020` and `TASK-021` in `tasks/backlog.md`.
+ADR-038 records the user's policy, schema, API, OpenRouter budget, and
+local/development-write approval for the sequential TASK-056~065 program.
+Deployment and production-database writes remain excluded.
+
+| ID | Task | Owner | Assignee | Branch | Status |
+|----|------|-------|----------|--------|--------|
+| TASK-057 | Add automated-context storage schema | Backend Implementer | Backend Implementer | `backend/TASK-057-context-schema` | in_progress |
+| TASK-058 | Build OpenRouter web-research client | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-058-context-research` | assigned |
+| TASK-059 | Build deterministic and independent-AI verification | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-059-context-verification` | assigned |
+| TASK-060 | Connect context research to the scheduled batch | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-060-context-batch` | assigned |
+| TASK-061 | Generate evidence-grounded v4 reports | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-061-evidence-report-v4` | assigned |
+| TASK-062 | Serve the v4 context/report API | Backend Implementer | Backend Implementer | `backend/TASK-062-context-report-api` | assigned |
+| TASK-063 | Build the change-episode UI | Frontend Implementer | Frontend Implementer | `frontend/TASK-063-change-episode-ui` | assigned |
+| TASK-064 | Review the automated-context integration | Reviewer | Reviewer | `review/TASK-064-auto-context-integration` | assigned |
+| TASK-065 | Run local/dev backfill and record demo evidence | Data/AI Implementer + PM | Data/AI Implementer + PM / Planner | `data-ai/TASK-065-context-backfill` | assigned |
+
+Exact dependencies, file ownership, acceptance criteria, verification commands,
+handoffs, and stop conditions are binding in
+`reports/task-055-automated-context-execution-plan.md`. Only one task may be
+`in_progress` at a time; each successor starts from the verified predecessor.
 
 ## Status Values
 

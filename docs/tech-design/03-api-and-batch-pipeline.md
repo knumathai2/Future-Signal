@@ -78,4 +78,24 @@ Since every step is append-only per run and keyed by `(market_id, captured_at)`/
 ### Rate limit handling
 Add a small fixed delay between requests (e.g., 200–500ms) and respect any `Retry-After` header Polymarket returns; with only 30–50 markets checked every 1–4 hours, this is unlikely to be a binding constraint, but building the delay in from day one avoids a last-minute scramble if it becomes one.
 
+### 6.1 Approved v4 batch insertion point
+
+TASK-060 inserts `context research and verification` after expectation-shift
+detection and before v4 report generation. The step selects only new-signal,
+absolute-change-threshold, top-10-heat, or stale/missing-candidate issues; a
+first local/development backfill may process the full 30-50 issue set once.
+
+Per issue, the hard bounds are six search queries, 30 citation results, eight
+rule-passing candidates, five verifier inputs, three verified stored/public
+candidates, and one research + one verifier + one writer call. One malformed
+schema correction is allowed; safety or semantic failures are not retried with
+the same input.
+
+Each issue uses an isolated transaction. Provider or issue-level failure cannot
+stop the full batch and cannot replace a prior successful candidate/report.
+`no_candidate` is recorded as a normal completed state. Model/search/token/cost
+usage is audited and the cumulative TASK-056~065 OpenRouter spend must remain
+within USD 100. The batch is guarded to local/development writes until separate
+deployment and production-write approval exists.
+
 ---

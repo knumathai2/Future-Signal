@@ -35,6 +35,14 @@ This reconciles with PRD §6.3–6.5. Additions from this document layered in:
 - Any participant ranking/following feature
 - Automated news matching
 
+### Approved post-MVP exception: TASK-056~065
+
+ADR-038 supersedes the last bullet above only for the verified v4 pipeline.
+The exception is not a general permission for automated matching: it requires
+OpenRouter citation annotations, deterministic hard gates, an independent
+verifier model, evidence-linked structured output, verified-only public reads,
+and fail-closed behavior. Relationship assertions remain excluded.
+
 ---
 
 ## 10. Risk and Mitigation
