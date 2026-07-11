@@ -29,7 +29,8 @@ historical v1-v6 archive followed by separately approved cleanup.
 | TASK-109 | Remove superseded v1-v6 runtime code after v7 acceptance | Reviewer / Implementers | Reviewer | `review/TASK-109-legacy-report-cleanup` | assigned |
 
 No v7 implementation task is currently in progress. TASK-100 archived the
-v1-v6 map without changing runtime behavior. TASK-101 requires explicit wording
+v1-v6 map without changing runtime behavior. TASK-101 now has an approval-ready
+contract in `reports/task-101-v7-briefing-contract.md` but requires explicit wording
 and AI-policy approval. TASK-102 requires schema approval. TASK-104 requires
 workflow/runtime approval. TASK-105 requires public API approval. TASK-103 and
 TASK-108 require bounded provider-call and local/development-write approval.
