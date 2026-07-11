@@ -461,6 +461,50 @@ def test_context_refresh_with_new_evidence_creates_successor_request(db):
     assert db.query(AiReport).count() == 0
 
 
+def test_failed_context_refresh_can_retry_with_stored_evidence_only(db):
+    queued = enqueue_v8_request(
+        db,
+        MARKET_ID,
+        requested_by="user",
+        context_refresh_requested=True,
+        now=NOW,
+    )
+    assert queued is not None
+
+    def fail_refresh(_session, _market_id, _now):
+        raise RuntimeError("simulated context refresh failure")
+
+    failed = process_v8_request(
+        db,
+        queued.request_id,
+        FakeLLM(_valid_output()),
+        "fake/writer",
+        now=NOW + timedelta(seconds=1),
+        context_refresher=fail_refresh,
+    )
+    assert failed.reason_code == "context_refresh_failed"
+
+    retry = enqueue_v8_request(
+        db,
+        MARKET_ID,
+        requested_by="user",
+        context_refresh_requested=False,
+        now=NOW + timedelta(seconds=2),
+    )
+    assert retry is not None and retry.state == "queued"
+    succeeded = process_v8_request(
+        db,
+        retry.request_id,
+        FakeLLM(_valid_output()),
+        "fake/writer",
+        now=NOW + timedelta(seconds=3),
+        context_refresher=fail_refresh,
+    )
+
+    assert succeeded.state == "succeeded"
+    assert db.query(AiReport).count() == 1
+
+
 def test_v7_context_sources_keep_level_claim_and_parent_refs(db):
     candidate_id = _add_context(db)
     bundle = build_v8_input_bundle(db, MARKET_ID, now=NOW)

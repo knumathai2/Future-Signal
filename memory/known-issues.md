@@ -523,6 +523,11 @@ Not bugs, but unresolved decisions that can affect later demo or product work:
     current usage field but returned `annotations=null`.
   - Exact annotation provenance is mandatory, so eight evaluation attempts
     stored zero candidates and no new briefing.
+  - TASK-115 confirmed that this does not need to block the stored-evidence
+    writer forever: after a failed source-refresh attempt, the user may retry
+    explicitly with current stored evidence. The resulting report honestly
+    exposes the zero-source state. Citation-backed source enrichment itself
+    remains unresolved.
 - **Accounting note**:
   - Three persisted failure-usage rows record USD 0.22190440 and two direct
     diagnostics record USD 0.11140620.

@@ -188,7 +188,12 @@ export function IssueReportCard({
     response?.status === "failed" ||
     response?.status === "stale" ||
     response?.status === "failed_with_last_good";
-  const actionLabel = report ? "브리핑 새로고침" : "AI 브리핑 생성";
+  const retryWithStoredEvidence = response?.status === "failed";
+  const actionLabel = retryWithStoredEvidence
+    ? "저장된 근거로 다시 생성"
+    : report
+      ? "브리핑 새로고침"
+      : "AI 브리핑 생성";
 
   return (
     <section
@@ -320,11 +325,12 @@ export function IssueReportCard({
           <ActionButton
             label={actionLabel}
             pending={generationPending}
-            onGenerate={() => void onGenerate(true)}
+            onGenerate={() => void onGenerate(!retryWithStoredEvidence)}
           />
           <p className="text-xs leading-5 text-ink-faint">
-            확인 가능한 공개 자료를 새로 살핀 뒤 현재 근거 묶음으로 브리핑을
-            생성합니다.
+            {retryWithStoredEvidence
+              ? "이전 시도는 저장되지 않았습니다. 현재 저장된 근거만 사용해 다시 생성합니다."
+              : "확인 가능한 공개 자료를 새로 살핀 뒤 현재 근거 묶음으로 브리핑을 생성합니다."}
           </p>
         </div>
       ) : null}

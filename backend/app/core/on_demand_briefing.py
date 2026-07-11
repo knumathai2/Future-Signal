@@ -684,6 +684,7 @@ def enqueue_v8_request(
                 "queued",
                 attempt_number=latest.attempt_number,
                 now=requested_at,
+                usage={"context_refresh_requested": context_refresh_requested},
             )
             db.commit()
             state = "queued"
@@ -740,7 +741,7 @@ def claim_v8_request(
     *,
     now: datetime | None = None,
     lease_duration: timedelta = DEFAULT_LEASE_DURATION,
-) -> tuple[AiReportGenerationRequest, uuid.UUID, int] | None:
+) -> tuple[AiReportGenerationRequest, uuid.UUID, int, bool] | None:
     """Append a running lease when queued or when the latest lease expired."""
     claimed_at = _as_utc(now or datetime.now(UTC))
     request = db.execute(
@@ -762,6 +763,11 @@ def claim_v8_request(
     ):
         return None
     attempt = max(1, latest.attempt_number + 1)
+    refresh_context_requested = request.context_refresh_requested
+    if isinstance(latest.usage, dict) and isinstance(
+        latest.usage.get("context_refresh_requested"), bool
+    ):
+        refresh_context_requested = latest.usage["context_refresh_requested"]
     token = uuid.uuid4()
     _append_event(
         db,
@@ -773,7 +779,7 @@ def claim_v8_request(
         lease_expires_at=claimed_at + lease_duration,
     )
     db.commit()
-    return request, token, attempt
+    return request, token, attempt, refresh_context_requested
 
 
 def _recorded_writer_spend(db: Session) -> float:
@@ -884,9 +890,9 @@ def process_v8_request(
     claimed = claim_v8_request(db, request_id, now=processed_at)
     if claimed is None:
         return ProcessResult(request_id=request_id, state="not_claimed")
-    request, _lease_token, attempt = claimed
+    request, _lease_token, attempt, refresh_context_requested = claimed
 
-    if request.context_refresh_requested:
+    if refresh_context_requested:
         if context_refresher is None:
             return _fail_request(
                 db,

@@ -14,9 +14,9 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: Backend Implementer
-- **Session Goal**: Remove ISS-017 API/DB full-read bottlenecks without changing public contracts.
-- **Branch**: `backend/TASK-114-api-query-scope`
+- **Agent Role**: Data/AI Implementer with Backend/Frontend integration
+- **Session Goal**: Restore live chart access and make failed v8 generation safely retryable.
+- **Branch**: `data-ai/TASK-115-v8-generation-retry`
 
 ## Context Read
 
@@ -26,6 +26,30 @@ Harness Version: 1.1
 
 ## Work Completed
 
+- Diagnosed the user's screenshot in the existing Chrome tab. The page was the
+  static `ai-oversight-bill` fallback route and every request showed `Failed to
+  fetch` because the Frontend dev server was stopped. Restarted Frontend on
+  `127.0.0.1:5173`; its proxy, Backend health, issue list, detail, and history
+  endpoints then returned HTTP 200.
+- Confirmed real 30-day chart history and rendered the real Israeli-parliament
+  issue in Chrome without the chart-error state.
+- Two bounded stored-evidence writer attempts reached the worker but failed
+  safely on `banned_phrase:확정`. Strengthened the v8 prompt by enumerating the
+  existing Korean prohibited-expression list; no filter or policy was relaxed.
+- Added an append-only queued-event retry preference. Immutable request rows
+  remain unchanged, while a user retry after any failed generation can select
+  current stored evidence without repeating a failed context refresh. The UI
+  now exposes `저장된 근거로 다시 생성` and honest supporting copy only in the
+  failed state.
+- The post-fix real browser retry succeeded on attempt three. Report
+  `d179b6fe-9873-41ac-95b6-2a7c17c17f33` is served fresh with the real chart,
+  data-as-of, caution, and explicit zero-source state. Total observed writer
+  cost for the three attempts was USD 0.02658845.
+- Verification passed: 467 Backend tests, full Ruff, Frontend typecheck/lint/
+  parser/build, Prettier, changed-copy prohibited-wording scan, live API read,
+  and Chrome DOM review. The known bundle-size warning remains. No schema,
+  migration, dependency, infrastructure, deployment, production write, or
+  safety-policy change occurred.
 - Completed TASK-114 in the required priority order. Request polling now reads
   one generation request by primary key and one latest event, with no snapshot
   or metric query. Generation POST, report GET, detail, and history no longer
