@@ -20,6 +20,13 @@ idempotent skips: the database rejects the duplicate and callers keep the
 existing row. Both new tables use `ON DELETE CASCADE` with their parent market,
 matching the lifecycle rule in `001_initial_schema.sql`.
 
+`003_market_resolution_rules.sql` is the ADR-049/TASK-083 append-only extension
+for provenance-preserving market resolution evidence. Its code implementation
+was approved during TASK-083 and the user separately approved application to
+the configured development database on 2026-07-11. The application and schema
+verification passed; production application remains prohibited without
+separate approval.
+
 Once approved, running it against a real Postgres instance is:
 
 ```bash
@@ -31,6 +38,12 @@ application may use:
 
 ```bash
 psql "$DATABASE_URL" -f migrations/002_context_candidates.sql
+```
+
+The same guarded procedure applies to migration 003:
+
+```bash
+psql "$DATABASE_URL" -f migrations/003_market_resolution_rules.sql
 ```
 
 `psql` expects a plain Postgres URL such as `postgresql://...`; if local API

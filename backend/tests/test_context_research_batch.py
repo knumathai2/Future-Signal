@@ -35,6 +35,7 @@ from app.db.models import (
     Market,
     MarketMetric,
     MarketOutcome,
+    MarketResolutionRule,
     MarketSnapshot,
 )
 
@@ -69,6 +70,7 @@ def db():
         tables=[
             Market.__table__,
             MarketOutcome.__table__,
+            MarketResolutionRule.__table__,
             MarketSnapshot.__table__,
             MarketMetric.__table__,
             IssueSignal.__table__,
@@ -384,6 +386,34 @@ def test_build_research_inputs_requires_both_change_windows(db):
     assert target.market_id == market.id
     assert target.metric_id == metric.id
     assert build_research_inputs(db, target) is None
+
+
+def test_build_research_inputs_prefers_latest_resolution_rule(db):
+    market, metric = _seed_market(db)
+    db.add(
+        MarketResolutionRule(
+            id=uuid.uuid4(),
+            market_id=market.id,
+            condition_text="The named official document records the condition as completed.",
+            deadline=NOW + timedelta(days=10),
+            exclusions=["A preliminary notice is not sufficient."],
+            resolution_source="https://example.gov/policy/rule",
+            source_description_hash="description-hash",
+            rules_hash="rules-hash",
+            collected_at=NOW - timedelta(minutes=5),
+        )
+    )
+    db.commit()
+    target = select_context_targets(db, NOW, use_latest_metrics=True)[0]
+
+    inputs = build_research_inputs(db, target)
+
+    assert inputs is not None
+    assert inputs.tracked_condition.startswith("The named official document")
+    assert inputs.resolution_source == "https://example.gov/policy/rule"
+    assert inputs.resolution_exclusions == ["A preliminary notice is not sufficient."]
+    assert inputs.allowed_domains == ["example.gov"]
+    assert inputs.end_date == NOW + timedelta(days=10)
 
 
 def test_batch_stores_verified_candidates_and_secret_free_usage(db):

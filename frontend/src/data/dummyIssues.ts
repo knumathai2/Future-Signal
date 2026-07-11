@@ -44,7 +44,10 @@ function generateHistory(
   return values;
 }
 
-function historyFromValues(values: number[], dataAsOf: string): IssueHistoryPoint[] {
+function historyFromValues(
+  values: number[],
+  dataAsOf: string,
+): IssueHistoryPoint[] {
   const dataAsOfTime = new Date(dataAsOf).getTime();
   const startTime = dataAsOfTime - (values.length - 1) * DAY_MS;
 
@@ -68,7 +71,9 @@ function buildIssue(seed: IssueSeed, dataAsOf: string): Issue {
         return null;
       }
 
-      const change = Number((point.value - history[index - 1].value).toFixed(1));
+      const change = Number(
+        (point.value - history[index - 1].value).toFixed(1),
+      );
 
       if (Math.abs(change) < 5) {
         return null;
@@ -80,7 +85,9 @@ function buildIssue(seed: IssueSeed, dataAsOf: string): Issue {
         label: "관측된 변화가 5pp 기준선을 넘었습니다",
       };
     })
-    .filter((point): point is Issue["inflectionPoints"][number] => point !== null);
+    .filter(
+      (point): point is Issue["inflectionPoints"][number] => point !== null,
+    );
 
   return {
     ...seed,

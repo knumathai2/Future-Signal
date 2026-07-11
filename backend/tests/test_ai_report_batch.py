@@ -27,6 +27,7 @@ from app.core.ai_report import (
     PROMPT_VERSION,
     V4_PROMPT_VERSION,
     V5_PROMPT_VERSION,
+    V6_PROMPT_VERSION,
     LLMCallError,
     LLMReportFields,
     LLMUsage,
@@ -41,6 +42,7 @@ from app.core.ai_report_batch import (
     run_ai_report_batch,
     run_v4_ai_report_batch,
     run_v5_ai_report_batch,
+    run_v6_ai_report_batch,
     select_markets_for_regeneration,
 )
 from app.core.historical_seed import metric_timestamp_for_seed
@@ -54,6 +56,7 @@ from app.db.models import (
     Market,
     MarketMetric,
     MarketOutcome,
+    MarketResolutionRule,
     MarketSnapshot,
     RelatedEvent,
 )
@@ -90,6 +93,28 @@ LEGACY_CONTENT = {
     "scenario_status_quo": "조건이 성립하지 않으면 기존 흐름이 대체로 유지될 수 있습니다.",
     "check_points": "확인할 지점은 공식 발표, 기준일, 후속 절차입니다.",
     "caution_note": "이 요약은 공개 데이터와 등록된 맥락을 정리한 것입니다.",
+}
+
+VALID_V6_CHANGE_WITHOUT_EVIDENCE = {
+    "mode": "change_without_evidence",
+    "conditional_scenarios": [
+        {
+            "title": "문서 범위가 달라지는 경우",
+            "text": (
+                "만약 Test 항목을 다루는 공개 문서의 범위가 달라지는 경우 일반적인 "
+                "상황 구분에 따라 내용을 살펴볼 수 있습니다."
+            ),
+            "basis": "general_scenario",
+        }
+    ],
+    "materials_to_check": [
+        {
+            "scenario_index": 1,
+            "title": "공개 문서 범위",
+            "text": "Test 항목을 다루는 공식 공개 문서의 범위를 확인할 자료입니다.",
+            "basis": "general_scenario",
+        }
+    ],
 }
 
 
@@ -136,6 +161,7 @@ def db():
         tables=[
             Market.__table__,
             MarketOutcome.__table__,
+            MarketResolutionRule.__table__,
             MarketSnapshot.__table__,
             MarketMetric.__table__,
             IssueSignal.__table__,
@@ -168,6 +194,19 @@ def _seed_market(db, market_id: uuid.UUID = MARKET_ID, title: str = "Test issue"
             end_date=NOW + timedelta(days=30),
             first_seen_at=NOW - timedelta(days=30),
             last_seen_at=NOW,
+        )
+    )
+    db.add(
+        MarketResolutionRule(
+            id=uuid.uuid4(),
+            market_id=market_id,
+            condition_text="The documented test condition is recorded by the deadline.",
+            deadline=NOW + timedelta(days=30),
+            exclusions=[],
+            resolution_source=None,
+            source_description_hash="test-description-hash",
+            rules_hash=f"test-rules-hash-{market_id}",
+            collected_at=NOW - timedelta(minutes=10),
         )
     )
     db.commit()
@@ -230,7 +269,7 @@ VALID_V4_RESPONSE = {
 
 VALID_V5_RESPONSE = {
     "executive_summary": (
-        "test issue의 문서 조건을 정해진 기준일까지 확인하는 이슈입니다. 저장된 현재 값과 "
+        "Test issue의 문서 조건을 정해진 기준일까지 확인하는 이슈입니다. 저장된 현재 값과 "
         "최근 비교 구간의 움직임을 함께 정리하지만 현실의 결과나 배경을 뜻하지 않습니다."
     ),
     "current_data_interpretation": (
@@ -240,12 +279,14 @@ VALID_V5_RESPONSE = {
     "conditional_scenarios": [
         {
             "title": "조건 확인",
+            "basis": "market_definition",
             "narrative": (
                 "만약 test issue 조건이 공식 문서에서 확인된다면 해당 판정 조건과 함께 읽습니다."
             ),
         },
         {
             "title": "부분 확인",
+            "basis": "market_definition",
             "narrative": (
                 "만약 test issue 관련 자료가 공개되지만 조건 충족이 "
                 "불분명한 경우 후속 문서를 확인합니다."
@@ -253,6 +294,7 @@ VALID_V5_RESPONSE = {
         },
         {
             "title": "조건 미확인",
+            "basis": "market_definition",
             "narrative": (
                 "만약 기준일까지 test issue 조건이 공식 문서에서 확인되지 않는다면 "
                 "미확인 상태로 구분합니다."
@@ -260,17 +302,27 @@ VALID_V5_RESPONSE = {
         },
     ],
     "factors_to_check": [
-        {"title": "판정 문서", "explanation": "test issue의 조건을 명시한 공식 문서를 확인합니다."},
-        {"title": "기준 시각", "explanation": "자료가 정해진 기준일 안에 공개됐는지 확인합니다."},
+        {
+            "title": "판정 문서",
+            "explanation": "test issue의 조건을 명시한 공식 문서를 확인합니다.",
+            "basis": "market_definition",
+        },
+        {
+            "title": "기준 시각",
+            "explanation": "자료가 정해진 기준일 안에 공개됐는지 확인합니다.",
+            "basis": "market_definition",
+        },
     ],
     "signals_to_watch": [
         {
             "title": "공식 자료",
             "explanation": "test issue 관련 공식 문서의 공개 여부를 관찰합니다.",
+            "basis": "market_definition",
         },
         {
             "title": "데이터 갱신",
             "explanation": "공개 예측시장 데이터의 이후 갱신을 별도로 확인합니다.",
+            "basis": "observed_data",
         },
     ],
     "evidence_synthesis": None,
@@ -964,6 +1016,25 @@ def test_v4_inputs_load_only_verified_same_episode_candidates_with_sources(db):
     assert inputs.data_as_of == NOW
 
 
+def test_v4_inputs_load_reference_values_at_or_before_window_boundaries(db):
+    market, metric, _ = _seed_v4_metric_state(db, with_context=False)
+    db.add(_snapshot(MARKET_ID, NOW - timedelta(hours=25), price=0.55))
+    db.add(_snapshot(MARKET_ID, NOW - timedelta(days=8), price=0.53))
+    db.commit()
+
+    inputs = build_v4_inputs_for_market(db, market, metric, NOW)
+
+    assert inputs is not None
+    assert inputs.value_24h_ago == pytest.approx(0.55)
+    assert inputs.value_24h_ago_at == NOW - timedelta(hours=25)
+    assert inputs.value_7d_ago == pytest.approx(0.53)
+    assert inputs.value_7d_ago_at == NOW - timedelta(days=8)
+    assert inputs.recent_history_summary is not None
+    assert inputs.recent_history_summary.start_value == pytest.approx(0.55)
+    assert inputs.recent_history_summary.end_value == pytest.approx(0.63)
+    assert inputs.recent_history_summary.sample_count == 2
+
+
 def test_v4_success_stores_payload_with_metric_and_candidate_evidence(db):
     _, metric, candidate_id = _seed_v4_metric_state(db)
     client = FakeV4LLMClient([json.dumps(VALID_V4_RESPONSE, ensure_ascii=False)])
@@ -1008,7 +1079,31 @@ def test_v5_no_candidate_stores_narrative_and_metric_evidence(db):
     assert row.prompt_version == V5_PROMPT_VERSION
     assert row.content["evidence_refs"] == [f"metric:{metric.id}"]
     assert row.content["content"]["evidence_synthesis"] is None
-    assert "test issue" in row.content["content"]["executive_summary"]
+    assert "Test issue" in row.content["content"]["executive_summary"]
+
+
+def test_v6_batch_stores_only_mode_constrained_payload(db):
+    _, metric, _ = _seed_v4_metric_state(db, with_context=False)
+    client = FakeV4LLMClient([json.dumps(VALID_V6_CHANGE_WITHOUT_EVIDENCE, ensure_ascii=False)])
+
+    outcomes = run_v6_ai_report_batch(db, NOW, client, "openai/writer")
+
+    assert outcomes[0].status == "success"
+    row = db.query(AiReport).one()
+    assert row.prompt_version == V6_PROMPT_VERSION
+    assert row.input_metrics_id == metric.id
+    assert row.content["report_mode"] == "change_without_evidence"
+    assert row.content["briefing"]["mode"] == "change_without_evidence"
+    assert row.content["observed_change"] == {
+        "metric_id": metric.id,
+        "window": "24h",
+        "current_value": 0.63,
+        "change_value": 0.08,
+        "significant": True,
+        "threshold": 0.05,
+    }
+    assert row.content["evidence_refs"] == [f"metric:{metric.id}"]
+    assert "current_value" not in row.content["briefing"]
 
 
 def test_v5_generic_summary_is_filtered_and_not_stored(db):
@@ -1019,8 +1114,16 @@ def test_v5_generic_summary_is_filtered_and_not_stored(db):
         "최근 비교 구간을 함께 정리하지만 현실의 결과나 배경을 뜻하지 않습니다."
     )
     generic["factors_to_check"] = [
-        {"title": "문서 확인", "explanation": "정해진 문서 조건을 이후 공개 자료에서 확인합니다."},
-        {"title": "시각 확인", "explanation": "정해진 기준일 안의 공개 여부를 확인합니다."},
+        {
+            "title": "문서 확인",
+            "explanation": "정해진 문서 조건을 이후 공개 자료에서 확인합니다.",
+            "basis": "market_definition",
+        },
+        {
+            "title": "시각 확인",
+            "explanation": "정해진 기준일 안의 공개 여부를 확인합니다.",
+            "basis": "market_definition",
+        },
     ]
     client = FakeV4LLMClient([json.dumps(generic, ensure_ascii=False)])
 

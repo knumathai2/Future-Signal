@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.11.0-v5-narrative-review-ready
-- **Phase**: Approved post-MVP v5 narrative-summary/source-link program complete
-- **Next milestone**: User quality decision on the actual local v5 result
-- **Overall health**: 🟢 Review ready — TASK-075~081 are complete. Development has valid v5 reports across 13 issues, strict API/UI/browser validation passes, and the actual comparison screen is open. Verified sources remain zero, so the real UI honestly shows the no-source state. Deployment and production writes remain excluded.
+- **Version**: v0.12.0-v5-grounding-code-complete
+- **Phase**: Post-MVP grounding program complete in code
+- **Next milestone**: Render the approved v6 modes and collapsed resolution reference in the Frontend
+- **Overall health**: 🟢 TASK-093~095 are complete. The strict v6 generator, context configuration failure path, and public API pass all 383 Backend tests; TASK-096 is active.
 
 ## Tech Summary
 
@@ -57,11 +57,17 @@ Future Signal/
 | PM / Safety | The v3 MVP remains frozen. ADR-038 activates TASK-056~065 with verified-only automated context, strict evidence links, a cumulative USD 100 OpenRouter cap, and local/development-only writes. Deployment and production DB writes remain separate gates. |
 | v4 program | TASK-056~065 are complete. Migration 002 exists only in the approved development DB. ADR-047 permits bounded provider query reformulation with normalized market-metadata overlap while every evidence/publication gate remains unchanged. Fifty backfill targets yielded 46 completed distinct issues, seven rejected candidates, zero public candidates, and 14 successful v4 rows across 13 issues. |
 | v5 program | ADR-048 expands the two authored v4 fields into six evidence-bounded narrative fields, adds explicit verified-source/no-source presentation, and activates sequential TASK-075~081 for implementation, development regeneration, and user quality review. |
+| grounding program | ADR-049/TASK-082~091 add unapplied migration 003, source resolution evidence, writer/research grounding, one-to-four completeness-scaled scenarios, exact-title/reference/history validation, strict basis fields, and issue-type adversarial gates. Full Backend/Frontend checks pass; no external call, deployment, or non-test DB write occurred. |
 
 ## Recent Changes
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | TASK-095 activated the v6-only report endpoint with strict DB evidence reconstruction, four mode unions, exact sources/rule reference, v5 exclusion, and previous-valid-v6 fallback. Full Backend verification passed with 383 tests. |
+| 2026-07-11 | TASK-094 resolved ISS-014: incomplete requested context configuration now records a safe failure reason, failed batch/log state, and CLI exit code one; explicit skip remains normal. No workflow configuration changed. |
+| 2026-07-11 | TASK-093 completed the deterministic four-mode v6 writer/storage contract, metric/rule single-owner enforcement, evidence-basis separation, duplicate/rule-leak/current-fact gates, and append-only batch path. Full Backend verification passed with 369 tests. |
+| 2026-07-11 | TASK-092 proposed ADR-050 and the four deterministic v6 briefing modes, strict evidence bases, single-owner non-duplication rules, collapsed resolution reference, and exact public response shape. TASK-093~098 are dependency-ordered; implementation awaits explicit AI-policy/API approval. |
+| 2026-07-11 | After explicit user approval, append-only migration 003 was applied to the configured `ENV=local` development Supabase database. Table, columns, index, and unique constraint verification passed; `market_resolution_rules` contains zero rows. No provider call or report regeneration occurred. |
 | 2026-07-11 | TASK-081 complete: actual v4/v5 comparison, display-value refinement, ten-report quality regeneration with six successes/four safe rejections, USD 0.376609 total observed v5 writer spend, documented limitations, and open local review screen. TASK-075~081 program complete. |
 | 2026-07-11 | TASK-080 complete: 14 valid v5 rows across 13 development issues, 13/13 strict reconstruction, actual no-source Browser flow, fixture 0/1/3 evidence, responsive/loading/error/link/console QA, USD 0.268466 observed writer spend, 333 Backend tests, and all Frontend checks. TASK-081 activated. |
 | 2026-07-11 | TASK-079 complete: v5 AI briefing UI, scenario/check/watch cards, visible no-source state, safe exact source links, strict parser, full Frontend checks, and responsive Browser QA. TASK-080 activated. |
@@ -77,6 +83,11 @@ Future Signal/
 | 2026-07-11 | TASK-062 completed: strict v4 read-time reconstruction, verified-only candidate/source output, legacy/malformed gating, OpenAPI contract, and 309-test Backend verification. |
 | 2026-07-11 | TASK-061 completed: strict seven-field evidence-grounded v4 generation, same-episode metric/candidate references, writer budget accounting, and failure-preserving storage passed the 298-test Backend suite. |
 | 2026-07-11 | ADR-038 accepted and TASK-056~065 activated; TASK-056 policy/contract documentation completed without provider calls or DB writes. |
+| 2026-07-11 | TASK-096 completed the strict four-mode v6 Frontend, collapsed resolution reference, safe exact source links, and 20-combination responsive Browser QA; TASK-097 development regeneration is active. |
+| 2026-07-11 | TASK-097 evaluated the user-limited ten-issue development subset for USD 0.051373. Strict filtering preserved safety but yielded zero successful v6 rows; exact issue-anchor and scenario/material prompt corrections pass locally, while a small provider revalidation remains pending as ISS-015. |
+| 2026-07-11 | TASK-097 completed after the user-approved two-issue retry: actual Trump stable/no-evidence and Israeli-parliament change/no-evidence v6 rows stored and served successfully for USD 0.007316 retry cost (USD 0.058689 total TASK-097 writer cost). ISS-015 is resolved and TASK-098 review is active. |
+| 2026-07-11 | TASK-098 completed the v6 integration review: 388 Backend tests and all Frontend checks pass; four modes pass the 20-case Browser matrix; actual Trump and Israeli v6 flows pass stored/API/UI audits; the actual Trump screen is left open with recorded zero-candidate, prose-polish, pool, and runtime-verifier limits. |
+| 2026-07-11 | TASK-098 reopened after detecting authored `december` repetition and generic English in the two live rows. New date/language read gates pass 390 Backend tests and fail closed both rows; TASK-097 is active pending approval for one clean Trump regeneration. |
 | 2026-07-07 | AI Development Harness v1.1 initial setup (Standard tier) |
 | 2026-07-07 | PRD rescoped to v1.1 (hackathon-narrowed from broader "global issue outlook platform" concept) |
 | 2026-07-07 | Service Design, Technical Design, UX Design written as companion specs to PRD |

@@ -25,6 +25,7 @@ from app.core.snapshot_metrics import (
     compute_confidence_level,
     compute_heat_score,
     compute_raw_delta,
+    ensure_resolution_rule,
     ensure_tracked_outcome,
     get_or_create_market,
     has_unfinished_recent_run,
@@ -37,6 +38,7 @@ from app.db.models import (
     Market,
     MarketMetric,
     MarketOutcome,
+    MarketResolutionRule,
     MarketSnapshot,
 )
 
@@ -68,6 +70,15 @@ def _normalized(**overrides) -> dict:
         "market_created_at": "2026-01-01T00:00:00Z",
         "end_date": "2026-12-31T00:00:00Z",
         "price_history_token": "token-1",
+        "resolution_rules": {
+            "condition_text": "The source condition must be met by the deadline.",
+            "deadline": "2026-12-31T00:00:00Z",
+            "exclusions": [],
+            "resolution_source": "https://example.gov/policy/rule",
+            "source_description_hash": "description-hash",
+            "rules_hash": "rules-hash",
+            "collected_at": "2026-07-08T12:00:00Z",
+        },
     }
     base.update(overrides)
     return base
@@ -92,6 +103,7 @@ def db():
         tables=[
             Market.__table__,
             MarketOutcome.__table__,
+            MarketResolutionRule.__table__,
             MarketSnapshot.__table__,
             MarketMetric.__table__,
             DataCollectionLog.__table__,
@@ -215,6 +227,35 @@ def test_ensure_tracked_outcome_is_created_once(db):
     outcomes = db.query(MarketOutcome).filter(MarketOutcome.market_id == market.id).all()
     assert len(outcomes) == 1
     assert outcomes[0].is_tracked is True
+
+
+def test_ensure_resolution_rule_is_append_only_and_idempotent(db):
+    market = get_or_create_market(db, _normalized(), NOW)
+    first = ensure_resolution_rule(db, market, _normalized())
+    duplicate = ensure_resolution_rule(db, market, _normalized())
+    changed = ensure_resolution_rule(
+        db,
+        market,
+        _normalized(
+            resolution_rules={
+                **_normalized()["resolution_rules"],
+                "condition_text": "A revised source condition.",
+                "source_description_hash": "revised-description-hash",
+                "rules_hash": "revised-rules-hash",
+            }
+        ),
+    )
+    db.commit()
+
+    assert first is not None
+    assert duplicate is not None
+    assert changed is not None
+    assert first.id == duplicate.id
+    assert first.id != changed.id
+    rows = db.query(MarketResolutionRule).filter_by(market_id=market.id).all()
+    assert len(rows) == 2
+    assert rows[0].exclusions == []
+    assert rows[0].resolution_source == "https://example.gov/policy/rule"
 
 
 def test_has_unfinished_recent_run(db):
@@ -422,6 +463,7 @@ def test_run_snapshot_and_metrics_end_to_end_against_real_task_007_output(db):
 
     assert db.query(Market).count() == len(normalized_markets)
     assert db.query(MarketOutcome).count() == len(normalized_markets)
+    assert db.query(MarketResolutionRule).count() == 0
     assert db.query(MarketSnapshot).count() == len(normalized_markets)
     assert db.query(MarketMetric).count() == len(normalized_markets)
     assert all(uuid.UUID(str(m.market_id)) for m in result.markets)  # ids are real UUIDs

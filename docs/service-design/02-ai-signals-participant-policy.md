@@ -92,6 +92,38 @@ domain search anchors, and deterministic rejection of market-listing or
 forecast pages. These improvements do not weaken the same-window, official-
 source, independent-source, annotation, or verifier gates.
 
+### 6.10 Approved v6 evidence-aware briefing contract (ADR-050)
+
+V6 selects one of four report modes with deterministic code before writer
+invocation. The two inputs are independent: the latest linked metric qualifies
+as a significant change only under the existing 24-hour ±5pp
+`expectation_shift` rule, and verified material is present only when at least
+one same-episode candidate survives the existing strict public read gates.
+
+The four modes are `change_with_evidence`, `change_without_evidence`,
+`stable_with_evidence`, and `stable_without_evidence`. Stable modes may not
+inflate a below-threshold or unavailable movement. No-evidence modes may provide
+clearly labelled general conditional scenarios, but those scenarios are not
+evidence of the current situation and cannot add unsupported recent facts,
+named-person states, concrete procedures, causal claims, likelihood rankings,
+outcome assertions, or action prompts.
+
+V6 separates `observed_data`, `market_definition`, `verified_context`,
+`general_scenario`, and `data_limitation` bases. Current value, change amount,
+metric time, mode, no-source state, limitations, caution, and resolution-rule
+reference are deterministic. The writer receives only the authored fields
+allowed by the selected mode. Exact resolution rules appear only in the
+collapsed reference region, not in the briefing body. Generation and read paths
+reject metric/rule repetition, cross-section duplicates, unsupported evidence
+bases, and mode/field mismatches.
+
+The exact decision table, response proposal, duplication checks, and approval
+boundary are recorded in
+`reports/task-092-evidence-aware-briefing-policy.md`. The user approved the
+bounded AI-policy and public report API changes on 2026-07-11. This approval
+does not authorize deployment, production writes, workflow mutation, new
+dependencies, or a schema change.
+
 ---
 
 ## 7. Sudden Change Signal Design

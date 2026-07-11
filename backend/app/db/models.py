@@ -61,6 +61,36 @@ class MarketOutcome(Base):
     is_tracked: Mapped[bool] = mapped_column(default=False)
 
 
+class MarketResolutionRule(Base):
+    """Append-only source resolution evidence for one market definition."""
+
+    __tablename__ = "market_resolution_rules"
+    __table_args__ = (
+        UniqueConstraint(
+            "market_id",
+            "rules_hash",
+            name="uq_market_resolution_rules_market_hash",
+        ),
+        Index(
+            "idx_market_resolution_rules_market_collected",
+            "market_id",
+            "collected_at",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    market_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("markets.id", ondelete="CASCADE")
+    )
+    condition_text: Mapped[str | None] = mapped_column(Text)
+    deadline: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    exclusions: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    resolution_source: Mapped[str | None] = mapped_column(Text)
+    source_description_hash: Mapped[str | None] = mapped_column(Text)
+    rules_hash: Mapped[str] = mapped_column(Text)
+    collected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
 class MarketSnapshot(Base):
     """Append-only. Never update a row after insert."""
 

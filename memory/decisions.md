@@ -80,6 +80,59 @@ without reducing the desired depth. The exact reference contract is recorded in
 
 ---
 
+### ADR-050: Select v6 briefing structure from change and verified-evidence state
+
+- **Date**: 2026-07-11
+- **Status**: Accepted ⚠️ HUMAN APPROVAL
+- **Decided by**: User (human), PM / Planner
+
+**Context**: The current v5 report can repeat the same metric and market
+resolution content in its summary, current-data interpretation, scenarios, and
+check cards. When verified public material is absent, its fixed six-field shape
+also creates large low-information sections instead of adapting to the actual
+evidence level.
+
+**Decision**: Select one of four v6 modes from two deterministic facts: whether
+the latest linked metric meets the existing 24-hour ±5pp
+`expectation_shift` rule, and whether at least one same-episode candidate passes
+the strict verified-source read contract. Each mode has an exact authored-field
+allowlist and typed evidence bases. General scenarios are permitted only as
+clearly labelled non-current explanations; they cannot add unsupported recent
+facts, person states, concrete procedures, causal assertions, likelihood ranks,
+outcome assertions, or action prompts. Current metric data and resolution rules
+are deterministic and each has one display owner; rules move to a collapsed
+`판정 기준 보기` reference region.
+
+**Rationale**: Information structure should follow available evidence rather
+than requiring every issue to fill the same cards. Reusing the existing signal
+threshold and verified-candidate gates keeps mode selection reproducible and
+prevents the model from deciding how strong its own evidence is.
+
+**Trade-offs**: V6 replaces the current public report shape, adds a new evidence
+basis, and requires discriminated Backend/Frontend validation. Strict duplicate
+and rule-leak checks will reject some otherwise readable generations. General
+scenario copy remains intentionally limited when no attributable source exists.
+
+**Approval boundary**: The product behavior and proposed exact contract are in
+`reports/task-092-evidence-aware-briefing-policy.md`. No schema change or new
+dependency is proposed. TASK-093 and TASK-095 runtime implementation require
+explicit approval of (1) the bounded general-scenario AI-policy change and (2)
+the v5-to-v6 public report API change. Workflow/runtime configuration changes,
+deployment, production writes, existing-migration edits, and wording-policy
+changes remain separate gates.
+
+**Approval follow-up (2026-07-11)**: The user explicitly approved both the
+bounded general-scenario AI-policy change and the exact v5-to-v6 public report
+API contract. TASK-093 and TASK-095 may implement those approved scopes in
+dependency order. This approval does not include workflow/runtime
+configuration, deployment, production writes, schema changes, new dependencies,
+existing-migration edits, or wording-policy changes.
+
+**Consequences**: TASK-092 is complete and TASK-093 is active. TASK-094~098
+remain dependency-gated in `tasks/active.md`.
+
+---
+
 ### ADR-001: AI Development Harness v1.1 Adoption
 
 - **Date**: 2026-07-07
@@ -1490,3 +1543,43 @@ OpenRouter key without modifying `.env` or printing secrets. Live provider
 calls remain explicit batch-side side effects and still pass every generated
 summary through the strict schema parser and banned-phrase filter before
 storage.
+
+---
+
+### ADR-049: Evidence-completeness contract for grounded v5 reports
+
+- **Date**: 2026-07-11
+- **Status**: Accepted and implemented in code; migration remains unapplied
+- **Decided by**: User request and Data/AI analysis
+
+**Context**: The live collector preserves the market question but replaces the
+source resolution description with generic display copy. The v5 writer can
+therefore produce safe metric prose but lacks the condition, exclusions, and
+source anchors required for concrete issue-specific scenarios. Requiring three
+or four scenarios despite missing definition evidence produces repeated,
+low-information output.
+
+**Decision**: Separate `market_definition`, `observed_data`,
+`verified_context`, and `data_limitation` evidence. Add provenance-preserving
+`resolution_rules`, compute an input-completeness level before generation, and
+allow output richness to shrink with evidence availability. The intended public
+contract permits one to four scenarios and adds a bounded `basis` enum before
+any later claim-level reference expansion. Comparison values, history summaries,
+and consistency checks are deterministic backend responsibilities.
+
+**Approval boundary**: This decision fixes the staged design only. TASK-083's
+new append-only migration requires explicit database-schema approval before
+implementation. TASK-085 and TASK-090 require explicit public API approval.
+No development/production database write, deployment, or paid provider call is
+authorized by this ADR.
+
+**Consequences**: TASK-082 is complete. TASK-083 is the next task but remains at
+its approval gate. The full contract and evaluation matrix are recorded in
+`reports/task-082-grounding-contract.md`.
+
+**Implementation follow-up (2026-07-11)**: The user approved the database-schema
+and public API code changes. TASK-083~091 completed the append-only schema,
+writer/research wiring, completeness-scaled scenarios, exact-title gate,
+no-source review, reference values, deterministic history summary, basis
+contract, and full integration audit. Migration 003 was not applied to any
+database, and no provider call, deployment, or non-test database write occurred.

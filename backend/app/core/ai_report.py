@@ -33,15 +33,25 @@ configured, per human-approved ADRs in memory/decisions.md.
 import json
 import logging
 import re
+import unicodedata
 import uuid
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Literal, Protocol
+from typing import Annotated, Literal, Protocol
 
 from openai import OpenAI, OpenAIError
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    TypeAdapter,
+    ValidationError,
+    field_validator,
+    model_validator,
+)
 
+from app.core.signal_detection import EXPECTATION_SHIFT_THRESHOLD
 from app.core.snapshot_metrics import (
     CAUTION_HIGH_VOLATILITY_THRESHOLD,
     CAUTION_LOW_ACTIVITY_LIQUIDITY_THRESHOLD,
@@ -937,6 +947,46 @@ class V4VerifiedCandidateInput(BaseModel):
     sources: list[V4ContextSource] = Field(min_length=1)
 
 
+class ResolutionRulesInput(BaseModel):
+    """Provenance-preserving market definition supplied to grounded writers."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    condition_text: str | None
+    deadline: datetime | None
+    exclusions: list[str] = Field(default_factory=list)
+    resolution_source: str | None
+    source_description_hash: str | None
+    rules_hash: str
+    collected_at: datetime
+
+
+class RecentHistorySummary(BaseModel):
+    """Deterministic bounded summary of stored snapshots, never model-computed."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    start_at: datetime
+    start_value: float = Field(ge=0, le=1)
+    end_at: datetime
+    end_value: float = Field(ge=0, le=1)
+    min_value: float = Field(ge=0, le=1)
+    max_value: float = Field(ge=0, le=1)
+    sample_count: int = Field(ge=1)
+
+    @model_validator(mode="after")
+    def validate_summary(self) -> "RecentHistorySummary":
+        if self.start_at > self.end_at:
+            raise ValueError("history summary start must not follow end")
+        if self.min_value > self.max_value:
+            raise ValueError("history summary minimum must not exceed maximum")
+        if not self.min_value <= self.start_value <= self.max_value:
+            raise ValueError("history start value must be inside the range")
+        if not self.min_value <= self.end_value <= self.max_value:
+            raise ValueError("history end value must be inside the range")
+        return self
+
+
 class V4ReportInputs(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
@@ -956,6 +1006,27 @@ class V4ReportInputs(BaseModel):
     volume_24h: float | None
     liquidity: float | None
     context_candidates: list[V4VerifiedCandidateInput] = Field(max_length=3)
+    resolution_rules: ResolutionRulesInput | None = None
+    value_24h_ago: float | None = Field(default=None, ge=0, le=1)
+    value_24h_ago_at: datetime | None = None
+    value_7d_ago: float | None = Field(default=None, ge=0, le=1)
+    value_7d_ago_at: datetime | None = None
+    recent_history_summary: RecentHistorySummary | None = None
+
+    @model_validator(mode="after")
+    def validate_reference_values(self) -> "V4ReportInputs":
+        """Require paired reference values/times and metric consistency."""
+        for label, value, captured_at, change in (
+            ("24h", self.value_24h_ago, self.value_24h_ago_at, self.change_24h),
+            ("7d", self.value_7d_ago, self.value_7d_ago_at, self.change_7d),
+        ):
+            if (value is None) != (captured_at is None):
+                raise ValueError(f"{label} reference value and timestamp must be paired")
+            if value is not None:
+                expected = round(self.current_value - value, 4)
+                if change is None or abs(expected - change) > 0.0001:
+                    raise ValueError(f"{label} reference value does not match stored change")
+        return self
 
 
 class V4LLMFields(BaseModel):
@@ -1216,7 +1287,23 @@ when writing Korean prose. Do not expose the internal confidence_level enum or
 raw 0-to-1 decimals when a display value is supplied. Factors and watch items
 must stay tied to the named market condition, outcome label, end date, or
 verified evidence; do not fill them with generic data-methodology reminders.
-conditional_scenarios must contain three or four distinct items. Each item must
+Treat market.resolution_rules as the only source for resolution conditions,
+deadlines, exceptions, and recognized source criteria. market.description is
+display copy and is not a resolution rule. When resolution_rules is null or its
+condition_text is null, do not introduce a procedure, institution, schedule, or
+condition from general knowledge.
+Every conditional scenario, factor, and watch item must include exactly one
+basis value: market_definition, observed_data, verified_context, or
+data_limitation. Use market_definition only when condition_text exists, use
+verified_context only when verified candidates exist, and use data_limitation
+only when observed_data.missing_fields is non-empty.
+Scenario limits are binding: definition_complete allows one to four,
+definition_partial allows one to three, definition_missing_with_context allows
+one or two, and definition_missing_no_context requires exactly one limitation
+scenario. In the last case, state only that the detailed resolution definition
+is unavailable and do not add a procedural path.
+conditional_scenarios must contain the number of distinct items allowed by
+input_completeness. Each item must
 have a short title and a narrative beginning with a Korean conditional expression
 such as "만약" and may describe only conditions present in the supplied market
 definition or verified evidence. factors_to_check and signals_to_watch must be
@@ -1231,6 +1318,7 @@ class V5ConditionalScenario(BaseModel):
 
     title: str = Field(min_length=2, max_length=100)
     narrative: str = Field(min_length=30, max_length=900)
+    basis: Literal["market_definition", "observed_data", "verified_context", "data_limitation"]
 
     @field_validator("narrative")
     @classmethod
@@ -1247,6 +1335,7 @@ class V5BriefingItem(BaseModel):
 
     title: str = Field(min_length=2, max_length=120)
     explanation: str = Field(min_length=20, max_length=700)
+    basis: Literal["market_definition", "observed_data", "verified_context", "data_limitation"]
 
     @field_validator("explanation")
     @classmethod
@@ -1261,7 +1350,7 @@ class V5LLMFields(BaseModel):
 
     executive_summary: str = Field(min_length=80, max_length=1200)
     current_data_interpretation: str = Field(min_length=50, max_length=1200)
-    conditional_scenarios: list[V5ConditionalScenario] = Field(min_length=3, max_length=4)
+    conditional_scenarios: list[V5ConditionalScenario] = Field(min_length=1, max_length=4)
     factors_to_check: list[V5BriefingItem] = Field(min_length=2, max_length=6)
     signals_to_watch: list[V5BriefingItem] = Field(min_length=2, max_length=6)
     evidence_synthesis: str | None = Field(default=..., min_length=50, max_length=1800)
@@ -1287,16 +1376,158 @@ class V5StoredReportPayload(BaseModel):
     content: V5ReportContent
     evidence_refs: list[str] = Field(min_length=1, max_length=4)
     context_candidate_ids: list[uuid.UUID] = Field(max_length=3)
+    resolution_rules: ResolutionRulesInput | None = None
+
+
+def determine_input_completeness(
+    inputs: V4ReportInputs,
+) -> Literal[
+    "definition_complete",
+    "definition_partial",
+    "definition_missing_with_context",
+    "definition_missing_no_context",
+]:
+    """Classify evidence availability deterministically before generation."""
+    rules = inputs.resolution_rules
+    if rules is not None and rules.condition_text:
+        return "definition_complete" if rules.deadline is not None else "definition_partial"
+    if inputs.context_candidates:
+        return "definition_missing_with_context"
+    return "definition_missing_no_context"
+
+
+def build_recent_history_summary(
+    points: list[tuple[datetime, float]],
+) -> RecentHistorySummary | None:
+    """Summarize ordered or unordered stored points with deterministic math."""
+    if not points:
+        return None
+    ordered = sorted(points, key=lambda point: point[0])
+    values = [float(value) for _, value in ordered]
+    return RecentHistorySummary(
+        start_at=ordered[0][0],
+        start_value=values[0],
+        end_at=ordered[-1][0],
+        end_value=values[-1],
+        min_value=min(values),
+        max_value=max(values),
+        sample_count=len(values),
+    )
+
+
+def build_v5_missing_fields(inputs: V4ReportInputs) -> list[str]:
+    """List evidence gaps deterministically for the writer and audit tests."""
+    missing: list[str] = []
+    if inputs.resolution_rules is None or not inputs.resolution_rules.condition_text:
+        missing.append("market.resolution_rules.condition_text")
+    if inputs.end_date is None and (
+        inputs.resolution_rules is None or inputs.resolution_rules.deadline is None
+    ):
+        missing.append("market.deadline")
+    for label, change, value, captured_at in (
+        ("24h", inputs.change_24h, inputs.value_24h_ago, inputs.value_24h_ago_at),
+        ("7d", inputs.change_7d, inputs.value_7d_ago, inputs.value_7d_ago_at),
+    ):
+        if change is None or value is None or captured_at is None:
+            missing.append(f"observed_data.{label}_reference")
+    if inputs.volume_24h is None:
+        missing.append("observed_data.volume_24h")
+    if inputs.liquidity is None:
+        missing.append("observed_data.liquidity")
+    if inputs.recent_history_summary is None:
+        missing.append("observed_data.recent_history_summary")
+    return missing
+
+
+def _scenario_count_matches_completeness(fields: V5LLMFields, inputs: V4ReportInputs) -> bool:
+    count = len(fields.conditional_scenarios)
+    minimum, maximum = {
+        "definition_complete": (1, 4),
+        "definition_partial": (1, 3),
+        "definition_missing_with_context": (1, 2),
+        "definition_missing_no_context": (1, 1),
+    }[determine_input_completeness(inputs)]
+    return minimum <= count <= maximum
+
+
+def _basis_values_match_available_evidence(fields: V5LLMFields, inputs: V4ReportInputs) -> bool:
+    basis_values = [item.basis for item in fields.conditional_scenarios]
+    basis_values.extend(item.basis for item in fields.factors_to_check)
+    basis_values.extend(item.basis for item in fields.signals_to_watch)
+    if "market_definition" in basis_values and (
+        inputs.resolution_rules is None or not inputs.resolution_rules.condition_text
+    ):
+        return False
+    if "verified_context" in basis_values and not inputs.context_candidates:
+        return False
+    if "data_limitation" in basis_values and not build_v5_missing_fields(inputs):
+        return False
+    return True
+
+
+_GROUNDED_DETAIL_TERMS: tuple[str, ...] = (
+    "위원회",
+    "본회의",
+    "표결",
+    "수정안",
+    "연방준비제도",
+    "한국은행",
+    "유럽중앙은행",
+    "fomc",
+    "금통위",
+    "기준금리",
+    "물가",
+    "고용",
+    "중재자",
+    "중재",
+    "합의문",
+    "당사국",
+    "committee",
+    "plenary",
+    "amendment",
+    "federal reserve",
+    "central bank meeting",
+    "mediator",
+    "agreement document",
+)
+
+
+def _v5_uses_only_supported_detail_terms(fields: V5LLMFields, inputs: V4ReportInputs) -> bool:
+    """Reject high-risk procedural detail absent from structured evidence.
+
+    This bounded MVP gate complements numeric/date/URL validation. A term may
+    appear when it is present in the source title, resolution definition, or
+    verified candidate evidence, but not merely from model background knowledge.
+    """
+    evidence_parts = [inputs.title, inputs.outcome_label or ""]
+    if inputs.resolution_rules is not None:
+        evidence_parts.extend(
+            [
+                inputs.resolution_rules.condition_text or "",
+                *inputs.resolution_rules.exclusions,
+            ]
+        )
+    for candidate in inputs.context_candidates:
+        evidence_parts.extend((candidate.title, candidate.neutral_summary))
+    evidence = " ".join(evidence_parts).casefold()
+    authored = _v5_authored_text(fields).casefold()
+    return all(term not in authored or term in evidence for term in _GROUNDED_DETAIL_TERMS)
 
 
 def build_v5_prompt(inputs: V4ReportInputs) -> tuple[str, str]:
     payload = {
+        "input_completeness": determine_input_completeness(inputs),
         "market": {
             "title": inputs.title,
             "description": inputs.description,
             "category": inputs.category,
             "outcome_label": inputs.outcome_label,
             "end_date": inputs.end_date.isoformat() if inputs.end_date else None,
+            "resolution_rules": (
+                inputs.resolution_rules.model_dump(mode="json")
+                if inputs.resolution_rules is not None
+                else None
+            ),
         },
         "observed_data": {
             "data_as_of": inputs.data_as_of.isoformat(),
@@ -1311,6 +1542,22 @@ def build_v5_prompt(inputs: V4ReportInputs) -> tuple[str, str]:
                 round(inputs.change_7d * 100, 4) if inputs.change_7d is not None else None
             ),
             "confidence_level": inputs.confidence_level,
+            "value_24h_ago": inputs.value_24h_ago,
+            "value_24h_ago_at": (
+                inputs.value_24h_ago_at.isoformat() if inputs.value_24h_ago_at else None
+            ),
+            "value_7d_ago": inputs.value_7d_ago,
+            "value_7d_ago_at": (
+                inputs.value_7d_ago_at.isoformat() if inputs.value_7d_ago_at else None
+            ),
+            "volume_24h": inputs.volume_24h,
+            "liquidity": inputs.liquidity,
+            "recent_history_summary": (
+                inputs.recent_history_summary.model_dump(mode="json")
+                if inputs.recent_history_summary is not None
+                else None
+            ),
+            "missing_fields": build_v5_missing_fields(inputs),
         },
         "verified_context_candidates": [
             {
@@ -1366,6 +1613,7 @@ def build_v5_stored_payload(
         evidence_refs=[f"metric:{inputs.metric_id}"]
         + [f"candidate:{candidate_id}" for candidate_id in candidate_ids],
         context_candidate_ids=candidate_ids,
+        resolution_rules=inputs.resolution_rules,
     )
 
 
@@ -1380,7 +1628,19 @@ def _normalized_specific_tokens(text: str) -> set[str]:
 
 def _v5_is_issue_specific(fields: V5LLMFields, inputs: V4ReportInputs) -> bool:
     input_tokens = _normalized_specific_tokens(
-        " ".join(filter(None, (inputs.title, inputs.description, inputs.outcome_label)))
+        " ".join(
+            filter(
+                None,
+                (
+                    inputs.title,
+                    inputs.description,
+                    inputs.outcome_label,
+                    inputs.resolution_rules.condition_text
+                    if inputs.resolution_rules is not None
+                    else None,
+                ),
+            )
+        )
     )
     # The lead section must itself identify the issue. A specific name hidden in
     # a later checklist must not rescue a reusable, generic executive summary.
@@ -1422,7 +1682,27 @@ def _v5_uses_only_evidence_numbers(fields: V5LLMFields, inputs: V4ReportInputs) 
         str(inputs.current_value),
         str(inputs.current_value * 100),
         "24 7",
+        str(inputs.value_24h_ago) if inputs.value_24h_ago is not None else None,
+        inputs.value_24h_ago_at.isoformat() if inputs.value_24h_ago_at else None,
+        str(inputs.value_7d_ago) if inputs.value_7d_ago is not None else None,
+        inputs.value_7d_ago_at.isoformat() if inputs.value_7d_ago_at else None,
+        str(inputs.volume_24h) if inputs.volume_24h is not None else None,
+        str(inputs.liquidity) if inputs.liquidity is not None else None,
     ]
+    if inputs.recent_history_summary is not None:
+        allowed_parts.extend(
+            str(value) for value in inputs.recent_history_summary.model_dump(mode="json").values()
+        )
+    if inputs.resolution_rules is not None:
+        allowed_parts.extend(
+            (
+                inputs.resolution_rules.condition_text,
+                inputs.resolution_rules.deadline.isoformat()
+                if inputs.resolution_rules.deadline
+                else None,
+                *inputs.resolution_rules.exclusions,
+            )
+        )
     for change in (inputs.change_24h, inputs.change_7d):
         if change is not None:
             allowed_parts.extend((str(change), str(change * 100)))
@@ -1471,8 +1751,20 @@ def run_v5_safety_and_semantic_checks(
         return SafetyFilterResult(False, "unsupported_number")
     if not _v5_is_issue_specific(llm_fields, inputs):
         return SafetyFilterResult(False, "generic_summary", "executive_summary")
+    if llm_fields.executive_summary.count(inputs.title) != 1:
+        return SafetyFilterResult(
+            False,
+            "exact_title_occurrence_mismatch",
+            "executive_summary",
+        )
     if _v5_has_excessive_duplication(llm_fields):
         return SafetyFilterResult(False, "duplicate_narrative_fields")
+    if not _scenario_count_matches_completeness(llm_fields, inputs):
+        return SafetyFilterResult(False, "scenario_count_evidence_mismatch")
+    if not _basis_values_match_available_evidence(llm_fields, inputs):
+        return SafetyFilterResult(False, "basis_evidence_mismatch")
+    if not _v5_uses_only_supported_detail_terms(llm_fields, inputs):
+        return SafetyFilterResult(False, "unsupported_procedural_detail")
     if bool(inputs.context_candidates) != (llm_fields.evidence_synthesis is not None):
         return SafetyFilterResult(False, "evidence_synthesis_presence_mismatch")
     expected_refs = [f"metric:{inputs.metric_id}"] + [
@@ -1487,5 +1779,629 @@ def run_v5_safety_and_semantic_checks(
     if payload.content.data_limitations != build_v4_data_limitations(inputs):
         return SafetyFilterResult(False, "data_limitations_mismatch")
     if payload.content.caution_note != CAUTION_NOTE_BY_LEVEL.get(inputs.confidence_level):
+        return SafetyFilterResult(False, "caution_note_literal_mismatch")
+    return SafetyFilterResult(True)
+
+
+# --------------------------------------------------------------------------
+# ADR-050 v6 deterministic evidence-aware briefing contract.
+# --------------------------------------------------------------------------
+
+V6_PROMPT_VERSION = "v6"
+V6ReportMode = Literal[
+    "change_with_evidence",
+    "change_without_evidence",
+    "stable_with_evidence",
+    "stable_without_evidence",
+]
+V6EvidenceBasis = Literal[
+    "observed_data",
+    "market_definition",
+    "verified_context",
+    "general_scenario",
+    "data_limitation",
+]
+
+V6_SYSTEM_PROMPT = """\
+Write concise Korean briefing blocks using only the supplied structured input.
+Return exactly the JSON shape requested for selected_report_mode. Do not add
+extra fields. The mode was selected by deterministic code and must be copied
+exactly; never choose or change it.
+
+Do not write any digits, dates, current values, change amounts, thresholds, or
+resolution-rule wording in authored prose. Those appear once in deterministic
+UI regions. Do not add current events, named-person status, concrete procedures,
+relationships, forecasts, likelihood rankings, outcomes, or reader actions that
+are absent from verified_context_candidates. General scenario blocks describe
+only generic conditional possibilities and must use basis general_scenario;
+they are not evidence of the current situation. Verified background may use
+only verified_context_candidates and must copy their candidate_ids exactly.
+
+Copy at least one value from required_issue_anchors exactly, preserving its
+spelling, in the issue explanation or first scenario text. Translate the
+surrounding prose and every other English term, not that anchor. Every
+conditional scenario text must contain
+one of 만약, 경우, 된다면, or 않는다면. In modes with materials_to_check, if
+there are N conditional_scenarios, return exactly N materials, using each
+scenario_index from 1 through N exactly once.
+
+Never assert that verified material explains an observed movement. Never use
+the Korean words 원인, 전망, 확정, 추천, 수익, 가능성 순위, or 행동 anywhere.
+Do not reproduce the market resolution condition, deadline, exclusions, source
+criteria, current value, metric date, or change amount. Keep every text field
+issue-specific, non-causal, conditional where applicable, and complete Korean.
+Return JSON only.
+"""
+
+
+class V6MarketDefinitionBlock(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    text: str = Field(min_length=30, max_length=900)
+    basis: Literal["market_definition"]
+
+
+class V6GeneralBlock(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    text: str = Field(min_length=30, max_length=900)
+    basis: Literal["general_scenario"]
+
+
+class V6VerifiedBlock(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    text: str = Field(min_length=30, max_length=1200)
+    basis: Literal["verified_context"]
+    candidate_ids: list[uuid.UUID] = Field(min_length=1, max_length=3)
+
+
+class V6GeneralScenario(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    title: str = Field(min_length=2, max_length=100)
+    text: str = Field(min_length=30, max_length=900)
+    basis: Literal["general_scenario"]
+
+    @field_validator("text")
+    @classmethod
+    def require_conditional_language(cls, value: str) -> str:
+        if not any(token in value for token in ("만약", "경우", "된다면", "않는다면")):
+            raise ValueError("V6 scenarios require explicit conditional language")
+        return value
+
+
+class V6VerifiedInterpretation(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    title: str = Field(min_length=2, max_length=100)
+    text: str = Field(min_length=30, max_length=900)
+    basis: Literal["verified_context"]
+    candidate_ids: list[uuid.UUID] = Field(min_length=1, max_length=3)
+
+    @field_validator("text")
+    @classmethod
+    def require_conditional_language(cls, value: str) -> str:
+        if not any(token in value for token in ("만약", "경우", "된다면", "않는다면")):
+            raise ValueError("V6 interpretations require explicit conditional language")
+        return value
+
+
+class V6MaterialToCheck(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    scenario_index: int = Field(ge=1, le=4)
+    title: str = Field(min_length=2, max_length=120)
+    text: str = Field(min_length=20, max_length=700)
+    basis: Literal["general_scenario"]
+
+
+class V6ChangeWithEvidenceBriefing(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["change_with_evidence"]
+    verified_background: V6VerifiedBlock
+    conditional_interpretations: list[V6VerifiedInterpretation] = Field(min_length=1, max_length=4)
+
+
+class V6ChangeWithoutEvidenceBriefing(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["change_without_evidence"]
+    conditional_scenarios: list[V6GeneralScenario] = Field(min_length=1, max_length=4)
+    materials_to_check: list[V6MaterialToCheck] = Field(min_length=1, max_length=8)
+
+
+class V6StableWithEvidenceBriefing(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["stable_with_evidence"]
+    issue_explanation: V6MarketDefinitionBlock
+    verified_background: V6VerifiedBlock
+    conditional_scenarios: list[V6GeneralScenario] = Field(min_length=1, max_length=4)
+
+
+class V6StableWithoutEvidenceBriefing(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    mode: Literal["stable_without_evidence"]
+    issue_explanation: V6GeneralBlock
+    conditional_scenarios: list[V6GeneralScenario] = Field(min_length=1, max_length=4)
+    materials_to_check: list[V6MaterialToCheck] = Field(min_length=1, max_length=8)
+
+
+V6Briefing = Annotated[
+    V6ChangeWithEvidenceBriefing
+    | V6ChangeWithoutEvidenceBriefing
+    | V6StableWithEvidenceBriefing
+    | V6StableWithoutEvidenceBriefing,
+    Field(discriminator="mode"),
+]
+_V6_BRIEFING_ADAPTER = TypeAdapter(V6Briefing)
+
+
+class V6ObservedChange(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    metric_id: int
+    window: Literal["24h"]
+    current_value: float = Field(ge=0, le=1)
+    change_value: float | None
+    significant: bool
+    threshold: float = Field(ge=0, le=1)
+
+
+class V6ResolutionReference(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    status: Literal["available", "unavailable"]
+    condition_text: str | None
+    deadline: datetime | None
+    exclusions: list[str]
+    source_url: str | None
+
+
+class V6StoredReportPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    episode_at: datetime
+    report_mode: V6ReportMode
+    observed_change: V6ObservedChange
+    briefing: V6Briefing
+    resolution_reference: V6ResolutionReference
+    evidence_refs: list[str] = Field(min_length=1, max_length=4)
+    context_candidate_ids: list[uuid.UUID] = Field(max_length=3)
+    resolution_rules: ResolutionRulesInput | None = None
+    relationship_boundary: str = Field(min_length=50, max_length=500)
+    data_limitations: str = Field(min_length=50, max_length=900)
+    caution_note: str = Field(min_length=120, max_length=700)
+
+
+def has_v6_significant_change(inputs: V4ReportInputs) -> bool:
+    """Reuse the existing signal rule without depending on cooldown rows."""
+    return (
+        inputs.confidence_level != "insufficient_data"
+        and inputs.change_24h is not None
+        and abs(inputs.change_24h) >= EXPECTATION_SHIFT_THRESHOLD
+    )
+
+
+def determine_v6_report_mode(inputs: V4ReportInputs) -> V6ReportMode:
+    """Select the four-way report mode from independent deterministic facts."""
+    changed = has_v6_significant_change(inputs)
+    verified = bool(inputs.context_candidates)
+    if changed and verified:
+        return "change_with_evidence"
+    if changed:
+        return "change_without_evidence"
+    if verified:
+        return "stable_with_evidence"
+    return "stable_without_evidence"
+
+
+def build_v6_observed_change(inputs: V4ReportInputs) -> V6ObservedChange:
+    return V6ObservedChange(
+        metric_id=inputs.metric_id,
+        window="24h",
+        current_value=inputs.current_value,
+        change_value=inputs.change_24h,
+        significant=has_v6_significant_change(inputs),
+        threshold=EXPECTATION_SHIFT_THRESHOLD,
+    )
+
+
+def build_v6_resolution_reference(inputs: V4ReportInputs) -> V6ResolutionReference:
+    rules = inputs.resolution_rules
+    if rules is None or not rules.condition_text:
+        return V6ResolutionReference(
+            status="unavailable",
+            condition_text=None,
+            deadline=None,
+            exclusions=[],
+            source_url=None,
+        )
+    return V6ResolutionReference(
+        status="available",
+        condition_text=rules.condition_text,
+        deadline=rules.deadline,
+        exclusions=rules.exclusions,
+        source_url=rules.resolution_source,
+    )
+
+
+def _v6_output_shape(mode: V6ReportMode) -> dict:
+    verified_block = {
+        "text": "string",
+        "basis": "verified_context",
+        "candidate_ids": ["exact supplied candidate UUID"],
+    }
+    general_scenario = {
+        "title": "string",
+        "text": "conditional string",
+        "basis": "general_scenario",
+    }
+    material = {
+        "scenario_index": 1,
+        "title": "string",
+        "text": "string",
+        "basis": "general_scenario",
+    }
+    if mode == "change_with_evidence":
+        return {
+            "mode": mode,
+            "verified_background": verified_block,
+            "conditional_interpretations": [
+                {**general_scenario, "basis": "verified_context", "candidate_ids": []}
+            ],
+        }
+    if mode == "change_without_evidence":
+        return {
+            "mode": mode,
+            "conditional_scenarios": [general_scenario],
+            "materials_to_check": [material],
+        }
+    if mode == "stable_with_evidence":
+        return {
+            "mode": mode,
+            "issue_explanation": {"text": "string", "basis": "market_definition"},
+            "verified_background": verified_block,
+            "conditional_scenarios": [general_scenario],
+        }
+    return {
+        "mode": mode,
+        "issue_explanation": {"text": "string", "basis": "general_scenario"},
+        "conditional_scenarios": [general_scenario],
+        "materials_to_check": [material],
+    }
+
+
+_V6_ANCHOR_STOPWORDS = {
+    "will",
+    "is",
+    "are",
+    "the",
+    "before",
+    "after",
+    "january",
+    "february",
+    "march",
+    "april",
+    "may",
+    "june",
+    "july",
+    "august",
+    "september",
+    "october",
+    "november",
+    "december",
+    "politics",
+}
+
+
+def _v6_required_issue_anchors(inputs: V4ReportInputs) -> list[str]:
+    """Prefer proper names so Korean prose need not preserve generic English."""
+    anchors: list[str] = []
+    seen: set[str] = set()
+    anchor_sources = [inputs.title] + [
+        candidate.title for candidate in inputs.context_candidates
+    ]
+    for source in anchor_sources:
+        for token in re.findall(r"[A-Za-z]{3,}", source):
+            normalized = token.casefold()
+            if (
+                normalized in _V6_ANCHOR_STOPWORDS
+                or not token[0].isupper()
+                or normalized in seen
+            ):
+                continue
+            anchors.append(token)
+            seen.add(normalized)
+    if anchors:
+        return anchors[:6]
+
+    fallback = _normalized_specific_tokens(
+        " ".join(
+            [inputs.title, inputs.category]
+            + [candidate.title for candidate in inputs.context_candidates]
+        )
+    )
+    return sorted(fallback)[:12]
+
+
+def build_v6_prompt(inputs: V4ReportInputs) -> tuple[str, str]:
+    """Expose no metric values or exact resolution-rule prose to the writer."""
+    mode = determine_v6_report_mode(inputs)
+    payload = {
+        "selected_report_mode": mode,
+        "required_output_shape": _v6_output_shape(mode),
+        "issue": {
+            "title": inputs.title,
+            "category": inputs.category,
+            "outcome_label": inputs.outcome_label,
+            "has_stored_definition": bool(
+                inputs.resolution_rules and inputs.resolution_rules.condition_text
+            ),
+        },
+        "required_issue_anchors": _v6_required_issue_anchors(inputs),
+        "generation_constraints": {
+            "conditional_tokens": ["만약", "경우", "된다면", "않는다면"],
+            "scenario_count_range": [1, 4],
+            "material_mapping": (
+                "Return exactly one materials_to_check item for every "
+                "conditional_scenarios item and use each one-based "
+                "scenario_index exactly once."
+            ),
+        },
+        "verified_context_candidates": [
+            {
+                "id": str(candidate.id),
+                "title": candidate.title,
+                "neutral_summary": candidate.neutral_summary,
+                "source_titles": [source.title for source in candidate.sources],
+            }
+            for candidate in inputs.context_candidates
+        ],
+    }
+    return V6_SYSTEM_PROMPT, json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+
+
+def parse_v6_briefing(raw_text: str, expected_mode: V6ReportMode) -> V6Briefing | None:
+    try:
+        briefing = _V6_BRIEFING_ADAPTER.validate_json(raw_text)
+    except ValidationError:
+        return None
+    return briefing if briefing.mode == expected_mode else None
+
+
+def build_v6_stored_payload(
+    inputs: V4ReportInputs, briefing: V6Briefing
+) -> V6StoredReportPayload | None:
+    caution = build_caution_note(inputs.confidence_level)
+    if caution is None:
+        return None
+    candidate_ids = [candidate.id for candidate in inputs.context_candidates]
+    try:
+        return V6StoredReportPayload(
+            episode_at=inputs.episode_at,
+            report_mode=determine_v6_report_mode(inputs),
+            observed_change=build_v6_observed_change(inputs),
+            briefing=briefing,
+            resolution_reference=build_v6_resolution_reference(inputs),
+            evidence_refs=[f"metric:{inputs.metric_id}"]
+            + [f"candidate:{candidate_id}" for candidate_id in candidate_ids],
+            context_candidate_ids=candidate_ids,
+            resolution_rules=inputs.resolution_rules,
+            relationship_boundary=V4_RELATIONSHIP_BOUNDARY,
+            data_limitations=build_v4_data_limitations(inputs),
+            caution_note=caution,
+        )
+    except ValidationError:
+        return None
+
+
+def _v6_body_texts(briefing: V6Briefing) -> list[str]:
+    if isinstance(briefing, V6ChangeWithEvidenceBriefing):
+        return [briefing.verified_background.text] + [
+            item.text for item in briefing.conditional_interpretations
+        ]
+    if isinstance(briefing, V6ChangeWithoutEvidenceBriefing):
+        return [item.text for item in briefing.conditional_scenarios] + [
+            item.text for item in briefing.materials_to_check
+        ]
+    if isinstance(briefing, V6StableWithEvidenceBriefing):
+        return [
+            briefing.issue_explanation.text,
+            briefing.verified_background.text,
+            *(item.text for item in briefing.conditional_scenarios),
+        ]
+    return [
+        briefing.issue_explanation.text,
+        *(item.text for item in briefing.conditional_scenarios),
+        *(item.text for item in briefing.materials_to_check),
+    ]
+
+
+def _canonical_v6_text(text: str) -> str:
+    normalized = unicodedata.normalize("NFKC", text).casefold()
+    normalized = re.sub(r"\d+(?:[.,:/-]\d+)*", "#", normalized)
+    normalized = re.sub(r"[^a-z가-힣#]+", " ", normalized)
+    return re.sub(r"\s+", " ", normalized).strip()
+
+
+def _v6_content_tokens(text: str) -> set[str]:
+    return {
+        token
+        for token in _canonical_v6_text(text).split()
+        if len(token) >= 2 and token not in {"만약", "경우", "대한", "관련", "자료"}
+    }
+
+
+def _v6_has_duplicate_bodies(briefing: V6Briefing) -> bool:
+    bodies = _v6_body_texts(briefing)
+    canonical = [_canonical_v6_text(body) for body in bodies]
+    if len(canonical) != len(set(canonical)):
+        return True
+    for index, left in enumerate(bodies):
+        left_tokens = _v6_content_tokens(left)
+        for right in bodies[index + 1 :]:
+            right_tokens = _v6_content_tokens(right)
+            union = left_tokens | right_tokens
+            if (
+                min(len(left_tokens), len(right_tokens)) >= 4
+                and union
+                and len(left_tokens & right_tokens) / len(union) >= 0.82
+            ):
+                return True
+    return False
+
+
+def _v6_repeats_resolution_rule(briefing: V6Briefing, inputs: V4ReportInputs) -> bool:
+    rules = inputs.resolution_rules
+    if rules is None or not rules.condition_text:
+        return False
+    rule = _canonical_v6_text(rules.condition_text)
+    rule_tokens = _v6_content_tokens(rules.condition_text)
+    for body in _v6_body_texts(briefing):
+        canonical = _canonical_v6_text(body)
+        body_tokens = _v6_content_tokens(body)
+        overlap = rule_tokens & body_tokens
+        if rule and rule in canonical:
+            return True
+        if len(overlap) >= 4 and len(overlap) / max(1, len(rule_tokens)) >= 0.7:
+            return True
+    return False
+
+
+def _v6_candidate_ids_match(briefing: V6Briefing, inputs: V4ReportInputs) -> bool:
+    expected = [candidate.id for candidate in inputs.context_candidates]
+    if isinstance(briefing, V6ChangeWithEvidenceBriefing | V6StableWithEvidenceBriefing):
+        if briefing.verified_background.candidate_ids != expected:
+            return False
+    if isinstance(briefing, V6ChangeWithEvidenceBriefing):
+        allowed = set(expected)
+        return all(
+            item.candidate_ids and set(item.candidate_ids).issubset(allowed)
+            for item in briefing.conditional_interpretations
+        )
+    return True
+
+
+def _v6_materials_cover_scenarios(briefing: V6Briefing) -> bool:
+    if not isinstance(briefing, V6ChangeWithoutEvidenceBriefing | V6StableWithoutEvidenceBriefing):
+        return True
+    scenario_count = len(briefing.conditional_scenarios)
+    indices = {item.scenario_index for item in briefing.materials_to_check}
+    return indices == set(range(1, scenario_count + 1))
+
+
+_UNSUPPORTED_CURRENT_FACT_PATTERN = re.compile(
+    r"(?:현재|오늘|최근|지금|이번)\s*[^.!?]{0,40}"
+    r"(?:발표|사임|취임|진행|발생|합의|승인|통과|결정|확인됐)"
+)
+
+
+def _v6_adds_unsupported_current_fact(briefing: V6Briefing) -> bool:
+    """Block source-free prose that presents a recent state as current fact."""
+    if isinstance(briefing, V6ChangeWithEvidenceBriefing | V6StableWithEvidenceBriefing):
+        general_texts = [item.text for item in getattr(briefing, "conditional_scenarios", [])]
+    else:
+        general_texts = _v6_body_texts(briefing)
+    return any(_UNSUPPORTED_CURRENT_FACT_PATTERN.search(text) for text in general_texts)
+
+
+_V6_AUTHORED_DATE_PATTERN = re.compile(
+    r"(?<![A-Za-z])(?:january|february|march|april|may|june|july|august|"
+    r"september|october|november|december)(?![A-Za-z])|"
+    r"(?:기준일|마감일|시한|연말|연초|월말|월초)",
+    re.IGNORECASE,
+)
+
+
+def _v6_repeats_authored_date(briefing: V6Briefing) -> bool:
+    """Dates and deadlines belong to deterministic/reference UI regions only."""
+    return any(_V6_AUTHORED_DATE_PATTERN.search(text) for text in _v6_body_texts(briefing))
+
+
+def _v6_uses_unapproved_english(briefing: V6Briefing, inputs: V4ReportInputs) -> bool:
+    """Allow supplied proper-name anchors, not generic English prose."""
+    allowed = {anchor.casefold() for anchor in _v6_required_issue_anchors(inputs)}
+    return any(
+        token.casefold() not in allowed
+        for text in _v6_body_texts(briefing)
+        for token in re.findall(r"[A-Za-z]{3,}", text)
+    )
+
+
+def run_v6_safety_and_semantic_checks(
+    payload: V6StoredReportPayload,
+    inputs: V4ReportInputs,
+    briefing: V6Briefing,
+) -> SafetyFilterResult:
+    """Validate mode, evidence, safety, duplication, and single-owner rules."""
+    if payload.report_mode != determine_v6_report_mode(inputs):
+        return SafetyFilterResult(False, "report_mode_mismatch")
+    if briefing.mode != payload.report_mode:
+        return SafetyFilterResult(False, "briefing_mode_mismatch")
+
+    for text in _v6_body_texts(briefing):
+        lowered = text.lower()
+        for phrase, pattern in zip(BANNED_PHRASES, _PHRASE_PATTERNS, strict=True):
+            if pattern.search(lowered):
+                return SafetyFilterResult(False, f"banned_phrase:{phrase}")
+        for phrase, pattern in zip(KOREAN_BANNED_SUBSTRINGS, _KOREAN_PHRASE_PATTERNS, strict=True):
+            if pattern.search(text):
+                return SafetyFilterResult(False, f"banned_phrase:{phrase}")
+        for pattern in (*BANNED_PATTERNS, *KOREAN_BANNED_PATTERNS):
+            if pattern.search(text):
+                return SafetyFilterResult(False, f"banned_pattern:{pattern.pattern}")
+        if _URL_PATTERN.search(text):
+            return SafetyFilterResult(False, "llm_added_url")
+        if _NUMBER_PATTERN.search(text):
+            return SafetyFilterResult(False, "deterministic_value_repeated")
+
+    if _v6_has_duplicate_bodies(briefing):
+        return SafetyFilterResult(False, "duplicate_narrative_fields")
+    if _v6_repeats_resolution_rule(briefing, inputs):
+        return SafetyFilterResult(False, "resolution_rule_repeated")
+    if _v6_repeats_authored_date(briefing):
+        return SafetyFilterResult(False, "authored_date_repeated")
+    if _v6_uses_unapproved_english(briefing, inputs):
+        return SafetyFilterResult(False, "non_korean_generic_term")
+    if _v6_adds_unsupported_current_fact(briefing):
+        return SafetyFilterResult(False, "unsupported_current_fact")
+    if not _v6_candidate_ids_match(briefing, inputs):
+        return SafetyFilterResult(False, "candidate_id_mismatch")
+    if not _v6_materials_cover_scenarios(briefing):
+        return SafetyFilterResult(False, "scenario_material_mismatch")
+
+    authored = " ".join(_v6_body_texts(briefing))
+    evidence_tokens = _normalized_specific_tokens(
+        " ".join(
+            [inputs.title, inputs.category]
+            + [
+                f"{candidate.title} {candidate.neutral_summary}"
+                for candidate in inputs.context_candidates
+            ]
+        )
+    )
+    if not evidence_tokens & _normalized_specific_tokens(authored):
+        return SafetyFilterResult(False, "generic_summary")
+
+    expected_refs = [f"metric:{inputs.metric_id}"] + [
+        f"candidate:{candidate.id}" for candidate in inputs.context_candidates
+    ]
+    if payload.evidence_refs != expected_refs:
+        return SafetyFilterResult(False, "evidence_ref_mismatch")
+    if payload.context_candidate_ids != [candidate.id for candidate in inputs.context_candidates]:
+        return SafetyFilterResult(False, "candidate_id_mismatch")
+    if payload.observed_change != build_v6_observed_change(inputs):
+        return SafetyFilterResult(False, "observed_change_mismatch")
+    if payload.resolution_reference != build_v6_resolution_reference(inputs):
+        return SafetyFilterResult(False, "resolution_reference_mismatch")
+    if payload.relationship_boundary != V4_RELATIONSHIP_BOUNDARY:
+        return SafetyFilterResult(False, "relationship_boundary_mismatch")
+    if payload.data_limitations != build_v4_data_limitations(inputs):
+        return SafetyFilterResult(False, "data_limitations_mismatch")
+    if payload.caution_note != CAUTION_NOTE_BY_LEVEL.get(inputs.confidence_level):
         return SafetyFilterResult(False, "caution_note_literal_mismatch")
     return SafetyFilterResult(True)

@@ -379,9 +379,105 @@ Not bugs, but unresolved decisions that can affect later demo or product work:
     unsuitable as live-flow evidence.
 - **Mitigation used**:
   - Restarted only the local API process, serialized page navigation, waited for
-    full render, and reran in a clean tab. Five live no-candidate flows and five
-    fixture candidate flows then passed; final clean-tab console errors were 0.
+  full render, and reran in a clean tab. Five live no-candidate flows and five
+  fixture candidate flows then passed; final clean-tab console errors were 0.
+  - TASK-097 reproduced the same limit after repeated multi-tab responsive
+    navigation. Closing extra tabs and stopping the local API released local
+    connections; the verified development fixture remains available without a
+    DB connection. No pool or runtime setting was changed.
 - **Follow-up**:
   - Review application connection-pool sizing only under a separately approved
     infrastructure/reliability task. TASK-065 did not change deployment or
     production settings.
+
+### ISS-014: Scheduled context collection silently skips when verifier model is absent
+- **Severity**: High
+- **Found**: 2026-07-11
+- **Status**: Resolved in TASK-094
+- **Reproduction steps**:
+  1. Configure the existing OpenRouter key and research model without
+     `CONTEXT_VERIFIER_MODEL`.
+  2. Run the combined scheduled batch without `--skip-context-research`.
+  3. Observe that the research client builds, the verifier builder raises
+     `ContextVerificationError`, and `main()` catches the exception as an
+     informational skip.
+  4. Observe a successful scheduled-batch log with `context_success=0`,
+     `context_failed=0`, and `context_candidates_accepted=0`.
+- **Evidence**:
+  - The current local configuration has an AI key and research model but no
+    verifier model; direct builder reproduction returns `Independent verifier
+    model is not configured`.
+  - The latest development scheduled batch processed 50 markets successfully
+    but recorded zero context outcomes and zero accepted candidates.
+  - `.github/workflows/daily-batch.yml` passes API keys and the writer model but
+    does not pass `CONTEXT_VERIFIER_MODEL`, so the same skip condition applies
+    unless it is supplied through another runtime mechanism.
+  - Existing context unit/integration tests pass (84 focused tests), but they do
+    not require the CLI to fail visibly when requested context configuration is
+    incomplete.
+- **Root cause**:
+  - Context research requires both a research client and a different-provider
+    verifier. The verifier model is mandatory but absent from the scheduled
+    workflow/configuration.
+  - `scheduled_batch.main()` catches any client-construction error, logs only
+    `Skipping context research: <exception type>`, and continues with both
+    clients set to `None`. The final batch status therefore reports success
+    rather than a context configuration failure.
+- **Impact**:
+  - New market and metric data can be collected while no context collection run
+    rows are created, making the pipeline appear healthy despite doing no
+    candidate research.
+  - Historical stored state remains seven rejected candidates and zero verified
+    public candidates; this is separate from the current total-stage skip.
+- **Fix direction**:
+  - Completed: requested context collection with an incomplete client pair now
+    records a secret-free reason code, a failed scheduled-batch log, and exit
+    code one; `context_success=0/context_failed=0` can no longer look healthy.
+  - Completed: explicit `--skip-context-research` remains the only normal skip
+    path, and CLI/direct-batch regressions cover the missing verifier.
+  - Adding the different-provider verifier setting to a scheduled runtime still
+    requires separate infrastructure approval; TASK-094 did not change it.
+
+### ISS-015: Bounded v6 development run produced no successful public report
+- **Severity**: Medium
+- **Found**: 2026-07-11 during TASK-097
+- **Status**: Resolved in TASK-097
+- **Evidence**:
+  - The user-limited run evaluated ten actual development issues, including the
+    Trump resignation issue, at USD 0.051373 observed writer cost.
+  - Three responses failed the strict mode/schema parser, six were filtered as
+    generic, and one failed exact scenario/material coverage. No successful v6
+    row was stored; three failed audit rows were appended.
+  - The public Trump endpoint correctly returns `not_yet_generated` and does not
+    expose the previous v5 row through the new contract.
+- **Local correction**:
+  - The prompt now supplies exact issue anchors to prevent English-to-Korean
+    translation from defeating the issue-specificity check.
+  - The prompt now states conditional tokens and exact one-to-one scenario/
+    material index coverage. New regressions pass without weakening any gate.
+- **Remaining proof**:
+  - Completed: the user approved exactly two retries. Both produced strict
+    successful v6 rows for Trump resignation and Israeli parliament dissolution
+    at USD 0.007316 total retry cost.
+  - Completed: stored safety/rule-repeat/evidence audits, HTTP reconstruction,
+    and actual Browser flows passed. No additional market was called.
+
+### ISS-016: V6 authored dates and generic English escaped the first safety pass
+- **Severity**: High
+- **Found**: 2026-07-11 during TASK-098 final visual audit
+- **Status**: Open — one clean actual Trump regeneration pending approval
+- **Evidence**:
+  - The successful Trump row repeated `december` in the issue explanation and
+    conditional scenario even though numeric dates were blocked.
+  - Both successful rows preserved generic English action terms because the
+    first anchor list included more than proper names.
+- **Fix implemented**:
+  - Prompt anchors now prefer proper names from the issue and verified
+    candidates and instruct the writer to translate all other English terms.
+  - Generation and read-time validation reject authored month/deadline words
+    and English tokens outside the supplied proper-name anchors.
+  - Full Backend verification passes 390 tests. Both old append-only rows now
+    fail closed as `not_yet_generated` and remain available for audit only.
+- **Remaining proof**:
+  - One new Trump generation must pass the strengthened gate and actual UI
+    review. This provider call exceeds the prior exact two-issue approval.

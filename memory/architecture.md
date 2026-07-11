@@ -25,7 +25,7 @@ Polymarket public APIs (Gamma + CLOB)
 Batch Collector (Python) -- fetch -> normalize -> snapshot -> metrics -> signals -> verified context -> evidence-grounded reports -> logs
         |  writes
         v
-PostgreSQL -- existing tables + approved v4 context_candidates / context_collection_runs
+PostgreSQL -- existing tables + context evidence + unapplied resolution-rule extension
         |  reads only
         v
 FastAPI backend (read-only REST API) -- /api/issues /api/issues/:id /api/issues/:id/history /api/issues/:id/report ...
@@ -54,6 +54,24 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
     unique, bounded provider reformulations with normalized distinctive
     topic/entity overlap. Reported queries are retained in run audit JSON; the
     annotation, source, verifier, publication, and budget gates are unchanged
+11. TASK-083 preserves exact source resolution evidence in live normalized
+    collector output and appends changed definitions to
+    `market_resolution_rules`; checked/local JSON artifacts still omit raw
+    source descriptions. Migration 003 is checked in but not applied.
+12. TASK-084 injects the latest resolution-rule record into v5 writer and
+    context-research inputs. New v5 payloads retain that rule snapshot so API
+    reconstruction uses generation-time evidence; legacy payloads default to
+    no rule evidence.
+13. TASK-088 reloads the closest snapshot at or before each 24h/7d metric
+    boundary, sends its value and timestamp to the writer, and revalidates that
+    the stored delta is reproducible during generation and API reconstruction.
+14. TASK-089 summarizes snapshots within the fixed seven-day metric window into
+    deterministic start/end/min/max/sample fields and adds activity, liquidity,
+    and explicit evidence gaps to writer input.
+15. TASK-090 adds a four-value basis to every authored scenario/check/watch
+    item. Generation, API reconstruction, and Frontend parsing validate both
+    shape and evidence availability before the UI renders an evidence-range
+    label.
 
 ## Design Decision Summary
 
@@ -75,7 +93,27 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 | Migration format (interim) | Plain SQL (`backend/migrations/*.sql`), not Alembic | 2026-07-08 (ADR-007) |
 | Automated context v4 | Citation annotations + deterministic hard gates + different verifier model + verified-only public reads; cumulative USD 100, local/dev writes only | 2026-07-11 (ADR-038, human-approved) |
 | Evidence-bounded narrative v5 | Six authored narrative fields plus deterministic relationship/limitation/caution fields; verified exact-source links; genericity/evidence/safety gates | 2026-07-11 (ADR-048, human-approved) |
+| Resolution-rule evidence | Separate append-only source condition/deadline/exclusion/source records from display copy; hash-idempotent versions | 2026-07-11 (ADR-049, human-approved code change) |
 | Server-tool query scope | Deterministic anchors + bounded normalized metadata overlap; exact reported strings audited | 2026-07-11 (ADR-047, human-approved) |
+| Evidence-aware briefing v6 | Four deterministic change/evidence modes, strict basis union, one-owner metric/rule display, and v6-only fallback | 2026-07-11 (ADR-050, human-approved and implemented) |
+
+## V6 evidence-aware briefing implementation (TASK-092~098)
+
+ADR-050 defines a no-migration v6 extension over append-only
+`ai_reports.content`. The selector reuses the existing 24-hour Â±5pp signal rule
+and the current verified-candidate reconstruction gates to choose one of four
+report modes before generation. The public response adds deterministic
+`observed_change`, `resolution_reference`, `report_mode`, and a strict
+mode-discriminated briefing union. V1-v5 remain audit-only and only a
+contract-compatible v6 row could satisfy fallback.
+
+TASK-093 implements mode-constrained generation and append-only storage;
+TASK-095 reconstructs the strict public response from DB evidence and excludes
+v1-v5 rows; TASK-096 renders the four layouts and collapsed rule reference;
+TASK-097 stores two actual development successes after bounded fail-closed
+evaluation; and TASK-098 verifies stored/API/UI integration. The user approved
+the AI-policy, public API, and bounded provider calls. No schema, dependency,
+workflow, infrastructure, deployment, or production-write change is included.
 
 ## Architecture Constraints
 

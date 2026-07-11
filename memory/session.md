@@ -14,9 +14,10 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: Reviewer + Data/AI Implementer → PM / Planner
-- **Session Goal**: Complete the approved TASK-075~081 narrative-summary/source-link program and open actual development results for review.
-- **Branch**: `pm/TASK-081-summary-quality-review`
+- **Agent Role**: PM / Planner
+- **Session Goal**: Define the TASK-092 v6 evidence-aware briefing policy and
+  approval boundary before sequential TASK-093~098 implementation.
+- **Branch**: `pm/TASK-092-evidence-aware-briefing-policy`
 
 ## Context Read
 
@@ -24,6 +25,113 @@ Harness Version: 1.1
 - TASK-065 backfill, audit, API, wording, browser, and budget criteria
 
 ## Work Completed
+
+- Completed TASK-095: v6-only API reconstruction, all four mode responses,
+  exact metric/snapshot/reference/history/rule/candidate/source revalidation,
+  v1-v5 exclusion, previous-valid-v6 fallback, and OpenAPI/API documentation.
+- TASK-095 passed 63 focused API tests, 64 context/API integration tests, the
+  full 383-test Backend suite, Ruff, and diff checks. Activated TASK-096.
+- Completed TASK-094 / ISS-014: incomplete requested context configuration now
+  produces a safe reason code, failed batch/log status, and CLI exit code one;
+  explicit skip remains normal. No workflow configuration changed.
+- TASK-094 verification passed 103 context/scheduled tests, the full 373-test
+  Backend suite, Ruff, and diff checks. Activated TASK-095.
+- Completed TASK-093: deterministic four-mode selection, four strict writer
+  unions, deterministic observed-change/rule-reference storage, evidence-basis
+  separation, prompt-level metric/rule exclusion, normalized duplicate and
+  rule-leak blocking, source-free current-fact filtering, scenario/material
+  linkage, and append-only v6 batch generation.
+- TASK-093 verification passed with 59 focused tests, the complete 369-test
+  Backend suite, Ruff, and diff checks. No provider or non-test DB call ran.
+- Activated TASK-094 to resolve the already-diagnosed ISS-014 CLI/configuration
+  observability defect without changing workflow/runtime configuration.
+- Read the user-provided goal objective and the full required project context in
+  order, including all role prompts and current worktree state.
+- Preserved the existing migration 003, regeneration, ISS-014, and scheduled
+  batch artifact changes without rewriting or discarding them.
+- Recorded TASK-092~098 together in `tasks/active.md` with the complete
+  dependency sequence and approval stop conditions; only TASK-092 is active.
+- Drafted the four-mode decision table, exact existing ±5pp significant-change
+  rule, verified-material rule, evidence-basis boundaries, strict v6 public
+  response proposal, section ownership, duplicate/rule-leak gates, collapsed
+  resolution-reference contract, and Frontend accessibility requirements in
+  `reports/task-092-evidence-aware-briefing-policy.md`.
+- Added proposed ADR-050 and matching Service/Technical/UX v6 sections. No
+  runtime code, database, provider, workflow, dependency, infrastructure, or
+  deployment action occurred.
+- Stopped before TASK-093/TASK-095 because the bounded general-scenario AI
+  policy and v5-to-v6 public report API changes require explicit human approval.
+
+- Completed TASK-091 and the full TASK-082~091 grounding program.
+- Closed the remaining unsupported-procedural-detail gap with bounded evidence
+  vocabulary checks and legislative, monetary-policy, and diplomatic
+  adversarial cases.
+- Aligned API contract, Technical Design, and OpenAPI regression coverage with
+  one-to-four scenarios and strict basis fields.
+- Full verification: 348 Backend tests, Ruff, Frontend typecheck/lint/parser/
+  build, copy scan, and diff checks pass. Migration 003 remains unapplied; no
+  provider, development/production DB, or deployment action occurred.
+
+- Completed TASK-090: every scenario/check/watch item now has a strict basis
+  tied to actually available market, observed, verified, or limitation evidence.
+- Backend generation/read validation and Frontend parser reject invalid basis
+  shapes; the UI renders the basis label per item.
+- Verified Backend, Ruff, Frontend typecheck/parser/lint/build; only the known
+  bundle-size warning remains.
+
+- Completed TASK-089: v5 observed data now contains activity, liquidity,
+  deterministic seven-day history summary, and explicit missing fields.
+- API reconstruction recomputes the same summary from snapshots bounded by the
+  stored metric timestamp.
+- Verified 194 focused Backend tests and Ruff.
+
+- Completed TASK-088: v5 inputs now include exact 24h/7d reference values and
+  timestamps selected with the metric boundary rule.
+- Paired-field and delta consistency validation run before generation and again
+  during DB-backed API reconstruction.
+- Verified 193 focused Backend tests and Ruff.
+
+- Completed TASK-087 as a review-only task: the DB-backed no-candidate report,
+  null evidence synthesis, metric-only evidence reference, strict Frontend
+  parser, explicit no-source copy, and one-scenario build all pass.
+- No product code or non-test data changed; the production build retained only
+  the known bundle-size warning.
+
+- Completed TASK-086: v5 storage and serving now reject an executive summary
+  unless the exact source title occurs once.
+- Added missing, whitespace-modified, and duplicated-title regressions; 181
+  focused Backend tests and Ruff pass.
+
+- Completed TASK-085: deterministic definition completeness now controls a
+  one-to-four scenario contract across generation, API, and Frontend parsing.
+- Missing definition plus no verified context requires exactly one limitation
+  scenario; overfilled output fails semantic validation.
+- Verified 188 Backend tests, Ruff, Frontend typecheck, and parser regression.
+
+- Completed TASK-084: the v5 writer and research stages now consume the latest
+  stored resolution evidence while display description remains non-authoritative.
+- New v5 payloads retain the exact rule snapshot for read-time reconstruction;
+  legacy payloads without rules remain valid.
+- Verified 220 focused Backend tests and Ruff without external calls or
+  non-test database writes.
+
+- Received explicit user approval for the planned database-schema and public
+  API code changes; database application, deployment, and external calls remain
+  excluded.
+- Completed TASK-083 with unapplied migration 003, the append-only ORM model,
+  exact source-rule normalization, safe artifact separation, and idempotent
+  per-market rule storage.
+- Verified 25 focused tests and Ruff; no non-test database was touched.
+
+- Completed TASK-082 without changing product code or guarded contracts.
+- Fixed the resolution-rule provenance model, four evidence classes,
+  deterministic input-completeness levels, one-to-four scenario direction,
+  lightweight basis vocabulary, observed-data extension, and six evaluation
+  cases in `reports/task-082-grounding-contract.md`.
+- Recorded ADR-049 and moved TASK-082 to the completed ledger.
+- Stopped before TASK-083 implementation because its new append-only migration
+  requires explicit database-schema approval. Public API changes in TASK-085
+  and TASK-090 remain separately approval-gated.
 
 - Received explicit human approval for ADR-047 and resumed TASK-065. The narrow
   amendment replaces exact query-string membership only; all annotation,
@@ -65,6 +173,53 @@ Harness Version: 1.1
   changes, and optional TASK-066+ work require separate user direction.
 - ISS-013 records the non-blocking development DB session-pool saturation seen
   only during rapid Browser QA; serialized clean reruns passed.
+- The user explicitly approved bringing the configured development database to
+  the latest schema state. Migration 003 was applied successfully to the
+  `ENV=local` Supabase target; table, column, index, and unique-constraint
+  checks passed. The new table has zero rows. No provider call or report
+  regeneration was performed.
+
+## Latest v5 Grounded Regeneration
+
+- At the user's request, ran the approved local/development-only grounding path
+  against 50 fresh public market records. The collector stored 50 append-only
+  `market_resolution_rules` rows across 50 markets and refreshed the matching
+  snapshots/metrics without deployment or production writes.
+- Ran the latest ADR-048/ADR-049 v5 generator directly because the generic
+  scheduled-batch report selector still targets the legacy path. Ten latest
+  metrics were evaluated: four reports passed and were stored; six were safely
+  rejected by the `unsupported_number` evidence gate. Previous valid reports
+  remain available for rejected cases.
+- Observed writer cost for this run was USD 0.128091. Targeted Ruff verification
+  passed for collector, snapshot/metric, v5 generation, and batch modules.
+- At the user's follow-up request, attempted latest-contract v5 generation for
+  all 70 markets with latest metrics. Seven already-completed markets plus 63
+  remaining targets covered the full set; a second guarded pass retried the 58
+  markets that had not passed after the first full pass.
+- Eighteen distinct markets received a new successful v5 row during the full
+  operation. Including earlier valid rows, 28 of 70 markets now have at least
+  one successful v5 report; 42 remain without a valid v5 row. The dominant
+  fail-closed reason was `unsupported_number`, followed by malformed responses,
+  prohibited wording, and unsupported procedural detail. No safety or evidence
+  gate was relaxed.
+- The two completed parallel passes recorded USD 1.572546 in observed writer
+  cost. A previously interrupted sequential call may add a small provider-side
+  amount that was not included in that completed-pass sum. No deployment or
+  production write occurred.
+
+## Candidate-context collection diagnosis
+
+- Diagnosed ISS-014 without changing product code, runtime configuration, or
+  database state. The current and scheduled runtime omit the mandatory
+  different-provider `CONTEXT_VERIFIER_MODEL`; verifier construction fails and
+  the CLI silently converts that failure into a skipped context stage.
+- Read-only development audit confirmed the latest scheduled batch processed 50
+  markets with `context_success=0`, `context_failed=0`, and zero accepted
+  candidates. Existing historical context state is 90 runs, seven rejected
+  candidates, and zero verified candidates.
+- All 84 focused context/scheduled-batch tests pass, showing the defect is an
+  untested CLI/configuration observability path rather than a failure in the
+  covered research and verification units.
 
 ## TASK-075~081 Program Activation
 
@@ -117,3 +272,66 @@ Harness Version: 1.1
   observed v5 writer spend is USD 0.376609. Development verified sources remain
   zero, so the actual screen shows the explicit no-source state. The local
   browser is left on the real v5 result for user review.
+
+## TASK-092~098 evidence-aware briefing program
+
+- TASK-092~095 are complete: ADR-050 defines four deterministic v6 modes; the
+  generator selects the mode from the existing 24-hour ±5pp rule and exact
+  verified-candidate presence; the scheduled context stage now fails visibly
+  when requested without a complete independent verifier configuration; and
+  the API reconstructs and serves only valid v6 rows.
+- TASK-096 is complete. The Frontend now renders the four mode-specific layouts,
+  separates general scenarios from verified current background, suppresses
+  incompatible fallback, and keeps the resolution rule in a default-collapsed
+  accessible disclosure. Parser, typecheck, lint, and build checks pass.
+- Browser QA covered all four fixture modes at 320/375/768/1024/1280px with no
+  horizontal overflow and correct evidence/general-notice visibility. TASK-097
+  is active for guarded append-only development regeneration and cost audit.
+- TASK-097 evaluated only the user-requested subset of ten actual development
+  issues, including Trump resignation. The deterministic modes were nine
+  `stable_without_evidence` and one `change_without_evidence`; zero verified
+  candidates meant the evidence-present modes remained fixture-only.
+- The strict run produced zero successes: three malformed mode/schema results,
+  six generic-summary filters, and one scenario/material mapping filter. It cost
+  USD 0.051373 and appended only three failed v6 rows; no further provider call
+  was made after the user asked to limit the run.
+- The local prompt now exposes exact issue anchors and the one-to-one scenario/
+  material contract. New regressions preserve the generic-output rejection and
+  prove English anchors can keep Korean prose issue-specific. Provider
+  revalidation and a successful actual v6 row remain pending.
+- A real Trump-page plus v6 fixture Browser review found the general-scenario
+  notice duplicated in `stable_without_evidence`. The UI now renders it once in
+  the issue-explanation card. A clean 20-case rerun passed all four modes at
+  320/375/768/1024/1280px with exact notice counts, collapsed rule references,
+  and no overflow. Backend is at 387 passing tests; all Frontend checks pass.
+- Completion audit confirms TASK-097 still lacks a successful actual v6 row and
+  therefore cannot prove the actual Trump authored-body regression. The user
+  was asked to approve exactly two bounded retries after requesting only a
+  subset; no answer arrived across the required repeated goal continuations.
+  TASK-097 is recorded as blocked and TASK-098 remains assigned rather than
+  being started out of dependency order.
+- The user then approved exactly two retries. Trump resignation and Israeli
+  parliament dissolution both succeeded for USD 0.007316 combined, bringing
+  TASK-097 observed writer cost to USD 0.058689. Both strict stored payloads,
+  HTTP responses, and actual Browser screens passed metric/evidence, mode,
+  duplicate, rule-repeat, current-fact, data-as-of, caution, and overflow checks.
+- TASK-097 is complete. Review of the successful text narrowed future prompt
+  anchors to proper names so generic English month/action words are not
+  preserved; no third provider call was made. TASK-098 is now active.
+- TASK-098 is complete on the Reviewer branch. The final suite passes 388
+  Backend tests, Ruff, diff checks, and every Frontend command. Stored/HTTP/UI
+  audits passed for actual Trump stable/no-evidence and Israeli-parliament
+  change/no-evidence rows; the four-mode fixture matrix passed 20/20 responsive
+  combinations with exact notice counts and no overflow.
+- The actual Trump v6 screen is open in the visible Browser with the rule
+  collapsed. Final limitations are recorded: zero genuine verified-candidate
+  modes, mixed generic English in the two pre-refinement append-only rows,
+  ISS-013 session-pool sensitivity, and separately approval-gated verifier
+  runtime configuration.
+- TASK-098 was reopened after the final visual audit found `december` repeated
+  in two Trump authored sections and generic English action terms in both live
+  rows. New generation/read-time gates reject authored dates/deadlines and
+  non-anchor English; Backend now passes 390 tests. Both append-only rows are
+  preserved but the current HTTP API honestly returns `not_yet_generated`.
+  TASK-097 is active again pending separate approval for one clean Trump call;
+  TASK-098 is assigned.
