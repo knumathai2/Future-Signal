@@ -19,8 +19,8 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 - **Version**: v0.10.0-v5-narrative-program-active
 - **Phase**: Approved post-MVP v5 narrative-summary/source-link program active
-- **Next milestone**: TASK-078 v5 storage and public API contract
-- **Overall health**: 🟢 Active — TASK-077 aligned the v5 generator to the user-approved briefing contract and strengthened source retrieval without weakening verification. 331 Backend tests pass; seven guarded development research rows completed with zero qualifying sources. TASK-078 is active. Deployment and production writes remain excluded.
+- **Next milestone**: TASK-079 AI briefing and verified-source UI
+- **Overall health**: 🟢 Active — TASK-078 now serves strict reconstructed v5 reports, preserves the previous valid row on newer-row failure, and exposes only exact verified source metadata. 332 Backend tests pass. TASK-079 is active. Deployment and production writes remain excluded.
 
 ## Tech Summary
 
@@ -62,6 +62,7 @@ Future Signal/
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | TASK-078 complete: no-migration v5 JSONB storage/read contract, newest-to-oldest last-good reconstruction, exact verified-source API, OpenAPI update, and 332 Backend tests. TASK-079 activated. |
 | 2026-07-11 | TASK-077 complete: user-format v5 contract, 3–4 conditional scenarios, typed check/watch lists, issue-specific/numeric gates, title/entity/official-domain queries, market/forecast-page exclusion, seven guarded development research rows, USD 0.18057005 task spend, and 331 Backend tests. TASK-078 activated. |
 | 2026-07-11 | TASK-076 complete: strict six-field v5 narrative generation, specificity/duplication/evidence/wording gates, append-only batch storage, and 327 Backend tests. TASK-077 activated. |
 | 2026-07-11 | TASK-075 complete: ADR-048 records human approval for the evidence-bounded v5 narrative and exact verified-source-link program; TASK-076 is activated. |

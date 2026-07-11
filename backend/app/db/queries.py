@@ -12,6 +12,7 @@ invent a value. Missing change/heat metrics are represented as
 `None` + `confidence_level="insufficient_data"` instead, per
 Technical Design §6 step 5 and AGENTS.md's no-fabrication rule.
 """
+
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
@@ -91,23 +92,17 @@ def load_live_issues(db: Session) -> tuple[list[LiveIssue], datetime] | None:
     latest_snapshot_by_market = _latest_per_market(snapshots)
 
     metrics = (
-        db.execute(select(MarketMetric).order_by(MarketMetric.computed_at.desc()))
-        .scalars()
-        .all()
+        db.execute(select(MarketMetric).order_by(MarketMetric.computed_at.desc())).scalars().all()
     )
     latest_metric_by_market = _latest_per_market(metrics)
 
     tracked_outcomes = (
-        db.execute(select(MarketOutcome).where(MarketOutcome.is_tracked.is_(True)))
-        .scalars()
-        .all()
+        db.execute(select(MarketOutcome).where(MarketOutcome.is_tracked.is_(True))).scalars().all()
     )
     tracked_outcome_by_market = {o.market_id: o for o in tracked_outcomes}
 
     markets = (
-        db.execute(
-            select(Market).where(Market.id.in_(latest_snapshot_by_market.keys()))
-        )
+        db.execute(select(Market).where(Market.id.in_(latest_snapshot_by_market.keys())))
         .scalars()
         .all()
     )
@@ -126,19 +121,13 @@ def load_live_issues(db: Session) -> tuple[list[LiveIssue], datetime] | None:
                 current_value=float(snapshot.price),
                 captured_at=snapshot.captured_at,
                 change_24h=(
-                    float(metric.change_24h)
-                    if metric and metric.change_24h is not None
-                    else None
+                    float(metric.change_24h) if metric and metric.change_24h is not None else None
                 ),
                 change_7d=(
-                    float(metric.change_7d)
-                    if metric and metric.change_7d is not None
-                    else None
+                    float(metric.change_7d) if metric and metric.change_7d is not None else None
                 ),
                 heat_score=(
-                    float(metric.heat_score)
-                    if metric and metric.heat_score is not None
-                    else None
+                    float(metric.heat_score) if metric and metric.heat_score is not None else None
                 ),
                 confidence_level=metric.confidence_level if metric else "insufficient_data",
                 updated_at=metric.computed_at if metric else snapshot.captured_at,
@@ -161,15 +150,11 @@ def load_signals_for_market(db: Session, market_id: uuid.UUID) -> list[IssueSign
 
 def load_related_events_for_market(db: Session, market_id: uuid.UUID) -> list[RelatedEvent]:
     return list(
-        db.execute(select(RelatedEvent).where(RelatedEvent.market_id == market_id))
-        .scalars()
-        .all()
+        db.execute(select(RelatedEvent).where(RelatedEvent.market_id == market_id)).scalars().all()
     )
 
 
-def load_history_points(
-    db: Session, market_id: uuid.UUID, since: datetime
-) -> list[MarketSnapshot]:
+def load_history_points(db: Session, market_id: uuid.UUID, since: datetime) -> list[MarketSnapshot]:
     return list(
         db.execute(
             select(MarketSnapshot)
@@ -195,9 +180,7 @@ def _latest_successful_report_row(
         query = query.where(AiReport.prompt_version == prompt_version)
 
     return (
-        db.execute(
-            query.order_by(AiReport.generated_at.desc(), AiReport.id.desc()).limit(1)
-        )
+        db.execute(query.order_by(AiReport.generated_at.desc(), AiReport.id.desc()).limit(1))
         .tuples()
         .first()
     )
@@ -287,3 +270,62 @@ def load_latest_successful_v4_report(
         snapshot=snapshot,
         candidates=candidates,
     )
+
+
+def load_successful_v5_reports(
+    db: Session,
+    market_id: uuid.UUID,
+    *,
+    limit: int = 20,
+) -> list[LiveV4AiReport]:
+    """Load recent v5 rows with their evidence for last-good reconstruction."""
+    rows = (
+        db.execute(
+            select(AiReport, MarketMetric)
+            .join(MarketMetric, AiReport.input_metrics_id == MarketMetric.id)
+            .where(
+                AiReport.market_id == market_id,
+                AiReport.status == "success",
+                AiReport.prompt_version == "v5",
+                MarketMetric.market_id == market_id,
+            )
+            .order_by(AiReport.generated_at.desc(), AiReport.id.desc())
+            .limit(limit)
+        )
+        .tuples()
+        .all()
+    )
+    results: list[LiveV4AiReport] = []
+    for report, metric in rows:
+        snapshot = db.execute(
+            select(MarketSnapshot)
+            .where(
+                MarketSnapshot.market_id == market_id,
+                MarketSnapshot.captured_at <= metric.computed_at,
+            )
+            .order_by(MarketSnapshot.captured_at.desc(), MarketSnapshot.id.desc())
+            .limit(1)
+        ).scalar_one_or_none()
+        if snapshot is None:
+            continue
+        candidates = list(
+            db.execute(
+                select(ContextCandidate)
+                .where(
+                    ContextCandidate.market_id == market_id,
+                    ContextCandidate.verification_state == "verified",
+                )
+                .order_by(ContextCandidate.event_at.asc(), ContextCandidate.id.asc())
+            )
+            .scalars()
+            .all()
+        )
+        results.append(
+            LiveV4AiReport(
+                report=report,
+                metric=metric,
+                snapshot=snapshot,
+                candidates=candidates,
+            )
+        )
+    return results

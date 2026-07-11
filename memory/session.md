@@ -14,9 +14,9 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: Data/AI Implementer → Backend Implementer
+- **Agent Role**: Backend Implementer → Frontend Implementer
 - **Session Goal**: Activate and implement the approved TASK-075~081 narrative-summary/source-link program.
-- **Branch**: `data-ai/TASK-077-source-retrieval-quality` → `backend/TASK-078-narrative-report-api`
+- **Branch**: `backend/TASK-078-narrative-report-api` → `frontend/TASK-079-ai-summary-source-ui`
 
 ## Context Read
 
@@ -91,3 +91,9 @@ Harness Version: 1.1
   3.09164205. Backend verification passed with 331 tests and Ruff clean.
 - TASK-078 is active and must implement strict v5 read-time reconstruction and
   the approved public API contract without a schema migration.
+- TASK-078 is complete. The report API serves reconstructed v5 only, validates
+  metric/snapshot/candidate/source/timing/deterministic content again on read,
+  and falls back to the previous valid v5 if a newer successful row is invalid.
+  OpenAPI and integration coverage pass with 332 Backend tests and Ruff clean.
+- TASK-079 is active and must render the approved briefing order, verified
+  source/no-source states, safe exact links, report timing, and caution.

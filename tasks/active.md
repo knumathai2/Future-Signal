@@ -19,7 +19,7 @@ excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-078 | Implement v5 report storage and public API contract | Backend | Backend Implementer | `backend/TASK-078-narrative-report-api` | in_progress |
+| TASK-079 | Implement AI issue briefing and verified-source detail UI | Frontend | Frontend Implementer | `frontend/TASK-079-ai-summary-source-ui` | in_progress |
 
 Exact dependencies, ownership, acceptance criteria, handoffs, and stop
 conditions are binding in
