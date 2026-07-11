@@ -15,8 +15,9 @@ from datetime import timedelta
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api.routes import issues as issues_routes
-from app.db.models import AiReport, Market, MarketSnapshot
+from app.db.models import AiReport, ContextCandidate, Market, MarketSnapshot
 from tests.conftest import (
+    CONTEXT_CANDIDATE_ID,
     MARKET_ID,
     MARKET_ID_NO_METRIC,
     NOW,
@@ -27,6 +28,7 @@ from tests.conftest import (
     seed_ai_report,
     seed_basic_market,
     seed_market_without_metric,
+    seed_v4_report,
 )
 
 
@@ -206,7 +208,7 @@ def test_missing_metric_yields_null_fields_and_insufficient_data(live_client, db
     assert issue["confidence_level"] == "insufficient_data"
 
 
-def test_get_issue_report_live_data_returns_latest_successful_report(
+def test_get_issue_report_legacy_rows_return_not_yet_generated(
     live_client, db_session
 ):
     seed_basic_market(db_session)
@@ -236,20 +238,10 @@ def test_get_issue_report_live_data_returns_latest_successful_report(
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    body = response.json()
-    assert body["id"] == str(REPORT_ID_LATEST)
-    assert body["status"] == "success"
-    assert body["report_version"] == "v3"
-    # input_metrics_id=1 links the report to the seeded metric row, so the
-    # report's data_as_of reflects the metric snapshot rather than generated_at.
-    assert body["data_as_of"].startswith("2026-07-08T09:00:00")
-    expected_overview = (
-        "latest issue overview from stored data that explains the tracked condition."
-    )
-    assert body["content"]["issue_overview"] == expected_overview
+    assert response.json() == {"status": "not_yet_generated"}
 
 
-def test_get_issue_report_prefers_current_prompt_version_when_timestamps_tie(
+def test_get_issue_report_v1_and_v3_tie_returns_not_yet_generated(
     live_client, db_session
 ):
     seed_basic_market(db_session)
@@ -271,12 +263,7 @@ def test_get_issue_report_prefers_current_prompt_version_when_timestamps_tie(
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
     assert response.status_code == 200
-    body = response.json()
-    assert body["id"] == str(REPORT_ID_LATEST)
-    expected_overview = (
-        "current issue overview from stored data that explains the tracked condition."
-    )
-    assert body["content"]["issue_overview"] == expected_overview
+    assert response.json() == {"status": "not_yet_generated"}
 
 
 def test_get_issue_report_live_data_with_legacy_schema_returns_not_yet_generated(
@@ -332,7 +319,7 @@ def test_get_issue_report_query_failure_returns_not_yet_generated(
     def fail_query(*args, **kwargs):
         raise SQLAlchemyError("simulated report query failure")
 
-    monkeypatch.setattr(issues_routes, "load_latest_successful_report", fail_query)
+    monkeypatch.setattr(issues_routes, "load_latest_successful_v4_report", fail_query)
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
 
@@ -500,7 +487,7 @@ def test_history_multiple_snapshots_filtered_and_sorted_by_window(
     assert timestamps == sorted(timestamps)
 
 
-def test_v3_report_success_response(live_client, db_session):
+def test_v3_success_row_is_audit_only(live_client, db_session):
     seed_basic_market(db_session)
     seed_ai_report(
         db_session,
@@ -512,20 +499,10 @@ def test_v3_report_success_response(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response.status_code == 200
-    body = response.json()
-    assert body["status"] == "success"
-    assert body["report_version"] == "v3"
-    expected_context = (
-        "v3_success external context narrative for manually reviewed context candidate."
-    )
-    expected_overview = (
-        "v3_success issue overview from stored data that explains the tracked condition."
-    )
-    assert body["content"]["external_context"] == expected_context
-    assert body["content"]["issue_overview"] == expected_overview
+    assert response.json() == {"status": "not_yet_generated"}
 
 
-def test_v3_report_explicit_null_external_context(live_client, db_session):
+def test_v3_null_context_row_is_audit_only(live_client, db_session):
     seed_basic_market(db_session)
     content = report_content("v3_null_context")
     content["external_context"] = None
@@ -542,10 +519,7 @@ def test_v3_report_explicit_null_external_context(live_client, db_session):
 
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response.status_code == 200
-    body = response.json()
-    assert body["status"] == "success"
-    assert body["report_version"] == "v3"
-    assert body["content"]["external_context"] is None
+    assert response.json() == {"status": "not_yet_generated"}
 
 
 def test_v3_report_missing_external_context_key_rejection(live_client, db_session):
@@ -690,7 +664,7 @@ def test_v3_report_missing_required_field_rejection(live_client, db_session):
     assert response.json() == {"status": "not_yet_generated"}
 
 
-def test_v3_report_legacy_version_gating(live_client, db_session):
+def test_v1_to_v3_rows_are_all_excluded_after_v4_activation(live_client, db_session):
     seed_basic_market(db_session)
 
     # 1. Verify v1 / v2 legacy-row exclusion
@@ -730,10 +704,7 @@ def test_v3_report_legacy_version_gating(live_client, db_session):
 
     response_mixed = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response_mixed.status_code == 200
-    body = response_mixed.json()
-    assert body["id"] == str(v3_report_id)  # Serves the older v3 row instead of the newer v2 row
-    assert body["status"] == "success"
-    assert body["report_version"] == "v3"
+    assert response_mixed.json() == {"status": "not_yet_generated"}
 
 
 def test_v3_report_failed_row_exclusion(live_client, db_session):
@@ -816,32 +787,210 @@ def test_v3_report_unknown_issue_id_is_404(live_client, db_session):
     assert response.status_code == 404
 
 
-def test_v3_static_fallback_validates_contract(live_client):
+def test_static_fallback_does_not_fabricate_v4_evidence(live_client):
     # Unset DATABASE_URL in mock setup to trigger static fallback
     # The default issue_id "b3f1c2a4-0000-4000-8000-000000000001" returns the static fallback
     url = "/api/issues/b3f1c2a4-0000-4000-8000-000000000001/report"
     response = live_client.get(url)
     assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v4_report_serves_verified_candidate_and_exact_stored_source(
+    live_client, db_session
+):
+    seed_basic_market(db_session)
+    report, candidate = seed_v4_report(db_session)
+    assert candidate is not None
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["id"] == str(report.id)
+    assert body["status"] == "success"
+    assert body["report_version"] == "v4"
+    assert body["data_as_of"].startswith("2026-07-08T09:00:00")
+    assert body["episode_at"].startswith("2026-07-08T09:00:00")
+    assert body["evidence_refs"] == [
+        "metric:1",
+        f"candidate:{CONTEXT_CANDIDATE_ID}",
+    ]
+    assert set(body["content"]) == {
+        "issue_overview",
+        "observed_change",
+        "context_summary",
+        "relationship_boundary",
+        "what_to_check",
+        "data_limitations",
+        "caution_note",
+    }
+    public_candidate = body["context_candidates"][0]
+    assert public_candidate["id"] == str(candidate.id)
+    assert public_candidate["title"] == candidate.event_title
+    assert public_candidate["summary"] == candidate.neutral_summary
+    assert public_candidate["sources"] == [
+        {
+            "title": "Official context notice",
+            "url": "https://example.gov/notices/context",
+            "domain": "example.gov",
+            "published_at": None,
+            "source_type": "official",
+        }
+    ]
+    assert "citation_id" not in public_candidate["sources"][0]
+    assert "content_hash" not in public_candidate["sources"][0]
+
+
+def test_v4_report_without_candidate_has_null_context_and_metric_ref_only(
+    live_client, db_session
+):
+    seed_basic_market(db_session)
+    seed_v4_report(db_session, with_candidate=False)
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.status_code == 200
     body = response.json()
     assert body["status"] == "success"
-    assert body["report_version"] == "v3"
-    expected_overview = "이 이슈는 공개된 기한까지 문서에 적힌 조건이 충족되는지를 추적합니다."
-    expected_caution = (
-        "이 내용은 공개 예측시장 참여자 데이터에 나타난 흐름을 정리한 것이며, "
-        "전체 대중의 판단을 대표하거나 현실의 결과를 입증하지 않습니다. "
-        "24시간 및 7일 비교 지점이 있고 활동량과 유동성이 설정된 하한보다 낮지 않으며 "
-        "24시간 변화 폭이 큰 움직임 기준을 넘지 않지만, "
-        "다른 자료를 통해 독립적으로 확인해야 합니다."
+    assert body["content"]["context_summary"] is None
+    assert body["context_candidates"] == []
+    assert body["evidence_refs"] == ["metric:1"]
+
+
+def test_v4_withheld_candidate_is_not_exposed(live_client, db_session):
+    seed_basic_market(db_session)
+    seed_v4_report(db_session)
+    candidate = db_session.get(ContextCandidate, CONTEXT_CANDIDATE_ID)
+    candidate.verification_state = "withheld"
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v4_candidate_without_public_source_is_not_exposed(live_client, db_session):
+    seed_basic_market(db_session)
+    seed_v4_report(db_session)
+    candidate = db_session.get(ContextCandidate, CONTEXT_CANDIDATE_ID)
+    candidate.sources = []
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v4_candidate_episode_mismatch_is_not_exposed(live_client, db_session):
+    seed_basic_market(db_session)
+    seed_v4_report(db_session)
+    candidate = db_session.get(ContextCandidate, CONTEXT_CANDIDATE_ID)
+    candidate.episode_at = NOW - timedelta(hours=1)
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v4_missing_candidate_evidence_reference_is_not_exposed(
+    live_client, db_session
+):
+    seed_basic_market(db_session)
+    report, _ = seed_v4_report(db_session)
+    content = dict(report.content)
+    content["evidence_refs"] = ["metric:1"]
+    report.content = content
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v4_metric_content_mismatch_is_not_exposed(live_client, db_session):
+    seed_basic_market(db_session)
+    report, _ = seed_v4_report(db_session)
+    envelope = dict(report.content)
+    content = dict(envelope["content"])
+    content["observed_change"] = (
+        "데이터 기준 시각의 값이 저장된 metric과 다르게 바뀐 문장입니다. "
+        "이 문장은 충분한 길이를 갖지만 공개되어서는 안 됩니다."
     )
-    assert body["content"]["issue_overview"] == expected_overview
-    assert body["content"]["possible_drivers"] == (
-        "이 움직임과 함께 비교할 수 있도록 수동 검토를 마친 맥락 후보가 없습니다. "
-        "현재 데이터는 관찰된 움직임만 보여 주며, 추가 맥락은 다른 자료를 통해 "
-        "독립적으로 확인해야 합니다."
-    )
-    assert body["content"]["external_context"] is None
-    assert body["content"]["what_to_check"] == (
-        "게시된 이슈 문구와 기록된 기한, 데이터 기준 시각, "
-        "이후 공개 데이터 갱신 내용을 추가로 확인해야 합니다."
-    )
-    assert body["content"]["caution_note"] == expected_caution
+    envelope["content"] = content
+    report.content = envelope
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v4_source_with_unapproved_internal_field_is_not_exposed(
+    live_client, db_session
+):
+    seed_basic_market(db_session)
+    seed_v4_report(db_session)
+    candidate = db_session.get(ContextCandidate, CONTEXT_CANDIDATE_ID)
+    source = dict(candidate.sources[0])
+    source["source_excerpt"] = "internal text must not cross the public boundary"
+    candidate.sources = [source]
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v4_source_url_domain_mismatch_is_not_exposed(live_client, db_session):
+    seed_basic_market(db_session)
+    seed_v4_report(db_session)
+    candidate = db_session.get(ContextCandidate, CONTEXT_CANDIDATE_ID)
+    source = dict(candidate.sources[0])
+    source["url"] = "https://different.example/context"
+    candidate.sources = [source]
+    db_session.commit()
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_v4_data_as_of_later_than_generated_at_is_not_exposed(
+    live_client, db_session
+):
+    seed_basic_market(db_session)
+    seed_v4_report(db_session, generated_at=NOW - timedelta(minutes=1))
+
+    response = live_client.get(f"/api/issues/{MARKET_ID}/report")
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "not_yet_generated"}
+
+
+def test_openapi_exposes_strict_v4_report_schema(live_client, db_session):
+    schema = live_client.get("/openapi.json").json()
+    report_schema = schema["components"]["schemas"]["IssueReportResponse"]
+    properties = report_schema["properties"]
+
+    assert properties["report_version"]["const"] == "v4"
+    assert {"episode_at", "evidence_refs", "context_candidates"}.issubset(properties)
+    content_schema = schema["components"]["schemas"]["ReportContent"]
+    assert content_schema["additionalProperties"] is False
+    assert set(content_schema["properties"]) == {
+        "issue_overview",
+        "observed_change",
+        "context_summary",
+        "relationship_boundary",
+        "what_to_check",
+        "data_limitations",
+        "caution_note",
+    }

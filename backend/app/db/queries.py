@@ -2,7 +2,8 @@
 
 Scope note: only reads the tables TASK-010 needs (markets, market_outcomes,
 market_snapshots, market_metrics, issue_signals, related_events) plus the
-TASK-039 report read path against existing `ai_reports` rows.
+TASK-039/TASK-062 report read paths against existing `ai_reports` and verified
+`context_candidates` rows.
 
 No-fabrication rule: a market only becomes a servable "issue" once it has
 both a snapshot (for current_value) and a tracked outcome (for
@@ -20,6 +21,7 @@ from sqlalchemy.orm import Session
 
 from app.db.models import (
     AiReport,
+    ContextCandidate,
     IssueSignal,
     Market,
     MarketMetric,
@@ -47,6 +49,14 @@ class LiveIssue:
 class LiveAiReport:
     report: AiReport
     data_as_of: datetime
+
+
+@dataclass
+class LiveV4AiReport:
+    report: AiReport
+    metric: MarketMetric
+    snapshot: MarketSnapshot
+    candidates: list[ContextCandidate]
 
 
 def _latest_per_market(rows: list, market_id_attr: str = "market_id") -> dict:
@@ -216,4 +226,64 @@ def load_latest_successful_report(
     return LiveAiReport(
         report=report,
         data_as_of=metric_computed_at,
+    )
+
+
+def load_latest_successful_v4_report(
+    db: Session,
+    market_id: uuid.UUID,
+) -> LiveV4AiReport | None:
+    """Load the latest complete v4 evidence bundle for read-time validation.
+
+    This helper intentionally does not decide whether the bundle is public.
+    The route validates the strict stored envelope, metric/episode references,
+    verified-only candidate state, and public source schema before returning it.
+    """
+    row = (
+        db.execute(
+            select(AiReport, MarketMetric)
+            .join(MarketMetric, AiReport.input_metrics_id == MarketMetric.id)
+            .where(
+                AiReport.market_id == market_id,
+                AiReport.status == "success",
+                AiReport.prompt_version == "v4",
+                MarketMetric.market_id == market_id,
+            )
+            .order_by(AiReport.generated_at.desc(), AiReport.id.desc())
+            .limit(1)
+        )
+        .tuples()
+        .first()
+    )
+    if row is None:
+        return None
+    report, metric = row
+    snapshot = db.execute(
+        select(MarketSnapshot)
+        .where(
+            MarketSnapshot.market_id == market_id,
+            MarketSnapshot.captured_at <= metric.computed_at,
+        )
+        .order_by(MarketSnapshot.captured_at.desc(), MarketSnapshot.id.desc())
+        .limit(1)
+    ).scalar_one_or_none()
+    if snapshot is None:
+        return None
+    candidates = list(
+        db.execute(
+            select(ContextCandidate)
+            .where(
+                ContextCandidate.market_id == market_id,
+                ContextCandidate.verification_state == "verified",
+            )
+            .order_by(ContextCandidate.event_at.asc(), ContextCandidate.id.asc())
+        )
+        .scalars()
+        .all()
+    )
+    return LiveV4AiReport(
+        report=report,
+        metric=metric,
+        snapshot=snapshot,
+        candidates=candidates,
     )

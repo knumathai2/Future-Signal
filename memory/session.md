@@ -14,30 +14,33 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: Backend Implementer
-- **Session Goal**: Complete TASK-062 v4 context/report API after TASK-061.
-- **Branch**: `backend/TASK-062-context-report-api`
+- **Agent Role**: Frontend Implementer
+- **Session Goal**: Complete TASK-063 v4 change-episode UI after TASK-062.
+- **Branch**: `frontend/TASK-063-change-episode-ui`
 
 ## Context Read
 
-- ADR-038 through ADR-043, TASK-056~061 implementation and verification
-- Existing issue/report schemas, live-read helpers, route fallbacks, and API contract
+- ADR-038 through ADR-044 and the sequential TASK-056~065 plan
+- TASK-062 v4 API schema, strict parser expectations, source/candidate fields
+- Existing detail chart, marker, report card, responsive states, and copy policy
 
 ## Previous Handoff
 
-- TASK-061 stores only strict v4 internal envelopes with seven content fields,
-  one metric reference, and same-episode verified candidate references.
-- Model-authored content is limited to issue overview and later checks; all
-  evidence-bearing fields are deterministic and semantic checks run before storage.
-- Writer usage joins research/verifier usage under the cumulative USD 100 cap.
-- Focused TASK-061 tests: 121 passed; full Backend suite: 298 passed; Ruff and
-  `git diff --check` passed.
+- `/api/issues/{id}/report` now serves only `report_version="v4"` bundles.
+- Success includes `generated_at`, `data_as_of`, `episode_at`, seven content
+  fields, ordered evidence refs, and zero to three verified context candidates.
+- Public source fields are title, URL, domain, nullable `published_at`, and
+  `source_type`; internal evidence and verification fields never leave the API.
+- Legacy/failed/malformed/evidence-mismatched rows and static fallback return
+  `{"status":"not_yet_generated"}`; unknown issue remains 404.
+- Focused API tests: 61 passed; full Backend suite: 309 passed; Ruff, OpenAPI,
+  wording scan, and `git diff --check` passed.
 
 ## Approval Boundaries / Follow-up
 
-- TASK-062 may change only the approved v4 report read contract and tests.
-- Legacy v1-v3, failed, malformed, evidence-missing, or integrity-mismatched rows
-  must remain audit-only and return the neutral not-yet-generated state.
-- No live provider call, migration application, configured DB write, deployment,
-  or production DB write occurred in TASK-061.
-- Deployment and production DB writes remain prohibited without new approval.
+- TASK-063 may update only approved v4 Frontend types/parser, change-episode UI,
+  source links, candidate-marker linkage, tests, and responsive behavior.
+- No dependency, infrastructure, deployment, provider call, migration
+  application, configured DB write, or production DB write is approved here.
+- Every data-bearing report view must keep data-as-of and interpretation caution
+  visible, and candidate absence must hide the context area without fabrication.
