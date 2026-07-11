@@ -325,6 +325,8 @@ def test_settings_clamp_environment_limits_and_invalid_engine(monkeypatch):
     monkeypatch.setenv("CONTEXT_MAX_SEARCH_RESULTS", "100")
     monkeypatch.setenv("CONTEXT_MAX_RESULTS_PER_QUERY", "100")
     monkeypatch.setenv("CONTEXT_SEARCH_ENGINE", "unknown")
+    monkeypatch.setenv("CONTEXT_BUDGET_USD", "1000")
+    monkeypatch.setenv("CONTEXT_COST_RESERVATION_USD", "1000")
 
     settings = Settings()
 
@@ -332,6 +334,8 @@ def test_settings_clamp_environment_limits_and_invalid_engine(monkeypatch):
     assert settings.context_max_search_results == 30
     assert settings.context_max_results_per_query == 25
     assert settings.context_search_engine == "auto"
+    assert settings.context_budget_usd == 100
+    assert settings.context_cost_reservation_usd == 100
 
 
 def test_settings_builder_requires_openrouter_key(monkeypatch):

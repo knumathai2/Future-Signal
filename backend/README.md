@@ -74,10 +74,13 @@ ENV=local ./.venv/bin/python -m app.core.historical_seed \
   --confirm-local-dev-write
 ```
 
-## Scheduled data + AI report batch
+## Scheduled data + context + AI report batch
 
 The combined batch links data collection, metric calculation, signal detection,
-and stored AI report generation in one write path:
+optional verified-context research, and stored AI report generation in one
+write path. The context stage runs only when an OpenRouter key and a
+different-provider `CONTEXT_VERIFIER_MODEL` are configured; otherwise it is
+skipped without changing the existing batch:
 
 ```bash
 ENV=local ./.venv/bin/python -m app.core.scheduled_batch \
@@ -102,6 +105,21 @@ Actions. It expects `DATABASE_URL` plus either `OPENROUTER_API_KEY` or
 shape, the batch automatically calls `https://openrouter.ai/api/v1` through the
 existing OpenAI-compatible SDK path. For OpenRouter, an unqualified
 `OPENAI_MODEL=gpt-4o-mini` is sent as `openai/gpt-4o-mini`.
+
+Context research is bounded by the query/result settings in `.env.example`,
+stores per-market usage in `context_collection_runs`, and stops before a call
+when recorded spend plus the configured reservation would exceed the approved
+USD 100 cap. A local/development first backfill may be requested explicitly:
+
+```bash
+ENV=local ./.venv/bin/python -m app.core.scheduled_batch \
+  --reports-only \
+  --context-backfill \
+  --confirm-local-dev-write
+```
+
+Use `--skip-context-research` to run the pre-v4 path even when context settings
+are present. Production DB writes and deployment remain separately prohibited.
 
 ## Lint / Test
 

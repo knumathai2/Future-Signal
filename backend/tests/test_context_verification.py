@@ -308,6 +308,7 @@ def test_model_cannot_promote_a_hard_gate_failure():
     )
 
     assert result.decisions[0].verification_state == "rejected"
+    assert result.decisions[0].evidence_hash
     assert fake.completions.calls == []
 
 

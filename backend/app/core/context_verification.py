@@ -9,7 +9,7 @@ tool and no database access.
 import hashlib
 import json
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from typing import Any, Literal, Protocol
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
@@ -191,6 +191,14 @@ class ContextVerificationResult(BaseModel):
     @property
     def verified(self) -> list[VerificationDecision]:
         return [item for item in self.decisions if item.verification_state == "verified"]
+
+
+class VerifierUsage(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cost_usd: float | None = None
 
 
 class ChatCompletionsTransport(Protocol):
@@ -482,6 +490,28 @@ def _model_family(model: str) -> str:
     return model.split("/", 1)[0].casefold()
 
 
+def _as_mapping(value: Any) -> Mapping[str, Any]:
+    if isinstance(value, Mapping):
+        return value
+    model_dump = getattr(value, "model_dump", None)
+    if callable(model_dump):
+        dumped = model_dump()
+        if isinstance(dumped, Mapping):
+            return dumped
+    data = getattr(value, "__dict__", None)
+    return data if isinstance(data, Mapping) else {}
+
+
+def _parse_verifier_usage(raw_usage: Any) -> VerifierUsage:
+    usage = _as_mapping(raw_usage)
+    cost = usage.get("cost")
+    return VerifierUsage(
+        input_tokens=int(usage.get("prompt_tokens") or usage.get("input_tokens") or 0),
+        output_tokens=int(usage.get("completion_tokens") or usage.get("output_tokens") or 0),
+        cost_usd=float(cost) if cost is not None else None,
+    )
+
+
 class IndependentVerifierClient:
     """One-call verifier using a provider family distinct from research."""
 
@@ -502,6 +532,7 @@ class IndependentVerifierClient:
         self._client = client
         self.model = model
         self._extra_headers = extra_headers or {}
+        self.last_usage = VerifierUsage()
 
     def verify(self, candidates: Sequence[_VerifierCandidateInput]) -> list[VerifierOutput]:
         payload = [candidate.model_dump(mode="json") for candidate in candidates]
@@ -543,6 +574,7 @@ class IndependentVerifierClient:
             parsed = _VerifierResponse.model_validate_json(response.choices[0].message.content)
         except ValidationError as exc:
             raise ContextVerificationError("Independent verifier returned invalid JSON") from exc
+        self.last_usage = _parse_verifier_usage(getattr(response, "usage", None))
         return parsed.verifications
 
 
@@ -571,7 +603,7 @@ def verify_research_result(
                     reason_code=gate.reason_code,
                     neutral_summary_ko=None,
                     sources=gate.sources,
-                    evidence_hash=None,
+                    evidence_hash=_evidence_hash(candidate, gate.sources),
                     research_model=research.model,
                     verifier_model=verifier.model,
                 )
@@ -586,7 +618,7 @@ def verify_research_result(
                     reason_code="rule_passing_candidate_limit",
                     neutral_summary_ko=None,
                     sources=gate.sources,
-                    evidence_hash=None,
+                    evidence_hash=_evidence_hash(candidate, gate.sources),
                     research_model=research.model,
                     verifier_model=verifier.model,
                 )
@@ -602,7 +634,7 @@ def verify_research_result(
                 reason_code="verifier_candidate_limit",
                 neutral_summary_ko=None,
                 sources=gate.sources,
-                evidence_hash=None,
+                evidence_hash=_evidence_hash(candidate, gate.sources),
                 research_model=research.model,
                 verifier_model=verifier.model,
             )
@@ -650,7 +682,7 @@ def verify_research_result(
                         reason_code="verifier_missing_candidate",
                         neutral_summary_ko=None,
                         sources=gate.sources,
-                        evidence_hash=None,
+                        evidence_hash=_evidence_hash(candidate, gate.sources),
                         research_model=research.model,
                         verifier_model=verifier.model,
                     )
@@ -689,10 +721,8 @@ def verify_research_result(
                     reason_code=output.reason_code if accepted else "independent_verifier_rejected",
                     neutral_summary_ko=output.neutral_summary_ko if accepted else None,
                     sources=gate.sources,
-                    evidence_hash=(
-                        _evidence_hash(candidate_by_key[candidate.candidate_key], gate.sources)
-                        if accepted
-                        else None
+                    evidence_hash=_evidence_hash(
+                        candidate_by_key[candidate.candidate_key], gate.sources
                     ),
                     research_model=research.model,
                     verifier_model=verifier.model,
