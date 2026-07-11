@@ -90,6 +90,20 @@ const noCandidate = parseReportResponse(
 assert.equal(noCandidate.status, "success");
 assert.equal(noCandidate.report.content.evidence_synthesis, null);
 
+const oneScenario = parseReportResponse(
+  makePayload({
+    content: {
+      ...validContent,
+      conditional_scenarios: validContent.conditional_scenarios.slice(0, 1),
+      evidence_synthesis: null,
+    },
+    evidence_refs: ["metric:1"],
+    context_candidates: [],
+  }),
+);
+assert.equal(oneScenario.status, "success");
+assert.equal(oneScenario.report.content.conditional_scenarios.length, 1);
+
 assert.equal(
   parseReportResponse({ status: "not_yet_generated" }).status,
   "not_yet_generated",

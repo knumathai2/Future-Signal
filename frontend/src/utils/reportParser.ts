@@ -153,7 +153,7 @@ function validateContent(raw: unknown): IssueReportContent | null {
   const relationshipBoundary = text("relationship_boundary");
   const dataLimitations = text("data_limitations");
   const cautionNote = text("caution_note");
-  const conditionalScenarios = items("conditional_scenarios", "narrative", 3, 4);
+  const conditionalScenarios = items("conditional_scenarios", "narrative", 1, 4);
   const factorsToCheck = items("factors_to_check", "explanation", 2, 6);
   const signalsToWatch = items("signals_to_watch", "explanation", 2, 6);
   if (

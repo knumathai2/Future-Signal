@@ -23,6 +23,7 @@ from sqlalchemy.pool import StaticPool
 from app.api.routes import categories as categories_routes
 from app.api.routes import issues as issues_routes
 from app.core.ai_report import (
+    ResolutionRulesInput,
     V4ContextSource,
     V4LLMFields,
     V4ReportInputs,
@@ -364,6 +365,15 @@ def seed_v4_report(
         volume_24h=1000,
         liquidity=2000,
         context_candidates=candidate_inputs,
+        resolution_rules=ResolutionRulesInput(
+            condition_text="The documented test condition is recorded by the deadline.",
+            deadline=NOW + timedelta(days=30),
+            exclusions=[],
+            resolution_source=None,
+            source_description_hash="test-description-hash",
+            rules_hash="test-rules-hash",
+            collected_at=NOW - timedelta(minutes=10),
+        ),
     )
     fields = V4LLMFields(
         issue_overview=(
@@ -432,6 +442,15 @@ def seed_v5_report(
         volume_24h=1000,
         liquidity=2000,
         context_candidates=candidate_inputs,
+        resolution_rules=ResolutionRulesInput(
+            condition_text="The documented test condition is recorded by the deadline.",
+            deadline=NOW + timedelta(days=30),
+            exclusions=[],
+            resolution_source=None,
+            source_description_hash="test-description-hash",
+            rules_hash="test-rules-hash",
+            collected_at=NOW - timedelta(minutes=10),
+        ),
     )
     fields = V5LLMFields(
         executive_summary=(

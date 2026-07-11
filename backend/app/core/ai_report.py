@@ -1236,7 +1236,13 @@ deadlines, exceptions, and recognized source criteria. market.description is
 display copy and is not a resolution rule. When resolution_rules is null or its
 condition_text is null, do not introduce a procedure, institution, schedule, or
 condition from general knowledge.
-conditional_scenarios must contain three or four distinct items. Each item must
+Scenario limits are binding: definition_complete allows one to four,
+definition_partial allows one to three, definition_missing_with_context allows
+one or two, and definition_missing_no_context requires exactly one limitation
+scenario. In the last case, state only that the detailed resolution definition
+is unavailable and do not add a procedural path.
+conditional_scenarios must contain the number of distinct items allowed by
+input_completeness. Each item must
 have a short title and a narrative beginning with a Korean conditional expression
 such as "만약" and may describe only conditions present in the supplied market
 definition or verified evidence. factors_to_check and signals_to_watch must be
@@ -1281,7 +1287,7 @@ class V5LLMFields(BaseModel):
 
     executive_summary: str = Field(min_length=80, max_length=1200)
     current_data_interpretation: str = Field(min_length=50, max_length=1200)
-    conditional_scenarios: list[V5ConditionalScenario] = Field(min_length=3, max_length=4)
+    conditional_scenarios: list[V5ConditionalScenario] = Field(min_length=1, max_length=4)
     factors_to_check: list[V5BriefingItem] = Field(min_length=2, max_length=6)
     signals_to_watch: list[V5BriefingItem] = Field(min_length=2, max_length=6)
     evidence_synthesis: str | None = Field(default=..., min_length=50, max_length=1800)
@@ -1310,8 +1316,39 @@ class V5StoredReportPayload(BaseModel):
     resolution_rules: ResolutionRulesInput | None = None
 
 
+def determine_input_completeness(
+    inputs: V4ReportInputs,
+) -> Literal[
+    "definition_complete",
+    "definition_partial",
+    "definition_missing_with_context",
+    "definition_missing_no_context",
+]:
+    """Classify evidence availability deterministically before generation."""
+    rules = inputs.resolution_rules
+    if rules is not None and rules.condition_text:
+        return "definition_complete" if rules.deadline is not None else "definition_partial"
+    if inputs.context_candidates:
+        return "definition_missing_with_context"
+    return "definition_missing_no_context"
+
+
+def _scenario_count_matches_completeness(
+    fields: V5LLMFields, inputs: V4ReportInputs
+) -> bool:
+    count = len(fields.conditional_scenarios)
+    minimum, maximum = {
+        "definition_complete": (1, 4),
+        "definition_partial": (1, 3),
+        "definition_missing_with_context": (1, 2),
+        "definition_missing_no_context": (1, 1),
+    }[determine_input_completeness(inputs)]
+    return minimum <= count <= maximum
+
+
 def build_v5_prompt(inputs: V4ReportInputs) -> tuple[str, str]:
     payload = {
+        "input_completeness": determine_input_completeness(inputs),
         "market": {
             "title": inputs.title,
             "description": inputs.description,
@@ -1522,6 +1559,8 @@ def run_v5_safety_and_semantic_checks(
         return SafetyFilterResult(False, "generic_summary", "executive_summary")
     if _v5_has_excessive_duplication(llm_fields):
         return SafetyFilterResult(False, "duplicate_narrative_fields")
+    if not _scenario_count_matches_completeness(llm_fields, inputs):
+        return SafetyFilterResult(False, "scenario_count_evidence_mismatch")
     if bool(inputs.context_candidates) != (llm_fields.evidence_synthesis is not None):
         return SafetyFilterResult(False, "evidence_synthesis_presence_mismatch")
     expected_refs = [f"metric:{inputs.metric_id}"] + [

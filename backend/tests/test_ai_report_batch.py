@@ -172,6 +172,19 @@ def _seed_market(db, market_id: uuid.UUID = MARKET_ID, title: str = "Test issue"
             last_seen_at=NOW,
         )
     )
+    db.add(
+        MarketResolutionRule(
+            id=uuid.uuid4(),
+            market_id=market_id,
+            condition_text="The documented test condition is recorded by the deadline.",
+            deadline=NOW + timedelta(days=30),
+            exclusions=[],
+            resolution_source=None,
+            source_description_hash="test-description-hash",
+            rules_hash=f"test-rules-hash-{market_id}",
+            collected_at=NOW - timedelta(minutes=10),
+        )
+    )
     db.commit()
 
 
