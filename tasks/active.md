@@ -17,8 +17,7 @@ Deployment and production-database writes remain excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-061 | Generate evidence-grounded v4 reports | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-061-evidence-report-v4` | in_progress |
-| TASK-062 | Serve the v4 context/report API | Backend Implementer | Backend Implementer | `backend/TASK-062-context-report-api` | assigned |
+| TASK-062 | Serve the v4 context/report API | Backend Implementer | Backend Implementer | `backend/TASK-062-context-report-api` | in_progress |
 | TASK-063 | Build the change-episode UI | Frontend Implementer | Frontend Implementer | `frontend/TASK-063-change-episode-ui` | assigned |
 | TASK-064 | Review the automated-context integration | Reviewer | Reviewer | `review/TASK-064-auto-context-integration` | assigned |
 | TASK-065 | Run local/dev backfill and record demo evidence | Data/AI Implementer + PM | Data/AI Implementer + PM / Planner | `data-ai/TASK-065-context-backfill` | assigned |

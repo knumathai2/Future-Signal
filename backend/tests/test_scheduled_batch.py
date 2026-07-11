@@ -16,6 +16,7 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from app.core.ai_report_batch import ReportOutcome
 from app.core.context_research_batch import ContextResearchOutcome
 from app.core.scheduled_batch import run_scheduled_batch
 from app.db.models import (
@@ -375,7 +376,11 @@ def test_context_failure_marks_combined_log_partial_without_blocking_reports(db,
     def fake_context(*_args, **_kwargs):
         return [ContextResearchOutcome(market_id=market_id, status="failed")]
 
+    def fake_reports(*_args, **_kwargs):
+        return [ReportOutcome(market_id=market_id, status="success")]
+
     monkeypatch.setattr(scheduled_batch, "run_context_research_batch", fake_context)
+    monkeypatch.setattr(scheduled_batch, "run_reports_for_timestamp", fake_reports)
 
     result = run_scheduled_batch(
         db,

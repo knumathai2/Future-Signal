@@ -17,25 +17,39 @@ new `ai_reports` row or inserts none at all - never updates a row in place.
 import logging
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.orm import Session
 
 from app.core.ai_report import (
     PROMPT_VERSION,
+    V4_PROMPT_VERSION,
     LLMCallError,
     LLMClient,
+    LLMUsage,
     ReportPromptInputs,
+    V4ContextSource,
+    V4ReportInputs,
+    V4StoredReportPayload,
+    V4VerifiedCandidateInput,
     assemble_report_content,
+    assemble_v4_report_content,
     build_prompt,
+    build_v4_prompt,
+    build_v4_stored_payload,
     parse_llm_fields,
+    parse_v4_llm_fields,
     run_safety_filter,
     run_semantic_checks,
+    run_v4_safety_and_semantic_checks,
 )
+from app.core.context_research_batch import APPROVED_BUDGET_USD, context_spend_usd
 from app.core.snapshot_metrics import as_utc_naive
 from app.db.models import (
     AiReport,
+    ContextCandidate,
+    ContextCollectionRun,
     IssueSignal,
     Market,
     MarketMetric,
@@ -60,15 +74,20 @@ class ReportOutcome:
     market_id: uuid.UUID
     status: str  # "success" | "failed" | "filtered" | "skipped"
     reason: str | None = None
+    model_usage: dict | None = None
 
 
-def _latest_successful_report(db: Session, market_id: uuid.UUID) -> AiReport | None:
+def _latest_successful_report(
+    db: Session,
+    market_id: uuid.UUID,
+    prompt_version: str = PROMPT_VERSION,
+) -> AiReport | None:
     latest_current = db.execute(
         select(AiReport)
         .where(
             AiReport.market_id == market_id,
             AiReport.status == "success",
-            AiReport.prompt_version == PROMPT_VERSION,
+            AiReport.prompt_version == prompt_version,
         )
         .order_by(AiReport.generated_at.desc(), AiReport.id.desc())
         .limit(1)
@@ -88,16 +107,17 @@ def _sort_and_cap_qualifying_metrics(
     db: Session,
     metrics: list[MarketMetric],
     new_signal_market_ids: set[uuid.UUID],
+    prompt_version: str = PROMPT_VERSION,
 ) -> list[MarketMetric]:
     qualifying: list[MarketMetric] = []
     for metric in metrics:
         if metric.market_id in new_signal_market_ids:
             qualifying.append(metric)
             continue
-        latest = _latest_successful_report(db, metric.market_id)
+        latest = _latest_successful_report(db, metric.market_id, prompt_version)
         if (
             latest is None
-            or latest.prompt_version != PROMPT_VERSION
+            or latest.prompt_version != prompt_version
             or as_utc_naive(latest.generated_at)
             < as_utc_naive(metric.computed_at - STALENESS_THRESHOLD)
         ):
@@ -110,7 +130,11 @@ def _sort_and_cap_qualifying_metrics(
     return qualifying[:MAX_REPORTS_PER_BATCH_RUN]
 
 
-def select_markets_for_regeneration(db: Session, run_timestamp: datetime) -> list[MarketMetric]:
+def select_markets_for_regeneration(
+    db: Session,
+    run_timestamp: datetime,
+    prompt_version: str = PROMPT_VERSION,
+) -> list[MarketMetric]:
     """A market qualifies iff any of (Technical Design §9):
     - a new `issue_signals` row fired for it in *this* run (`triggered_at ==
       run_timestamp`, matching how `signal_detection.py` stamps new signals), or
@@ -134,10 +158,15 @@ def select_markets_for_regeneration(db: Session, run_timestamp: datetime) -> lis
         )
     }
 
-    return _sort_and_cap_qualifying_metrics(db, metrics, new_signal_market_ids)
+    return _sort_and_cap_qualifying_metrics(
+        db, metrics, new_signal_market_ids, prompt_version
+    )
 
 
-def select_latest_metrics_for_regeneration(db: Session) -> list[MarketMetric]:
+def select_latest_metrics_for_regeneration(
+    db: Session,
+    prompt_version: str = PROMPT_VERSION,
+) -> list[MarketMetric]:
     """Reports-only mode for the current DB state.
 
     Historical/demo seeding can leave each market's latest metric a few seconds
@@ -177,7 +206,9 @@ def select_latest_metrics_for_regeneration(db: Session) -> list[MarketMetric]:
         )
         if latest_metric_by_market.get(market_id) == triggered_at
     }
-    return _sort_and_cap_qualifying_metrics(db, metrics, new_signal_market_ids)
+    return _sort_and_cap_qualifying_metrics(
+        db, metrics, new_signal_market_ids, prompt_version
+    )
 
 
 def _describe_inflection_point(db: Session, market_id: uuid.UUID) -> str | None:
@@ -496,6 +527,318 @@ def run_ai_report_batch_for_latest_metrics(
         outcomes.append(outcome)
 
     return outcomes
+
+
+def _latest_completed_context_run(
+    db: Session, market_id: uuid.UUID
+) -> ContextCollectionRun | None:
+    return db.execute(
+        select(ContextCollectionRun)
+        .where(
+            ContextCollectionRun.market_id == market_id,
+            ContextCollectionRun.status.in_(["success", "no_candidate"]),
+        )
+        .order_by(
+            ContextCollectionRun.finished_at.desc(),
+            ContextCollectionRun.started_at.desc(),
+        )
+        .limit(1)
+    ).scalar_one_or_none()
+
+
+def build_v4_inputs_for_market(
+    db: Session,
+    market: Market,
+    metric: MarketMetric,
+    run_timestamp: datetime,
+) -> V4ReportInputs | None:
+    """Load one metric snapshot and same-episode verified context only."""
+    metric_timestamp = metric.computed_at or run_timestamp
+    snapshot = db.execute(
+        select(MarketSnapshot)
+        .where(
+            MarketSnapshot.market_id == market.id,
+            MarketSnapshot.captured_at <= metric_timestamp,
+        )
+        .order_by(MarketSnapshot.captured_at.desc(), MarketSnapshot.id.desc())
+        .limit(1)
+    ).scalar_one_or_none()
+    if snapshot is None:
+        return None
+
+    context_run = _latest_completed_context_run(db, market.id)
+    episode_at = context_run.episode_at if context_run is not None else metric_timestamp
+    rows = (
+        db.execute(
+            select(ContextCandidate)
+            .where(
+                ContextCandidate.market_id == market.id,
+                ContextCandidate.episode_at == episode_at,
+                ContextCandidate.verification_state == "verified",
+                ContextCandidate.expires_at >= run_timestamp,
+            )
+            .order_by(ContextCandidate.event_at.asc(), ContextCandidate.id.asc())
+            .limit(3)
+        )
+        .scalars()
+        .all()
+    )
+    candidates: list[V4VerifiedCandidateInput] = []
+    for row in rows:
+        if row.event_at is None or not row.sources:
+            return None
+        try:
+            sources = [V4ContextSource.model_validate(source) for source in row.sources]
+            candidates.append(
+                V4VerifiedCandidateInput(
+                    id=row.id,
+                    title=row.event_title,
+                    event_at=row.event_at,
+                    neutral_summary=row.neutral_summary,
+                    sources=sources,
+                )
+            )
+        except Exception:
+            return None
+
+    return V4ReportInputs(
+        market_id=market.id,
+        metric_id=metric.id,
+        episode_at=episode_at,
+        data_as_of=snapshot.captured_at,
+        title=market.title,
+        description=market.description or market.title,
+        category=market.category,
+        outcome_label=_find_tracked_outcome_label(db, market.id),
+        end_date=market.end_date,
+        current_value=float(snapshot.price),
+        change_24h=float(metric.change_24h) if metric.change_24h is not None else None,
+        change_7d=float(metric.change_7d) if metric.change_7d is not None else None,
+        confidence_level=metric.confidence_level,
+        volume_24h=float(snapshot.volume_24h) if snapshot.volume_24h is not None else None,
+        liquidity=float(snapshot.liquidity) if snapshot.liquidity is not None else None,
+        context_candidates=candidates,
+    )
+
+
+def _usage_records(llm_client: LLMClient) -> list[LLMUsage]:
+    records = getattr(llm_client, "usage_records", None)
+    return records if isinstance(records, list) else []
+
+
+def _usage_since(llm_client: LLMClient, start: int) -> dict:
+    records = _usage_records(llm_client)[start:]
+    costs = [record.cost_usd for record in records if record.cost_usd is not None]
+    return {
+        "writer_input_tokens": sum(record.input_tokens for record in records),
+        "writer_output_tokens": sum(record.output_tokens for record in records),
+        "writer_cost_usd": round(sum(costs), 8) if costs else None,
+    }
+
+
+def generate_v4_report_for_market(
+    db: Session,
+    market: Market,
+    metric: MarketMetric,
+    inputs: V4ReportInputs,
+    llm_client: LLMClient,
+    generated_at: datetime,
+    model_name: str,
+) -> ReportOutcome:
+    """Generate and append one strict evidence-grounded v4 report."""
+    system_prompt, user_prompt = build_v4_prompt(inputs)
+    usage_start = len(_usage_records(llm_client))
+    payload: V4StoredReportPayload | None = None
+    llm_fields = None
+    last_error = "unknown"
+    for _attempt in range(1, MAX_ATTEMPTS + 1):
+        try:
+            raw = llm_client.complete(system_prompt, user_prompt)
+        except LLMCallError as exc:
+            last_error = type(exc).__name__
+            continue
+        llm_fields = parse_v4_llm_fields(raw)
+        if llm_fields is None:
+            last_error = "malformed_or_schema_mismatched_response"
+            continue
+        content = assemble_v4_report_content(inputs, llm_fields)
+        if content is None:
+            last_error = "assembled_content_failed_v4_contract"
+            continue
+        payload = build_v4_stored_payload(inputs, content)
+        break
+
+    usage = _usage_since(llm_client, usage_start)
+    if payload is None or llm_fields is None:
+        db.add(
+            AiReport(
+                id=uuid.uuid4(),
+                market_id=market.id,
+                generated_at=generated_at,
+                input_metrics_id=metric.id,
+                content={},
+                model_used=model_name,
+                prompt_version=V4_PROMPT_VERSION,
+                status="failed",
+            )
+        )
+        db.commit()
+        return ReportOutcome(
+            market_id=market.id,
+            status="failed",
+            reason=last_error,
+            model_usage=usage,
+        )
+
+    validation = run_v4_safety_and_semantic_checks(payload, inputs, llm_fields)
+    if not validation.passed:
+        return ReportOutcome(
+            market_id=market.id,
+            status="filtered",
+            reason=f"{validation.field}:{validation.rule}",
+            model_usage=usage,
+        )
+
+    db.add(
+        AiReport(
+            id=uuid.uuid4(),
+            market_id=market.id,
+            generated_at=generated_at,
+            input_metrics_id=metric.id,
+            content=payload.model_dump(mode="json"),
+            model_used=model_name,
+            prompt_version=V4_PROMPT_VERSION,
+            status="success",
+        )
+    )
+    db.commit()
+    return ReportOutcome(market_id=market.id, status="success", model_usage=usage)
+
+
+def _run_v4_metrics(
+    db: Session,
+    metrics: list[MarketMetric],
+    llm_client: LLMClient,
+    model_name: str,
+    *,
+    generated_at_for_metric,
+    failed_context_market_ids: set[uuid.UUID] | None = None,
+    budget_usd: float = APPROVED_BUDGET_USD,
+    writer_cost_reservation_usd: float = 0.5,
+) -> list[ReportOutcome]:
+    failed_context_market_ids = failed_context_market_ids or set()
+    outcomes: list[ReportOutcome] = []
+    running_spend = context_spend_usd(db)
+    effective_budget = min(budget_usd, APPROVED_BUDGET_USD)
+    for metric in metrics:
+        if metric.market_id in failed_context_market_ids:
+            outcomes.append(
+                ReportOutcome(
+                    market_id=metric.market_id,
+                    status="skipped",
+                    reason="context_research_failed",
+                )
+            )
+            continue
+        if running_spend + writer_cost_reservation_usd > effective_budget:
+            outcomes.append(
+                ReportOutcome(
+                    market_id=metric.market_id,
+                    status="skipped",
+                    reason="budget_limit",
+                )
+            )
+            continue
+        market = db.get(Market, metric.market_id)
+        if market is None:
+            outcomes.append(
+                ReportOutcome(
+                    market_id=metric.market_id,
+                    status="skipped",
+                    reason="market_not_found",
+                )
+            )
+            continue
+        generated_at = generated_at_for_metric(metric)
+        inputs = build_v4_inputs_for_market(db, market, metric, generated_at)
+        if inputs is None:
+            outcomes.append(
+                ReportOutcome(
+                    market_id=market.id,
+                    status="skipped",
+                    reason="invalid_or_missing_v4_evidence",
+                )
+            )
+            continue
+        try:
+            outcome = generate_v4_report_for_market(
+                db,
+                market,
+                metric,
+                inputs,
+                llm_client,
+                generated_at,
+                model_name,
+            )
+        except Exception:
+            db.rollback()
+            logger.exception("Unhandled error generating v4 report for market %s.", market.id)
+            outcome = ReportOutcome(
+                market_id=market.id,
+                status="skipped",
+                reason="unhandled_error",
+            )
+        outcomes.append(outcome)
+        if outcome.model_usage:
+            cost = outcome.model_usage.get("writer_cost_usd")
+            if isinstance(cost, int | float):
+                running_spend += float(cost)
+    return outcomes
+
+
+def run_v4_ai_report_batch(
+    db: Session,
+    run_timestamp: datetime,
+    llm_client: LLMClient,
+    model_name: str,
+    *,
+    failed_context_market_ids: set[uuid.UUID] | None = None,
+    budget_usd: float = APPROVED_BUDGET_USD,
+    writer_cost_reservation_usd: float = 0.5,
+) -> list[ReportOutcome]:
+    metrics = select_markets_for_regeneration(db, run_timestamp, V4_PROMPT_VERSION)
+    return _run_v4_metrics(
+        db,
+        metrics,
+        llm_client,
+        model_name,
+        generated_at_for_metric=lambda _metric: run_timestamp,
+        failed_context_market_ids=failed_context_market_ids,
+        budget_usd=budget_usd,
+        writer_cost_reservation_usd=writer_cost_reservation_usd,
+    )
+
+
+def run_v4_ai_report_batch_for_latest_metrics(
+    db: Session,
+    llm_client: LLMClient,
+    model_name: str,
+    *,
+    failed_context_market_ids: set[uuid.UUID] | None = None,
+    budget_usd: float = APPROVED_BUDGET_USD,
+    writer_cost_reservation_usd: float = 0.5,
+) -> list[ReportOutcome]:
+    metrics = select_latest_metrics_for_regeneration(db, V4_PROMPT_VERSION)
+    return _run_v4_metrics(
+        db,
+        metrics,
+        llm_client,
+        model_name,
+        generated_at_for_metric=lambda _metric: datetime.now(UTC),
+        failed_context_market_ids=failed_context_market_ids,
+        budget_usd=budget_usd,
+        writer_cost_reservation_usd=writer_cost_reservation_usd,
+    )
 
 
 if __name__ == "__main__":

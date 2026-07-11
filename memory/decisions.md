@@ -788,6 +788,42 @@ accounting boundary.
 
 ---
 
+### ADR-043: V4 reports split model-authored prose from deterministic evidence
+
+- **Date**: 2026-07-11
+- **Status**: Accepted
+- **Decided by**: Data/AI Implementer within ADR-038 execution approval
+
+**Context**: TASK-061 had to produce useful Korean summaries while preventing
+the writer model from changing metrics, introducing unsupported context, or
+weakening the approved relationship and caution boundaries.
+
+**Decision**: Give the writer only structured metric inputs and at most three
+same-episode verified candidates. Allow its strict response to contain exactly
+`issue_overview` and `what_to_check`; assemble `observed_change`, nullable
+`context_summary`, `relationship_boundary`, `data_limitations`, and
+`caution_note` deterministically. Store an internal v4 envelope containing the
+seven-field content, one `metric:{id}` reference, zero to three
+`candidate:{id}` references, and the matching candidate-ID list. Reject
+missing sources, field/reference mismatches, unknown evidence, unsafe
+relationship/result/action phrasing, model-authored URLs, and unsupported
+numbers. Keep v1-v3 and failed rows append-only for audit but do not let them
+block v4 regeneration. Record writer token/cost usage and reserve cost before
+each call under the shared USD 100 cap.
+
+**Rationale**: Deterministic evidence-bearing sentences make stored output
+reproducible and independently checkable, while retaining a narrow model role
+for readability. The envelope lets TASK-062 verify the stored row against DB
+state rather than trusting prose alone.
+
+**Consequences**: No verified candidate produces `context_summary=null` and no
+candidate reference. A context-stage failure skips only that market and
+preserves the prior successful v4 row. TASK-062 must expose only envelopes
+whose metric timestamp, episode, candidate state, sources, and evidence
+references all still validate.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07

@@ -15,7 +15,7 @@ from typing import Any, Literal, Protocol
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from openai import OpenAI, OpenAIError
-from pydantic import BaseModel, ConfigDict, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
 
 from app.core.config import OPENROUTER_BASE_URL, Settings
 from app.core.context_research import (
@@ -161,6 +161,14 @@ class VerifierOutput(BaseModel):
     conflicting_citation_ids: list[str]
     neutral_summary_ko: str = Field(min_length=1, max_length=700)
     reason_code: str = Field(min_length=1)
+
+    @field_validator("neutral_summary_ko")
+    @classmethod
+    def limit_summary_sentences(cls, value: str) -> str:
+        sentence_count = len(re.findall(r"[.!?]+(?=\s|$)", value.strip())) or 1
+        if sentence_count > 2:
+            raise ValueError("Verifier summary must contain at most two sentences")
+        return value
 
 
 class _VerifierResponse(BaseModel):

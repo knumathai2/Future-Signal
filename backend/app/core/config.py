@@ -160,6 +160,12 @@ class Settings:
             minimum=0.01,
             maximum=100.0,
         )
+        self.context_writer_cost_reservation_usd: float = _bounded_float(
+            os.getenv("CONTEXT_WRITER_COST_RESERVATION_USD"),
+            default=0.5,
+            minimum=0.01,
+            maximum=100.0,
+        )
 
 
 settings = Settings()

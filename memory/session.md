@@ -14,35 +14,30 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: Data/AI Implementer
-- **Session Goal**: Complete TASK-060 context batch integration and hand off to TASK-061.
-- **Branch**: `data-ai/TASK-060-context-batch`
+- **Agent Role**: Backend Implementer
+- **Session Goal**: Complete TASK-062 v4 context/report API after TASK-061.
+- **Branch**: `backend/TASK-062-context-report-api`
 
 ## Context Read
 
-- TASK-060 packet, TASK-057 storage, TASK-058 research, TASK-059 verification
-- Existing scheduled/report batch, metric/signal selectors, local/dev guard,
-  CLI, and SQLite test patterns
+- ADR-038 through ADR-043, TASK-056~061 implementation and verification
+- Existing issue/report schemas, live-read helpers, route fallbacks, and API contract
 
-## Work Completed
+## Previous Handoff
 
-- Added signal/change/heat/staleness/backfill target selection and structured
-  research-input loading from current DB rows.
-- Added per-market research→verification→append-only storage with rollback,
-  duplicate idempotency, verified-only downstream IDs, and a three-item cap.
-- Added normal no-candidate handling and secret-free research/verifier usage.
-- Added pre-call USD 100 budget reservation and connected the context stage
-  between signals and reports with guarded CLI controls.
-
-## Verification
-
-- Focused context-batch tests: 12 passed; scheduled-batch tests: 7 passed.
-- Full Backend suite: 280 passed.
-- Ruff and `git diff --check`: passed.
+- TASK-061 stores only strict v4 internal envelopes with seven content fields,
+  one metric reference, and same-episode verified candidate references.
+- Model-authored content is limited to issue overview and later checks; all
+  evidence-bearing fields are deterministic and semantic checks run before storage.
+- Writer usage joins research/verifier usage under the cumulative USD 100 cap.
+- Focused TASK-061 tests: 121 passed; full Backend suite: 298 passed; Ruff and
+  `git diff --check` passed.
 
 ## Approval Boundaries / Follow-up
 
-- No live OpenRouter call or DB write occurred.
-- TASK-061 must generate only strict v4 evidence-linked reports from stored
-  metrics and verified candidates, and include writer usage in budget audit.
+- TASK-062 may change only the approved v4 report read contract and tests.
+- Legacy v1-v3, failed, malformed, evidence-missing, or integrity-mismatched rows
+  must remain audit-only and return the neutral not-yet-generated state.
+- No live provider call, migration application, configured DB write, deployment,
+  or production DB write occurred in TASK-061.
 - Deployment and production DB writes remain prohibited without new approval.

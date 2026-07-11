@@ -19,7 +19,7 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 - **Version**: v0.8.0-day5-technical-mvp-complete
 - **Phase**: Approved post-MVP v4 automated-context program
-- **Next milestone**: Complete TASK-057 schema after TASK-056 policy/contract closeout, then continue sequentially through TASK-065
+- **Next milestone**: Serve the strict v4 context/report API in TASK-062, then continue sequentially through TASK-065
 - **Overall health**: 🟢 Good — ADR-038 records policy, schema, API, OpenRouter cumulative USD 100, and local/development-write approval. Deployment and production-database writes remain excluded.
 
 ## Tech Summary
@@ -52,15 +52,16 @@ Future Signal/
 | Area | Current state |
 |---|---|
 | Frontend | TASK-051/TASK-053 provide the ADR-033 report UI and parser enforcement. TASK-054 adds routed Home/list/detail/methodology information architecture, a real-history featured chart, ranked summaries, and responsive verification. PR #53 replaces two ES2022-only `.at()` reads with ES2020-compatible index access so typecheck and production build pass without configuration or behavior changes. |
-| Backend | Existing v3 reads remain unchanged. TASK-057 adds the unapplied append-only `002_context_candidates.sql` and matching candidate/run ORM models with constrained states, episode-scoped evidence uniqueness, lookup indexes, and documented cascade behavior. |
-| Data/AI | TASK-058/059 provide bounded annotation-only research and deterministic/independent verification. TASK-060 connects them between signals and reports with per-market append-only storage, verified-only downstream IDs, a three-candidate cap, no-candidate handling, usage audit, and USD 100 pre-call budget reservation. Existing v3 report generation remains intact pending TASK-061. |
+| Backend | Existing v3 reads remain unchanged pending TASK-062. TASK-057 adds the unapplied append-only `002_context_candidates.sql` and matching candidate/run ORM models with constrained states, episode-scoped evidence uniqueness, lookup indexes, and documented cascade behavior. |
+| Data/AI | TASK-058/059 provide bounded annotation-only research and deterministic/independent verification. TASK-060 connects them between signals and reports, and TASK-061 adds strict evidence-linked v4 generation with deterministic metric/context fields, same-episode verified candidates, writer-cost accounting, and last-known-good failure isolation. |
 | PM / Safety | The v3 MVP remains frozen. ADR-038 activates TASK-056~065 with verified-only automated context, strict evidence links, a cumulative USD 100 OpenRouter cap, and local/development-only writes. Deployment and production DB writes remain separate gates. |
-| v4 program | TASK-056 policy/contract is complete and TASK-057 schema is next. V4 requires OpenRouter API citation annotations, deterministic hard gates, a different verifier model, verified-only public reads, evidence-linked report fields, and an append-only migration. |
+| v4 program | TASK-056~061 are complete; TASK-062 is in progress. V4 requires OpenRouter API citation annotations, deterministic hard gates, a different verifier model, verified-only public reads, evidence-linked report fields, and an append-only migration. |
 
 ## Recent Changes
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | TASK-061 completed: strict seven-field evidence-grounded v4 generation, same-episode metric/candidate references, writer budget accounting, and failure-preserving storage passed the 298-test Backend suite. |
 | 2026-07-11 | ADR-038 accepted and TASK-056~065 activated; TASK-056 policy/contract documentation completed without provider calls or DB writes. |
 | 2026-07-07 | AI Development Harness v1.1 initial setup (Standard tier) |
 | 2026-07-07 | PRD rescoped to v1.1 (hackathon-narrowed from broader "global issue outlook platform" concept) |
