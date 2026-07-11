@@ -101,6 +101,7 @@ class Settings:
             "openrouter",
             os.getenv("CONTEXT_RESEARCH_MODEL") or self.openai_model,
         )
+        self.context_verifier_model: str = os.getenv("CONTEXT_VERIFIER_MODEL", "").strip()
         raw_engine = os.getenv("CONTEXT_SEARCH_ENGINE", "auto").strip().lower()
         self.context_search_engine: str = (
             raw_engine

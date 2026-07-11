@@ -17,8 +17,7 @@ Deployment and production-database writes remain excluded.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-059 | Build deterministic and independent-AI verification | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-059-context-verification` | in_progress |
-| TASK-060 | Connect context research to the scheduled batch | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-060-context-batch` | assigned |
+| TASK-060 | Connect context research to the scheduled batch | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-060-context-batch` | in_progress |
 | TASK-061 | Generate evidence-grounded v4 reports | Data/AI Implementer | Data/AI Implementer | `data-ai/TASK-061-evidence-report-v4` | assigned |
 | TASK-062 | Serve the v4 context/report API | Backend Implementer | Backend Implementer | `backend/TASK-062-context-report-api` | assigned |
 | TASK-063 | Build the change-episode UI | Frontend Implementer | Frontend Implementer | `frontend/TASK-063-change-episode-ui` | assigned |

@@ -76,6 +76,19 @@ class ResearchInputs(BaseModel):
                 normalized.append(domain)
         return normalized
 
+    @field_validator(
+        "episode_at",
+        "end_date",
+        "inflection_at",
+        "search_window_start",
+        "search_window_end",
+    )
+    @classmethod
+    def require_timezone(cls, value: datetime | None) -> datetime | None:
+        if value is not None and (value.tzinfo is None or value.utcoffset() is None):
+            raise ValueError("research timestamps must include a timezone")
+        return value
+
 
 class NormalizedCitation(BaseModel):
     """Citation provenance derived exclusively from an API annotation."""
@@ -105,6 +118,13 @@ class _ProviderCandidate(BaseModel):
     matched_condition: str = Field(min_length=1)
     temporal_relation: Literal["before_window", "same_window", "after_window"]
 
+    @field_validator("event_at")
+    @classmethod
+    def require_event_timezone(cls, value: datetime | None) -> datetime | None:
+        if value is not None and (value.tzinfo is None or value.utcoffset() is None):
+            raise ValueError("candidate event_at must include a timezone")
+        return value
+
 
 class _ProviderResearchOutput(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -125,6 +145,13 @@ class ResearchCandidateDraft(BaseModel):
     matched_entities: list[str]
     matched_condition: str
     temporal_relation: Literal["before_window", "same_window", "after_window"]
+
+    @field_validator("event_at")
+    @classmethod
+    def require_event_timezone(cls, value: datetime | None) -> datetime | None:
+        if value is not None and (value.tzinfo is None or value.utcoffset() is None):
+            raise ValueError("candidate event_at must include a timezone")
+        return value
 
 
 class ResearchUsage(BaseModel):
