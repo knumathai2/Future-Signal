@@ -15,8 +15,8 @@ Harness Version: 1.1
 
 - **Date**: 2026-07-12
 - **Agent Role**: Frontend Implementer with PM / safety review
-- **Session Goal**: Extend the approved emphasis hierarchy to detail and full issue-list surfaces.
-- **Branch**: `frontend/TASK-119-issue-list-emphasis`
+- **Session Goal**: Align shared navigation and extend emphasis to methodology.
+- **Branch**: `frontend/TASK-120-shared-header-methodology-emphasis`
 
 ## Context Read
 
@@ -24,6 +24,22 @@ Harness Version: 1.1
 - Current project/session/task state, standards, glossary, detail/report components, types, and browser QA guidance
 
 ## Work Completed
+
+- Completed TASK-120 at the user's direction. Moved the home desktop navigation
+  into the same right-aligned shared-header group used by detail/list routes;
+  the refresh action remains immediately after the navigation instead of
+  pushing navigation toward the center.
+- Applied restrained methodology emphasis: terracotta heading marker and
+  eyebrow, soft outlined return action, and five numbered neutral guidance
+  cards in a desktop two-column/mobile one-column layout.
+- Frontend typecheck, lint, parser regression, build, desktop main/methodology
+  Browser review, and 320px Browser QA pass. Navigation remains shared, the
+  mobile return action is 44px, cards are 288px within the 320px viewport, and
+  both routes have no overflow or console warnings/errors. The known bundle-
+  size warning remains.
+- No dependency, public API, schema, database write, provider call,
+  infrastructure, deployment, production action, wording-policy change, or
+  legacy deletion occurred.
 
 - Completed TASK-119 at the user's direction. Extended the approved
   terracotta/current-context and muted-blue/comparison hierarchy to the full
