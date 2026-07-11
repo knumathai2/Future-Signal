@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Project: Outlook Signals
 
-_Last updated: 2026-07-11_
+_Last updated: 2026-07-12_
 
 ## Summary
 
@@ -17,7 +17,7 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.16.0-validated-block-streaming
+- **Version**: v0.17.0-four-part-detail
 - **Phase**: Active-v8 validated-block SSE enabled in the approved local development database
 - **Next milestone**: Review representative first-block latency samples only under a new bounded approval
 - **Overall health**: 🟡 Active v8 rendered its first actual validated block 4.038 seconds before full completion in the approved single-call sample while preserving final validation, polling, and last-known-good. ISS-017 queued-request recovery and ISS-018 citation compatibility remain open.
@@ -51,7 +51,7 @@ Future Signal/
 
 | Area | Current state |
 |---|---|
-| Frontend | TASK-063 replaces the v3 step navigator with a strict v4 change-episode card. It validates the full evidence bundle, conditionally renders zero to three candidate/source cards, links exact candidate IDs to chart markers, keeps secure external links/timing/caution, and passes 320px/375px/desktop QA. Existing routed Home/list/detail/methodology information architecture remains intact. |
+| Frontend | TASK-118 divides the issue-detail route into Overview, AI Issue Briefing, Related Materials, and Interpretation Guide tabs. Query-linked state, keyboard navigation, 320px tab scrolling, shared timing/caution context, full v8 report states, candidate timing boundaries, and exact accepted-source cards remain intact. Warm terracotta now emphasizes navigation/current context/chart/action while muted blue distinguishes comparison values without green/red gain-loss semantics. |
 | Backend | TASK-062 activates the strict v4 report read contract and returns only reconstructed, evidence-consistent bundles with verified same-episode candidates and approved source fields. Legacy/failed/malformed/mismatched rows remain audit-only. TASK-057's append-only migration was applied to the approved development DB during TASK-065; production remains untouched. |
 | Data/AI | TASK-058/059 provide bounded annotation-only research and deterministic/independent verification. TASK-060 connects them between signals and reports, and TASK-061 adds strict evidence-linked v4 generation with deterministic metric/context fields, same-episode verified candidates, writer-cost accounting, and last-known-good failure isolation. |
 | PM / Safety | The v3 MVP remains frozen. ADR-038 activates TASK-056~065 with verified-only automated context, strict evidence links, a cumulative USD 100 OpenRouter cap, and local/development-only writes. Deployment and production DB writes remain separate gates. |
@@ -63,6 +63,8 @@ Future Signal/
 
 | Date | Change |
 |------|--------|
+| 2026-07-12 | TASK-118 visual follow-up applied `#B84416`/`#FFF2E9` terracotta emphasis and `#466AA3`/`#EDF3FB` comparison styling to the detail flow and shared tokens. Frontend checks plus desktop/320px Browser QA pass without overflow or console warnings/errors. |
+| 2026-07-11 | TASK-118 reorganized the issue detail into four query-linked tabs while preserving v8 generation/source/failure states, exact timing boundaries, data-as-of, and caution. All Frontend checks and actual 1280px/390px/320px Browser QA pass with no clean-tab console errors or page overflow. |
 | 2026-07-11 | TASK-116 activated `v8-contextual-wording-1`: six Korean expressions now require explicit negation/inquiry or source-supported visible attribution, while financial/action and future-outcome blocks remain strict. Historical v8 reports reconstruct as stale last-known-good. Backend 482 tests/Ruff pass. |
 | 2026-07-11 | TASK-115 restored the stopped Frontend server, added explicit v8 prohibited-expression prompt guidance, and made failed requests retryable with stored evidence through append-only event metadata. A real development chart and fresh v8 briefing were verified together; Backend 467 tests/Ruff and all Frontend checks pass. |
 | 2026-07-11 | TASK-114 removed full snapshot/metric materialization from ID routes, bounded history and report evidence reads by market/time/latest row, and moved list/category latest-row selection into portable SQL. Backend 466 tests/Ruff, API/OpenAPI, all Frontend checks, and diff checks pass. ISS-017 remains open only for orphaned queued-request recovery. |
