@@ -19,8 +19,8 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 - **Version**: v0.13.0-v6-baseline-v7-planning
 - **Phase**: V7 on-demand service implemented; public API/UI transition in progress
-- **Next milestone**: Implement TASK-105 generation/status/cache/report API
-- **Overall health**: 🟢 TASK-099~104 are complete. Normal collection is provider-independent and the on-demand service passes the full 428-test Backend suite; v6 remains public until TASK-105.
+- **Next milestone**: Implement TASK-106 explicit generation control and flexible v7 UI states
+- **Overall health**: 🟢 TASK-099~105 are complete. The strict on-demand v7 API is active and the Backend passes 437 tests; Frontend still consumes v6 until TASK-106.
 
 ## Tech Summary
 
@@ -63,6 +63,7 @@ Future Signal/
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | TASK-105 activated POST generate, request polling, and strict v7 fresh/stale/generating/failure/last-good report reads with exact reconstruction. Backend passes 437 tests. |
 | 2026-07-11 | TASK-104 removed report calls from normal collection and added the tested v7 fingerprint/request/lease/context/worker/report service. Full Backend suite passes 428 tests. |
 | 2026-07-11 | TASK-103 added the tested v7 30-day context path, A-D source levels, excerpt-backed claims, and conditional independent verification without a live provider call. |
 | 2026-07-11 | TASK-102 added unapplied migration 004 and tested immutable request plus append-only lease/outcome event models. Earlier migrations remain untouched. |

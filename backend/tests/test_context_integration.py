@@ -163,19 +163,4 @@ def test_schema_to_verified_context_to_v6_api_flow(live_client, db_session):
     response = live_client.get(f"/api/issues/{MARKET_ID}/report")
     assert response.status_code == 200
     body = response.json()
-    assert body["status"] == "success"
-    assert body["report_version"] == "v6"
-    assert body["report_mode"] == "change_with_evidence"
-    assert body["episode_at"].startswith("2026-07-08T09:00:00")
-    assert body["evidence_refs"] == report.content["evidence_refs"]
-    assert body["context_candidates"][0]["id"] == str(candidate.id)
-    assert body["context_candidates"][0]["sources"] == [
-        {
-            "title": candidate.sources[0]["title"],
-            "url": candidate.sources[0]["url"],
-            "domain": candidate.sources[0]["domain"],
-            "published_at": None,
-            "source_type": "official",
-        }
-    ]
-    assert "citation_id" not in body["context_candidates"][0]["sources"][0]
+    assert body == {"status": "idle"}

@@ -55,6 +55,10 @@ from app.db.models import (
 DEFAULT_LEASE_DURATION = timedelta(minutes=5)
 DEFAULT_WRITER_COST_RESERVATION_USD = 0.5
 DEFAULT_PROGRAM_BUDGET_USD = 100.0
+V7_DATA_LIMITATIONS = (
+    "공개 데이터는 전체 대중을 대표하지 않으며 저장된 근거와 기준 시각 "
+    "범위에서만 읽어야 합니다."
+)
 _NUMBER_PATTERN = re.compile(r"(?<![A-Za-z])[-+]?\d+(?:[.,:/-]\d+)*(?![A-Za-z])")
 
 
@@ -175,18 +179,35 @@ def _v7_context_rows(
     db: Session,
     market_id: uuid.UUID,
     now: datetime,
+    *,
+    candidate_ids: list[uuid.UUID] | None = None,
 ) -> list[ContextCandidate]:
+    statement = select(ContextCandidate).where(
+        ContextCandidate.market_id == market_id,
+        ContextCandidate.verification_state == "verified",
+        ContextCandidate.policy_version == "v7-source-level-1",
+        ContextCandidate.collected_at <= now,
+        ContextCandidate.expires_at >= now,
+    )
+    if candidate_ids is not None:
+        if not candidate_ids:
+            return []
+        rows = list(
+            db.execute(statement.where(ContextCandidate.id.in_(candidate_ids)))
+            .scalars()
+            .all()
+        )
+        rows_by_id = {row.id: row for row in rows}
+        return [
+            rows_by_id[candidate_id]
+            for candidate_id in candidate_ids
+            if candidate_id in rows_by_id
+        ]
     return list(
         db.execute(
-            select(ContextCandidate)
-            .where(
-                ContextCandidate.market_id == market_id,
-                ContextCandidate.verification_state == "verified",
-                ContextCandidate.policy_version == "v7-source-level-1",
-                ContextCandidate.expires_at >= now,
-            )
-            .order_by(ContextCandidate.collected_at.desc(), ContextCandidate.id.desc())
-            .limit(8)
+            statement.order_by(
+                ContextCandidate.collected_at.desc(), ContextCandidate.id.desc()
+            ).limit(8)
         )
         .scalars()
         .all()
@@ -392,21 +413,43 @@ def build_v7_input_bundle(
     market_id: uuid.UUID,
     *,
     now: datetime,
+    metric_id: int | None = None,
+    context_candidate_ids: list[uuid.UUID] | None = None,
+    definition_ref: str | None = None,
 ) -> V7InputBundle | None:
     """Reconstruct one exact v7 writer/evidence input from stored rows."""
     market = db.get(Market, market_id)
-    metric = _latest_metric(db, market_id)
+    metric = (
+        db.get(MarketMetric, metric_id)
+        if metric_id is not None
+        else _latest_metric(db, market_id)
+    )
     if market is None or metric is None:
+        return None
+    if metric.market_id != market_id:
         return None
     snapshot = _latest_snapshot(db, market_id, metric.computed_at)
     if snapshot is None:
         return None
-    rule = _latest_rule(db, market_id)
-    definition_ref = (
-        f"market_definition:{rule.id}"
-        if rule is not None
-        else f"market_definition:market-{market.id}"
-    )
+    if definition_ref is None:
+        rule = _latest_rule(db, market_id)
+        resolved_definition_ref = (
+            f"market_definition:{rule.id}"
+            if rule is not None
+            else f"market_definition:market-{market.id}"
+        )
+    elif definition_ref == f"market_definition:market-{market.id}":
+        rule = None
+        resolved_definition_ref = definition_ref
+    else:
+        try:
+            rule_id = uuid.UUID(definition_ref.removeprefix("market_definition:"))
+        except ValueError:
+            return None
+        rule = db.get(MarketResolutionRule, rule_id)
+        if rule is None or rule.market_id != market_id:
+            return None
+        resolved_definition_ref = definition_ref
     definition_text = (
         rule.condition_text
         if rule is not None and rule.condition_text
@@ -414,7 +457,7 @@ def build_v7_input_bundle(
     )
     evidence = [
         V7EvidenceItem(
-            ref=definition_ref,
+            ref=resolved_definition_ref,
             kind="market_definition",
             text=definition_text,
         ),
@@ -452,7 +495,15 @@ def build_v7_input_bundle(
     context_ids: list[uuid.UUID] = []
     source_records: list[V7SourceRecord] = []
     context_times: list[datetime] = []
-    for row in _v7_context_rows(db, market_id, now):
+    rows = _v7_context_rows(
+        db,
+        market_id,
+        now,
+        candidate_ids=context_candidate_ids,
+    )
+    if context_candidate_ids is not None and len(rows) != len(context_candidate_ids):
+        return None
+    for row in rows:
         context_ref = f"context:{row.id}"
         source_evidence, records = _source_evidence(row)
         if not records:
@@ -481,7 +532,7 @@ def build_v7_input_bundle(
     return V7InputBundle(
         writer_inputs=writer_inputs,
         metric_id=metric.id,
-        definition_ref=definition_ref,
+        definition_ref=resolved_definition_ref,
         context_candidate_ids=context_ids,
         sources=source_records,
         data_as_of=_as_utc(snapshot.captured_at),
@@ -707,6 +758,56 @@ def _validate_section_numbers(output: V7WriterOutput, bundle: V7InputBundle) -> 
     return True
 
 
+def reconstruct_v7_report(
+    db: Session,
+    report: AiReport,
+) -> V7StoredReportPayload:
+    """Rebuild and validate one stored v7 report against generation-time rows."""
+    if report.status != "success" or report.prompt_version != V7_PROMPT_VERSION:
+        raise ValueError("not_a_successful_v7_report")
+    try:
+        payload = V7StoredReportPayload.model_validate(report.content)
+    except ValidationError as exc:
+        raise ValueError("invalid_v7_stored_payload") from exc
+    if report.input_metrics_id != payload.metric_id:
+        raise ValueError("v7_metric_id_mismatch")
+    generated_at = _as_utc(report.generated_at)
+    bundle = build_v7_input_bundle(
+        db,
+        report.market_id,
+        now=generated_at,
+        metric_id=payload.metric_id,
+        context_candidate_ids=payload.context_candidate_ids,
+        definition_ref=payload.definition_ref,
+    )
+    if bundle is None:
+        raise ValueError("v7_evidence_bundle_unavailable")
+    if v7_input_fingerprint(bundle) != payload.input_fingerprint:
+        raise ValueError("v7_input_fingerprint_mismatch")
+    if payload.definition_ref != bundle.definition_ref:
+        raise ValueError("v7_definition_ref_mismatch")
+    if payload.evidence != bundle.writer_inputs.evidence:
+        raise ValueError("v7_evidence_snapshot_mismatch")
+    if payload.sources != bundle.sources:
+        raise ValueError("v7_source_snapshot_mismatch")
+    if payload.data_as_of != bundle.data_as_of or payload.context_as_of != bundle.context_as_of:
+        raise ValueError("v7_evidence_timestamp_mismatch")
+    if payload.data_as_of > generated_at or (
+        payload.context_as_of is not None and payload.context_as_of > generated_at
+    ):
+        raise ValueError("v7_evidence_after_generation")
+    validation = validate_v7_writer_output(payload.writer, bundle.writer_inputs)
+    if not validation.passed:
+        raise ValueError(f"v7_writer_validation_failed:{validation.rule}")
+    if not _validate_section_numbers(payload.writer, bundle):
+        raise ValueError("v7_unsupported_number")
+    if payload.data_limitations != V7_DATA_LIMITATIONS:
+        raise ValueError("v7_data_limitations_mismatch")
+    if payload.caution_note != build_caution_note(bundle.confidence_level):
+        raise ValueError("v7_caution_mismatch")
+    return payload
+
+
 def _fail_request(
     db: Session,
     request_id: uuid.UUID,
@@ -875,10 +976,7 @@ def process_v7_request(
         sources=bundle.sources,
         data_as_of=bundle.data_as_of,
         context_as_of=bundle.context_as_of,
-        data_limitations=(
-            "공개 데이터는 전체 대중을 대표하지 않으며 저장된 근거와 기준 시각 "
-            "범위에서만 읽어야 합니다."
-        ),
+        data_limitations=V7_DATA_LIMITATIONS,
         caution_note=caution,
     )
     report = AiReport(

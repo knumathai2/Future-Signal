@@ -1,6 +1,6 @@
 # Backend — Outlook Signals
 
-FastAPI read-only REST API + batch collector (batch collector arrives with `TASK-007`).
+FastAPI issue-data API + append-only v7 generation requests + batch collector.
 
 ## Setup
 
