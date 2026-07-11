@@ -14,9 +14,9 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: PM / Planner
-- **Session Goal**: Finalize the approval-ready v7 writer and source-level contract without activating policy or changing runtime behavior.
-- **Branch**: `data-ai/TASK-101-v7-briefing-contract`
+- **Agent Role**: Frontend Implementer
+- **Session Goal**: Complete TASK-099 through TASK-109 within the approved v7 boundary; TASK-106 is complete and TASK-107 is next.
+- **Branch**: `frontend/TASK-106-on-demand-briefing-ui`
 
 ## Context Read
 
@@ -26,6 +26,19 @@ Harness Version: 1.1
 
 ## Work Completed
 
+- Completed TASK-106 with a strict v7 runtime parser, explicit generate/join
+  button, issue-scoped request polling, flexible paragraph/list rendering, and
+  idle/generating/fresh/stale/failed/failed-with-last-good UI states.
+- Added exact safe A-C source links, visible supported claims, preserved
+  last-good content during refresh/failure, and data-as-of plus caution on every
+  report state. The detail/chart/manual-context areas remain independently
+  available.
+- Frontend typecheck, lint, parser regressions, production build, Prettier,
+  wording scan, and diff checks pass. Browser QA covered all v7 public states,
+  source/no-source, 1280px and 390px with no overflow and 44px controls.
+- No dependency, provider call, database write, migration application,
+  infrastructure change, deployment, production action, or TASK-109 deletion
+  occurred. TASK-107 is next.
 - Completed TASK-105 with public POST generate, GET request status, and strict
   v7 GET report states. The API appends only request/queue rows and never calls
   a provider.

@@ -64,139 +64,111 @@ export type CategorySummary = {
   averageChange: number | null;
 };
 
-export type ReportBasis =
-  | "market_definition"
-  | "observed_data"
-  | "verified_context"
-  | "general_scenario"
-  | "data_limitation";
-
-export type IssueReportMode =
-  | "change_with_evidence"
-  | "change_without_evidence"
-  | "stable_with_evidence"
-  | "stable_without_evidence";
-
-export type MarketDefinitionBlock = {
-  text: string;
-  basis: "market_definition";
-};
-
-export type GeneralBlock = {
-  text: string;
-  basis: "general_scenario";
-};
-
-export type VerifiedBlock = {
-  text: string;
-  basis: "verified_context";
-  candidate_ids: string[];
-};
-
-export type GeneralScenario = {
-  title: string;
-  text: string;
-  basis: "general_scenario";
-};
-
-export type VerifiedInterpretation = {
-  title: string;
-  text: string;
-  basis: "verified_context";
-  candidate_ids: string[];
-};
-
-export type MaterialToCheck = {
-  scenario_index: number;
-  title: string;
-  text: string;
-  basis: "general_scenario";
-};
-
-export type IssueReportBriefing =
-  | {
-      mode: "change_with_evidence";
-      verified_background: VerifiedBlock;
-      conditional_interpretations: VerifiedInterpretation[];
-    }
-  | {
-      mode: "change_without_evidence";
-      conditional_scenarios: GeneralScenario[];
-      materials_to_check: MaterialToCheck[];
-    }
-  | {
-      mode: "stable_with_evidence";
-      issue_explanation: MarketDefinitionBlock;
-      verified_background: VerifiedBlock;
-      conditional_scenarios: GeneralScenario[];
-    }
-  | {
-      mode: "stable_without_evidence";
-      issue_explanation: GeneralBlock;
-      conditional_scenarios: GeneralScenario[];
-      materials_to_check: MaterialToCheck[];
-    };
-
-export type IssueReportObservedChange = {
-  metric_id: number;
-  window: "24h";
-  current_value: number;
-  change_value: number | null;
-  significant: boolean;
-  threshold: number;
-};
-
-export type IssueReportResolutionReference = {
-  status: "available" | "unavailable";
-  condition_text: string | null;
-  deadline: string | null;
-  exclusions: string[];
-  source_url: string | null;
-};
-
-export type IssueReportContextSource = {
-  title: string;
-  url: string;
-  domain: string;
-  published_at: string | null;
-  source_type: "official" | "independent_secondary";
-};
-
+/** Legacy chart annotation shape retained until the separately approved TASK-109 cleanup. */
 export type IssueReportContextCandidate = {
   id: string;
   title: string;
   event_at: string;
   summary: string;
-  sources: IssueReportContextSource[];
+  sources: Array<{
+    title: string;
+    url: string;
+    domain: string;
+    published_at: string | null;
+    source_type: "official" | "independent_secondary";
+  }>;
 };
 
-export type IssueReportSuccessResponse = {
+export type V7ReportSectionType =
+  | "issue_overview"
+  | "current_context"
+  | "market_data"
+  | "external_context"
+  | "uncertainties"
+  | "what_to_watch";
+
+export type V7ReportSection = {
+  type: V7ReportSectionType;
+  title: string;
+  format: "paragraph" | "bullets";
+  content: string | null;
+  items: string[];
+  evidence_refs: string[];
+};
+
+export type V7SupportedClaim = {
+  ref: string;
+  text: string;
+  excerpt: string;
+  citation_id: string;
+};
+
+export type V7ReportSource = {
   id: string;
-  status: "success";
-  report_version: "v6";
-  report_mode: IssueReportMode;
+  context_ref: string;
+  citation_id: string;
+  title: string;
+  url: string;
+  domain: string;
+  source_level: "A" | "B" | "C";
+  supported_claims: V7SupportedClaim[];
+  retrieved_at: string;
+};
+
+export type V7IssueReportResponse = {
+  id: string;
+  status: "fresh" | "stale" | "generating" | "failed_with_last_good";
+  report_version: "v7";
+  headline: string;
+  summary: string;
+  sections: V7ReportSection[];
+  sources: V7ReportSource[];
   generated_at: string;
   data_as_of: string;
-  episode_at: string;
-  observed_change: IssueReportObservedChange;
-  briefing: IssueReportBriefing;
-  resolution_reference: IssueReportResolutionReference;
-  evidence_refs: string[];
-  context_candidates: IssueReportContextCandidate[];
-  relationship_boundary: string;
+  context_as_of: string | null;
+  cache: {
+    state: "fresh" | "stale";
+    input_fingerprint: string;
+    current_fingerprint: string | null;
+  };
   data_limitations: string;
   caution_note: string;
-};
-
-export type IssueReportNotYetGeneratedResponse = {
-  status: "not_yet_generated";
+  request_id: string | null;
+  request_error_code: string | null;
 };
 
 export type IssueReportResponse =
-  IssueReportSuccessResponse | IssueReportNotYetGeneratedResponse;
+  | V7IssueReportResponse
+  | { status: "idle" }
+  | {
+      status: "generating";
+      request_id: string;
+      input_fingerprint: string;
+      requested_at: string;
+    }
+  | { status: "failed"; request_id: string; error_code: string };
 
 export type IssueReportLoadState =
   | { status: "loading" }
-  | { status: "success"; report: IssueReportSuccessResponse }
-  | { status: "not_yet_generated" }
+  | { status: "ready"; response: IssueReportResponse }
   | { status: "error" };
+
+export type GenerationRequestResponse = {
+  request_id: string;
+  status: "queued" | "running" | "fresh" | "failed";
+  created: boolean;
+  input_fingerprint: string;
+};
+
+export type GenerationRequestStatusResponse = {
+  request_id: string;
+  issue_id: string;
+  state: "queued" | "running" | "succeeded" | "failed";
+  attempt_number: number;
+  requested_at: string;
+  updated_at: string;
+  input_fingerprint: string;
+  report_id: string | null;
+  error_code: string | null;
+  successor_request_id: string | null;
+};
