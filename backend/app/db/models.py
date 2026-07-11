@@ -1,19 +1,30 @@
-"""SQLAlchemy ORM models mirroring migrations/001_initial_schema.sql.
+"""SQLAlchemy ORM models mirroring the accepted SQL migrations.
 
-DRAFT: these models are not wired to any route yet and the schema has not
-been applied to a database (TASK-002 requires human approval first). This
-module exists so the eventual DB-backed routes (after TASK-002 approval)
-have models ready rather than needing a second design pass.
+The initial schema is used by the DB-backed routes and was applied to the
+approved development database. TASK-057 adds v4 context models; its migration
+remains local/development-only until a guarded application step is explicitly
+run. Production application still requires separate approval.
 
 Append-only rule (Technical Design §4.10): market_snapshots, market_metrics,
-issue_signals, and ai_reports are insert-only from the batch collector.
+issue_signals, ai_reports, context_candidates, and context_collection_runs are
+insert-only from the batch collector.
 Only markets.last_seen_at/status are ever updated in place. Do not add
 update/upsert helpers for the append-only tables.
 """
 import uuid
 from datetime import datetime
 
-from sqlalchemy import BigInteger, ForeignKey, Numeric, Text
+from sqlalchemy import (
+    BigInteger,
+    CheckConstraint,
+    DateTime,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -145,4 +156,93 @@ class DataCollectionLog(Base):
     status: Mapped[str] = mapped_column(Text)
     markets_processed: Mapped[int] = mapped_column(default=0)
     markets_failed: Mapped[int] = mapped_column(default=0)
+    error_detail: Mapped[dict | None] = mapped_column(JSONB)
+
+
+class ContextCandidate(Base):
+    """Append-only v4 context candidate with stored citation provenance.
+
+    Duplicate evidence for the same market episode is rejected by the
+    ``uq_context_candidates_episode_evidence`` constraint. Callers should
+    treat that integrity error as an idempotent skip; existing rows are never
+    updated. Deleting a parent market cascades to its candidate audit rows,
+    matching the lifecycle rule used by the initial schema.
+    """
+
+    __tablename__ = "context_candidates"
+    __table_args__ = (
+        CheckConstraint(
+            "verification_state IN ('verified', 'withheld', 'rejected')",
+            name="ck_context_candidates_verification_state",
+        ),
+        UniqueConstraint(
+            "market_id",
+            "episode_at",
+            "evidence_hash",
+            name="uq_context_candidates_episode_evidence",
+        ),
+        Index(
+            "idx_context_candidates_market_episode_state",
+            "market_id",
+            "episode_at",
+            "verification_state",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    market_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("markets.id", ondelete="CASCADE")
+    )
+    episode_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    event_title: Mapped[str] = mapped_column(Text)
+    event_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    neutral_summary: Mapped[str] = mapped_column(Text)
+    sources: Mapped[list[dict]] = mapped_column(JSONB)
+    verification_state: Mapped[str] = mapped_column(Text)
+    verification_score_internal: Mapped[float | None] = mapped_column(Numeric(6, 5))
+    research_model: Mapped[str] = mapped_column(Text)
+    verifier_model: Mapped[str] = mapped_column(Text)
+    policy_version: Mapped[str] = mapped_column(Text)
+    evidence_hash: Mapped[str] = mapped_column(Text)
+    collected_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ContextCollectionRun(Base):
+    """Append-only audit row for one market's bounded context-research run.
+
+    The JSON fields contain aggregate provider usage and secret-free error
+    details only. Parent-market deletion cascades to these operational audit
+    rows, matching the candidate and initial-schema lifecycle rule.
+    """
+
+    __tablename__ = "context_collection_runs"
+    __table_args__ = (
+        CheckConstraint(
+            "status IN ('success', 'partial', 'failed', 'no_candidate')",
+            name="ck_context_collection_runs_status",
+        ),
+        CheckConstraint(
+            "query_count >= 0 AND result_count >= 0 AND accepted_count >= 0",
+            name="ck_context_collection_runs_nonnegative_counts",
+        ),
+        Index(
+            "idx_context_collection_runs_market_episode",
+            "market_id",
+            "episode_at",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    market_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("markets.id", ondelete="CASCADE")
+    )
+    episode_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    status: Mapped[str] = mapped_column(Text)
+    query_count: Mapped[int] = mapped_column(Integer, default=0)
+    result_count: Mapped[int] = mapped_column(Integer, default=0)
+    accepted_count: Mapped[int] = mapped_column(Integer, default=0)
+    model_usage: Mapped[dict] = mapped_column(JSONB, default=dict)
     error_detail: Mapped[dict | None] = mapped_column(JSONB)

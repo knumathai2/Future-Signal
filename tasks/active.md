@@ -7,13 +7,24 @@ Harness Version: 1.1
 
 # Active Tasks — Outlook Signals
 
-_Last updated: 2026-07-10_
+_Last updated: 2026-07-11_
 
 ## In Progress
 
-No implementation tasks remain active. Day 5 is closed as a technical MVP
-milestone by ADR-037. Deployment and final presentation operations are deferred
-as `TASK-020` and `TASK-021` in `tasks/backlog.md`.
+ADR-038 records the user's policy, schema, API, OpenRouter budget, and
+local/development-write approval for the sequential TASK-056~065 program.
+Deployment and production-database writes remain excluded.
+
+| ID | Task | Owner | Assignee | Branch | Status |
+|----|------|-------|----------|--------|--------|
+
+No tasks are currently active. Deployment, production DB writes, and optional
+TASK-066+ work remain separately approval-gated.
+
+Exact dependencies, file ownership, acceptance criteria, verification commands,
+handoffs, and stop conditions are binding in
+`reports/task-055-automated-context-execution-plan.md`. Only one task may be
+`in_progress` at a time; each successor starts from the verified predecessor.
 
 ## Status Values
 

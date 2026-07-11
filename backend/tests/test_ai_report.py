@@ -5,6 +5,7 @@ regeneration/storage orchestration lives in test_ai_report_batch.py.
 """
 
 import json
+import uuid
 from datetime import UTC, datetime
 
 import httpx
@@ -21,17 +22,26 @@ from app.core.ai_report import (
     OpenAIReportClient,
     ReportContent,
     ReportPromptInputs,
+    V4ContextSource,
+    V4LLMFields,
+    V4ReportInputs,
+    V4VerifiedCandidateInput,
     assemble_report_content,
+    assemble_v4_report_content,
     build_caution_note,
     build_data_limitations,
     build_external_context,
     build_openai_client,
     build_possible_drivers,
     build_prompt,
+    build_v4_prompt,
+    build_v4_stored_payload,
     build_what_to_check,
     parse_llm_fields,
+    parse_v4_llm_fields,
     run_safety_filter,
     run_semantic_checks,
+    run_v4_safety_and_semantic_checks,
 )
 from app.core.config import (
     OPENROUTER_BASE_URL,
@@ -93,6 +103,63 @@ def _llm_fields(**overrides) -> LLMReportFields:
     base = dict(VALID_LLM_FIELDS)
     base.update(overrides)
     return LLMReportFields(**base)
+
+
+def _v4_inputs(*, with_context=True, **overrides) -> V4ReportInputs:
+    candidates = []
+    if with_context:
+        candidates = [
+            V4VerifiedCandidateInput(
+                id=uuid.UUID("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"),
+                title="공개 정보 업데이트",
+                event_at=datetime(2026, 7, 11, 8, 0, tzinfo=UTC),
+                neutral_summary="두 공개 출처는 해당 시각에 관련 정보를 기록했습니다.",
+                sources=[
+                    V4ContextSource(
+                        citation_id="citation:a",
+                        title="공개 출처",
+                        url="https://example.gov/update",
+                        canonical_url="https://example.gov/update",
+                        domain="example.gov",
+                        source_type="official",
+                        content_hash="sha256:source",
+                    )
+                ],
+            )
+        ]
+    values = {
+        "market_id": uuid.UUID("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb"),
+        "metric_id": 123,
+        "episode_at": datetime(2026, 7, 11, 8, 0, tzinfo=UTC),
+        "data_as_of": datetime(2026, 7, 11, 9, 0, tzinfo=UTC),
+        "title": "Will the documented condition be confirmed?",
+        "description": "Tracks whether the documented condition is confirmed.",
+        "category": "technology",
+        "outcome_label": "Yes",
+        "end_date": datetime(2026, 12, 31, tzinfo=UTC),
+        "current_value": 0.63,
+        "change_24h": 0.08,
+        "change_7d": 0.11,
+        "confidence_level": "sufficient",
+        "volume_24h": 1000.0,
+        "liquidity": 2000.0,
+        "context_candidates": candidates,
+    }
+    values.update(overrides)
+    return V4ReportInputs(**values)
+
+
+def _v4_fields(**overrides) -> V4LLMFields:
+    values = {
+        "issue_overview": (
+            "이 이슈는 문서에 적힌 조건이 정해진 기준 안에서 확인되는지를 살펴봅니다."
+        ),
+        "what_to_check": (
+            "게시된 조건 문구와 이후 공개되는 자료 및 데이터 갱신 내용을 추가로 확인해야 합니다."
+        ),
+    }
+    values.update(overrides)
+    return V4LLMFields(**values)
 
 
 # --- build_prompt -------------------------------------------------------
@@ -641,3 +708,127 @@ def test_build_openai_client_passes_openrouter_base_url_and_headers(monkeypatch)
     assert stub.completions.kwargs["extra_headers"] == {
         "X-OpenRouter-Title": "Outlook Signals"
     }
+
+
+# --- ADR-038 v4 evidence-grounded report ---------------------------------
+
+
+def test_v4_prompt_and_parser_are_strict_two_field_contract():
+    system_prompt, user_prompt = build_v4_prompt(_v4_inputs())
+
+    assert "issue_overview" in user_prompt
+    assert "what_to_check" in user_prompt
+    assert "observed_change" not in user_prompt
+    assert '"description"' not in user_prompt
+    assert "never arrays" in user_prompt
+    assert "Do not write any digits" in user_prompt
+    assert "Never" in system_prompt
+    assert "never return an array" in system_prompt
+    assert 'Never use "예측" except' in system_prompt
+    raw = json.dumps(_v4_fields().model_dump(), ensure_ascii=False)
+    assert parse_v4_llm_fields(raw) == _v4_fields()
+    assert parse_v4_llm_fields(json.dumps({**_v4_fields().model_dump(), "extra": "x"})) is None
+
+
+def test_v4_context_and_evidence_refs_are_deterministic():
+    inputs = _v4_inputs()
+    content = assemble_v4_report_content(inputs, _v4_fields())
+
+    assert content is not None
+    payload = build_v4_stored_payload(inputs, content)
+    candidate_id = inputs.context_candidates[0].id
+
+    assert payload.evidence_refs == ["metric:123", f"candidate:{candidate_id}"]
+    assert payload.context_candidate_ids == [candidate_id]
+    assert "두 공개 출처" in payload.content.context_summary
+    assert "63.0%" in payload.content.observed_change
+    assert "+8.0퍼센트포인트" in payload.content.observed_change
+    assert "+11.0퍼센트포인트" in payload.content.observed_change
+    assert run_v4_safety_and_semantic_checks(payload, inputs, _v4_fields()).passed
+
+
+def test_v4_without_verified_context_uses_json_null_and_metric_ref_only():
+    inputs = _v4_inputs(with_context=False)
+    content = assemble_v4_report_content(inputs, _v4_fields())
+
+    assert content is not None
+    payload = build_v4_stored_payload(inputs, content)
+
+    assert payload.content.context_summary is None
+    assert payload.context_candidate_ids == []
+    assert payload.evidence_refs == ["metric:123"]
+    assert run_v4_safety_and_semantic_checks(payload, inputs, _v4_fields()).passed
+
+
+@pytest.mark.parametrize(
+    ("mutation", "expected_rule"),
+    [
+        ({"evidence_refs": ["metric:999"]}, "evidence_ref_mismatch"),
+        ({"context_candidate_ids": []}, "candidate_id_mismatch"),
+    ],
+)
+def test_v4_rejects_unknown_or_mismatched_evidence(mutation, expected_rule):
+    inputs = _v4_inputs()
+    content = assemble_v4_report_content(inputs, _v4_fields())
+    payload = build_v4_stored_payload(inputs, content).model_copy(update=mutation)
+
+    result = run_v4_safety_and_semantic_checks(payload, inputs, _v4_fields())
+
+    assert result.passed is False
+    assert result.rule == expected_rule
+
+
+def test_v4_rejects_metric_or_context_text_that_differs_from_inputs():
+    inputs = _v4_inputs()
+    content = assemble_v4_report_content(inputs, _v4_fields())
+    payload = build_v4_stored_payload(inputs, content)
+
+    metric_payload = payload.model_copy(
+        update={
+            "content": payload.content.model_copy(
+                update={
+                    "observed_change": payload.content.observed_change.replace(
+                        "63.0%", "73.0%"
+                    )
+                }
+            )
+        }
+    )
+    context_payload = payload.model_copy(
+        update={
+            "content": payload.content.model_copy(
+                update={"context_summary": "다른 공개 정보가 관계를 설명합니다."}
+            )
+        }
+    )
+
+    assert run_v4_safety_and_semantic_checks(
+        metric_payload, inputs, _v4_fields()
+    ).rule == "metric_content_mismatch"
+    assert run_v4_safety_and_semantic_checks(
+        context_payload, inputs, _v4_fields()
+    ).passed is False
+
+
+@pytest.mark.parametrize(
+    "fields",
+    [
+        _v4_fields(what_to_check="https://invented.example 자료를 추가로 확인해야 합니다."),
+        _v4_fields(what_to_check="2027년 9월 99일 자료를 추가로 확인해야 합니다."),
+        _v4_fields(what_to_check="관찰값은 공개 정보 때문에 달라졌다고 확인해야 합니다."),
+    ],
+)
+def test_v4_rejects_model_added_url_number_or_relationship(fields):
+    inputs = _v4_inputs()
+    content = assemble_v4_report_content(inputs, fields)
+    payload = build_v4_stored_payload(inputs, content)
+
+    assert run_v4_safety_and_semantic_checks(payload, inputs, fields).passed is False
+
+
+def test_v4_unknown_caution_level_cannot_assemble():
+    with pytest.raises(ValueError, match="Unknown confidence_level"):
+        assemble_v4_report_content(
+            _v4_inputs(confidence_level="unknown"),
+            _v4_fields(),
+        )

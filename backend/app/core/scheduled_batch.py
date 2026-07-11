@@ -5,8 +5,9 @@ Runs the MVP pipeline in one process:
 1. Fetch/normalize public Polymarket market data, or read a normalized JSON file.
 2. Store snapshots and compute metrics.
 3. Detect expectation-shift signals for the same metric run.
-4. Generate stored AI reports for qualifying issues.
-5. Record one collection log for the combined run.
+4. Research, verify, and store bounded context candidates when configured.
+5. Generate stored AI reports for qualifying issues.
+6. Record one collection log for the combined run.
 
 The public API remains read-only; this module is the explicit write path for
 local/dev or scheduled batch execution.
@@ -16,7 +17,7 @@ import argparse
 import json
 import logging
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -28,9 +29,20 @@ from app.core.ai_report_batch import (
     ReportOutcome,
     run_ai_report_batch,
     run_ai_report_batch_for_latest_metrics,
+    run_v4_ai_report_batch,
+    run_v4_ai_report_batch_for_latest_metrics,
 )
 from app.core.collector import fetch_events
 from app.core.config import settings
+from app.core.context_research import (
+    OpenRouterContextResearchClient,
+    build_context_research_client_from_settings,
+)
+from app.core.context_research_batch import ContextResearchOutcome, run_context_research_batch
+from app.core.context_verification import (
+    IndependentVerifierClient,
+    build_independent_verifier_from_settings,
+)
 from app.core.historical_seed import ensure_local_dev_write_allowed
 from app.core.signal_detection import detect_signals_for_run
 from app.core.snapshot_metrics import BatchRunResult, run_snapshot_and_metrics
@@ -53,6 +65,7 @@ class ScheduledBatchResult:
     markets_processed: int = 0
     markets_failed: int = 0
     signals_inserted: int = 0
+    context_outcomes: list[ContextResearchOutcome] | None = None
     report_outcomes: list[ReportOutcome] | None = None
     error: str | None = None
 
@@ -72,6 +85,33 @@ class ScheduledBatchResult:
     def reports_skipped(self) -> int:
         return sum(1 for outcome in self.report_outcomes or [] if outcome.status == "skipped")
 
+    @property
+    def context_success(self) -> int:
+        return sum(
+            1
+            for outcome in self.context_outcomes or []
+            if outcome.status in {"success", "no_candidate"}
+        )
+
+    @property
+    def context_failed(self) -> int:
+        return sum(1 for outcome in self.context_outcomes or [] if outcome.status == "failed")
+
+    @property
+    def context_candidates_accepted(self) -> int:
+        return sum(outcome.accepted_count for outcome in self.context_outcomes or [])
+
+    @property
+    def v4_writer_cost_usd(self) -> float:
+        return round(
+            sum(
+                float(outcome.model_usage.get("writer_cost_usd") or 0)
+                for outcome in self.report_outcomes or []
+                if outcome.model_usage
+            ),
+            8,
+        )
+
 
 def load_normalized_markets(path: Path) -> list[dict[str, Any]]:
     with path.open(encoding="utf-8") as fh:
@@ -87,7 +127,7 @@ def record_scheduled_batch_log(db: Session, result: ScheduledBatchResult) -> Non
         status = "failed"
     elif result.skipped_duplicate_run:
         status = "skipped_duplicate"
-    elif result.markets_failed or result.reports_failed_or_filtered:
+    elif result.markets_failed or result.context_failed or result.reports_failed_or_filtered:
         status = "partial"
 
     db.add(
@@ -104,9 +144,13 @@ def record_scheduled_batch_log(db: Session, result: ScheduledBatchResult) -> Non
                 if result.run_timestamp
                 else None,
                 "signals_inserted": result.signals_inserted,
+                "context_success": result.context_success,
+                "context_failed": result.context_failed,
+                "context_candidates_accepted": result.context_candidates_accepted,
                 "reports_success": result.reports_success,
                 "reports_failed_or_filtered": result.reports_failed_or_filtered,
                 "reports_skipped": result.reports_skipped,
+                "v4_writer_cost_usd": result.v4_writer_cost_usd,
                 "error": result.error,
             },
         )
@@ -123,10 +167,23 @@ def run_reports_for_timestamp(
     run_timestamp: datetime,
     llm_client: LLMClient | None,
     model_name: str,
+    *,
+    use_v4: bool = False,
+    failed_context_market_ids: set | None = None,
 ) -> list[ReportOutcome]:
     if llm_client is None:
         logger.info("Skipping AI reports: no LLM client configured.")
         return []
+    if use_v4:
+        return run_v4_ai_report_batch(
+            db,
+            run_timestamp,
+            llm_client,
+            model_name,
+            failed_context_market_ids=failed_context_market_ids,
+            budget_usd=settings.context_budget_usd,
+            writer_cost_reservation_usd=settings.context_writer_cost_reservation_usd,
+        )
     return run_ai_report_batch(db, run_timestamp, llm_client, model_name)
 
 
@@ -134,10 +191,22 @@ def run_reports_for_current_db(
     db: Session,
     llm_client: LLMClient | None,
     model_name: str,
+    *,
+    use_v4: bool = False,
+    failed_context_market_ids: set | None = None,
 ) -> list[ReportOutcome]:
     if llm_client is None:
         logger.info("Skipping AI reports: no LLM client configured.")
         return []
+    if use_v4:
+        return run_v4_ai_report_batch_for_latest_metrics(
+            db,
+            llm_client,
+            model_name,
+            failed_context_market_ids=failed_context_market_ids,
+            budget_usd=settings.context_budget_usd,
+            writer_cost_reservation_usd=settings.context_writer_cost_reservation_usd,
+        )
     return run_ai_report_batch_for_latest_metrics(db, llm_client, model_name)
 
 
@@ -147,6 +216,12 @@ def run_scheduled_batch(
     normalized_markets: list[dict[str, Any]] | None = None,
     llm_client: LLMClient | None,
     model_name: str,
+    context_research_client: OpenRouterContextResearchClient | None = None,
+    context_verifier: IndependentVerifierClient | None = None,
+    context_backfill: bool = False,
+    context_max_markets: int | None = None,
+    context_offset: int = 0,
+    v4_reports_from_stored_context: bool = False,
     reports_only: bool = False,
     record_log: bool = True,
 ) -> ScheduledBatchResult:
@@ -173,11 +248,44 @@ def run_scheduled_batch(
                 signals = detect_signals_for_run(db, metric_result.run_timestamp)
                 result.signals_inserted = len(signals)
 
+        if (
+            context_research_client is not None
+            and context_verifier is not None
+            and result.run_timestamp is not None
+            and not result.skipped_duplicate_run
+        ):
+            result.context_outcomes = run_context_research_batch(
+                db,
+                result.run_timestamp,
+                context_research_client,
+                context_verifier,
+                use_latest_metrics=reports_only,
+                backfill=context_backfill,
+                change_threshold=settings.context_change_threshold,
+                staleness=timedelta(hours=settings.context_staleness_hours),
+                budget_usd=settings.context_budget_usd,
+                cost_reservation_usd=settings.context_cost_reservation_usd,
+                max_targets=context_max_markets,
+                target_offset=context_offset,
+            )
+        else:
+            result.context_outcomes = []
+
+        use_v4_reports = (
+            context_research_client is not None and context_verifier is not None
+        ) or v4_reports_from_stored_context
+        failed_context_market_ids = {
+            outcome.market_id
+            for outcome in result.context_outcomes or []
+            if outcome.status == "failed"
+        }
         if reports_only:
             result.report_outcomes = run_reports_for_current_db(
                 db,
                 llm_client,
                 model_name,
+                use_v4=use_v4_reports,
+                failed_context_market_ids=failed_context_market_ids,
             )
         elif not result.skipped_duplicate_run and result.run_timestamp is not None:
             result.report_outcomes = run_reports_for_timestamp(
@@ -185,6 +293,8 @@ def run_scheduled_batch(
                 result.run_timestamp,
                 llm_client,
                 model_name,
+                use_v4=use_v4_reports,
+                failed_context_market_ids=failed_context_market_ids,
             )
         else:
             result.report_outcomes = []
@@ -233,6 +343,33 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "--skip-ai-reports",
         action="store_true",
         help="Run data/metric/signal generation but skip AI report generation.",
+    )
+    parser.add_argument(
+        "--skip-context-research",
+        action="store_true",
+        help="Run the existing batch without the optional v4 context stage.",
+    )
+    parser.add_argument(
+        "--context-backfill",
+        action="store_true",
+        help="Research every latest eligible metric once; local/dev writes only.",
+    )
+    parser.add_argument(
+        "--context-max-markets",
+        type=int,
+        default=None,
+        help="Cap context research targets for one guarded local/dev run.",
+    )
+    parser.add_argument(
+        "--context-offset",
+        type=int,
+        default=0,
+        help="Skip this many deterministic context targets before applying the cap.",
+    )
+    parser.add_argument(
+        "--v4-reports-from-stored-context",
+        action="store_true",
+        help="Generate v4 reports from stored verified/no-candidate context without research.",
     )
     parser.add_argument(
         "--confirm-local-dev-write",
@@ -288,6 +425,15 @@ def main() -> int:
             extra_headers=ai_extra_headers_from_settings(),
         )
 
+    context_research_client = None
+    context_verifier = None
+    if not args.skip_context_research and not args.v4_reports_from_stored_context:
+        try:
+            context_research_client = build_context_research_client_from_settings(settings)
+            context_verifier = build_independent_verifier_from_settings(settings)
+        except Exception as exc:
+            logger.info("Skipping context research: %s", type(exc).__name__)
+
     session = get_session_factory()()
     try:
         result = run_scheduled_batch(
@@ -295,6 +441,12 @@ def main() -> int:
             normalized_markets=normalized_markets,
             llm_client=llm_client,
             model_name=settings.openai_model,
+            context_research_client=context_research_client,
+            context_verifier=context_verifier,
+            context_backfill=args.context_backfill,
+            context_max_markets=args.context_max_markets,
+            context_offset=args.context_offset,
+            v4_reports_from_stored_context=args.v4_reports_from_stored_context,
             reports_only=args.reports_only,
         )
     finally:
@@ -302,15 +454,24 @@ def main() -> int:
 
     logger.info(
         "Scheduled batch complete: processed=%s failed=%s signals=%s reports_success=%s "
-        "reports_skipped=%s error=%s",
+        "context_success=%s context_failed=%s reports_skipped=%s error=%s",
         result.markets_processed,
         result.markets_failed,
         result.signals_inserted,
         result.reports_success,
+        result.context_success,
+        result.context_failed,
         result.reports_skipped,
         result.error,
     )
-    return 1 if result.error or result.markets_failed or result.reports_failed_or_filtered else 0
+    return (
+        1
+        if result.error
+        or result.markets_failed
+        or result.context_failed
+        or result.reports_failed_or_filtered
+        else 0
+    )
 
 
 if __name__ == "__main__":

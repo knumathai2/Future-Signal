@@ -66,10 +66,10 @@ def test_get_issue_history_unknown_id_is_404():
     assert response.status_code == 404
 
 
-def test_get_issue_report_success():
+def test_static_fallback_report_is_not_fabricated():
     response = client.get(f"/api/issues/{ISSUE_ID}/report")
     assert response.status_code == 200
-    assert response.json()["status"] == "success"
+    assert response.json()["status"] == "not_yet_generated"
 
 
 def test_get_issue_report_not_yet_generated():

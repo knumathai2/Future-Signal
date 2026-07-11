@@ -93,7 +93,7 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
 
 - **Purpose**: Give the full picture for one issue — what it's asking, how the reflected expectation has moved, and how much to trust that read.
 - **Main user action**: Read the summary, view the chart, check the caution badge, optionally save (Phase 2).
-- **Key information**: Title, plain-language description, current expectation value, 24h/7d/30d change, chart, caution badge, related-event candidate (curated set only), data-as-of timestamp.
+- **Key information**: Title, plain-language description, current expectation value, 24h/7d/30d change, chart, caution badge, v3 curated candidate or v4 verified context candidate, data-as-of timestamp.
 - **Emphasize**: The explanatory summary and the caution badge, positioned with equal visual weight to the number itself — never let the raw percentage be the loudest element on the page.
 - **Hide/minimize**: Outcome-option labels should never be styled as selectable/clickable (no button-like affordance on "Yes"/"No" — see Section 6).
 - **Betting-perception risk**: **High** — this is the screen closest to a market page. Mitigate by never showing "Yes/No" as tappable buttons, never showing both outcomes side-by-side with color-coded pricing (see Section 6.1).
@@ -159,5 +159,25 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
 - **Hide/minimize**: No "turn on alerts to never miss an opportunity" style copy anywhere in this screen.
 - **Betting-perception risk**: **Low**, as long as notification copy itself stays neutral (see Section 8, notification example).
 - **UX direction**: Simple form/list UI; not needed at all for hackathon MVP since there's nothing to configure yet.
+
+### 3.10 Change episode (approved TASK-063 v4 extension)
+
+- **Purpose**: Show one observed metric interval, any verified public context in
+  the compatible review window, source provenance, what remains unknown, and
+  interpretation caution as one evidence-first surface.
+- **Order**: Observed change → verified context (when present) → sources →
+  relationship boundary → what to check → data limitations → caution.
+- **Required states**: zero, one, and three verified candidates; loading;
+  not-yet-generated; and request failure. Zero candidates hide the entire
+  context/source region without treating absence as an error.
+- **Evidence connection**: Chart marker, episode, report metric reference, and
+  candidate cards use the stored episode/candidate IDs. The UI does not infer a
+  match by title or timestamp alone.
+- **Source display**: Show source title, domain, optional published date, and a
+  safe new-window link. Never show model text excerpts or internal scores.
+- **Safety**: Data-as-of and a short caution stay in the same viewport as the
+  change. The detailed relationship boundary states that timing does not
+  establish a relationship with the observed movement.
+- **Responsive acceptance**: No horizontal overflow at 320px, 375px, or desktop.
 
 ---

@@ -11,10 +11,26 @@ Alembic) — the tool choice is listed as an open "Day 1" decision in
 dependency needs its own approval + decision, separate from the schema
 draft itself.
 
+`002_context_candidates.sql` is the ADR-038/TASK-057 append-only extension for
+`context_candidates` and `context_collection_runs`. The user's approval covers
+application only to local/development databases. Do not run it against a
+production database or as part of a deployment without separate approval.
+Duplicate `(market_id, episode_at, evidence_hash)` candidate inserts are
+idempotent skips: the database rejects the duplicate and callers keep the
+existing row. Both new tables use `ON DELETE CASCADE` with their parent market,
+matching the lifecycle rule in `001_initial_schema.sql`.
+
 Once approved, running it against a real Postgres instance is:
 
 ```bash
 psql "$DATABASE_URL" -f migrations/001_initial_schema.sql
+```
+
+After the initial schema exists, an explicitly guarded local/development
+application may use:
+
+```bash
+psql "$DATABASE_URL" -f migrations/002_context_candidates.sql
 ```
 
 `psql` expects a plain Postgres URL such as `postgresql://...`; if local API

@@ -16,7 +16,9 @@ from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.core.scheduled_batch import run_scheduled_batch
+from app.core.ai_report_batch import ReportOutcome
+from app.core.context_research_batch import ContextResearchOutcome
+from app.core.scheduled_batch import build_arg_parser, run_scheduled_batch
 from app.db.models import (
     AiReport,
     Base,
@@ -329,3 +331,119 @@ def test_reports_only_uses_each_markets_latest_metric_not_only_global_max(db):
     assert result.reports_success == 2
     assert client.calls == 2
     assert db.query(AiReport).count() == 2
+
+
+def test_context_stage_runs_after_signals_and_before_reports(db, monkeypatch):
+    import app.core.scheduled_batch as scheduled_batch
+
+    order = []
+
+    def fake_signals(_db, _timestamp):
+        order.append("signals")
+        return []
+
+    def fake_context(*_args, **_kwargs):
+        order.append("context")
+        return []
+
+    def fake_reports(*_args, **_kwargs):
+        order.append("reports")
+        return []
+
+    monkeypatch.setattr(scheduled_batch, "detect_signals_for_run", fake_signals)
+    monkeypatch.setattr(scheduled_batch, "run_context_research_batch", fake_context)
+    monkeypatch.setattr(scheduled_batch, "run_reports_for_timestamp", fake_reports)
+
+    result = run_scheduled_batch(
+        db,
+        normalized_markets=[_normalized()],
+        llm_client=object(),
+        model_name="openai/gpt-4o-mini",
+        context_research_client=object(),
+        context_verifier=object(),
+        record_log=False,
+    )
+
+    assert result.error is None
+    assert order == ["signals", "context", "reports"]
+
+
+def test_context_offset_cli_is_guarded_and_explicit():
+    args = build_arg_parser().parse_args(
+        [
+            "--reports-only",
+            "--context-backfill",
+            "--context-max-markets",
+            "10",
+            "--context-offset",
+            "30",
+            "--confirm-local-dev-write",
+        ]
+    )
+
+    assert args.context_max_markets == 10
+    assert args.context_offset == 30
+    assert args.confirm_local_dev_write is True
+
+
+def test_stored_context_writer_mode_uses_v4_without_research(db, monkeypatch):
+    import app.core.scheduled_batch as scheduled_batch
+
+    run_scheduled_batch(
+        db,
+        normalized_markets=[_normalized()],
+        llm_client=None,
+        model_name="openai/writer",
+        record_log=False,
+    )
+    captured = {}
+
+    def fake_reports(_db, _client, _model, **kwargs):
+        captured.update(kwargs)
+        return []
+
+    monkeypatch.setattr(scheduled_batch, "run_reports_for_current_db", fake_reports)
+
+    result = run_scheduled_batch(
+        db,
+        llm_client=object(),
+        model_name="openai/writer",
+        reports_only=True,
+        v4_reports_from_stored_context=True,
+        record_log=False,
+    )
+
+    assert result.error is None
+    assert result.context_outcomes == []
+    assert captured["use_v4"] is True
+
+
+def test_context_failure_marks_combined_log_partial_without_blocking_reports(db, monkeypatch):
+    import app.core.scheduled_batch as scheduled_batch
+
+    market_id = uuid.uuid4()
+
+    def fake_context(*_args, **_kwargs):
+        return [ContextResearchOutcome(market_id=market_id, status="failed")]
+
+    def fake_reports(*_args, **_kwargs):
+        return [ReportOutcome(market_id=market_id, status="success")]
+
+    monkeypatch.setattr(scheduled_batch, "run_context_research_batch", fake_context)
+    monkeypatch.setattr(scheduled_batch, "run_reports_for_timestamp", fake_reports)
+
+    result = run_scheduled_batch(
+        db,
+        normalized_markets=[_normalized()],
+        llm_client=FakeLLMClient([json.dumps(VALID_CONTENT)]),
+        model_name="openai/gpt-4o-mini",
+        context_research_client=object(),
+        context_verifier=object(),
+    )
+
+    assert result.error is None
+    assert result.context_failed == 1
+    assert result.reports_success == 1
+    log = db.query(DataCollectionLog).one()
+    assert log.status == "scheduled_batch_partial"
+    assert log.error_detail["context_failed"] == 1

@@ -601,6 +601,367 @@ behavior change is approved by this decision.
 
 ---
 
+### ADR-038: Approve verified automated context and evidence-grounded v4 reports
+
+- **Date**: 2026-07-11
+- **Status**: Accepted ⚠️ HUMAN APPROVAL
+- **Decided by**: User (human), PM / Planner recording
+
+**Context**: TASK-055 proposed a sequential TASK-056~065 program that replaces
+the frozen v3 manual-only context path with a narrowly bounded automated
+research, verification, evidence, report, API, and change-episode UI flow. The
+project constitution required explicit approval for the policy change, schema,
+public API, paid provider use, and database writes before implementation.
+
+**Decision**:
+
+1. Authorize TASK-056~065 sequentially. TASK-056 is the policy/contract gate;
+   TASK-057~065 must follow the dependencies and stop conditions in
+   `reports/task-055-automated-context-execution-plan.md`.
+2. Permit automated context only when every source URL comes from an OpenRouter
+   API `url_citation` annotation, deterministic hard gates pass, a research
+   model and a different verifier model agree, and the candidate is stored as
+   `verified`. Model-body URLs and non-verified candidates are never public.
+3. Permit OpenRouter research, independent-verification, and report-writing
+   calls for this program up to USD 100 cumulative usage. Usage must be
+   recorded per run without secrets, prompts, or full responses, and execution
+   must refuse work that would exceed the remaining approved budget.
+4. Permit one new append-only migration,
+   `backend/migrations/002_context_candidates.sql`, adding
+   `context_candidates` and `context_collection_runs`. Existing migrations,
+   `related_events`, and legacy `ai_reports` rows remain unchanged.
+5. Permit the strict v4 response on the existing
+   `GET /api/issues/{id}/report` path with top-level report timing, episode,
+   evidence references, and verified context candidates with source metadata.
+   Legacy v1-v3, failed, malformed, unverified, and evidence-inconsistent rows
+   must return the existing not-yet-generated state.
+6. Fix v4 content to exactly `issue_overview`, `observed_change`,
+   `context_summary`, `relationship_boundary`, `what_to_check`,
+   `data_limitations`, and `caution_note`. `context_summary` alone is nullable.
+   Metric sentences require stored metric evidence; context sentences require
+   stored verified-candidate evidence.
+7. Permit the TASK-063 change-episode UI and local/development-only candidate,
+   report, migration, backfill, and audit writes. Production DB writes,
+   deployment, infrastructure changes, unrelated schema/API changes, and new
+   dependencies remain outside this approval.
+8. Preserve the bans on relationship assertions, real-world result
+   assertions, action-inducing language, individual-participant data, and
+   open-ended analysis. A missing or inconsistent requirement fails closed.
+
+**Rationale**: The program adds current public context while preserving the
+product's evidence-first, non-predictive posture through mechanical provenance,
+independent verification, strict evidence IDs, and verified-only public reads.
+
+**Trade-offs**: Automated verification can legitimately yield no public
+candidate. Provider cost and availability become pipeline dependencies, so the
+last successful candidate/report remains live on failure and `no_candidate`
+is a normal outcome. v3 remains the historical MVP contract while v4 is built.
+
+**Consequences**: TASK-056~065 move to `tasks/active.md`. TASK-057 and TASK-058
+may start only after TASK-056 documentation passes. TASK-065 may call the
+provider and write only against a guarded local/development database within
+the cumulative USD 100 limit. Deployment remains a separate approval gate.
+
+---
+
+### ADR-039: Context evidence duplicates are episode-scoped and market deletion cascades
+
+- **Date**: 2026-07-11
+- **Status**: Accepted
+- **Decided by**: Backend Implementer within ADR-038 schema approval
+
+**Context**: TASK-057 required a deterministic duplicate-evidence rule and
+documented delete behavior for the two append-only v4 context tables.
+
+**Decision**: Enforce uniqueness on
+`(market_id, episode_at, evidence_hash)`. A duplicate insert is an idempotent
+skip: callers keep the existing row and never update it. The same citation
+bundle may support a different market or a different episode. Both new tables
+use `ON DELETE CASCADE` from `markets`, matching the lifecycle of all existing
+market-owned tables in `001_initial_schema.sql`.
+
+**Rationale**: Episode-scoped uniqueness prevents duplicate batch writes while
+preserving legitimate reuse across issues or later episodes. Consistent cascade
+behavior avoids orphaned audit rows and matches the accepted initial schema.
+
+**Consequences**: TASK-060 must catch duplicate-integrity errors as skips, not
+rewrite candidates. A parent-market delete removes its candidate and run rows;
+normal batch paths remain strictly insert-only.
+
+---
+
+### ADR-040: OpenRouter server-tool research trusts annotations, not model URLs
+
+- **Date**: 2026-07-11
+- **Status**: Accepted
+- **Decided by**: Data/AI Implementer within ADR-038 provider approval
+
+**Context**: TASK-058 needed to reconcile OpenRouter's beta
+`openrouter:web_search` Chat Completions response with the v4 citation-ID
+contract. The model can copy URLs into JSON, but model text alone is not
+provenance.
+
+**Decision**: Send the server tool through the existing OpenAI-compatible SDK
+using OpenRouter-only `extra_body.tools`. Parse nested or flat
+`url_citation` annotations, normalize and hash only those URLs/excerpts, and
+map model-returned candidate URLs to citation IDs only on exact annotation URL
+matches. Discard candidates with no matching annotation. Require provider
+usage to show a server-tool search unless it is a completed empty search, cap
+reported searches at six and total citations at 30. ADR-047 amends only the
+reported-query check: queries use deterministic market-metadata suggestions as
+scope anchors and must pass normalized topic/entity overlap.
+
+**Rationale**: The model can organize candidate drafts but cannot create
+evidence. Exact annotation matching preserves provenance and lets TASK-059
+apply canonicalization and substantive verification independently.
+
+**Consequences**: Model-body URLs, missing-title/invalid-scheme annotations,
+out-of-scope queries, over-limit usage, and malformed output fail closed.
+No DB write occurs in TASK-058; TASK-059 receives normalized citations and
+candidate drafts only.
+
+---
+
+### ADR-041: Deterministic gates control publication before independent verification
+
+- **Date**: 2026-07-11
+- **Status**: Accepted
+- **Decided by**: Data/AI Implementer within ADR-038 policy approval
+
+**Context**: TASK-059 needed a reproducible publication boundary that could not
+be overridden by either the research model or verifier model.
+
+**Decision**: Canonicalize URLs and reject unsafe forms; require timezone-aware
+episode/event dates supported by citation text and compatible with the search
+window; require matched entities in both market metadata and evidence; require
+tracked-condition token support; reject unsupported English proper nouns,
+conflicting dates, relationship/result assertions, and missing annotations.
+Accept the deterministic source path only when one configured/resolution/
+government-family official source directly supports the candidate, or at least
+two distinct publisher families with distinct content hashes and normalized
+content directly support it. Verify at most five of at most eight rule-passing
+candidates in one call, using a different OpenRouter provider family with no
+web tool. Any disagreement, extra claim/date/name, missing candidate, malformed
+response, or unsafe summary remains non-public.
+
+**Rationale**: Model judgment is useful only after provenance and support are
+mechanically established. Provider-family separation and no-search verification
+reduce correlated generation and prevent the verifier from inventing new
+evidence.
+
+**Consequences**: TASK-060 may persist every decision for audit but may pass
+only `verification_state="verified"` candidates to v4 report generation. Hard
+failures are `rejected`; capacity or verifier failures are `withheld` or batch
+failures. Fixed-fixture decisions are deterministic.
+
+---
+
+### ADR-042: Context batch is per-market append-only and budget-reserved
+
+- **Date**: 2026-07-11
+- **Status**: Accepted
+- **Decided by**: Data/AI Implementer within ADR-038 execution approval
+
+**Context**: TASK-060 needed to add paid-capable research to the scheduled
+batch without letting one market failure, duplicate evidence, or provider cost
+damage the existing pipeline.
+
+**Decision**: Select targets by current-run signal, absolute 24-hour change,
+top-10 heat, or missing/stale verified context; backfill may select every latest
+eligible metric. Run research and verification in one isolated market unit,
+store all audit decisions append-only, return only verified candidate IDs, cap
+public candidates at three, and record `no_candidate` as a normal completion.
+Treat duplicate market/episode/evidence rows as idempotent references to the
+existing row. Persist secret-free research/verifier usage and errors per run.
+Before every market, sum recorded research/verifier/writer costs and skip the
+call when current spend plus the configured reservation would exceed the
+ADR-038 USD 100 cap. The scheduled order is signals → context → reports.
+
+**Rationale**: Market isolation preserves last-known-good context and reports,
+while append-only audit rows make cost and publication decisions reproducible.
+Pre-call reservation keeps the program inside the approved external-call
+boundary even before TASK-065 performs a live run.
+
+**Consequences**: Context failure makes the combined log partial but does not
+block other markets or the existing report stage. TASK-061 must consume only
+verified stored candidates and add writer usage to the same cumulative budget
+accounting boundary.
+
+---
+
+### ADR-043: V4 reports split model-authored prose from deterministic evidence
+
+- **Date**: 2026-07-11
+- **Status**: Accepted
+- **Decided by**: Data/AI Implementer within ADR-038 execution approval
+
+**Context**: TASK-061 had to produce useful Korean summaries while preventing
+the writer model from changing metrics, introducing unsupported context, or
+weakening the approved relationship and caution boundaries.
+
+**Decision**: Give the writer only structured metric inputs and at most three
+same-episode verified candidates. Allow its strict response to contain exactly
+`issue_overview` and `what_to_check`; assemble `observed_change`, nullable
+`context_summary`, `relationship_boundary`, `data_limitations`, and
+`caution_note` deterministically. Store an internal v4 envelope containing the
+seven-field content, one `metric:{id}` reference, zero to three
+`candidate:{id}` references, and the matching candidate-ID list. Reject
+missing sources, field/reference mismatches, unknown evidence, unsafe
+relationship/result/action phrasing, model-authored URLs, and unsupported
+numbers. Keep v1-v3 and failed rows append-only for audit but do not let them
+block v4 regeneration. Record writer token/cost usage and reserve cost before
+each call under the shared USD 100 cap.
+
+**Rationale**: Deterministic evidence-bearing sentences make stored output
+reproducible and independently checkable, while retaining a narrow model role
+for readability. The envelope lets TASK-062 verify the stored row against DB
+state rather than trusting prose alone.
+
+**Consequences**: No verified candidate produces `context_summary=null` and no
+candidate reference. A context-stage failure skips only that market and
+preserves the prior successful v4 row. TASK-062 must expose only envelopes
+whose metric timestamp, episode, candidate state, sources, and evidence
+references all still validate.
+
+---
+
+### ADR-044: V4 report reads revalidate the stored evidence bundle
+
+- **Date**: 2026-07-11
+- **Status**: Accepted
+- **Decided by**: Backend Implementer within ADR-038 execution approval
+
+**Context**: A successful stored v4 row is not sufficient by itself for public
+output. TASK-062 had to prevent stale legacy shapes, altered JSON, missing
+candidate rows, non-public verification states, and source-field drift from
+crossing the read boundary.
+
+**Decision**: Query only successful `prompt_version="v4"` rows joined to a
+metric belonging to the requested issue, load the latest snapshot at or before
+that metric, and load only verified candidates. Strictly parse the internal
+envelope, resolve its ordered candidate IDs, require same-market and exact
+episode linkage, validate every stored internal source field, and reconstruct
+all deterministic content from DB values. Return the report only when the
+reconstruction, semantic checks, evidence-reference order, source URL/domain,
+and `data_as_of`/episode timing all match. Public source output includes only
+title, URL, domain, nullable publication time, and source type. Static fallback
+and v1-v3/failed/malformed/missing-evidence rows return the accepted 200 empty
+state; unknown issues remain 404.
+
+**Rationale**: Revalidation makes the read API an independent fail-closed
+boundary rather than assuming that append-only storage can never be incomplete
+or altered. Deriving the public source object from the validated stored record
+also prevents internal audit fields from leaking.
+
+**Consequences**: The Frontend must consume only report version v4 in TASK-063.
+Until migration and backfill run in TASK-065, development data with only v3
+rows naturally shows the neutral not-yet-generated state. No API request calls
+an external provider or writes to the database.
+
+---
+
+### ADR-045: V4 renders as one evidence-first change episode
+
+- **Date**: 2026-07-11
+- **Status**: Accepted
+- **Decided by**: Frontend Implementer within ADR-038 execution approval
+
+**Context**: The v3 one-section-at-a-time navigator separated metrics, context,
+limitations, and caution. TASK-063 needed to make their linkage visible without
+turning context into an explanation of the observed movement.
+
+**Decision**: Render one change-episode card in this order: issue overview,
+observed change, optional same-review-window public context with candidate and
+source cards, mandatory relationship boundary, later checks, data limitations,
+and interpretation caution. Hide the whole context region when no verified
+candidate exists. Give each candidate card and its nearest visible chart marker
+the same candidate ID and bidirectional anchors. Open approved public source
+URLs in a new tab with `noopener noreferrer`. Repeat strict v4 schema, timestamp,
+evidence-reference, candidate/source, URL/domain, and no-internal-field checks
+in the Frontend parser. Keep local-host-only 0/1/3 candidate fixtures for
+responsive verification; they are inaccessible on non-local hosts.
+
+**Rationale**: A single reading flow makes the evidence hierarchy legible while
+the explicit relationship boundary and marker note prevent temporal proximity
+from being presented as influence. Repeating parser checks gives malformed API
+payloads a fail-closed UI state.
+
+**Consequences**: Legacy v3 success payloads enter the report error state and
+are never partially rendered. TASK-064 must review candidate/marker linkage,
+source-link safety, null-context behavior, all three responsive widths, and the
+content-safety wording of the complete integrated flow.
+
+---
+
+### ADR-046: Normalize v4 writer evidence timestamps to UTC before assembly
+
+- **Date**: 2026-07-11
+- **Status**: Accepted
+- **Decided by**: Reviewer within ADR-038 execution approval
+
+**Context**: TASK-064's full-flow SQLite fixture produced a valid verified
+candidate and v4 row, but the API correctly withheld it because the writer had
+serialized a timezone-naive snapshot timestamp while the read boundary
+reconstructed the same evidence as UTC-aware. SQLite does not preserve timezone
+metadata on these columns; PostgreSQL does.
+
+**Decision**: Normalize v4 snapshot, episode, candidate-event, and end-date
+inputs to UTC-aware datetimes in `build_v4_inputs_for_market` before any
+deterministic sentence or stored envelope is assembled. Keep the API's UTC
+normalization and exact reconstruction check unchanged.
+
+**Rationale**: Stored deterministic content must be identical across the
+approved local SQLite test path and development PostgreSQL path. Fixing the
+writer input is safer than weakening the API's independent evidence check.
+
+**Consequences**: Local/development v4 rows now round-trip through the strict
+API, and the full-flow integration test prevents regression. No schema, public
+API, dependency, provider, infrastructure, or deployment boundary changed.
+
+---
+
+### ADR-047: Permit bounded server-tool query reformulation within metadata scope
+
+- **Date**: 2026-07-11
+- **Status**: Accepted ⚠️ HUMAN APPROVAL
+- **Decided by**: User, Data/AI Implementer + PM / Planner
+
+**Context**: The approved development migration succeeded, but bounded live
+preflights showed that current OpenRouter server tools generate or reformulate
+search queries. Valid annotated responses therefore fail ADR-040's exact
+model-reported-query membership check. Multiple current model families,
+one-query configuration, explicit prompt constraints, and exactly one retry did
+not produce a reliable path.
+
+**Decision**: Retain deterministic metadata suggestions, query/result
+caps, annotation-only evidence, deterministic verification, independent
+provider verification, verified-only storage/API reads, and all wording/evidence
+checks. Replace exact query-string membership with a bounded-count and
+normalized market-metadata overlap check, while storing the reported strings
+for audit.
+
+**Rationale**: OpenRouter documents that the model creates the server-tool
+query. Exact equality is not an enforceable client-side constraint on this
+provider behavior; annotation provenance and candidate hard gates remain the
+actual publication boundary.
+
+**Consequences**: Every reported query must be non-empty, unique, at most 300
+characters, within the six-query cap, and share normalized distinctive
+topic/entity tokens with title, description, category, or tracked condition.
+Generic search vocabulary, dates, and domains cannot make an unrelated query
+pass alone. Exact reported query strings remain stored for audit. Annotation
+provenance and every downstream candidate/publication gate are unchanged.
+Migration 002 and existing audit rows remain in the approved development DB;
+deployment and production writes remain excluded.
+
+**Implementation result**: TASK-065 completed exactly 50 development backfill
+targets. Forty-six distinct issues reached a normal completed research state;
+reported query/result maxima were five and 26. Seven drafts failed existing
+candidate gates, zero candidates became public, and no gate was relaxed.
+Final evidence is in `reports/task-065-context-backfill-evaluation.md`.
+
+---
+
 ### ADR-004: Monorepo, npm + pip, GitHub Actions
 
 - **Date**: 2026-07-07

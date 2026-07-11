@@ -21,9 +21,20 @@ from sqlalchemy.pool import StaticPool
 
 from app.api.routes import categories as categories_routes
 from app.api.routes import issues as issues_routes
+from app.core.ai_report import (
+    V4ContextSource,
+    V4LLMFields,
+    V4ReportInputs,
+    V4VerifiedCandidateInput,
+    assemble_v4_report_content,
+    build_v4_stored_payload,
+)
 from app.db.models import (
     AiReport,
     Base,
+    ContextCandidate,
+    ContextCollectionRun,
+    DataCollectionLog,
     IssueSignal,
     Market,
     MarketMetric,
@@ -39,6 +50,7 @@ MARKET_ID_NO_METRIC = uuid.UUID("22222222-2222-4222-8222-222222222222")
 REPORT_ID_OLD = uuid.UUID("33333333-3333-4333-8333-333333333333")
 REPORT_ID_LATEST = uuid.UUID("44444444-4444-4444-8444-444444444444")
 REPORT_ID_FAILED = uuid.UUID("55555555-5555-4555-8555-555555555555")
+CONTEXT_CANDIDATE_ID = uuid.UUID("66666666-6666-4666-8666-666666666666")
 
 
 @compiles(JSONB, "sqlite")
@@ -76,6 +88,9 @@ def db_session():
             MarketMetric.__table__,
             IssueSignal.__table__,
             AiReport.__table__,
+            ContextCandidate.__table__,
+            ContextCollectionRun.__table__,
+            DataCollectionLog.__table__,
             RelatedEvent.__table__,
         ],
     )
@@ -275,3 +290,96 @@ def seed_ai_report(
         )
     )
     db_session.commit()
+
+
+def seed_v4_report(
+    db_session,
+    *,
+    report_id: uuid.UUID = REPORT_ID_LATEST,
+    generated_at: datetime = NOW + timedelta(minutes=5),
+    with_candidate: bool = True,
+    status: str = "success",
+) -> tuple[AiReport, ContextCandidate | None]:
+    """Seed one internally valid v4 evidence envelope for API tests."""
+    candidate = None
+    candidate_inputs: list[V4VerifiedCandidateInput] = []
+    if with_candidate:
+        source = V4ContextSource(
+            citation_id="citation:official",
+            title="Official context notice",
+            url="https://example.gov/notices/context",
+            canonical_url="https://example.gov/notices/context",
+            domain="example.gov",
+            source_type="official",
+            content_hash="a" * 64,
+        )
+        candidate = ContextCandidate(
+            id=CONTEXT_CANDIDATE_ID,
+            market_id=MARKET_ID,
+            episode_at=NOW,
+            event_title="Official context notice was published",
+            event_at=NOW - timedelta(minutes=30),
+            neutral_summary="공식 공개 자료에 검토 구간의 관련 공지가 기록되었습니다.",
+            sources=[source.model_dump(mode="json")],
+            verification_state="verified",
+            verification_score_internal=1,
+            research_model="research/model",
+            verifier_model="verifier/model",
+            policy_version="v4",
+            evidence_hash="b" * 64,
+            collected_at=NOW,
+            expires_at=NOW + timedelta(hours=24),
+        )
+        db_session.add(candidate)
+        candidate_inputs.append(
+            V4VerifiedCandidateInput(
+                id=candidate.id,
+                title=candidate.event_title,
+                event_at=candidate.event_at,
+                neutral_summary=candidate.neutral_summary,
+                sources=[source],
+            )
+        )
+
+    inputs = V4ReportInputs(
+        market_id=MARKET_ID,
+        metric_id=1,
+        episode_at=NOW,
+        data_as_of=NOW,
+        title="Will the test issue resolve Yes?",
+        description="A seeded test issue.",
+        category="technology",
+        outcome_label="Yes",
+        end_date=NOW + timedelta(days=30),
+        current_value=0.63,
+        change_24h=0.08,
+        change_7d=0.11,
+        confidence_level="sufficient",
+        volume_24h=1000,
+        liquidity=2000,
+        context_candidates=candidate_inputs,
+    )
+    fields = V4LLMFields(
+        issue_overview=(
+            "이 이슈는 공개 문서에 적힌 조건의 충족 여부를 정해진 기한 기준으로 추적합니다."
+        ),
+        what_to_check=(
+            "게시된 조건 문구와 기준 시각 이후 공개 자료의 갱신 내용을 추가로 확인해야 합니다."
+        ),
+    )
+    content = assemble_v4_report_content(inputs, fields)
+    assert content is not None
+    payload = build_v4_stored_payload(inputs, content)
+    report = AiReport(
+        id=report_id,
+        market_id=MARKET_ID,
+        generated_at=generated_at,
+        input_metrics_id=1,
+        content=payload.model_dump(mode="json"),
+        model_used="writer/model",
+        prompt_version="v4",
+        status=status,
+    )
+    db_session.add(report)
+    db_session.commit()
+    return report, candidate

@@ -33,9 +33,11 @@ configured, per human-approved ADRs in memory/decisions.md.
 import json
 import logging
 import re
+import uuid
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Protocol
+from typing import Literal, Protocol
 
 from openai import OpenAI, OpenAIError
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, field_validator
@@ -198,6 +200,37 @@ class LLMClient(Protocol):
         ...
 
 
+@dataclass(frozen=True)
+class LLMUsage:
+    input_tokens: int = 0
+    output_tokens: int = 0
+    cost_usd: float | None = None
+
+
+def _usage_mapping(value: object) -> Mapping[str, object]:
+    if isinstance(value, Mapping):
+        return value
+    model_dump = getattr(value, "model_dump", None)
+    if callable(model_dump):
+        dumped = model_dump()
+        if isinstance(dumped, Mapping):
+            return dumped
+    data = getattr(value, "__dict__", None)
+    return data if isinstance(data, Mapping) else {}
+
+
+def _parse_llm_usage(value: object) -> LLMUsage:
+    usage = _usage_mapping(value)
+    cost = usage.get("cost")
+    return LLMUsage(
+        input_tokens=int(usage.get("prompt_tokens") or usage.get("input_tokens") or 0),
+        output_tokens=int(
+            usage.get("completion_tokens") or usage.get("output_tokens") or 0
+        ),
+        cost_usd=float(cost) if cost is not None else None,
+    )
+
+
 class OpenAICompatibleReportClient:
     """`LLMClient` backed by OpenAI-compatible Chat Completions.
 
@@ -219,6 +252,7 @@ class OpenAICompatibleReportClient:
         self._model = model
         self._provider_name = provider_name
         self._extra_headers = extra_headers or {}
+        self.usage_records: list[LLMUsage] = []
 
     def complete(self, system_prompt: str, user_prompt: str) -> str:
         try:
@@ -244,6 +278,7 @@ class OpenAICompatibleReportClient:
         content = response.choices[0].message.content if response.choices else None
         if not content:
             raise LLMCallError(f"Empty response from {self._provider_name}.")
+        self.usage_records.append(_parse_llm_usage(getattr(response, "usage", None)))
         return content
 
 
@@ -865,4 +900,314 @@ def run_semantic_checks(content: ReportContent, inputs: ReportPromptInputs) -> S
             field="external_context",
         )
 
+    return SafetyFilterResult(passed=True)
+
+
+# --------------------------------------------------------------------------
+# ADR-038 v4 evidence-grounded report contract.
+# --------------------------------------------------------------------------
+
+V4_PROMPT_VERSION = "v4"
+V4_RELATIONSHIP_BOUNDARY = (
+    "관찰된 움직임은 공개 데이터에 기록된 흐름이며, 현실의 결과 또는 함께 제시된 "
+    "공개 정보와의 관계를 입증하지 않습니다."
+)
+V4_SYSTEM_PROMPT = """\
+You write exactly two concise Korean fields for an evidence-grounded public
+issue report: issue_overview and what_to_check. Use only the supplied structured
+text. Do not add numbers, dates, URLs, source names, entities, outcomes, causes,
+relationships, forecasts, or actions that are absent from the inputs. Never
+state that public information explains a data movement. Return strict JSON and
+no other text. Both values must be Korean prose strings between 30 and 600
+characters; never return an array, object, or null for either field.
+
+Korean safety rules:
+- Describe the documented issue as a condition to check, never as a forecast.
+- Never use "예측" except inside the exact no-space compound "예측시장".
+- Never use 전망, 확정, 추천, 기회, 가능성이 높다, or 가능성이 낮다.
+- Never suggest an action or imply that a real-world result will occur.
+- Do not mention any data platform, market, participant dataset, probability,
+  reflected value, or numeric movement; deterministic fields add those facts.
+- Never write digits or numeric expressions in either field.
+- Prefer the neutral shape "이 이슈는 ... 확인되는지를 살펴봅니다."."""
+
+
+class V4ContextSource(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    citation_id: str
+    title: str
+    url: str
+    canonical_url: str
+    domain: str
+    source_type: Literal["official", "independent_secondary"]
+    content_hash: str
+
+
+class V4VerifiedCandidateInput(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    id: uuid.UUID
+    title: str
+    event_at: datetime
+    neutral_summary: str
+    sources: list[V4ContextSource] = Field(min_length=1)
+
+
+class V4ReportInputs(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    market_id: uuid.UUID
+    metric_id: int
+    episode_at: datetime
+    data_as_of: datetime
+    title: str
+    description: str
+    category: str
+    outcome_label: str | None
+    end_date: datetime | None
+    current_value: float = Field(ge=0, le=1)
+    change_24h: float | None
+    change_7d: float | None
+    confidence_level: str
+    volume_24h: float | None
+    liquidity: float | None
+    context_candidates: list[V4VerifiedCandidateInput] = Field(max_length=3)
+
+
+class V4LLMFields(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    issue_overview: str = Field(min_length=30, max_length=600)
+    what_to_check: str = Field(min_length=30, max_length=600)
+
+    @field_validator("*")
+    @classmethod
+    def limit_sentence_count(cls, value: str) -> str:
+        if _sentence_count(value) > 5:
+            raise ValueError("V4 LLM fields must contain at most five sentences.")
+        return value
+
+
+class V4ReportContent(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    issue_overview: str = Field(min_length=30, max_length=600)
+    observed_change: str = Field(min_length=50, max_length=900)
+    context_summary: str | None = Field(default=..., min_length=40, max_length=1800)
+    relationship_boundary: str = Field(min_length=50, max_length=500)
+    what_to_check: str = Field(min_length=30, max_length=600)
+    data_limitations: str = Field(min_length=50, max_length=900)
+    caution_note: str = Field(min_length=120, max_length=700)
+
+    @field_validator("*")
+    @classmethod
+    def limit_sentence_count(cls, value: str | None) -> str | None:
+        if value is not None and _sentence_count(value) > 5:
+            raise ValueError("V4 report fields must contain at most five sentences.")
+        return value
+
+
+class V4StoredReportPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    episode_at: datetime
+    content: V4ReportContent
+    evidence_refs: list[str] = Field(min_length=1, max_length=4)
+    context_candidate_ids: list[uuid.UUID] = Field(max_length=3)
+
+
+def build_v4_prompt(inputs: V4ReportInputs) -> tuple[str, str]:
+    candidates = [
+        {
+            "title": candidate.title,
+            "event_at": candidate.event_at.isoformat(),
+            "neutral_summary": candidate.neutral_summary,
+        }
+        for candidate in inputs.context_candidates
+    ]
+    payload = {
+        "title": inputs.title,
+        "category": inputs.category,
+        "outcome_label": inputs.outcome_label,
+        "end_date": inputs.end_date.isoformat() if inputs.end_date else None,
+        "verified_context_candidates": candidates,
+    }
+    user_prompt = (
+        "Return JSON with exactly issue_overview and what_to_check. "
+        "Both values are Korean prose strings of 30-600 characters, never arrays. "
+        "Do not write any digits or numeric expressions. "
+        "The overview explains only the documented issue. The check field lists "
+        "only later source/data items to verify and never suggests an action.\n"
+        + json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+    )
+    return V4_SYSTEM_PROMPT, user_prompt
+
+
+def parse_v4_llm_fields(raw_text: str) -> V4LLMFields | None:
+    try:
+        return V4LLMFields.model_validate_json(raw_text)
+    except ValidationError:
+        return None
+
+
+def build_v4_observed_change(inputs: V4ReportInputs) -> str:
+    parts = [
+        "데이터 기준 시각 "
+        f"{inputs.data_as_of.isoformat()}에 공개 예측시장 참여자 데이터에 반영된 "
+        f"기대값은 {inputs.current_value * 100:.1f}%입니다."
+    ]
+    comparisons: list[str] = []
+    if inputs.change_24h is not None:
+        comparisons.append(f"24시간 변화 {inputs.change_24h * 100:+.1f}퍼센트포인트")
+    if inputs.change_7d is not None:
+        comparisons.append(f"7일 변화 {inputs.change_7d * 100:+.1f}퍼센트포인트")
+    if comparisons:
+        parts.append("관찰된 비교값은 " + ", ".join(comparisons) + "입니다.")
+    else:
+        parts.append("고정 비교 구간의 값은 이력 부족으로 제시하지 않습니다.")
+    return " ".join(parts)
+
+
+def build_v4_context_summary(inputs: V4ReportInputs) -> str | None:
+    if not inputs.context_candidates:
+        return None
+    summaries = " ".join(candidate.neutral_summary for candidate in inputs.context_candidates)
+    return "같은 검토 구간에 기록된 공개 정보 후보를 근거 범위 안에서 정리했습니다. " + summaries
+
+
+def build_v4_data_limitations(inputs: V4ReportInputs) -> str:
+    limitations = [
+        "공개 예측시장 참여자 데이터는 전체 대중의 판단을 대표하지 않습니다.",
+        "수치와 맥락은 해당 기준 시각에 저장된 근거 범위에서만 해석해야 합니다.",
+    ]
+    if inputs.change_24h is None or inputs.change_7d is None:
+        limitations.append("고정 비교 구간 가운데 일부는 충분한 이력이 없습니다.")
+    if (
+        inputs.volume_24h is None
+        or inputs.volume_24h < CAUTION_LOW_ACTIVITY_VOLUME_THRESHOLD
+        or inputs.liquidity is None
+        or inputs.liquidity < CAUTION_LOW_ACTIVITY_LIQUIDITY_THRESHOLD
+    ):
+        limitations.append("활동량 또는 유동성이 설정된 하한보다 낮거나 확인되지 않았습니다.")
+    if (
+        inputs.change_24h is not None
+        and abs(inputs.change_24h) > CAUTION_HIGH_VOLATILITY_THRESHOLD
+    ):
+        limitations.append("24시간 변화 폭이 커서 단기 변동에 민감할 수 있습니다.")
+    return " ".join(limitations)
+
+
+def assemble_v4_report_content(
+    inputs: V4ReportInputs, fields: V4LLMFields
+) -> V4ReportContent | None:
+    caution_note = build_caution_note(inputs.confidence_level)
+    if caution_note is None:
+        return None
+    try:
+        return V4ReportContent(
+            issue_overview=fields.issue_overview,
+            observed_change=build_v4_observed_change(inputs),
+            context_summary=build_v4_context_summary(inputs),
+            relationship_boundary=V4_RELATIONSHIP_BOUNDARY,
+            what_to_check=fields.what_to_check,
+            data_limitations=build_v4_data_limitations(inputs),
+            caution_note=caution_note,
+        )
+    except ValidationError:
+        return None
+
+
+def build_v4_stored_payload(
+    inputs: V4ReportInputs, content: V4ReportContent
+) -> V4StoredReportPayload:
+    candidate_ids = [candidate.id for candidate in inputs.context_candidates]
+    return V4StoredReportPayload(
+        episode_at=inputs.episode_at,
+        content=content,
+        evidence_refs=[f"metric:{inputs.metric_id}"]
+        + [f"candidate:{candidate_id}" for candidate_id in candidate_ids],
+        context_candidate_ids=candidate_ids,
+    )
+
+
+_URL_PATTERN = re.compile(r"https?://|www\.", re.IGNORECASE)
+_NUMBER_PATTERN = re.compile(r"\d+(?:[.,]\d+)?")
+
+
+def _v4_llm_fields_use_only_input_numbers(
+    fields: V4LLMFields, inputs: V4ReportInputs
+) -> bool:
+    allowed_text = " ".join(
+        value
+        for value in (
+            inputs.title,
+            inputs.description,
+            inputs.category,
+            inputs.outcome_label,
+            inputs.end_date.isoformat() if inputs.end_date else None,
+            *(candidate.title for candidate in inputs.context_candidates),
+            *(candidate.event_at.isoformat() for candidate in inputs.context_candidates),
+        )
+        if value
+    )
+    allowed_numbers = set(_NUMBER_PATTERN.findall(allowed_text))
+    actual_numbers = set(
+        _NUMBER_PATTERN.findall(f"{fields.issue_overview} {fields.what_to_check}")
+    )
+    return actual_numbers.issubset(allowed_numbers)
+
+
+def run_v4_safety_and_semantic_checks(
+    payload: V4StoredReportPayload,
+    inputs: V4ReportInputs,
+    llm_fields: V4LLMFields,
+) -> SafetyFilterResult:
+    for field_name, text in payload.content.model_dump().items():
+        if text is None:
+            continue
+        lowered = text.lower()
+        for phrase, pattern in zip(BANNED_PHRASES, _PHRASE_PATTERNS, strict=True):
+            if pattern.search(lowered):
+                return SafetyFilterResult(
+                    passed=False, rule=f"banned_phrase:{phrase}", field=field_name
+                )
+        for phrase, pattern in zip(
+            KOREAN_BANNED_SUBSTRINGS, _KOREAN_PHRASE_PATTERNS, strict=True
+        ):
+            if pattern.search(text):
+                return SafetyFilterResult(
+                    passed=False, rule=f"banned_phrase:{phrase}", field=field_name
+                )
+        for pattern in (*BANNED_PATTERNS, *KOREAN_BANNED_PATTERNS):
+            if pattern.search(text):
+                return SafetyFilterResult(
+                    passed=False, rule=f"banned_pattern:{pattern.pattern}", field=field_name
+                )
+
+    if _URL_PATTERN.search(f"{llm_fields.issue_overview} {llm_fields.what_to_check}"):
+        return SafetyFilterResult(passed=False, rule="llm_added_url", field="what_to_check")
+    if not _v4_llm_fields_use_only_input_numbers(llm_fields, inputs):
+        return SafetyFilterResult(passed=False, rule="llm_added_number", field="what_to_check")
+    expected_refs = [f"metric:{inputs.metric_id}"] + [
+        f"candidate:{candidate.id}" for candidate in inputs.context_candidates
+    ]
+    if payload.evidence_refs != expected_refs:
+        return SafetyFilterResult(passed=False, rule="evidence_ref_mismatch")
+    if payload.context_candidate_ids != [
+        candidate.id for candidate in inputs.context_candidates
+    ]:
+        return SafetyFilterResult(passed=False, rule="candidate_id_mismatch")
+    if payload.content.observed_change != build_v4_observed_change(inputs):
+        return SafetyFilterResult(passed=False, rule="metric_content_mismatch")
+    if payload.content.context_summary != build_v4_context_summary(inputs):
+        return SafetyFilterResult(passed=False, rule="context_content_mismatch")
+    if payload.content.relationship_boundary != V4_RELATIONSHIP_BOUNDARY:
+        return SafetyFilterResult(passed=False, rule="relationship_boundary_mismatch")
+    if payload.content.caution_note != CAUTION_NOTE_BY_LEVEL.get(inputs.confidence_level):
+        return SafetyFilterResult(passed=False, rule="caution_note_literal_mismatch")
+    if inputs.context_candidates and payload.content.context_summary is None:
+        return SafetyFilterResult(passed=False, rule="missing_context_summary")
+    if not inputs.context_candidates and payload.content.context_summary is not None:
+        return SafetyFilterResult(passed=False, rule="unexpected_context_summary")
     return SafetyFilterResult(passed=True)

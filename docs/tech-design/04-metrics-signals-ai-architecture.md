@@ -144,4 +144,25 @@ Already covered in Sections 4.6 and 9 — one row per generation event, never ov
 - LLM API timeout/error → one retry, then `status = failed`, previous good report stays live.
 - Malformed JSON in response → treat as a failure the same way (don't attempt partial parsing under time pressure).
 
+### 10.7 Approved v4 evidence contract (ADR-038)
+
+V4 generation receives only the latest stored metric/snapshot evidence and
+stored `verified` context candidates. Its content object has exactly seven
+keys: `issue_overview`, `observed_change`, nullable `context_summary`,
+`relationship_boundary`, `what_to_check`, `data_limitations`, and
+`caution_note`. Top-level output adds `report_version="v4"`, report/data/episode
+timing, `evidence_refs`, and verified context candidates with public source
+metadata.
+
+Every numeric statement must resolve to a stored `metric:<id>` reference and
+match that metric. Every context statement must resolve to a stored
+`candidate:<uuid>` whose state is `verified` and whose source URLs match stored
+OpenRouter citation annotations. Missing/extra fields, invented values,
+unknown evidence IDs, absent sources, missing relationship-boundary copy,
+unsafe wording, or inconsistent timing block storage and public serving.
+
+When no verified candidate exists, `context_summary` is JSON `null`; the model
+must not generate a narrative about candidate absence. V1-v3 rows remain as
+audit history and are excluded from the v4 public response.
+
 ---

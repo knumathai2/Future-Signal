@@ -54,29 +54,10 @@ hackathon closeout.
 | TASK-029 | Basic rate-limiting middleware | |
 | TASK-030 | README / setup docs | |
 
-## Proposed Automated Context Program — blocked pending TASK-056 approval
+## Automated Context Program — activated by TASK-056
 
-This program is documented by `TASK-055` for a one-person, AI-assisted,
-20-hour implementation. It is not active work. The current constitution and
-product documents still exclude automated public context matching. `TASK-056`
-must receive explicit user approval before any implementation task moves to
-`tasks/active.md`.
-
-| ID | Task | Owner | Branch | Hours | Dependency | Notes |
-|----|------|-------|--------|------:|------------|-------|
-| TASK-056 | Approve automated-context policy and v4 contract | PM / Planner | `pm/TASK-056-auto-context-policy` | 1.0 | TASK-055 | Human approval gate for policy, provider budget, schema, API, and local/dev writes. |
-| TASK-057 | Add automated-context storage schema | Backend Implementer | `backend/TASK-057-context-schema` | 1.5 | TASK-056 | Append `002_context_candidates.sql`; never edit the existing migration. |
-| TASK-058 | Build OpenRouter web-research client | Data/AI Implementer | `data-ai/TASK-058-context-research` | 2.5 | TASK-056 | Parse only API `url_citation` annotations; no DB write. |
-| TASK-059 | Build deterministic and independent-AI verification | Data/AI Implementer | `data-ai/TASK-059-context-verification` | 2.5 | TASK-058 | Official single-source or independent multi-source hard gate. |
-| TASK-060 | Connect context research to the scheduled batch | Data/AI Implementer | `data-ai/TASK-060-context-batch` | 2.0 | TASK-057~059 | Signal/heat/staleness selection, append-only storage, failure isolation. |
-| TASK-061 | Generate evidence-grounded v4 reports | Data/AI Implementer | `data-ai/TASK-061-evidence-report-v4` | 2.0 | TASK-060 | Every metric/context sentence references stored evidence. |
-| TASK-062 | Serve the v4 context/report API | Backend Implementer | `backend/TASK-062-context-report-api` | 2.0 | TASK-057, TASK-061 | Strict response, verified candidates only, legacy exclusion. |
-| TASK-063 | Build the change-episode UI | Frontend Implementer | `frontend/TASK-063-change-episode-ui` | 2.5 | TASK-062 | Chart, context, sources, summary, timing, and caution on one surface. |
-| TASK-064 | Review the automated-context integration | Reviewer | `review/TASK-064-auto-context-integration` | 2.0 | TASK-057~063 | Contract, evidence, wording, responsive, and fail-closed review. |
-| TASK-065 | Run local/dev backfill and record demo evidence | Data/AI Implementer + PM | `data-ai/TASK-065-context-backfill` | 2.0 | TASK-064 | Guarded provider/DB run within the approved budget; deployment remains separate. |
-
-Exact scope, data contracts, file ownership, acceptance criteria, commands,
-handoffs, and stop conditions are in
+TASK-056~065 moved to `tasks/active.md` after the user's 2026-07-11 approval.
+The binding execution packet remains
 `reports/task-055-automated-context-execution-plan.md`.
 
 ## Proposed Automated Context Stretch Program — after TASK-065

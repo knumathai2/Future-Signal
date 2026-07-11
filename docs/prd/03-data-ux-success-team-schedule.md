@@ -10,7 +10,10 @@ _Source: former project-root PRD sections 9-14._
 
 Initial data draws on Polymarket's public market data. The product collects and processes market information, category/tags, reflected expectation values, activity level, liquidity, and time-series change data as they appear in public data.
 
-The hackathon MVP does not automatically collect external news/event information. For representative demo issues only, manually entered event candidates may be used.
+The frozen hackathon v3 MVP does not automatically collect external event
+information; representative demo issues use manually entered candidates. The
+post-MVP TASK-056~065 v4 extension may collect bounded public context only
+through ADR-038's verified, citation-backed, fail-closed path.
 
 ### 9.2 Data to collect
 

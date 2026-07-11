@@ -25,22 +25,29 @@ from app.core.ai_report import (
     POSSIBLE_DRIVERS_NO_CANDIDATE,
     POSSIBLE_DRIVERS_WITH_CANDIDATE,
     PROMPT_VERSION,
+    V4_PROMPT_VERSION,
     LLMCallError,
     LLMReportFields,
+    LLMUsage,
     assemble_report_content,
 )
 from app.core.ai_report_batch import (
     MAX_REPORTS_PER_BATCH_RUN,
     STALENESS_THRESHOLD,
     build_prompt_inputs_for_market,
+    build_v4_inputs_for_market,
     generate_report_for_market,
     run_ai_report_batch,
+    run_v4_ai_report_batch,
     select_markets_for_regeneration,
 )
 from app.core.historical_seed import metric_timestamp_for_seed
 from app.db.models import (
     AiReport,
     Base,
+    ContextCandidate,
+    ContextCollectionRun,
+    DataCollectionLog,
     IssueSignal,
     Market,
     MarketMetric,
@@ -132,6 +139,9 @@ def db():
             IssueSignal.__table__,
             AiReport.__table__,
             RelatedEvent.__table__,
+            ContextCandidate.__table__,
+            ContextCollectionRun.__table__,
+            DataCollectionLog.__table__,
         ],
     )
     session = sessionmaker(bind=engine)()
@@ -207,6 +217,92 @@ class FakeLLMClient:
         if isinstance(response, Exception):
             raise response
         return response
+
+
+VALID_V4_RESPONSE = {
+    "issue_overview": (
+        "이 이슈는 문서에 적힌 조건이 정해진 기준 안에서 확인되는지를 살펴봅니다."
+    ),
+    "what_to_check": (
+        "게시된 조건 문구와 이후 공개되는 자료 및 데이터 갱신 내용을 추가로 확인해야 합니다."
+    ),
+}
+
+
+class FakeV4LLMClient(FakeLLMClient):
+    def __init__(self, responses: list, *, cost_usd=0.03):
+        super().__init__(responses)
+        self.cost_usd = cost_usd
+        self.usage_records = []
+
+    def complete(self, system_prompt: str, user_prompt: str) -> str:
+        response = super().complete(system_prompt, user_prompt)
+        self.usage_records.append(
+            LLMUsage(input_tokens=40, output_tokens=10, cost_usd=self.cost_usd)
+        )
+        return response
+
+
+def _seed_v4_context(
+    db,
+    *,
+    market_id=MARKET_ID,
+    episode_at=NOW,
+    state="verified",
+    with_sources=True,
+):
+    candidate_id = uuid.uuid4()
+    sources = (
+        [
+            {
+                "citation_id": "citation:a",
+                "title": "Official source",
+                "url": "https://example.gov/update",
+                "canonical_url": "https://example.gov/update",
+                "domain": "example.gov",
+                "source_type": "official",
+                "content_hash": "sha256:source",
+            }
+        ]
+        if with_sources
+        else []
+    )
+    db.add(
+        ContextCandidate(
+            id=candidate_id,
+            market_id=market_id,
+            episode_at=episode_at,
+            event_title="공개 정보 업데이트",
+            event_at=episode_at,
+            neutral_summary="공식 출처는 같은 검토 구간에 관련 정보를 기록했습니다.",
+            sources=sources,
+            verification_state=state,
+            verification_score_internal=1,
+            research_model="openai/research",
+            verifier_model="anthropic/verifier",
+            policy_version="v4",
+            evidence_hash=f"sha256:{candidate_id}",
+            collected_at=episode_at,
+            expires_at=episode_at + timedelta(hours=24),
+        )
+    )
+    db.add(
+        ContextCollectionRun(
+            id=uuid.uuid4(),
+            market_id=market_id,
+            episode_at=episode_at,
+            started_at=episode_at,
+            finished_at=episode_at,
+            status="success" if state == "verified" else "no_candidate",
+            query_count=1,
+            result_count=1,
+            accepted_count=1 if state == "verified" else 0,
+            model_usage={"research_cost_usd": 0.01, "verifier_cost_usd": 0.01},
+            error_detail=None,
+        )
+    )
+    db.commit()
+    return candidate_id
 
 
 # --- select_markets_for_regeneration --------------------------------------
@@ -772,3 +868,190 @@ def test_batch_run_stores_success_when_metric_is_after_latest_snapshot(db):
     assert len(stored) == 1
     assert stored[0].status == "success"
     assert stored[0].input_metrics_id == metric.id
+
+
+# --- ADR-038 v4 evidence report batch ------------------------------------
+
+
+def _seed_v4_metric_state(db, *, with_context=True, with_sources=True):
+    _seed_market(db)
+    db.add(_snapshot(MARKET_ID, NOW, price=0.63))
+    db.add(_metric(MARKET_ID, NOW, heat_score=90.0, change_24h=0.08))
+    db.commit()
+    candidate_id = None
+    if with_context:
+        candidate_id = _seed_v4_context(db, with_sources=with_sources)
+    else:
+        db.add(
+            ContextCollectionRun(
+                id=uuid.uuid4(),
+                market_id=MARKET_ID,
+                episode_at=NOW,
+                started_at=NOW,
+                finished_at=NOW,
+                status="no_candidate",
+                query_count=1,
+                result_count=0,
+                accepted_count=0,
+                model_usage={"research_cost_usd": 0.01, "verifier_cost_usd": 0.01},
+                error_detail=None,
+            )
+        )
+        db.commit()
+    metric = db.execute(select(MarketMetric)).scalar_one()
+    market = db.get(Market, MARKET_ID)
+    return market, metric, candidate_id
+
+
+def test_v4_inputs_load_only_verified_same_episode_candidates_with_sources(db):
+    market, metric, candidate_id = _seed_v4_metric_state(db)
+    _seed_v4_context(db, episode_at=NOW - timedelta(hours=2), state="verified")
+    _seed_v4_context(db, episode_at=NOW, state="withheld")
+
+    inputs = build_v4_inputs_for_market(db, market, metric, NOW)
+
+    assert inputs is not None
+    assert inputs.metric_id == metric.id
+    assert [candidate.id for candidate in inputs.context_candidates] == [candidate_id]
+    assert inputs.data_as_of == NOW
+
+
+def test_v4_success_stores_payload_with_metric_and_candidate_evidence(db):
+    _, metric, candidate_id = _seed_v4_metric_state(db)
+    client = FakeV4LLMClient([json.dumps(VALID_V4_RESPONSE, ensure_ascii=False)])
+
+    outcomes = run_v4_ai_report_batch(db, NOW, client, "openai/writer")
+
+    assert outcomes[0].status == "success"
+    assert outcomes[0].model_usage["writer_cost_usd"] == 0.03
+    row = db.query(AiReport).one()
+    assert row.prompt_version == V4_PROMPT_VERSION
+    assert row.status == "success"
+    assert row.input_metrics_id == metric.id
+    assert row.content["evidence_refs"] == [
+        f"metric:{metric.id}",
+        f"candidate:{candidate_id}",
+    ]
+    assert row.content["context_candidate_ids"] == [str(candidate_id)]
+    assert row.content["content"]["context_summary"] is not None
+
+
+def test_v4_no_candidate_stores_null_context_without_absence_narrative(db):
+    _, metric, _ = _seed_v4_metric_state(db, with_context=False)
+    client = FakeV4LLMClient([json.dumps(VALID_V4_RESPONSE, ensure_ascii=False)])
+
+    outcomes = run_v4_ai_report_batch(db, NOW, client, "openai/writer")
+
+    assert outcomes[0].status == "success"
+    row = db.query(AiReport).one()
+    assert row.content["content"]["context_summary"] is None
+    assert row.content["context_candidate_ids"] == []
+    assert row.content["evidence_refs"] == [f"metric:{metric.id}"]
+
+
+def test_v4_malformed_fields_retry_once_then_store_failed_audit_row(db):
+    _seed_v4_metric_state(db)
+    client = FakeV4LLMClient(["not-json", json.dumps({"wrong": "shape"})])
+
+    outcomes = run_v4_ai_report_batch(db, NOW, client, "openai/writer")
+
+    assert outcomes[0].status == "failed"
+    assert client.calls == 2
+    row = db.query(AiReport).one()
+    assert row.status == "failed"
+    assert row.prompt_version == V4_PROMPT_VERSION
+    assert row.content == {}
+
+
+def test_v4_verified_candidate_without_sources_fails_closed_before_writer(db):
+    _seed_v4_metric_state(db, with_sources=False)
+    client = FakeV4LLMClient([json.dumps(VALID_V4_RESPONSE, ensure_ascii=False)])
+
+    outcomes = run_v4_ai_report_batch(db, NOW, client, "openai/writer")
+
+    assert outcomes[0].status == "skipped"
+    assert outcomes[0].reason == "invalid_or_missing_v4_evidence"
+    assert client.calls == 0
+    assert db.query(AiReport).count() == 0
+
+
+def test_v4_failed_context_preserves_previous_successful_report(db):
+    _seed_v4_metric_state(db)
+    previous = AiReport(
+        id=uuid.uuid4(),
+        market_id=MARKET_ID,
+        generated_at=NOW - timedelta(hours=25),
+        input_metrics_id=None,
+        content={"historical": True},
+        model_used="openai/writer",
+        prompt_version=V4_PROMPT_VERSION,
+        status="success",
+    )
+    db.add(previous)
+    db.commit()
+    client = FakeV4LLMClient([json.dumps(VALID_V4_RESPONSE, ensure_ascii=False)])
+
+    outcomes = run_v4_ai_report_batch(
+        db,
+        NOW,
+        client,
+        "openai/writer",
+        failed_context_market_ids={MARKET_ID},
+    )
+
+    assert outcomes[0].status == "skipped"
+    assert outcomes[0].reason == "context_research_failed"
+    assert client.calls == 0
+    assert db.query(AiReport).count() == 1
+    assert db.get(AiReport, previous.id).content == {"historical": True}
+
+
+def test_v4_legacy_v3_success_does_not_block_regeneration(db):
+    _seed_v4_metric_state(db)
+    db.add(
+        AiReport(
+            id=uuid.uuid4(),
+            market_id=MARKET_ID,
+            generated_at=NOW,
+            input_metrics_id=None,
+            content=LEGACY_CONTENT,
+            model_used="legacy",
+            prompt_version=PROMPT_VERSION,
+            status="success",
+        )
+    )
+    db.commit()
+
+    metrics = select_markets_for_regeneration(db, NOW, V4_PROMPT_VERSION)
+
+    assert [metric.market_id for metric in metrics] == [MARKET_ID]
+
+
+def test_v4_writer_budget_reservation_stops_before_call(db):
+    _seed_v4_metric_state(db)
+    db.add(
+        DataCollectionLog(
+            run_started_at=NOW - timedelta(hours=1),
+            run_finished_at=NOW - timedelta(hours=1),
+            status="scheduled_batch_success",
+            markets_processed=1,
+            markets_failed=0,
+            error_detail={"v4_writer_cost_usd": 99.0},
+        )
+    )
+    db.commit()
+    client = FakeV4LLMClient([json.dumps(VALID_V4_RESPONSE, ensure_ascii=False)])
+
+    outcomes = run_v4_ai_report_batch(
+        db,
+        NOW,
+        client,
+        "openai/writer",
+        budget_usd=100,
+        writer_cost_reservation_usd=1,
+    )
+
+    # The context seed already recorded USD 0.02, so 99.02 + 1 exceeds the cap.
+    assert outcomes[0].status == "skipped"
+    assert outcomes[0].reason == "budget_limit"
+    assert client.calls == 0

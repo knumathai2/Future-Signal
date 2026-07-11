@@ -13,67 +13,55 @@ Harness Version: 1.1
 
 ## Session Info
 
-- **Date**: 2026-07-10
-- **Agent Role**: PM / Planner with Frontend implementation
-- **Session Goal**: Resolve the final Frontend build blocker in PR #53 and
-  close Day 5 while deferring release and presentation operations.
-- **Branch**: `pm/TASK-055-context-summary-strategy`
-- **Pull request**: #53
+- **Date**: 2026-07-11
+- **Agent Role**: Data/AI Implementer + PM / Planner
+- **Session Goal**: Complete TASK-065 guarded local/development backfill and demo evidence.
+- **Branch**: `data-ai/TASK-065-context-backfill`
 
 ## Context Read
 
-- `AGENTS.md`, PRD, Service Design, Technical Design, and UX Design indexes
-- Relevant PRD schedule/release/presentation and UX safety sections
-- `memory/project.md`, prior `memory/session.md`, `tasks/active.md`
-- PM and Frontend role prompts, standards, glossary, architecture, roadmap
-- PR #53 metadata, latest `origin/main`, TASK-040 draft, and Day 5 task ledgers
-- GitHub and publish skill instructions
+- ADR-038 through human-approved ADR-047 and TASK-056~064 evidence
+- TASK-065 backfill, audit, API, wording, browser, and budget criteria
 
 ## Work Completed
 
-- Confirmed PR #53 targets `main` from
-  `pm/TASK-055-context-summary-strategy`.
-- Fetched and merged latest `origin/main` at `c455deb`; resolved
-  `memory/session.md` and `tasks/completed.md` conflicts by preserving both
-  TASK-054 and TASK-055 history.
-- Diagnosed the final Frontend failure: `FeaturedIssueCard.tsx` used
-  `Array.prototype.at()` twice while `tsconfig.app.json` intentionally uses
-  the `ES2020` library.
-- Replaced both reads with equivalent last-item array indexing. No dependency,
-  TypeScript configuration, copy, public API, schema, or runtime behavior
-  changed.
-- Recorded the repair as ISS-011.
-- Accepted ADR-037 from the user's direction: close Day 5 as a verified
-  technical MVP milestone and defer deployment plus final presentation
-  operations without marking them complete.
-- Added `reports/day-5-closeout.md`; updated roadmap, task ledgers, project
-  state, architecture, known issues, TASK-040 status, and decision history.
-- Kept TASK-020 and TASK-021 in the backlog for optional later resumption.
-- Kept TASK-056 through TASK-074 backlog-only behind their existing approval
-  gates.
+- Received explicit human approval for ADR-047 and resumed TASK-065. The narrow
+  amendment replaces exact query-string membership only; all annotation,
+  independent-verification, and publication gates remain unchanged.
+- Implemented normalized distinctive topic/entity query overlap, exact reported
+  query auditing, configured query-count enforcement, and decision reason
+  auditing without changing annotation or publication gates.
+- Added guarded backfill offset and stored-context v4 writer modes so local/dev
+  evaluation does not repeat paid research unnecessarily.
+- Completed exactly 50 development backfill targets in three slices; 46
+  distinct issues reached normal completed research and four incomplete-input
+  targets failed in isolation.
+- Kept all seven candidate drafts non-public because they failed deterministic
+  gates. No threshold was relaxed to manufacture a demo candidate.
+- Tightened the two-field v4 writer prompt to produce schema-correct, safe,
+  number-free Korean strings; the final writer-only batch passed 10/10.
+- Reconstructed every latest successful v4 row and sampled five live APIs:
+  evidence mismatches 0, safety failures 0, and all sampled requests HTTP 200.
+- Browser QA captured five real no-candidate flows and five explicitly local
+  fixture candidate flows. The fixture date was corrected so all three cards
+  have matching chart-marker IDs; final clean-tab console errors were 0.
+- Local servers and browser tabs were closed. No deployment, infrastructure
+  change, production write, or secret output occurred.
 
-## Verification
+## Development Audit State
 
-- Frontend `npm run typecheck`: passed.
-- Frontend `npm run lint`: passed.
-- Frontend `npm run test:report-parser`: passed.
-- Frontend `npm run build`: passed; the existing TD-001 chunk warning remains.
-- Changed-file Prettier check: passed.
-- Backend test suite: 200 passed.
-- Backend Ruff: passed.
-- Repository-wide Frontend Prettier check still reports three pre-existing,
-  unrelated format differences; they were not rewritten.
-- Final diff integrity and documentation wording checks are recorded in the PR
-  handoff.
+- Context runs: 80; 57 `no_candidate`, 23 failed across all preflight/history.
+- Distinct completed issues: 46; xAI query/result maxima: 5/26.
+- Candidates: seven rejected, zero verified/public.
+- Successful v4 reports: 14 rows across 13 issues.
+- DB-recorded spend: USD 3.00263875; conservative total including unlogged
+  diagnostics remains below USD 80 and the approved USD 100 cap.
+- Evidence: `reports/task-065-context-backfill-evaluation.md` and
+  `artifacts/task-065/*.png`.
 
-## Approval Boundaries / Follow-up
+## Current Follow-up
 
-- No deployment, provider call, database write, schema change, public API
-  change, dependency addition, infrastructure change, or wording-policy change
-  was performed.
-- PR #53 still requires normal review and merge before the repair and closeout
-  records reach `main`.
-- TASK-020 deployment remains separately approval-gated.
-- TASK-021 final deck, screenshots, rehearsal, and backup capture remain
-  deferred.
-- A scheduled-batch rerun from the eventual merged PR #53 revision is deferred.
+- TASK-056~065 are complete. Deployment, production DB writes, infrastructure
+  changes, and optional TASK-066+ work require separate user direction.
+- ISS-013 records the non-blocking development DB session-pool saturation seen
+  only during rapid Browser QA; serialized clean reruns passed.

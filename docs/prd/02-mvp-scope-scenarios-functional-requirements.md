@@ -20,7 +20,7 @@ A dashboard that selects global issues with large recent changes in reflected ex
 | Chart window | 24h, 7d, 30d if possible |
 | Refresh method | Pre-collected data + manual refresh, or limited scheduling |
 | Inflection points | Simple threshold-based markers |
-| Event candidates | 3-5 representative issues, entered manually |
+| Event candidates | v3: 3-5 representative issues, entered manually; v4: verified candidates only under ADR-038 |
 | Summary | Numeric, template-based |
 | User accounts | None |
 | Sharing / saving | None |
@@ -158,7 +158,9 @@ Provide an issue's change flow and interpretation-caution factors on a single sc
 - Show 24h, 7d, and (if possible) 30d change.
 - Provide a time-series chart.
 - Show simple inflection-point markers.
-- Provide manually entered related event candidates, limited to representative issues.
+- v3 provides manually entered related event candidates for representative
+  issues. The approved v4 path provides only verified candidates tied to a
+  change episode and stored citation sources.
 - Provide a template-based data summary.
 - Provide an interpretation-caution badge.
 - Show the source data's as-of time.
@@ -274,15 +276,15 @@ The largest change was observed around [time].
 However, interpretation requires caution due to [activity level/volatility/insufficient data].
 ```
 
-### 8.9 Related event candidates
+### 8.9 Context candidates
 
 #### Purpose
 
 Help users understand the context around an inflection point.
 
-#### Hackathon implementation approach
+#### Frozen hackathon v3 approach
 
-- Do not implement automated news matching.
+- Do not implement automated context matching in v3.
 - Provide manually entered event candidates limited to 3-5 representative issues.
 - Present event candidates as "context that can be checked alongside the change," not as "the cause."
 - For issues with no events, hide the event section or show "no related event candidate."
@@ -291,6 +293,23 @@ Help users understand the context around an inflection point.
 
 - Related events must not read as the cause of the change.
 - In the demo, connect event candidates to at least one representative issue.
+
+#### Approved post-MVP v4 extension (TASK-056~065)
+
+- Research may run only for bounded change episodes selected by signal, absolute
+  change, heat, or staleness rules.
+- Only URLs in OpenRouter API `url_citation` annotations are evidence. A URL in
+  model text is ignored.
+- A candidate is public only when deterministic provenance/date/entity/source
+  gates and an independent verifier model pass. All other states fail closed.
+- One official source that directly supports the tracked condition, or two
+  independent sources supporting the same event and date, is required.
+- Timing is displayed as comparable context, never as a relationship or cause.
+- No verified candidate means `context_summary=null` and the context section is
+  hidden; candidate absence is not an error.
+- Every public context sentence references a stored verified-candidate ID and
+  every metric sentence references a stored metric ID.
+- Deployment and production-database writes remain outside this extension.
 
 ### 8.10 Data as-of timestamp and disclaimer text
 
