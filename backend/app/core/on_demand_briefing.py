@@ -467,12 +467,25 @@ def build_v7_input_bundle(
             text=json.dumps(
                 {
                     "data_as_of": _as_utc(snapshot.captured_at).isoformat(),
+                    "comparison_window_24h_hours": 24,
+                    "comparison_window_7d_days": 7,
                     "current_value": float(snapshot.price),
+                    "current_value_percent": round(float(snapshot.price) * 100, 6),
                     "change_24h": (
                         float(metric.change_24h) if metric.change_24h is not None else None
                     ),
+                    "change_24h_pp": (
+                        round(float(metric.change_24h) * 100, 6)
+                        if metric.change_24h is not None
+                        else None
+                    ),
                     "change_7d": (
                         float(metric.change_7d) if metric.change_7d is not None else None
+                    ),
+                    "change_7d_pp": (
+                        round(float(metric.change_7d) * 100, 6)
+                        if metric.change_7d is not None
+                        else None
                     ),
                     "confidence_level": metric.confidence_level,
                 },
@@ -743,7 +756,24 @@ def _writer_usage(client: LLMClient, start_index: int) -> dict:
 
 
 def _specific_numbers(text: str) -> set[str]:
-    return set(_NUMBER_PATTERN.findall(text))
+    numbers = set(_NUMBER_PATTERN.findall(text))
+    month_numbers = {
+        "january": "1",
+        "february": "2",
+        "march": "3",
+        "april": "4",
+        "may": "5",
+        "june": "6",
+        "july": "7",
+        "august": "8",
+        "september": "9",
+        "october": "10",
+        "november": "11",
+        "december": "12",
+    }
+    lowered = text.casefold()
+    numbers.update(value for month, value in month_numbers.items() if month in lowered)
+    return numbers
 
 
 def _validate_section_numbers(output: V7WriterOutput, bundle: V7InputBundle) -> bool:

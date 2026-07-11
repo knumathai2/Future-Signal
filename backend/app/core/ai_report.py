@@ -2455,6 +2455,14 @@ or bullet presentation of sections according to the available evidence. Omit
 a category when no supplied evidence supports it. Return only the requested
 JSON object.
 
+Express status and evidence sentences with 판정, 조건 충족 여부, 공식 결정,
+and 관찰 범위 as the status nouns. Prefer describing metric direction. When a
+numeric value helps, copy the supplied comparison window,
+`current_value_percent`, or `change_*_pp` display value exactly and cite the
+metric reference instead of calculating a new value. When a cited definition
+includes an English month name, its ordinary Korean numeric-month rendering is
+supported by that same reference.
+
 Do not invent facts, sources, references, relationships, or future results.
 Do not encourage the reader to take a financial or market action. Treat an
 observed timing overlap as timing unless a supplied source explicitly supports

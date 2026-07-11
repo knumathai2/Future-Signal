@@ -17,10 +17,10 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 
 ## Current State
 
-- **Version**: v0.13.0-v6-baseline-v7-planning
-- **Phase**: V7 on-demand service implemented; public API/UI transition in progress
-- **Next milestone**: Implement TASK-106 explicit generation control and flexible v7 UI states
-- **Overall health**: 🟢 TASK-099~105 are complete. The strict on-demand v7 API is active and the Backend passes 437 tests; Frontend still consumes v6 until TASK-106.
+- **Version**: v0.14.0-v7-evaluation-failed
+- **Phase**: V7 on-demand implementation complete; development acceptance failed
+- **Next milestone**: Audit TASK-109 cleanup candidates without deletion; resolve ISS-016 before any legacy cleanup
+- **Overall health**: 🟡 TASK-099~108 are complete, but v7 produced 0 valid reports across 8 bounded development calls. Evidence/failure gates worked; legacy runtime must remain.
 
 ## Tech Summary
 
@@ -63,6 +63,7 @@ Future Signal/
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | TASK-108 applied migration 004 only to the approved development DB and compared the same two v6/v7 issues. V6 was 2/2 for USD 0.007316; v7 was 0/8 for USD 0.077962. ISS-016 blocks v7 acceptance and legacy deletion. Backend passes 440 tests. |
 | 2026-07-11 | TASK-105 activated POST generate, request polling, and strict v7 fresh/stale/generating/failure/last-good report reads with exact reconstruction. Backend passes 437 tests. |
 | 2026-07-11 | TASK-104 removed report calls from normal collection and added the tested v7 fingerprint/request/lease/context/worker/report service. Full Backend suite passes 428 tests. |
 | 2026-07-11 | TASK-103 added the tested v7 30-day context path, A-D source levels, excerpt-backed claims, and conditional independent verification without a live provider call. |

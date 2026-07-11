@@ -14,9 +14,9 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: Reviewer
-- **Session Goal**: Complete TASK-099 through TASK-109 within the approved v7 boundary; TASK-107 is complete and TASK-108 is next.
-- **Branch**: `review/TASK-107-v7-integration-review`
+- **Agent Role**: Data/AI Implementer / Reviewer
+- **Session Goal**: Complete TASK-099 through TASK-109 within the approved v7 boundary; TASK-108 is complete with v7 unaccepted and TASK-109 audit is next.
+- **Branch**: `data-ai/TASK-108-v7-development-evaluation`
 
 ## Context Read
 
@@ -26,6 +26,16 @@ Harness Version: 1.1
 
 ## Work Completed
 
+- Completed TASK-108 against the same two actual development issues and model
+  as v6. Applied migration 004 only to the approved `ENV=local` development DB.
+- V6's final comparison was 2/2 successful calls for USD 0.007316. V7 made
+  eight bounded calls for USD 0.077962 and stored zero reports: six failed
+  unsupported-number validation and two failed the Korean blocked-word gate.
+- Retained deterministic English-month, percent/percentage-point display, and
+  24-hour/7-day window evidence improvements plus preferred status vocabulary.
+  Full Backend passes 440 tests and Ruff. No further provider call will run.
+- Recorded ISS-016 and did not accept v7. TASK-109 may audit candidates but
+  legacy deletion is not eligible and remains separately approval-gated.
 - Completed TASK-107 integration review across request creation, duplicate
   join, lease/recovery, cache revisions, last-good, strict evidence/source
   reconstruction, wording gates, budget/provider/validation failure, polling,

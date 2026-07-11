@@ -7,12 +7,13 @@ Harness Version: 1.1
 
 # Known Issues — Outlook Signals
 
-_Last updated: 2026-07-10_
+_Last updated: 2026-07-11_
 
 ## Active Bugs
 
 | ID | Severity | Description | Found | Owner |
 |----|----------|-------------|-------|-------|
+| ISS-016 | High | V7 development evaluation produced zero valid reports across eight bounded calls for two issues that each have a successful v6 row. Six attempts failed unsupported-number validation and two failed the Korean blocked-word gate. No invalid report was stored. | 2026-07-11 | Data/AI Implementer |
 
 ## Technical Debt
 
