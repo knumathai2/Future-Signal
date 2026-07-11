@@ -245,7 +245,7 @@ VALID_V4_RESPONSE = {
 
 VALID_V5_RESPONSE = {
     "executive_summary": (
-        "test issue의 문서 조건을 정해진 기준일까지 확인하는 이슈입니다. 저장된 현재 값과 "
+        "Test issue의 문서 조건을 정해진 기준일까지 확인하는 이슈입니다. 저장된 현재 값과 "
         "최근 비교 구간의 움직임을 함께 정리하지만 현실의 결과나 배경을 뜻하지 않습니다."
     ),
     "current_data_interpretation": (
@@ -1023,7 +1023,7 @@ def test_v5_no_candidate_stores_narrative_and_metric_evidence(db):
     assert row.prompt_version == V5_PROMPT_VERSION
     assert row.content["evidence_refs"] == [f"metric:{metric.id}"]
     assert row.content["content"]["evidence_synthesis"] is None
-    assert "test issue" in row.content["content"]["executive_summary"]
+    assert "Test issue" in row.content["content"]["executive_summary"]
 
 
 def test_v5_generic_summary_is_filtered_and_not_stored(db):

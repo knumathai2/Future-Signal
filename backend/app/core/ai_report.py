@@ -1557,6 +1557,12 @@ def run_v5_safety_and_semantic_checks(
         return SafetyFilterResult(False, "unsupported_number")
     if not _v5_is_issue_specific(llm_fields, inputs):
         return SafetyFilterResult(False, "generic_summary", "executive_summary")
+    if llm_fields.executive_summary.count(inputs.title) != 1:
+        return SafetyFilterResult(
+            False,
+            "exact_title_occurrence_mismatch",
+            "executive_summary",
+        )
     if _v5_has_excessive_duplication(llm_fields):
         return SafetyFilterResult(False, "duplicate_narrative_fields")
     if not _scenario_count_matches_completeness(llm_fields, inputs):

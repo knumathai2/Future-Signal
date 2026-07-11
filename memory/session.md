@@ -16,7 +16,7 @@ Harness Version: 1.1
 - **Date**: 2026-07-11
 - **Agent Role**: Data/AI Implementer
 - **Session Goal**: Execute the TASK-082~091 AI-report grounding program in dependency order.
-- **Branch**: `data-ai/TASK-085-evidence-scaled-scenarios`
+- **Branch**: `data-ai/TASK-086-exact-title-validation`
 
 ## Context Read
 
@@ -24,6 +24,11 @@ Harness Version: 1.1
 - TASK-065 backfill, audit, API, wording, browser, and budget criteria
 
 ## Work Completed
+
+- Completed TASK-086: v5 storage and serving now reject an executive summary
+  unless the exact source title occurs once.
+- Added missing, whitespace-modified, and duplicated-title regressions; 181
+  focused Backend tests and Ruff pass.
 
 - Completed TASK-085: deterministic definition completeness now controls a
   one-to-four scenario contract across generation, API, and Frontend parsing.

@@ -140,8 +140,8 @@ def _v4_inputs(*, with_context=True, **overrides) -> V4ReportInputs:
         "metric_id": 123,
         "episode_at": datetime(2026, 7, 11, 8, 0, tzinfo=UTC),
         "data_as_of": datetime(2026, 7, 11, 9, 0, tzinfo=UTC),
-        "title": "Will the documented condition be confirmed?",
-        "description": "Tracks whether the documented condition is confirmed.",
+        "title": "Will JD Vance win the US Presidential Election?",
+        "description": "Tracks whether JD Vance wins the documented election.",
         "category": "technology",
         "outcome_label": "Yes",
         "end_date": datetime(2026, 12, 31, tzinfo=UTC),
@@ -182,7 +182,8 @@ def _v4_fields(**overrides) -> V4LLMFields:
 def _v5_fields(*, with_context=True, **overrides) -> V5LLMFields:
     values = {
         "executive_summary": (
-            "JD Vance의 미국 대통령 선거 당선 조건을 다루는 이슈입니다. 공개 데이터에 "
+            "Will JD Vance win the US Presidential Election? 질문의 문서 조건을 다루는 "
+            "이슈입니다. 공개 데이터에 "
             "저장된 현재 값과 최근 비교 구간의 움직임을 함께 읽되 현실의 결과로 해석하지 않습니다."
         ),
         "current_data_interpretation": (
@@ -1123,3 +1124,34 @@ def test_v5_completeness_levels_are_deterministic():
     assert determine_input_completeness(partial) == "definition_partial"
     assert determine_input_completeness(missing_with_context) == "definition_missing_with_context"
     assert determine_input_completeness(missing_without_context) == "definition_missing_no_context"
+
+
+@pytest.mark.parametrize(
+    "executive_summary",
+    [
+            (
+                "JD Vance 관련 선거 문서 조건을 살펴보는 이슈입니다. 공개 데이터 값은 "
+                "현실의 결과를 뜻하지 않으며 저장된 근거 범위에서만 읽습니다. 세부 내용은 "
+                "입력에 포함된 문서 조건을 벗어나지 않습니다."
+            ),
+        (
+            "Will  JD Vance win the US Presidential Election? 질문의 문서 조건을 살펴봅니다. "
+            "공개 데이터 값은 현실의 결과를 뜻하지 않습니다."
+        ),
+        (
+            "Will JD Vance win the US Presidential Election? 질문과 "
+            "Will JD Vance win the US Presidential Election? 질문의 문서 조건을 함께 살펴봅니다. "
+            "공개 데이터 값은 현실의 결과를 뜻하지 않습니다."
+        ),
+    ],
+)
+def test_v5_requires_exact_market_title_once(executive_summary):
+    inputs = _v4_inputs(with_context=False)
+    fields = _v5_fields(with_context=False, executive_summary=executive_summary)
+    content = assemble_v5_report_content(inputs, fields)
+    payload = build_v5_stored_payload(inputs, content)
+
+    result = run_v5_safety_and_semantic_checks(payload, inputs, fields)
+
+    assert result.rule == "exact_title_occurrence_mismatch"
+    assert result.field == "executive_summary"

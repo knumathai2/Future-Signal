@@ -454,7 +454,8 @@ def seed_v5_report(
     )
     fields = V5LLMFields(
         executive_summary=(
-            "test issue가 정해진 기준일까지 문서 조건을 충족하는지 다루는 이슈입니다. "
+            "Will the test issue resolve Yes? 질문이 정해진 기준일까지 문서 조건을 "
+            "충족하는지 다루는 이슈입니다. "
             "현재 공개 데이터와 최근 움직임은 현실의 결과를 뜻하지 않습니다."
         ),
         current_data_interpretation=(
