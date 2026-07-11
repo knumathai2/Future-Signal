@@ -1282,6 +1282,11 @@ deadlines, exceptions, and recognized source criteria. market.description is
 display copy and is not a resolution rule. When resolution_rules is null or its
 condition_text is null, do not introduce a procedure, institution, schedule, or
 condition from general knowledge.
+Every conditional scenario, factor, and watch item must include exactly one
+basis value: market_definition, observed_data, verified_context, or
+data_limitation. Use market_definition only when condition_text exists, use
+verified_context only when verified candidates exist, and use data_limitation
+only when observed_data.missing_fields is non-empty.
 Scenario limits are binding: definition_complete allows one to four,
 definition_partial allows one to three, definition_missing_with_context allows
 one or two, and definition_missing_no_context requires exactly one limitation
@@ -1303,6 +1308,9 @@ class V5ConditionalScenario(BaseModel):
 
     title: str = Field(min_length=2, max_length=100)
     narrative: str = Field(min_length=30, max_length=900)
+    basis: Literal[
+        "market_definition", "observed_data", "verified_context", "data_limitation"
+    ]
 
     @field_validator("narrative")
     @classmethod
@@ -1319,6 +1327,9 @@ class V5BriefingItem(BaseModel):
 
     title: str = Field(min_length=2, max_length=120)
     explanation: str = Field(min_length=20, max_length=700)
+    basis: Literal[
+        "market_definition", "observed_data", "verified_context", "data_limitation"
+    ]
 
     @field_validator("explanation")
     @classmethod
@@ -1433,6 +1444,23 @@ def _scenario_count_matches_completeness(
         "definition_missing_no_context": (1, 1),
     }[determine_input_completeness(inputs)]
     return minimum <= count <= maximum
+
+
+def _basis_values_match_available_evidence(
+    fields: V5LLMFields, inputs: V4ReportInputs
+) -> bool:
+    basis_values = [item.basis for item in fields.conditional_scenarios]
+    basis_values.extend(item.basis for item in fields.factors_to_check)
+    basis_values.extend(item.basis for item in fields.signals_to_watch)
+    if "market_definition" in basis_values and (
+        inputs.resolution_rules is None or not inputs.resolution_rules.condition_text
+    ):
+        return False
+    if "verified_context" in basis_values and not inputs.context_candidates:
+        return False
+    if "data_limitation" in basis_values and not build_v5_missing_fields(inputs):
+        return False
+    return True
 
 
 def build_v5_prompt(inputs: V4ReportInputs) -> tuple[str, str]:
@@ -1683,6 +1711,8 @@ def run_v5_safety_and_semantic_checks(
         return SafetyFilterResult(False, "duplicate_narrative_fields")
     if not _scenario_count_matches_completeness(llm_fields, inputs):
         return SafetyFilterResult(False, "scenario_count_evidence_mismatch")
+    if not _basis_values_match_available_evidence(llm_fields, inputs):
+        return SafetyFilterResult(False, "basis_evidence_mismatch")
     if bool(inputs.context_candidates) != (llm_fields.evidence_synthesis is not None):
         return SafetyFilterResult(False, "evidence_synthesis_presence_mismatch")
     expected_refs = [f"metric:{inputs.metric_id}"] + [

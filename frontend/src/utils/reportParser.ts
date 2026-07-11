@@ -138,12 +138,18 @@ function validateContent(raw: unknown): IssueReportContent | null {
     const value = record[key];
     if (!Array.isArray(value) || value.length < min || value.length > max) return null;
     const parsed = value.map((item) => {
-      if (!isRecord(item) || !hasExactKeys(item, new Set(["title", bodyKey]))) return null;
+      if (!isRecord(item) || !hasExactKeys(item, new Set(["title", bodyKey, "basis"]))) return null;
       if (typeof item.title !== "string" || typeof item[bodyKey] !== "string") return null;
+      if (
+        item.basis !== "market_definition" &&
+        item.basis !== "observed_data" &&
+        item.basis !== "verified_context" &&
+        item.basis !== "data_limitation"
+      ) return null;
       const title = item.title.trim();
       const body = item[bodyKey].trim();
       if (title.length < 2 || body.length < 20 || sentenceCount(body) > 5) return null;
-      return { title, [bodyKey]: body };
+      return { title, [bodyKey]: body, basis: item.basis };
     });
     return parsed.some((item) => item === null) ? null : parsed;
   }

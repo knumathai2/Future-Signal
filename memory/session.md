@@ -16,7 +16,7 @@ Harness Version: 1.1
 - **Date**: 2026-07-11
 - **Agent Role**: Data/AI Implementer
 - **Session Goal**: Execute the TASK-082~091 AI-report grounding program in dependency order.
-- **Branch**: `data-ai/TASK-089-observed-data-summary`
+- **Branch**: `backend/TASK-090-report-basis-contract`
 
 ## Context Read
 
@@ -24,6 +24,13 @@ Harness Version: 1.1
 - TASK-065 backfill, audit, API, wording, browser, and budget criteria
 
 ## Work Completed
+
+- Completed TASK-090: every scenario/check/watch item now has a strict basis
+  tied to actually available market, observed, verified, or limitation evidence.
+- Backend generation/read validation and Frontend parser reject invalid basis
+  shapes; the UI renders the basis label per item.
+- Verified Backend, Ruff, Frontend typecheck/parser/lint/build; only the known
+  bundle-size warning remains.
 
 - Completed TASK-089: v5 observed data now contains activity, liquidity,
   deterministic seven-day history summary, and explicit missing fields.

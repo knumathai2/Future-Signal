@@ -11,17 +11,17 @@ const BASE_CONTENT: IssueReportContent = {
   current_data_interpretation:
     "데이터 기준 시각에 공개 예측시장 참여자 데이터에 반영된 기대값은 43.2%입니다. 관찰된 비교값은 24시간 변화 -6.1퍼센트포인트, 7일 변화 -9.4퍼센트포인트입니다.",
   conditional_scenarios: [
-    { title: "조건 확인", narrative: "만약 정해진 기준일까지 문서 조건이 확인된다면 해당 판정 문구와 함께 읽습니다." },
-    { title: "부분 확인", narrative: "만약 관련 자료가 공개되지만 조건 충족이 불분명한 경우 후속 문서를 확인합니다." },
-    { title: "조건 미확인", narrative: "만약 기준일까지 문서 조건이 확인되지 않는다면 미확인 상태로 구분합니다." },
+    { title: "조건 확인", narrative: "만약 정해진 기준일까지 문서 조건이 확인된다면 해당 판정 문구와 함께 읽습니다.", basis: "market_definition" },
+    { title: "부분 확인", narrative: "만약 관련 자료가 공개되지만 조건 충족이 불분명한 경우 후속 문서를 확인합니다.", basis: "market_definition" },
+    { title: "조건 미확인", narrative: "만약 기준일까지 문서 조건이 확인되지 않는다면 미확인 상태로 구분합니다.", basis: "market_definition" },
   ],
   factors_to_check: [
-    { title: "판정 문서", explanation: "이슈의 조건을 명시한 공개 문서와 기준 시각을 확인합니다." },
-    { title: "데이터 비교", explanation: "현재 값과 24시간·7일 비교값을 같은 기준에서 확인합니다." },
+    { title: "판정 문서", explanation: "이슈의 조건을 명시한 공개 문서와 기준 시각을 확인합니다.", basis: "market_definition" },
+    { title: "데이터 비교", explanation: "현재 값과 24시간·7일 비교값을 같은 기준에서 확인합니다.", basis: "observed_data" },
   ],
   signals_to_watch: [
-    { title: "공식 자료", explanation: "조건과 직접 연결된 공식 문서의 공개 여부를 관찰합니다." },
-    { title: "후속 갱신", explanation: "공개 데이터의 이후 갱신 시각과 값 변화를 별도로 확인합니다." },
+    { title: "공식 자료", explanation: "조건과 직접 연결된 공식 문서의 공개 여부를 관찰합니다.", basis: "market_definition" },
+    { title: "후속 갱신", explanation: "공개 데이터의 이후 갱신 시각과 값 변화를 별도로 확인합니다.", basis: "observed_data" },
   ],
   evidence_synthesis: null,
   relationship_boundary:

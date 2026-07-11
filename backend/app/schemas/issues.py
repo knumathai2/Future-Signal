@@ -95,6 +95,9 @@ class ConditionalScenarioOut(BaseModel):
 
     title: str = Field(strict=True, min_length=2, max_length=100)
     narrative: str = Field(strict=True, min_length=30, max_length=900)
+    basis: Literal[
+        "market_definition", "observed_data", "verified_context", "data_limitation"
+    ]
 
 
 class BriefingItemOut(BaseModel):
@@ -102,6 +105,9 @@ class BriefingItemOut(BaseModel):
 
     title: str = Field(strict=True, min_length=2, max_length=120)
     explanation: str = Field(strict=True, min_length=20, max_length=700)
+    basis: Literal[
+        "market_definition", "observed_data", "verified_context", "data_limitation"
+    ]
 
 
 class ReportContent(BaseModel):

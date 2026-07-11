@@ -195,6 +195,7 @@ def _v5_fields(*, with_context=True, **overrides) -> V5LLMFields:
         "conditional_scenarios": [
             {
                 "title": "조건 확인",
+                "basis": "market_definition",
                 "narrative": (
                     "만약 JD Vance의 당선 조건이 공식 선거 문서에서 확인된다면 "
                     "해당 판정 조건과 함께 읽습니다."
@@ -202,6 +203,7 @@ def _v5_fields(*, with_context=True, **overrides) -> V5LLMFields:
             },
             {
                 "title": "부분 확인",
+                "basis": "market_definition",
                 "narrative": (
                     "만약 JD Vance 관련 문서가 공개되지만 당선 조건을 충족하는지 "
                     "불분명한 경우 추가 문서를 확인합니다."
@@ -209,6 +211,7 @@ def _v5_fields(*, with_context=True, **overrides) -> V5LLMFields:
             },
             {
                 "title": "조건 미확인",
+                "basis": "market_definition",
                 "narrative": (
                     "만약 기준일까지 JD Vance의 당선 조건이 공식 문서에서 "
                     "확인되지 않는다면 미확인 상태로 구분합니다."
@@ -218,20 +221,24 @@ def _v5_fields(*, with_context=True, **overrides) -> V5LLMFields:
         "factors_to_check": [
             {
                 "title": "판정 문서",
+                "basis": "market_definition",
                 "explanation": "JD Vance와 선거 결과를 명시한 공식 문서의 조건을 확인합니다.",
             },
             {
                 "title": "기준 시각",
+                "basis": "market_definition",
                 "explanation": "문서가 이 이슈의 정해진 기준일 안에 공개됐는지 확인합니다.",
             },
         ],
         "signals_to_watch": [
             {
                 "title": "공식 문서 공개",
+                "basis": "market_definition",
                 "explanation": "JD Vance 관련 공식 선거 문서의 공개 여부를 관찰합니다.",
             },
             {
                 "title": "데이터 갱신",
+                "basis": "observed_data",
                 "explanation": "공개 예측시장 데이터의 이후 갱신 시각과 값을 별도로 확인합니다.",
             },
         ],
@@ -981,10 +988,12 @@ def test_v5_rejects_generic_or_duplicated_narrative():
         factors_to_check=[
             {
                 "title": "문서 확인",
+                "basis": "market_definition",
                 "explanation": "정해진 문서 조건을 이후 공개 자료에서 확인합니다.",
             },
             {
                 "title": "시각 확인",
+                "basis": "market_definition",
                 "explanation": "정해진 기준일 안의 공개 여부를 함께 확인합니다.",
             },
         ],
@@ -1003,17 +1012,27 @@ def test_v5_rejects_generic_or_duplicated_narrative():
     duplicated = _v5_fields(
         with_context=False,
         factors_to_check=[
-            {"title": "공식 문서", "explanation": duplicate_text},
+            {
+                "title": "공식 문서",
+                "explanation": duplicate_text,
+                "basis": "market_definition",
+            },
             {
                 "title": "판정 조건",
                 "explanation": "JD Vance 선거 판정 조건을 공식 기록에서 확인합니다.",
+                "basis": "market_definition",
             },
         ],
         signals_to_watch=[
-            {"title": "공식 발표", "explanation": duplicate_text},
+            {
+                "title": "공식 발표",
+                "explanation": duplicate_text,
+                "basis": "market_definition",
+            },
             {
                 "title": "데이터 갱신",
                 "explanation": "JD Vance 관련 공개 데이터의 갱신을 확인합니다.",
+                "basis": "observed_data",
             },
         ],
     )
@@ -1084,6 +1103,7 @@ def test_v5_missing_definition_requires_one_limitation_scenario():
     one_scenario = [
         {
             "title": "판정 정의 부족",
+            "basis": "data_limitation",
             "narrative": (
                 "만약 현재 제공된 자료만 사용한다면 세부 판정 조건이 없어 "
                 "구체적인 절차 경로를 구분할 수 없습니다."
@@ -1097,6 +1117,30 @@ def test_v5_missing_definition_requires_one_limitation_scenario():
             "이슈입니다. 세부 판정 정의가 없어 현실의 결과를 뜻하지 않습니다."
         ),
         conditional_scenarios=one_scenario,
+        factors_to_check=[
+            {
+                "title": "정의 결손",
+                "explanation": "세부 판정 정의가 입력에 없어 구체적 절차를 구분할 수 없습니다.",
+                "basis": "data_limitation",
+            },
+            {
+                "title": "현재 관측값",
+                "explanation": "저장된 현재 값과 데이터 기준 시각만 분리해 확인합니다.",
+                "basis": "observed_data",
+            },
+        ],
+        signals_to_watch=[
+            {
+                "title": "정의 자료",
+                "explanation": "세부 판정 정의가 이후 입력에 포함되는지 확인합니다.",
+                "basis": "data_limitation",
+            },
+            {
+                "title": "데이터 갱신",
+                "explanation": "공개 예측시장 데이터의 이후 갱신 시각을 확인합니다.",
+                "basis": "observed_data",
+            },
+        ],
     )
     content = assemble_v5_report_content(inputs, fields)
     payload = build_v5_stored_payload(inputs, content)
@@ -1107,6 +1151,8 @@ def test_v5_missing_definition_requires_one_limitation_scenario():
     too_many = _v5_fields(
         with_context=False,
         executive_summary=fields.executive_summary,
+        factors_to_check=fields.factors_to_check,
+        signals_to_watch=fields.signals_to_watch,
     )
     too_many_content = assemble_v5_report_content(inputs, too_many)
     too_many_payload = build_v5_stored_payload(inputs, too_many_content)
@@ -1224,3 +1270,23 @@ def test_v5_requires_exact_market_title_once(executive_summary):
 
     assert result.rule == "exact_title_occurrence_mismatch"
     assert result.field == "executive_summary"
+
+
+def test_v5_basis_must_match_available_evidence():
+    inputs = _v4_inputs(with_context=False)
+    fields = _v5_fields(with_context=False)
+    invalid = fields.model_copy(
+        update={
+            "conditional_scenarios": [
+                fields.conditional_scenarios[0].model_copy(
+                    update={"basis": "verified_context"}
+                )
+            ]
+        }
+    )
+    content = assemble_v5_report_content(inputs, invalid)
+    payload = build_v5_stored_payload(inputs, content)
+
+    result = run_v5_safety_and_semantic_checks(payload, inputs, invalid)
+
+    assert result.rule == "basis_evidence_mismatch"

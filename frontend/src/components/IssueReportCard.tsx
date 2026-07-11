@@ -3,6 +3,7 @@ import type {
   IssueReportContextCandidate,
   IssueReportLoadState,
   IssueReportSuccessResponse,
+  ReportBasis,
 } from "../types/issue";
 import { formatDataTimestamp, formatShortDate } from "../utils/format";
 
@@ -166,17 +167,32 @@ function EvidenceSection({
 function BriefingList({
   items,
 }: {
-  items: Array<{ title: string; explanation: string }>;
+  items: Array<{ title: string; explanation: string; basis: ReportBasis }>;
 }) {
   return (
     <ul className="space-y-3">
       {items.map((item) => (
         <li key={`${item.title}-${item.explanation}`} className="rounded-md bg-paper px-3 py-3">
           <h4 className="font-bold text-ink">{item.title}</h4>
+          <BasisLabel basis={item.basis} />
           <p className="mt-1">{item.explanation}</p>
         </li>
       ))}
     </ul>
+  );
+}
+
+function BasisLabel({ basis }: { basis: ReportBasis }) {
+  const labels: Record<ReportBasis, string> = {
+    market_definition: "시장 판정 정의",
+    observed_data: "관측 데이터",
+    verified_context: "검증된 공개 자료",
+    data_limitation: "데이터 한계",
+  };
+  return (
+    <span className="mt-1 inline-flex rounded-full border border-line px-2 py-0.5 text-[10px] font-semibold text-ink-faint">
+      근거 범위 · {labels[basis]}
+    </span>
   );
 }
 
@@ -197,6 +213,7 @@ function AiIssueBriefing({ report }: { report: IssueReportSuccessResponse }) {
           {content.conditional_scenarios.map((scenario, index) => (
             <li key={`${scenario.title}-${scenario.narrative}`} className="rounded-md bg-paper px-3 py-3">
               <h4 className="font-bold text-ink">{index + 1}. {scenario.title}</h4>
+              <BasisLabel basis={scenario.basis} />
               <p className="mt-1">{scenario.narrative}</p>
             </li>
           ))}

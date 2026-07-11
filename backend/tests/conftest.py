@@ -465,36 +465,43 @@ def seed_v5_report(
         conditional_scenarios=[
             {
                 "title": "조건 확인",
+                "basis": "market_definition",
                 "narrative": (
                     "만약 test issue 조건이 문서에서 확인된다면 판정 조건과 함께 읽습니다."
                 ),
             },
             {
                 "title": "부분 확인",
+                "basis": "market_definition",
                 "narrative": "만약 test issue 자료가 불완전한 경우 후속 문서를 추가로 확인합니다.",
             },
             {
                 "title": "조건 미확인",
+                "basis": "market_definition",
                 "narrative": "만약 test issue 조건이 확인되지 않는다면 미확인 상태로 구분합니다.",
             },
         ],
         factors_to_check=[
             {
                 "title": "판정 문서",
+                "basis": "market_definition",
                 "explanation": "test issue의 조건이 적힌 공식 문서를 확인합니다.",
             },
             {
                 "title": "기준 시각",
+                "basis": "market_definition",
                 "explanation": "자료가 정해진 기준일 안에 공개됐는지 확인합니다.",
             },
         ],
         signals_to_watch=[
             {
                 "title": "공식 자료",
+                "basis": "market_definition",
                 "explanation": "test issue 관련 공식 자료의 공개 여부를 관찰합니다.",
             },
             {
                 "title": "데이터 갱신",
+                "basis": "observed_data",
                 "explanation": "공개 예측시장 데이터의 이후 갱신을 확인합니다.",
             },
         ],
