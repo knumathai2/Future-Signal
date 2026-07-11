@@ -21,11 +21,23 @@ const { parseReportResponse } = parserModule.exports;
 
 const candidateId = "66666666-6666-4666-8666-666666666666";
 const validContent = {
-  issue_overview: "가".repeat(30),
-  observed_change: "나".repeat(50),
-  context_summary: "다".repeat(40),
+  executive_summary: "가".repeat(80),
+  current_data_interpretation: "나".repeat(50),
+  conditional_scenarios: [
+    { title: "조건 하나", narrative: "다".repeat(30) },
+    { title: "조건 둘", narrative: "라".repeat(30) },
+    { title: "조건 셋", narrative: "마".repeat(30) },
+  ],
+  factors_to_check: [
+    { title: "요인 하나", explanation: "바".repeat(20) },
+    { title: "요인 둘", explanation: "사".repeat(20) },
+  ],
+  signals_to_watch: [
+    { title: "자료 하나", explanation: "아".repeat(20) },
+    { title: "자료 둘", explanation: "자".repeat(20) },
+  ],
+  evidence_synthesis: "차".repeat(50),
   relationship_boundary: "라".repeat(50),
-  what_to_check: "마".repeat(30),
   data_limitations: "바".repeat(50),
   caution_note: "사".repeat(120),
 };
@@ -49,7 +61,7 @@ function makePayload(overrides = {}) {
   return {
     id: "77777777-7777-4777-8777-777777777777",
     status: "success",
-    report_version: "v4",
+    report_version: "v5",
     generated_at: "2026-07-11T09:05:00Z",
     data_as_of: "2026-07-11T09:00:00Z",
     episode_at: "2026-07-11T09:00:00Z",
@@ -62,7 +74,7 @@ function makePayload(overrides = {}) {
 
 const success = parseReportResponse(makePayload());
 assert.equal(success.status, "success");
-assert.equal(success.report.report_version, "v4");
+assert.equal(success.report.report_version, "v5");
 assert.equal(
   success.report.context_candidates[0].sources[0].domain,
   "example.gov",
@@ -70,13 +82,13 @@ assert.equal(
 
 const noCandidate = parseReportResponse(
   makePayload({
-    content: { ...validContent, context_summary: null },
+    content: { ...validContent, evidence_synthesis: null },
     evidence_refs: ["metric:1"],
     context_candidates: [],
   }),
 );
 assert.equal(noCandidate.status, "success");
-assert.equal(noCandidate.report.content.context_summary, null);
+assert.equal(noCandidate.report.content.evidence_synthesis, null);
 
 assert.equal(
   parseReportResponse({ status: "not_yet_generated" }).status,
@@ -90,7 +102,7 @@ for (const invalidPayload of [
   makePayload({ evidence_refs: ["metric:1"] }),
   makePayload({ evidence_refs: ["metric:2", "candidate:missing"] }),
   makePayload({ context_candidates: [] }),
-  makePayload({ content: { ...validContent, context_summary: null } }),
+  makePayload({ content: { ...validContent, evidence_synthesis: null } }),
   makePayload({ content: { ...validContent, extra: "not allowed" } }),
   makePayload({ unexpected: true }),
   makePayload({
@@ -112,7 +124,7 @@ for (const invalidPayload of [
   makePayload({
     content: {
       ...validContent,
-      issue_overview:
+      executive_summary:
         "첫 문장입니다. 둘째 문장입니다. 셋째 문장입니다. " +
         "넷째 문장입니다. 다섯째 문장입니다. 여섯째 문장입니다.",
     },
@@ -121,4 +133,4 @@ for (const invalidPayload of [
   assert.equal(parseReportResponse(invalidPayload).status, "error");
 }
 
-console.log("v4 report parser regression checks passed");
+console.log("v5 report parser regression checks passed");

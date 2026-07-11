@@ -1,4 +1,4 @@
-/** Strict runtime parser for the ADR-038/ADR-044 v4 evidence bundle. */
+/** Strict runtime parser for the ADR-048 v5 evidence bundle. */
 import type {
   IssueReportContent,
   IssueReportContextCandidate,
@@ -10,21 +10,22 @@ import type {
 type LengthBounds = { min: number; max: number };
 
 const CONTENT_KEYS: ReadonlySet<keyof IssueReportContent> = new Set([
-  "issue_overview",
-  "observed_change",
-  "context_summary",
+  "executive_summary",
+  "current_data_interpretation",
+  "conditional_scenarios",
+  "factors_to_check",
+  "signals_to_watch",
+  "evidence_synthesis",
   "relationship_boundary",
-  "what_to_check",
   "data_limitations",
   "caution_note",
 ]);
 
-const CONTENT_LENGTH_BOUNDS: Record<keyof IssueReportContent, LengthBounds> = {
-  issue_overview: { min: 30, max: 600 },
-  observed_change: { min: 50, max: 900 },
-  context_summary: { min: 40, max: 1800 },
+const CONTENT_LENGTH_BOUNDS: Record<string, LengthBounds> = {
+  executive_summary: { min: 80, max: 1200 },
+  current_data_interpretation: { min: 50, max: 1200 },
+  evidence_synthesis: { min: 50, max: 1800 },
   relationship_boundary: { min: 50, max: 500 },
-  what_to_check: { min: 30, max: 600 },
   data_limitations: { min: 50, max: 900 },
   caution_note: { min: 120, max: 700 },
 };
@@ -109,15 +110,12 @@ function validateContent(raw: unknown): IssueReportContent | null {
   if (!isRecord(raw) || !hasExactKeys(raw, CONTENT_KEYS)) {
     return null;
   }
-  const normalized: Partial<IssueReportContent> = {};
-  for (const key of CONTENT_KEYS) {
-    const value = raw[key];
-    if (key === "context_summary" && value === null) {
-      normalized.context_summary = null;
-      continue;
-    }
+  const record = raw;
+  function text(key: string, nullable = false): string | null | undefined {
+    const value = record[key];
+    if (nullable && value === null) return null;
     if (typeof value !== "string") {
-      return null;
+      return undefined;
     }
     const trimmed = value.trim();
     const bounds = CONTENT_LENGTH_BOUNDS[key];
@@ -127,11 +125,55 @@ function validateContent(raw: unknown): IssueReportContent | null {
       length > bounds.max ||
       sentenceCount(trimmed) > 5
     ) {
-      return null;
+      return undefined;
     }
-    normalized[key] = trimmed;
+    return trimmed;
   }
-  return normalized as IssueReportContent;
+  function items(
+    key: string,
+    bodyKey: "narrative" | "explanation",
+    min: number,
+    max: number,
+  ) {
+    const value = record[key];
+    if (!Array.isArray(value) || value.length < min || value.length > max) return null;
+    const parsed = value.map((item) => {
+      if (!isRecord(item) || !hasExactKeys(item, new Set(["title", bodyKey]))) return null;
+      if (typeof item.title !== "string" || typeof item[bodyKey] !== "string") return null;
+      const title = item.title.trim();
+      const body = item[bodyKey].trim();
+      if (title.length < 2 || body.length < 20 || sentenceCount(body) > 5) return null;
+      return { title, [bodyKey]: body };
+    });
+    return parsed.some((item) => item === null) ? null : parsed;
+  }
+  const executiveSummary = text("executive_summary");
+  const currentDataInterpretation = text("current_data_interpretation");
+  const evidenceSynthesis = text("evidence_synthesis", true);
+  const relationshipBoundary = text("relationship_boundary");
+  const dataLimitations = text("data_limitations");
+  const cautionNote = text("caution_note");
+  const conditionalScenarios = items("conditional_scenarios", "narrative", 3, 4);
+  const factorsToCheck = items("factors_to_check", "explanation", 2, 6);
+  const signalsToWatch = items("signals_to_watch", "explanation", 2, 6);
+  if (
+    typeof executiveSummary !== "string" || typeof currentDataInterpretation !== "string" ||
+    evidenceSynthesis === undefined || relationshipBoundary === undefined ||
+    typeof relationshipBoundary !== "string" || typeof dataLimitations !== "string" ||
+    typeof cautionNote !== "string" ||
+    conditionalScenarios === null || factorsToCheck === null || signalsToWatch === null
+  ) return null;
+  return {
+    executive_summary: executiveSummary,
+    current_data_interpretation: currentDataInterpretation,
+    conditional_scenarios: conditionalScenarios as IssueReportContent["conditional_scenarios"],
+    factors_to_check: factorsToCheck as IssueReportContent["factors_to_check"],
+    signals_to_watch: signalsToWatch as IssueReportContent["signals_to_watch"],
+    evidence_synthesis: evidenceSynthesis,
+    relationship_boundary: relationshipBoundary,
+    data_limitations: dataLimitations,
+    caution_note: cautionNote,
+  };
 }
 
 function validateSource(
@@ -235,7 +277,7 @@ export function parseReportResponse(raw: unknown): IssueReportLoadState {
   }
   if (
     raw.status !== "success" ||
-    raw.report_version !== "v4" ||
+    raw.report_version !== "v5" ||
     !hasExactKeys(raw, SUCCESS_KEYS) ||
     typeof raw.id !== "string" ||
     !UUID_PATTERN.test(raw.id) ||
@@ -286,7 +328,7 @@ export function parseReportResponse(raw: unknown): IssueReportLoadState {
     !raw.evidence_refs.every(
       (reference, index) => reference === expectedRefs[index],
     ) ||
-    (content.context_summary === null) !== (typedCandidates.length === 0)
+    (content.evidence_synthesis === null) !== (typedCandidates.length === 0)
   ) {
     return { status: "error" };
   }
@@ -294,7 +336,7 @@ export function parseReportResponse(raw: unknown): IssueReportLoadState {
   const report: IssueReportSuccessResponse = {
     id: raw.id,
     status: "success",
-    report_version: "v4",
+    report_version: "v5",
     generated_at: raw.generated_at,
     data_as_of: raw.data_as_of,
     episode_at: raw.episode_at,

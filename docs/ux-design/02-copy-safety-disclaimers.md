@@ -130,10 +130,11 @@ Rule of thumb: **short-form disclaimer everywhere a number or signal appears; lo
 
 ### 8.1 V5 AI summary and source-link presentation (ADR-048)
 
-The detail screen visually separates `AI 이슈 요약` from deterministic metrics
-and caution copy. The AI area starts with a concise executive summary, then
-shows issue context, change interpretation, verified-evidence synthesis when
-available, open questions, and concrete materials or data updates to check.
+The detail screen visually separates `AI 이슈 브리핑` from deterministic
+metrics and caution copy. The AI area shows a concise executive summary,
+current-data interpretation, three to four conditional scenarios, factors to
+check, observable materials/data updates, and verified-evidence synthesis when
+available.
 
 Verified source cards show source title, organization/domain, publication time,
 source type, a neutral evidence summary, and a safe external action such as

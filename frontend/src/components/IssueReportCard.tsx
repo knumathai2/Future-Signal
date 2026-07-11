@@ -68,6 +68,10 @@ function sourceTypeLabel(sourceType: "official" | "independent_secondary") {
   return sourceType === "official" ? "공식 출처" : "독립 보조 출처";
 }
 
+function sourceActionLabel(sourceType: "official" | "independent_secondary") {
+  return sourceType === "official" ? "공식 자료 확인" : "기사 원문 확인";
+}
+
 function ContextCandidateCard({
   candidate,
 }: {
@@ -119,7 +123,7 @@ function ContextCandidateCard({
               rel="noopener noreferrer"
               className="mt-1 inline-flex min-h-11 max-w-full items-center break-words text-sm font-bold leading-5 text-accent hover:underline"
             >
-              {source.title}
+              {sourceActionLabel(source.source_type)} · {source.title}
               <span className="ml-1" aria-hidden="true">
                 ↗
               </span>
@@ -159,44 +163,83 @@ function EvidenceSection({
   );
 }
 
-function ChangeEpisode({ report }: { report: IssueReportSuccessResponse }) {
+function BriefingList({
+  items,
+}: {
+  items: Array<{ title: string; explanation: string }>;
+}) {
+  return (
+    <ul className="space-y-3">
+      {items.map((item) => (
+        <li key={`${item.title}-${item.explanation}`} className="rounded-md bg-paper px-3 py-3">
+          <h4 className="font-bold text-ink">{item.title}</h4>
+          <p className="mt-1">{item.explanation}</p>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function AiIssueBriefing({ report }: { report: IssueReportSuccessResponse }) {
   const { content, context_candidates: candidates } = report;
   return (
     <div className="mt-5 space-y-5" data-episode-at={report.episode_at}>
-      <EvidenceSection label="이슈 개요" tone="soft">
-        <p>{content.issue_overview}</p>
+      <EvidenceSection label="핵심 요약" tone="soft">
+        <p>{content.executive_summary}</p>
       </EvidenceSection>
 
-      <EvidenceSection label="관찰된 변화">
-        <p className="font-semibold text-ink">{content.observed_change}</p>
+      <EvidenceSection label="현재 데이터 해석">
+        <p className="font-semibold text-ink">{content.current_data_interpretation}</p>
       </EvidenceSection>
 
-      {candidates.length > 0 && content.context_summary !== null ? (
-        <EvidenceSection label="같은 검토 구간의 공개 정보">
-          <p>{content.context_summary}</p>
+      <EvidenceSection label="가능한 조건부 시나리오">
+        <ol className="space-y-3">
+          {content.conditional_scenarios.map((scenario, index) => (
+            <li key={`${scenario.title}-${scenario.narrative}`} className="rounded-md bg-paper px-3 py-3">
+              <h4 className="font-bold text-ink">{index + 1}. {scenario.title}</h4>
+              <p className="mt-1">{scenario.narrative}</p>
+            </li>
+          ))}
+        </ol>
+      </EvidenceSection>
+
+      <div className="grid gap-5 md:grid-cols-2">
+        <EvidenceSection label="기대값과 함께 확인할 주요 요인">
+          <BriefingList items={content.factors_to_check} />
+        </EvidenceSection>
+        <EvidenceSection label="앞으로 확인할 자료와 변화">
+          <BriefingList items={content.signals_to_watch} />
+        </EvidenceSection>
+      </div>
+
+      {candidates.length > 0 && content.evidence_synthesis !== null ? (
+        <EvidenceSection label="검증된 기사·공식자료">
+          <p>{content.evidence_synthesis}</p>
           <div className="mt-4 space-y-3">
             {candidates.map((candidate) => (
               <ContextCandidateCard key={candidate.id} candidate={candidate} />
             ))}
           </div>
         </EvidenceSection>
-      ) : null}
+      ) : (
+        <EvidenceSection label="검증된 기사·공식자료">
+          <div className="rounded-md border border-dashed border-line px-3 py-3">
+            이번 검토 구간에는 공개 기준을 통과한 자료가 없습니다. 관찰된 수치
+            움직임의 배경은 확인되지 않았습니다.
+          </div>
+        </EvidenceSection>
+      )}
 
       <EvidenceSection label="관계 해석 범위" tone="soft">
         <p>{content.relationship_boundary}</p>
       </EvidenceSection>
 
-      <div className="grid gap-5 md:grid-cols-2">
-        <EvidenceSection label="추가로 확인할 내용">
-          <p>{content.what_to_check}</p>
-        </EvidenceSection>
-        <EvidenceSection label="데이터 한계">
-          <p>{content.data_limitations}</p>
-        </EvidenceSection>
-      </div>
+      <EvidenceSection label="데이터 한계">
+        <p>{content.data_limitations}</p>
+      </EvidenceSection>
 
       <div className="rounded-lg border border-line bg-accent-soft px-4 py-4">
-        <h3 className="text-xs font-bold text-ink">해석 주의</h3>
+        <h3 className="text-xs font-bold text-ink">해석상 주의사항</h3>
         <p className="mt-2 break-words text-sm leading-7 text-ink-soft">
           {content.caution_note}
         </p>
@@ -216,7 +259,7 @@ function ReportBody({
     return <LoadingBody />;
   }
   if (reportState.status === "success") {
-    return <ChangeEpisode report={reportState.report} />;
+    return <AiIssueBriefing report={reportState.report} />;
   }
   if (reportState.status === "not_yet_generated") {
     return <NotYetGeneratedBody />;
@@ -240,9 +283,9 @@ export function IssueReportCard({
     <section className="mt-10 rounded-lg border border-line bg-card p-4 sm:p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-bold text-ink">변화 에피소드</h2>
+          <h2 className="text-lg font-bold text-ink">AI 이슈 브리핑</h2>
           <p className="mt-1 text-[11px] font-semibold text-ink-faint">
-            저장된 수치와 검증된 공개 정보를 같은 구간에서 확인합니다
+            저장 근거 안에서 현재 데이터, 조건부 시나리오, 확인 자료를 정리합니다
           </p>
         </div>
         <div className="flex flex-col items-start gap-1.5 sm:items-end">

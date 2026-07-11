@@ -14,9 +14,9 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: Backend Implementer → Frontend Implementer
+- **Agent Role**: Frontend Implementer → Reviewer + Data/AI Implementer
 - **Session Goal**: Activate and implement the approved TASK-075~081 narrative-summary/source-link program.
-- **Branch**: `backend/TASK-078-narrative-report-api` → `frontend/TASK-079-ai-summary-source-ui`
+- **Branch**: `frontend/TASK-079-ai-summary-source-ui` → `review/TASK-080-narrative-summary-integration`
 
 ## Context Read
 
@@ -97,3 +97,9 @@ Harness Version: 1.1
   OpenAPI and integration coverage pass with 332 Backend tests and Ruff clean.
 - TASK-079 is active and must render the approved briefing order, verified
   source/no-source states, safe exact links, report timing, and caution.
+- TASK-079 is complete. The detail report follows the approved briefing order,
+  renders typed scenario/check/watch cards, shows a visible zero-source state,
+  and opens exact stored links safely. Typecheck, lint, parser, build, responsive
+  zero/one/three-source Browser QA, overflow, and clean-console checks passed.
+- TASK-080 is active and must generate at least ten real development v5 reports,
+  audit stored content/evidence/cost, and rerun integrated Browser states.
