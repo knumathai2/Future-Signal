@@ -98,6 +98,7 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 | V7 briefing boundary | Positive-first flexible sections with opaque evidence refs; backend-owned metrics/source/timing/cache; A-C public source levels | 2026-07-11 (ADR-051, human-approved) |
 | V7 request lifecycle | Immutable market/fingerprint request plus append-only queued/running/succeeded/failed events with expiring leases | 2026-07-11 (TASK-102, human-approved) |
 | V7 context policy | Bounded 30-day issue context, deterministic A-D levels and excerpt claims, verifier only for conflict/ambiguity/high-impact/material C | 2026-07-11 (TASK-103, human-approved) |
+| V7 generation service | Versioned evidence fingerprint, duplicate join, append-only lease recovery, optional context successor, one-shot writer, strict storage, standalone worker | 2026-07-11 (TASK-104, human-approved) |
 | Evidence-aware briefing v6 | Four deterministic change/evidence modes, strict basis union, one-owner metric/rule display, and v6-only fallback | 2026-07-11 (ADR-050, human-approved and implemented) |
 
 ## V6 evidence-aware briefing implementation (TASK-092~098)

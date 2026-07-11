@@ -18,9 +18,9 @@ Built as a **5-day hackathon MVP by a 4-person team**.
 ## Current State
 
 - **Version**: v0.13.0-v6-baseline-v7-planning
-- **Phase**: V6 baseline preserved; on-demand v7 program awaiting implementation approvals
-- **Next milestone**: Implement TASK-104 on-demand generation service and scheduled-workflow separation
-- **Overall health**: 🟢 TASK-099~103 are complete. V7 writer, request/event schema, and broad A-D context policy pass focused tests; v6 remains public until TASK-105.
+- **Phase**: V7 on-demand service implemented; public API/UI transition in progress
+- **Next milestone**: Implement TASK-105 generation/status/cache/report API
+- **Overall health**: 🟢 TASK-099~104 are complete. Normal collection is provider-independent and the on-demand service passes the full 428-test Backend suite; v6 remains public until TASK-105.
 
 ## Tech Summary
 
@@ -63,6 +63,7 @@ Future Signal/
 
 | Date | Change |
 |------|--------|
+| 2026-07-11 | TASK-104 removed report calls from normal collection and added the tested v7 fingerprint/request/lease/context/worker/report service. Full Backend suite passes 428 tests. |
 | 2026-07-11 | TASK-103 added the tested v7 30-day context path, A-D source levels, excerpt-backed claims, and conditional independent verification without a live provider call. |
 | 2026-07-11 | TASK-102 added unapplied migration 004 and tested immutable request plus append-only lease/outcome event models. Earlier migrations remain untouched. |
 | 2026-07-11 | TASK-101 activated the approved positive-first v7 writer/source policy and added strict flexible writer models, opaque evidence refs, parser, validation, and tests. No provider, database, schema, API, or workflow action occurred. |

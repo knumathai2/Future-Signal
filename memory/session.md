@@ -26,6 +26,13 @@ Harness Version: 1.1
 
 ## Work Completed
 
+- Completed TASK-104: normal collection now makes zero report calls; the v7
+  service owns exact evidence bundles/fingerprints, duplicate join, append-only
+  leases, recovery, optional context refresh/successor requests, one-shot
+  validation/storage, budget gate, last-good preservation, and FIFO worker.
+- Added v7 context/run persistence and a guarded standalone local/dev worker.
+  Focused service/workflow coverage passes 23 tests and the full Backend suite
+  passes 428 tests with Ruff/diff clean. No live provider or non-test DB call ran.
 - Completed TASK-103 with a separate v7 30-day broad context path, A-D source
   classification, exact excerpt-backed supported claims, conditional verifier
   triggers, independent-provider/no-search verification, and fail-closed

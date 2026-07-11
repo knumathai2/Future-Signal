@@ -66,11 +66,11 @@ Runs as a single sequential Python script, triggered on a schedule (recommend ev
 | 5. Calculate metrics | Current snapshot + trailing 24h/7d history from `market_snapshots` | Compute `change_24h`, `change_7d`, and (if time allows) volatility/attention/heat per Service Design §5 formulas | Insert into `market_metrics` | Fewer data points than the window requires → set the relevant field `null` and `confidence_level = insufficient_data`, never fabricate a number | Straightforward SQL/pandas over the last N rows per market |
 | 6. Detect sudden change signals | Latest `market_metrics` row + threshold config | Evaluate `|change_24h| >= 5pp` (MVP threshold from PRD §8.6); check a cooldown window so the same shift doesn't refire every run | Insert into `issue_signals` if triggered | Threshold misconfiguration → fail safe to "no signal" rather than over-firing | Simple conditional; cooldown = "don't insert a new signal for the same market within the same rolling window that's already covered by an unresolved one" |
 | 7. Save collection logs | Run metadata | Aggregate counts (processed/failed) and any error details from steps 1–6 | Insert into `data_collection_logs` | Logging itself failing should never fail the run — wrap in try/except with a stdout fallback | One row per run |
-| 8. Trigger AI report generation only when needed | Markets with a new signal from step 6, OR no existing report, OR last report older than a set staleness window (e.g., 24h) | Call `generate_report()` (Section 9) per qualifying market, capped at a max count per run for cost control | Insert into `ai_reports` | AI API error → retry once, mark `status=failed`, leave the previous successful report as the one served to users | Isolate each market's report generation in its own try/except so one AI failure doesn't block others |
+| Historical v1-v6 step 8 (superseded by ADR-051) | Previously selected new-signal, missing, or stale reports | Historical batch generators remain for audit/development comparison only | Historical `ai_reports` rows | Previous valid row remains | Normal collection no longer invokes this step |
 
 ### Sync vs. async
-- **Steps 1–7 run synchronously, in sequence, within one script invocation.** There's no benefit to parallelizing or queueing this for 30–50 markets — the whole run should complete in well under a minute, and sequential code is far easier to debug under hackathon time pressure.
-- **Step 8 (AI generation) is asynchronous relative to any user request** — it never runs in response to an API call, only from the batch job. Within the batch job itself, it can still execute sequentially at the end of the run; "asynchronous" here means "decoupled from the request/response cycle," not "requires a job queue." A real async queue (Celery/RQ, or a `pending`-status polling worker) is a legitimate Phase 2 upgrade once report volume or generation latency grows enough to matter.
+- **Steps 1–7 run synchronously, in sequence, within one script invocation.** Normal collection completes without a report provider.
+- **V7 briefing generation is a separate asynchronous service.** A user request creates or joins an immutable fingerprint request, and a standalone worker claims it through an append-only expiring lease. No new queue dependency is required.
 
 ### Duplicate prevention
 Since every step is append-only per run and keyed by `(market_id, captured_at)`/`(market_id, computed_at)`, duplicate prevention is really "don't run the batch job twice concurrently" — enforce with a simple advisory lock or a `data_collection_logs` check ("is there a run with `run_finished_at IS NULL` from the last hour? if so, skip") rather than building real distributed-lock infrastructure.
@@ -97,5 +97,24 @@ stop the full batch and cannot replace a prior successful candidate/report.
 usage is audited and the cumulative TASK-056~065 OpenRouter spend must remain
 within USD 100. The batch is guarded to local/development writes until separate
 deployment and production-write approval exists.
+
+### 6.2 Approved v7 workflow separation and worker (TASK-104)
+
+Normal `run_scheduled_batch()` stores market data, metrics, signals, optional
+independent context, and its collection log, then exits with zero report calls.
+Supplying a legacy writer client cannot make the normal path invoke it.
+Historical `--reports-only` remains only as an explicitly confirmed local/dev
+comparison path pending TASK-109 review.
+
+`enqueue_v7_request()` reconstructs current definition/metric/context evidence,
+computes the versioned SHA-256 fingerprint, and creates or joins one immutable
+request. `process_v7_request()` claims a lease, optionally invokes a bounded
+context-refresh callback, rebuilds and compares the fingerprint, makes one
+writer call, validates references/language/numbers, appends a v7 report, and
+appends success or safe failure. It never retries the same prompt automatically.
+
+`run_pending_v7_requests()` is the standalone FIFO worker boundary. A crashed
+worker leaves an expiring running event; a later worker appends a new attempt.
+The guarded local/development CLI is `python -m app.core.on_demand_worker`.
 
 ---
