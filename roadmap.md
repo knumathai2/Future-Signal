@@ -55,18 +55,20 @@ Ship a genuinely working web MVP within 5 days that lets a user check today's mo
   demo/deck draft, and final `TASK-018` wording-safety lint are complete.
   Closeout evidence is recorded in `reports/day-4-closeout-plan.md`.
 
-### Day 5 — Integration QA + presentation finalized
-- [ ] PM: finalize deck, prepare risk-response explanations, finalize demo script, and coordinate final v3 review (`TASK-052` complete; `TASK-053` assigned)
-- [ ] Frontend: polish demo screens, check responsiveness, and implement ADR-033 dynamic report cards (`TASK-051`)
-- [ ] Backend: implement ADR-033 report runtime/read contract, prepare dummy fallback for API outage, and deploy only with separate approval (`TASK-050`)
-- [ ] Data/AI: implement ADR-033 v3 report generation, check data errors, and reinforce representative examples (`TASK-049`)
-- **Deliverables**: deployed MVP, presentation deck, demo scenario, backup video/screen captures, Q&A response sheet
-- **Status note (2026-07-10)**: Latest `origin/main` is `106af52`, including
-  completed `TASK-047` and `TASK-048`. `TASK-052` allocated Day 5 v3 runtime
-  work across Data/AI, Backend, Frontend, and Reviewer roles in
-  `reports/day-5-v3-implementation-allocation.md`. Runtime remains v2 until
-  those implementation/review tasks close; report refreshes, configured DB
-  writes, and deployment remain separately approval-gated.
+### Day 5 — Integration QA + technical MVP closeout
+- [x] PM: coordinate the final v3 review and record the technical MVP closeout; final deck production, screenshots, rehearsal, and backup capture are deferred by ADR-037
+- [x] Frontend: polish and responsive QA, ADR-033 dynamic report cards, TASK-054 information architecture, and the PR #53 ES2020 build repair
+- [x] Backend: implement and verify the ADR-033 report runtime/read contract and preserve the existing fallback path; deployment is deferred
+- [x] Data/AI: implement and review ADR-033 v3 report generation, safety validation, and representative stored-report evidence
+- **Completed deliverables**: verified web MVP code, v3 report flow, demo/deck outline, demo scenario, fallback behavior, and Q&A draft
+- **Deferred deliverables**: deployment, final presentation file, final screenshots, rehearsal, and backup video/screen captures (`TASK-020`, `TASK-021`)
+- **Status note (2026-07-10)**: Day 5 is closed as a technical MVP milestone by
+  explicit user direction. PR #53 merges the latest `main`, fixes the final
+  ES2020 TypeScript build blocker, and records the closeout evidence in
+  `reports/day-5-closeout.md`. The branch passes Frontend typecheck, lint,
+  report-parser regression, production build, and changed-file formatting, plus
+  200 Backend tests and Ruff. PR #53 still requires the normal review/merge
+  flow; deferred release and presentation work is not represented as completed.
 
 ## Backlog Ideas (Phase 2+ — do not build during the hackathon without HUMAN APPROVAL)
 

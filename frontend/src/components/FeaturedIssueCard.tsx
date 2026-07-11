@@ -26,7 +26,7 @@ type TrendStatus = "loading" | "ready" | "empty" | "error";
 
 function trendDescription(points: IssueHistoryPoint[]): string {
   const first = points[0]?.value;
-  const last = points.at(-1)?.value;
+  const last = points[points.length - 1]?.value;
   if (first === undefined || last === undefined) {
     return "";
   }
@@ -37,7 +37,7 @@ function trendDescription(points: IssueHistoryPoint[]): string {
 
 function HistoryPreview({ points }: { points: IssueHistoryPoint[] }) {
   const first = points[0];
-  const last = points.at(-1);
+  const last = points[points.length - 1];
   const lineColor =
     first && last && last.value < first.value
       ? "oklch(48% 0.075 245)"
