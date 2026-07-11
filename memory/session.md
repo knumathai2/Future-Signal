@@ -26,6 +26,13 @@ Harness Version: 1.1
 
 ## Work Completed
 
+- Completed TASK-105 with public POST generate, GET request status, and strict
+  v7 GET report states. The API appends only request/queue rows and never calls
+  a provider.
+- Added generation-time evidence reconstruction, current fingerprint freshness,
+  stale/generating/failed-with-last-good behavior, previous-valid-v7 fallback,
+  exact A-C source/claim/link output, request scoping, OpenAPI, and legacy
+  audit-only coverage. Full Backend passes 437 tests with Ruff/diff clean.
 - Completed TASK-104: normal collection now makes zero report calls; the v7
   service owns exact evidence bundles/fingerprints, duplicate join, append-only
   leases, recovery, optional context refresh/successor requests, one-shot

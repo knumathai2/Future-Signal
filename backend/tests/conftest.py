@@ -14,7 +14,7 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import BigInteger, create_engine
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.ext.compiler import compiles
@@ -40,6 +40,8 @@ from app.core.ai_report import (
 )
 from app.db.models import (
     AiReport,
+    AiReportGenerationEvent,
+    AiReportGenerationRequest,
     Base,
     ContextCandidate,
     ContextCollectionRun,
@@ -66,6 +68,11 @@ CONTEXT_CANDIDATE_ID = uuid.UUID("66666666-6666-4666-8666-666666666666")
 @compiles(JSONB, "sqlite")
 def _compile_jsonb_sqlite(element, compiler, **kw):
     return "JSON"
+
+
+@compiles(BigInteger, "sqlite")
+def _compile_biginteger_sqlite(element, compiler, **kw):
+    return "INTEGER"
 
 
 @compiles(PG_UUID, "sqlite")
@@ -99,6 +106,8 @@ def db_session():
             MarketMetric.__table__,
             IssueSignal.__table__,
             AiReport.__table__,
+            AiReportGenerationRequest.__table__,
+            AiReportGenerationEvent.__table__,
             ContextCandidate.__table__,
             ContextCollectionRun.__table__,
             DataCollectionLog.__table__,

@@ -6,7 +6,9 @@ _Source: former project-root Technical Design sections 5-6._
 
 ## 5. API Structure
 
-All endpoints are **read-only** in MVP except the internal report-trigger, which is not user-facing. REST, JSON, versionless for hackathon (`/api/...` prefix is enough, no `/v1` needed yet).
+All issue-data endpoints are read-only. ADR-051 adds one public append-only
+generation-request POST; it never calls a provider in the API process. REST,
+JSON, versionless for hackathon (`/api/...` prefix is enough, no `/v1` needed yet).
 
 | Endpoint | Method | Purpose | Key params | DB tables used | MVP priority |
 |---|---|---|---|---|---|
@@ -16,8 +18,9 @@ All endpoints are **read-only** in MVP except the internal report-trigger, which
 | `/api/issues/:id/metrics` | GET | Full metric breakdown (if not already folded into detail) | — | `market_metrics` | **P1** (can fold into detail response for MVP instead of a separate call) |
 | `/api/signals` | GET | Recent signals across all markets ("what changed recently" feed) | `severity`, `since` | `issue_signals`, `markets` | **P1** |
 | `/api/issues/:id/signals` | GET | Signals for one market | — | `issue_signals` | **P0** (can be embedded in detail response) |
-| `/api/issues/:id/report` | GET | Latest AI report for the issue | — | `ai_reports` | **P0** |
-| `/api/issues/:id/report/generate` | POST (internal only, not called by the frontend) | Force regeneration; used by the batch job or an admin/demo script, never exposed as a user-facing button per UX Design §3.6 | — | `ai_reports`, `market_metrics` | **P1** (useful for demo-prep to guarantee the 3 demo issues have fresh reports) |
+| `/api/issues/:id/report` | GET | V7 idle/generating/fresh/stale/failure state and latest valid report | — | `ai_reports`, generation requests/events, evidence tables | **P0** |
+| `/api/issues/:id/report/generate` | POST | Create or join a fingerprinted generation request; no provider call | `refresh_context` | generation requests/events, evidence tables | **P0 v7** |
+| `/api/issues/:id/report/requests/:request_id` | GET | Poll append-only request/lease/outcome state | — | generation requests/events | **P0 v7** |
 | `/api/categories` | GET | List of categories for filter UI | — | `markets` (distinct) | **P1** |
 | `/api/search` | GET | Simple title search | `q` | `markets` (ILIKE) | **P2** |
 | `/api/watchlist` | GET/POST/DELETE | Phase 2 only | `market_id` | `watchlists` | **Excluded from MVP** |

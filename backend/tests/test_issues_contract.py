@@ -69,13 +69,13 @@ def test_get_issue_history_unknown_id_is_404():
 def test_static_fallback_report_is_not_fabricated():
     response = client.get(f"/api/issues/{ISSUE_ID}/report")
     assert response.status_code == 200
-    assert response.json()["status"] == "not_yet_generated"
+    assert response.json()["status"] == "idle"
 
 
-def test_get_issue_report_not_yet_generated():
+def test_get_issue_report_idle():
     response = client.get(f"/api/issues/{NOT_YET_GENERATED_ISSUE_ID}/report")
     assert response.status_code == 200
-    assert response.json()["status"] == "not_yet_generated"
+    assert response.json()["status"] == "idle"
 
 
 def test_categories():

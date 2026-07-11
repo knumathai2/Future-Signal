@@ -28,13 +28,15 @@ Batch Collector (Python) -- fetch -> normalize -> snapshot -> metrics -> signals
 PostgreSQL -- existing tables + context evidence + unapplied resolution-rule extension
         |  reads only
         v
-FastAPI backend (read-only REST API) -- /api/issues /api/issues/:id /api/issues/:id/history /api/issues/:id/report ...
+FastAPI backend -- read issue data + append v7 generation requests; never call providers
         |  HTTPS/JSON
         v
 React + Vite + React Router frontend -- `/` Home / `/issues` Issue List / `/issues/:id` Detail / `/methodology` Disclaimer
 ```
 
-Key rule: **the API layer never calls the AI provider or Polymarket directly** â€” it only reads from Postgres. This decouples "is a report fresh" from "is a user waiting," and lets the API degrade to last-known-good data on failure.
+Key rule: **the API layer never calls the AI provider or Polymarket directly**.
+It reads issue/report data and may append only ADR-051 generation request/event
+rows. A standalone worker performs provider calls and report writes.
 
 ## Data Flow
 
@@ -99,6 +101,7 @@ Key rule: **the API layer never calls the AI provider or Polymarket directly** â
 | V7 request lifecycle | Immutable market/fingerprint request plus append-only queued/running/succeeded/failed events with expiring leases | 2026-07-11 (TASK-102, human-approved) |
 | V7 context policy | Bounded 30-day issue context, deterministic A-D levels and excerpt claims, verifier only for conflict/ambiguity/high-impact/material C | 2026-07-11 (TASK-103, human-approved) |
 | V7 generation service | Versioned evidence fingerprint, duplicate join, append-only lease recovery, optional context successor, one-shot writer, strict storage, standalone worker | 2026-07-11 (TASK-104, human-approved) |
+| V7 public API | Append-only generate POST, request polling, strict reconstructed fresh/stale/generating/failure/last-good GET; API never calls provider | 2026-07-11 (TASK-105, human-approved) |
 | Evidence-aware briefing v6 | Four deterministic change/evidence modes, strict basis union, one-owner metric/rule display, and v6-only fallback | 2026-07-11 (ADR-050, human-approved and implemented) |
 
 ## V6 evidence-aware briefing implementation (TASK-092~098)
