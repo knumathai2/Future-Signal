@@ -14,32 +14,30 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-11
-- **Agent Role**: Reviewer
-- **Session Goal**: Complete TASK-064 automated-context integration review.
-- **Branch**: `review/TASK-064-auto-context-integration`
+- **Agent Role**: Data/AI Implementer + PM / Planner
+- **Session Goal**: Complete TASK-065 guarded local/development backfill and demo evidence.
+- **Branch**: `data-ai/TASK-065-context-backfill`
 
 ## Context Read
 
-- ADR-038 through ADR-045 and TASK-056~063 implementation evidence
-- Full schema → research → verification → batch → report → API → UI path
-- Reviewer prompt, wording policy, adversarial fixtures, and browser criteria
+- ADR-038 through ADR-046 and TASK-056~064 implementation/review evidence
+- Configured environment guard, migration runner requirements, cumulative
+  provider usage audit, backfill CLI, and demo-flow acceptance criteria
 
 ## Previous Handoff
 
-- Frontend consumes only strict v4; v3 and malformed bundles fail closed.
-- Change episode shows all mandatory fields in one flow and hides only the
-  context region when candidate count is zero.
-- Candidate cards and nearest visible chart markers share exact IDs and
-  bidirectional anchors; approved source links use a new tab plus
-  `noopener noreferrer`.
-- Frontend typecheck/lint/parser/build and Backend 309-test suite pass.
-- Browser QA passed 0/1/3 candidates at 320px, 375px, and desktop with no
-  overflow or console errors; timing/caution and non-success states remain.
+- TASK-064 verdict is Approved after one in-scope UTC normalization fix.
+- Full schema→research→verification→storage→writer→API flow passes locally.
+- Backend: 311 tests and Ruff; Frontend: typecheck/lint/parser/build/Prettier;
+  Browser: 0/1/3 candidates and responsive/safety states all pass.
+- Review report: `reports/task-064-automated-context-integration-review.md`.
 
 ## Approval Boundaries / Follow-up
 
-- TASK-064 may add adversarial integration coverage and fix findings within the
-  already approved v4 schema/API/UI/safety boundary.
-- No provider call, migration application, configured DB write, deployment,
-  infrastructure, dependency, or production DB write occurred in TASK-063.
-- TASK-065 must not start until the full review and evidence report pass.
+- User approved migration/schema/API/provider usage up to USD 100 cumulative
+  and local/development DB writes for TASK-065.
+- Confirm the configured database environment is local/development before any
+  migration or backfill write; do not print or modify `.env` or secrets.
+- Reserve/check cost before every provider call and stop before the USD 100 cap.
+- Deployment, infrastructure changes, and production database writes remain
+  excluded. If environment classification cannot be proven, do not write.
