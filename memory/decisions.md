@@ -2185,3 +2185,34 @@ until migration 006 is separately approved and applied to the target local or
 development database. A future worker, provider evaluation, distributed abuse
 controls, scheduled cleanup, Frontend, deployment, and production activation
 remain independently gated.
+
+---
+
+### ADR-071: Keep scenario generation single-call, tool-free, and fail-closed
+
+- **Date**: 2026-07-12
+- **Status**: Accepted implementation; successful live response pending
+- **Task**: TASK-128
+
+**Context**: The user approved local migration 006 application and an actual
+AI response. Free-form scenario prose must remain more flexible than the
+current summary without allowing a user assumption, model path, or unverified
+item to become a current fact.
+
+**Decision**: Build a separate guarded writer that receives only one issue's
+reconstructed v8 evidence, immutable premise classes, and bounded same-session
+turns. It has no model tools or second-call path. Require exact premise refs and
+the current turn, preserve source-parent refs, reject secret-like output,
+unsupported numbers, prohibited wording, and unsafe Markdown, and persist only
+the fully validated assistant turn, model-scenario premises, complete blocks,
+and aggregate usage. Use explicit turn/request/event flush ordering for the
+PostgreSQL composite same-session constraints.
+
+**Consequences**: Migration 006 is applied only to the approved local DB. Two
+separately approved calls cost USD 0.0117605 total and were rejected before
+content storage by an overly narrow assumption-framing detector and then an
+ISO-date numeric-normalization error. The framing gate now accepts natural safe
+phrases such as `조건부 경로`, and equivalent ISO/Korean date numbers canonicalize
+without accepting new values. Both fixes have regression coverage. A third
+provider call requires explicit approval; no automatic retry, Frontend,
+scheduler, deployment, or production activation was introduced.

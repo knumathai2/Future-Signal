@@ -83,7 +83,7 @@ PostgreSQL <-> FastAPI <-> React/Vite
 | 003 | Versioned market resolution rules | Approved local development DB only |
 | 004 | Immutable generation requests and append-only events/leases | Approved local development DB only |
 | 005 | Individually validated generation blocks for SSE replay | Approved local development DB only |
-| 006 | Ephemeral scenario sessions, turns, premises, requests, events, and validated response blocks | Unapplied |
+| 006 | Ephemeral scenario sessions, turns, premises, requests, events, and validated response blocks | Approved local development DB only |
 
 Historical v1-v7 stored report/request rows were removed under explicit local
 approval. Migrations, ADRs, compatibility code, and retained evidence reports
@@ -152,13 +152,21 @@ Conversation content is append-only while live and is hard-deleted after expiry
 or owner deletion. Existing issue/report/evidence history remains append-only
 and untouched.
 
-Migration 006 and matching ORM models now exist but the migration is unapplied.
+Migration 006 and matching ORM models now exist and the migration is applied
+only to the approved local development DB.
 The local/development-only API can create capability-scoped sessions, append
 idempotent queued turns, read status, replay already validated stored blocks,
 and hard-delete the ephemeral graph. It uses process-local keyed request
 ceilings and exposes no capability in a URL or stored plaintext field.
 
-No scenario worker, provider call, shared rate-limit infrastructure, scheduled
-cleanup, Frontend tab, migration application, deployment, or production state
-exists. The feature flag defaults off, and enabling it against a database
-without migration 006 is unsupported.
+TASK-128 adds a guarded local/development single-request writer. It serializes
+only one issue's v8 evidence, server-owned premise classes, and bounded turns;
+it provides no model tools and validates complete JSON, premise refs, wording,
+leakage, numbers, restricted Markdown, and response blocks before storage. The
+first two authorized evaluations cost USD 0.0117605 total and failed closed on
+assumption framing and then ISO-date numeric normalization, leaving no assistant
+turn or block. Both corrected detectors are tested, but a third call is not
+authorized.
+
+No shared rate-limit infrastructure, scheduled cleanup, Frontend tab,
+deployment, or production state exists. The feature flag defaults off.

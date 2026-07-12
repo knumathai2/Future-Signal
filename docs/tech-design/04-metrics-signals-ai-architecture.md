@@ -205,10 +205,13 @@ fetch-SSE replay. Raw provider chunks, links, HTML, images, forms, and embedded
 content never become public blocks.
 
 TASK-126 implements the default-off API/session/request boundary and validated-
-block replay only; it does not implement or launch the future worker. Expiry or
-owner deletion prevents later persistence and removes the ephemeral
-conversation graph. Earlier active-v8 reports and all issue/evidence history
-remain untouched. Migration 006 remains unapplied; provider evaluation remains
-TASK-130-gated.
+block replay. TASK-128 adds a guarded local/development CLI that claims one
+queued request, builds the typed bundle, performs one non-tool provider call,
+and stores only a completely validated assistant turn, model-scenario premises,
+blocks, and terminal usage event. Expiry or owner deletion prevents later
+persistence and removes the ephemeral conversation graph. Earlier active-v8
+reports and all issue/evidence history remain untouched. Migration 006 is
+applied only to the approved local DB; deployment and successful provider
+acceptance remain separate decisions.
 
 ---

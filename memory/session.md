@@ -14,34 +14,40 @@ files.
 
 ## Session
 
-- **Role**: Backend Implementer
-- **Branch**: `backend/TASK-126-scenario-conversation-boundary`
-- **Goal**: Implement the approved default-off scenario API/storage boundary.
-- **Status**: Completed
+- **Role**: Data/AI + Backend Implementer
+- **Branch**: `data-ai/TASK-128-scenario-writer`
+- **Goal**: Apply migration 006 and generate one validated scenario response.
+- **Status**: In progress; a second provider call requires approval
 
-## Completed in TASK-126
+## Completed in TASK-128 so far
 
-- Added unapplied append-only migration 006 and matching constrained ORM models.
-- Added a disabled-by-default, local/development-only scenario API with a
-  one-time capability, stored hash authentication, strict issue/session scope,
-  idempotent turn enqueueing, status reads, and authenticated fetch-SSE replay.
-- Enforced 24-hour fixed expiry, eight user turns, one active request, message
-  and cumulative text bounds, current-input fingerprint stability, and
-  process-local keyed request ceilings.
-- Added explicit owner/expiry hard deletion for only the ephemeral graph.
-- Passed 24 focused tests, all 526 Backend tests, and Ruff.
+- Applied migration 006 to the configured `ENV=local` database and verified six
+  scenario tables plus 29 constraints.
+- Implemented a single-call, tool-free writer over one issue's reconstructed v8
+  evidence, typed premises, and bounded same-session turns.
+- Added Unicode/control normalization, premise/source-parent checks, current-
+  turn binding, prohibited-language/leakage/number gates, restricted Markdown,
+  complete block persistence, usage audit, and guarded CLI execution.
+- Fixed the actual PostgreSQL parent insertion order exposed before the call.
+- Passed 34 focused scenario tests, all 536 Backend tests, Ruff, and diff checks.
+- Used two explicitly approved OpenRouter calls: 2,704 input tokens, 1,397
+  output tokens, USD 0.0117605 total. They failed closed on the initial
+  assumption-framing detector and then ISO-date number normalization; zero
+  assistant turns and zero response blocks were stored. Both corrections are
+  now covered by regression tests.
 
 ## Boundaries
 
-- Migration 006 was not applied to any database and the feature defaults off.
-- No scenario provider client, writer, worker, shared rate-limit store,
-  scheduled cleanup, Frontend, new dependency, infrastructure, deployment, or
-  production state was added or changed.
+- Both separately approved provider calls are consumed; no automatic retry was
+  attempted.
+- No context/web research, model tool, new dependency, shared rate-limit store,
+  scheduled cleanup, Frontend, infrastructure, deployment, or production state
+  was added or changed.
 - Active v8 and historical reconstruction remain unchanged.
 
 ## Next handoff
 
-TASK-127 may define the deterministic premise-state builder within the accepted
-policy. Migration application, provider/writer evaluation, shared abuse and
-cleanup infrastructure, Frontend, deployment, and production remain later
-approval gates.
+Explicitly approve one more bounded provider call if a persisted AI response
+is still desired. The request must be a new turn/session because the failed
+request remains immutable. Other databases, shared abuse/cleanup
+infrastructure, Frontend, deployment, and production remain later gates.
