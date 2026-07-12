@@ -102,67 +102,28 @@ ENV=local ./.venv/bin/python -m app.core.historical_seed \
   --confirm-local-dev-write
 ```
 
-## Scheduled data + context + AI report batch
+## Scheduled market-data collection
 
-The combined batch links data collection, metric calculation, signal detection,
-optional verified-context research, and stored AI report generation in one
-write path. The context stage runs only when an OpenRouter key and a
-different-provider `CONTEXT_VERIFIER_MODEL` are configured; otherwise it is
-skipped without changing the existing batch:
+The active workflow runs market-data collection every four hours. It fetches
+up to 50 active binary markets, appends current snapshots and metrics, detects
+configured change signals, and records collection health. Normal collection
+does not invoke context research or the briefing writer:
 
 ```bash
 ENV=local ./.venv/bin/python -m app.core.scheduled_batch \
   --use-live-fetch \
   --max-samples 50 \
+  --skip-ai-reports \
+  --skip-context-research \
   --confirm-local-dev-write
 ```
 
-For development/demo work against the current DB state, generate reports from
-each market's latest existing metric row without collecting new market data:
-
-```bash
-ENV=local ./.venv/bin/python -m app.core.scheduled_batch \
-  --reports-only \
-  --confirm-local-dev-write
-```
-
-The GitHub Actions workflow `.github/workflows/daily-batch.yml` runs the
-combined batch once every 24 hours and can also be started manually from
-Actions. It expects `DATABASE_URL` plus either `OPENROUTER_API_KEY` or
-`OPENAI_API_KEY`. If an `OPENAI_API_KEY` value has the OpenRouter `sk-or-`
-shape, the batch automatically calls `https://openrouter.ai/api/v1` through the
-existing OpenAI-compatible SDK path. For OpenRouter, an unqualified
-`OPENAI_MODEL=gpt-4o-mini` is sent as `openai/gpt-4o-mini`.
-
-Context research is bounded by the query/result settings in `.env.example`,
-stores per-market usage in `context_collection_runs`, and stops before a call
-when recorded spend plus the configured reservation would exceed the approved
-USD 100 cap. A local/development first backfill may be requested explicitly:
-
-```bash
-ENV=local ./.venv/bin/python -m app.core.scheduled_batch \
-  --reports-only \
-  --context-backfill \
-  --context-max-markets 50 \
-  --confirm-local-dev-write
-```
-
-When a bounded run has isolated incomplete inputs, use `--context-offset N`
-with a smaller `--context-max-markets` value to audit the next deterministic
-slice without repeating paid calls for the earlier slice.
-
-After context research is audited, generate only v4 reports from the stored
-verified/no-candidate state without repeating paid research:
-
-```bash
-ENV=local ./.venv/bin/python -m app.core.scheduled_batch \
-  --reports-only \
-  --v4-reports-from-stored-context \
-  --confirm-local-dev-write
-```
-
-Use `--skip-context-research` to run the pre-v4 path even when context settings
-are present. Production DB writes and deployment remain separately prohibited.
+The checked-in workflow is
+`.github/workflows/four-hour-collection.yml`. It uses only `DATABASE_URL` and
+can also be started manually from Actions. Historical `--reports-only` and v4
+compatibility flags remain in the CLI for audit/development comparison but are
+not part of the current v8 operating path. Paid provider evaluations, another
+database, production writes, and deployment require their own approvals.
 
 ## Lint / Test
 
@@ -173,6 +134,8 @@ pytest
 
 ## Notes
 
-- The API layer only reads from Postgres — it never calls Polymarket or an AI provider directly (see `../docs/tech-design/01-architecture-stack-overview.md` §3).
+- The API reads issue data and appends generation requests/events in Postgres.
+  It never calls Polymarket or an AI provider directly (see
+  `../docs/tech-design/01-architecture-stack-overview.md` §3).
 - Public route names use `issues` / `signals` / `reports` / `categories`, never `markets`/`bets`/`trades`/`positions`.
 - DB schema was applied to the configured development Supabase DB on 2026-07-09 after human approval. Applying it or future schema changes to another shared/prod database still requires human approval.

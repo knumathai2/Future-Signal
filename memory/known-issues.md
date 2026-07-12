@@ -410,7 +410,7 @@ Not bugs, but unresolved decisions that can affect later demo or product work:
     model is not configured`.
   - The latest development scheduled batch processed 50 markets successfully
     but recorded zero context outcomes and zero accepted candidates.
-  - `.github/workflows/daily-batch.yml` passes API keys and the writer model but
+  - The retired daily workflow passed API keys and the writer model but
     does not pass `CONTEXT_VERIFIER_MODEL`, so the same skip condition applies
     unless it is supplied through another runtime mechanism.
   - Existing context unit/integration tests pass (84 focused tests), but they do

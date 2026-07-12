@@ -18,4 +18,4 @@ Harness Version: 1.1
 
 ## Authority
 
-The harness process files (`AGENTS.md`, `ORCHESTRATOR.md`, `standards.md`, `tech-stack.md`, `dependencies.md`, `roadmap.md`, `memory/`, `tasks/`, `prompts/`) govern how the team works. The product spec files linked above govern what the product is. When product scope and process guidance conflict, use the relevant spec index here to find the source section, then update the process file to match.
+The harness process files (`AGENTS.md`, `ORCHESTRATOR.md`, `standards.md`, `dependencies.md`, `roadmap.md`, `memory/`, `tasks/`, and `prompts/`) govern how the team works. The product spec files linked above govern what the product is. When product scope and process guidance conflict, use the relevant spec index here to find the source section, then update the process file to match.

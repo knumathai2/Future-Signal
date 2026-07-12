@@ -248,7 +248,12 @@ workflow, infrastructure, deployment, or production-write change is included.
   currently requires exact membership in the deterministic suggestion list.
   No read/API/publication gate has been relaxed.
 - `TASK-041` is complete: `build_prompt_inputs_for_market()` now selects the latest `market_snapshots` row with `captured_at <= market_metrics.computed_at`, matching the historical-seed `+1 microsecond` metric timestamp without fabricating values. Tests cover prompt-input construction, future-only snapshot rejection, and `run_ai_report_batch` inserting a `status=success` row with a fake `LLMClient`. Local/demo run notes live in `reports/task-041-report-generation-readiness.md`; OpenAI report calls are covered by ADR-022 and the provided-key clarification, while writes to the configured development DB remain separately approval-gated.
-- `TASK-042` is complete: `backend/app/core/scheduled_batch.py` is the combined scheduled/manual write path for data collection -> snapshot/metric generation -> expectation-shift signal detection -> AI report generation -> collection logging. It supports `--reports-only` for dev/demo report generation against each market's latest existing metric row. `.github/workflows/daily-batch.yml` runs the combined batch every 24h via GitHub Actions using `DATABASE_URL` and an approved AI provider key.
+- `TASK-042` added the combined scheduled/manual path and historical
+  `--reports-only` compatibility. TASK-121 supersedes its workflow: GitHub
+  Actions now runs `.github/workflows/four-hour-collection.yml` every four
+  hours with market fetch, snapshot/metric storage, signal detection, and
+  collection logging only. The scheduled job does not receive provider keys or
+  invoke context research or briefing generation.
 - `TASK-121` supersedes TASK-042's scheduled-workflow configuration. GitHub
   Actions now uses `.github/workflows/four-hour-collection.yml` at minute 17
   every four UTC hours. The job receives only `DATABASE_URL` and explicitly
