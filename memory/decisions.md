@@ -2015,3 +2015,30 @@ retired path; Git history preserves the referenced artifact.
 **Consequences**: The obsolete command and stack guides are replaced by
 canonical README and Technical Design guidance. Phase 4+ requires review of
 the current diff before proceeding. No runtime or external state changes.
+
+---
+
+### ADR-065: Compact active guidance and retain material evidence
+
+- **Date**: 2026-07-12
+- **Status**: Accepted for TASK-122 phases 4-7
+- **Decided by**: User direction after phases 1-3 review and correction
+
+**Context**: The initial cleanup left large current-memory handoffs,
+superseded v1-v7 contract walkthroughs in active design documents, stale
+backlog allocation history, and many implementation summaries whose outcomes
+were already captured by canonical contracts, tests, or retained reviews.
+
+**Decision**: Compact mutable memory to current v8 operating state; make the
+active API, Service, Technical, and UX documents v8-centered; route historical
+contracts to the archive; update the backlog to current work; and remove only
+reports superseded by stronger canonical or integration records. Retain every
+approval packet, provider-cost record, database application record, safety or
+evidence review, failure evaluation, current v8 report, and presentation
+artifact. Preserve accepted ADR and completed-task text unchanged.
+
+**Consequences**: Current guidance is substantially smaller and the retained
+report set is evidence-oriented. Removed detail remains recoverable from Git,
+so immutable historical ledgers may still name retired files. No source code,
+runtime contract, schema, database, provider, dependency, infrastructure,
+deployment, production, or wording-policy state changed.

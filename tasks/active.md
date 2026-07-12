@@ -18,7 +18,7 @@ historical v1-v6 archive followed by separately approved cleanup.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
-| TASK-122 | Consolidate project documentation phases 1-3 | PM / Reviewer | PM / Planner | `pm/TASK-122-document-consolidation` | review |
+| TASK-122 | Consolidate project documentation phases 1-7 | PM / Reviewer | PM / Planner | `pm/TASK-122-document-consolidation` | review |
 | TASK-109 | Remove superseded v1-v6 runtime code after v7 acceptance | Reviewer / Implementers | Reviewer | `review/TASK-109-legacy-report-cleanup` | assigned |
 
 TASK-101~108 and the user-directed TASK-110~111 follow-ups are complete under the

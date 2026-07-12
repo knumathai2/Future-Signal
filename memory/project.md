@@ -1,7 +1,7 @@
 <!--
-Purpose:        Current project state snapshot — the first context file every agent reads
+Purpose:        Current project state snapshot
 Owner:          All agents (read), PM / Backend Implementer (write)
-Update Trigger: Day completed, milestone status shift, major decision made
+Update Trigger: Milestone or active-state change
 Harness Version: 1.1
 -->
 
@@ -11,161 +11,77 @@ _Last updated: 2026-07-12_
 
 ## Summary
 
-Outlook Signals is an information-analysis dashboard that surfaces global issues whose reflected expectation value has recently shifted significantly in Polymarket's public prediction-market data. It helps users understand how an issue is being reassessed through change magnitude, time-series charts, and interpretation-caution notices — explicitly **not** a forecasting, betting, or trading tool.
+Outlook Signals is an issue-monitoring dashboard built from public aggregate
+Polymarket data. It presents reflected expectation values, observed changes,
+time-series history, evidence-bounded briefings, data timestamps, and
+interpretation cautions. It does not assert future results or attribute a
+movement to an external event without accepted source support.
 
-Built as a **5-day hackathon MVP by a 4-person team**.
+## Current state
 
-## Current State
+- **Product**: React issue discovery/list/detail/methodology flow with four
+  question-led detail tabs and responsive 320px support.
+- **Market data**: Gamma collection, CLOB history support, append-only
+  snapshots/metrics/signals, and honest static fallback states.
+- **Schedule**: `.github/workflows/four-hour-collection.yml` runs market-data
+  collection at minute 17 every four UTC hours. It receives no AI credentials
+  and skips context research and briefing generation.
+- **Briefing**: Active v8 on-demand worker with strict evidence reconstruction,
+  validated NDJSON blocks, SSE replay, polling fallback, cache fingerprints,
+  and last-known-good behavior.
+- **Database**: Migrations 001-005 are applied only to the approved local
+  development database. Production writes and deployment remain unapproved.
+- **Documentation**: TASK-122 phases 1-3 are complete and reviewed; phases 4-7
+  are active on `pm/TASK-122-document-consolidation`.
 
-- **Version**: v0.17.0-four-part-detail
-- **Phase**: Active-v8 validated-block SSE enabled in the approved local development database
-- **Next milestone**: Review representative first-block latency samples only under a new bounded approval
-- **Overall health**: 🟡 Active v8 rendered its first actual validated block 4.038 seconds before full completion in the approved single-call sample while preserving final validation, polling, and last-known-good. ISS-017 queued-request recovery and ISS-018 citation compatibility remain open.
+## Implementation snapshot
 
-## Tech Summary
-
-| Field | Value |
-|-------|-------|
-| Language | TypeScript (frontend) + Python (backend/data/AI) |
-| Framework | React + Vite + Tailwind + Recharts (frontend) / FastAPI (backend) |
-| Infrastructure | Vercel + Railway/Render + Supabase/Neon |
-| Repo Structure | Single monorepo (`/frontend`, `/backend`) |
-
-## Key Paths
-
-```
-Future Signal/
-└── AI Development Harness/     # Working root
-    ├── docs/
-    │   ├── prd/                # Product requirements (v1.1, split by section)
-    │   ├── service-design/     # Data/metrics/AI/signal spec (v1.0)
-    │   ├── tech-design/        # Architecture/schema/API/pipeline spec (v1.0)
-    │   └── ux-design/          # Screens/copy policy/safety guardrails (v1.0)
-    ├── frontend/               # React/Vite dummy-data dashboard/detail/chart flow
-    ├── backend/                # FastAPI scaffold, read API, schema/migration
-    ├── reports/                # Implementation status and data-spike findings
-    └── memory/                 # Working project/session state
-```
-
-## Implementation Snapshot
-
-| Area | Current state |
+| Area | Active implementation |
 |---|---|
-| Frontend | TASK-118 divides issue detail into four query-linked tabs; TASK-119 extends restrained terracotta/current-context and muted-blue/comparison styling to the full issue list. TASK-120 aligns home desktop navigation with the shared right-side header group and presents methodology as emphasized numbered guidance cards. Query state, accessibility, timing/caution, report states, and direction semantics remain intact. |
-| Backend | TASK-062 activates the strict v4 report read contract and returns only reconstructed, evidence-consistent bundles with verified same-episode candidates and approved source fields. Legacy/failed/malformed/mismatched rows remain audit-only. TASK-057's append-only migration was applied to the approved development DB during TASK-065; production remains untouched. |
-| Data/AI | TASK-058/059 provide bounded annotation-only research and deterministic/independent verification. TASK-060 connects them between signals and reports, and TASK-061 adds strict evidence-linked v4 generation with deterministic metric/context fields, same-episode verified candidates, writer-cost accounting, and last-known-good failure isolation. |
-| PM / Safety | The v3 MVP remains frozen. ADR-038 activates TASK-056~065 with verified-only automated context, strict evidence links, a cumulative USD 100 OpenRouter cap, and local/development-only writes. Deployment and production DB writes remain separate gates. |
-| v4 program | TASK-056~065 are complete. Migration 002 exists only in the approved development DB. ADR-047 permits bounded provider query reformulation with normalized market-metadata overlap while every evidence/publication gate remains unchanged. Fifty backfill targets yielded 46 completed distinct issues, seven rejected candidates, zero public candidates, and 14 successful v4 rows across 13 issues. |
-| v5 program | ADR-048 expands the two authored v4 fields into six evidence-bounded narrative fields, adds explicit verified-source/no-source presentation, and activates sequential TASK-075~081 for implementation, development regeneration, and user quality review. |
-| grounding program | ADR-049/TASK-082~091 add unapplied migration 003, source resolution evidence, writer/research grounding, one-to-four completeness-scaled scenarios, exact-title/reference/history validation, strict basis fields, and issue-type adversarial gates. Full Backend/Frontend checks pass; no external call, deployment, or non-test DB write occurred. |
+| Frontend | TASK-118~120: four detail tabs, shared navigation, restrained terracotta current-context emphasis, muted-blue comparison styling, accessibility and responsive QA |
+| API | Market-scoped issue/history/report reads; append-only generation-request POST; request status and validated-block SSE endpoints |
+| Collection | TASK-121: collection-only GitHub Actions workflow every four hours; no scheduled provider stage |
+| Data | Append-only snapshots and metrics, fixed 24h/7d changes, caution levels, ±5pp signal detection, guarded historical seed |
+| Briefing | TASK-112~117: v8 issue-centered prompt, source refinement, safe retry, contextual wording, validated-block streaming |
+| Safety | Aggregate-only data, deterministic evidence/source/timestamp checks, exact caution handling, prohibited-language validation |
 
-## Recent Changes
+## Active issues
+
+- **ISS-017**: a queued on-demand request can remain without a worker after a
+  process loss. Existing lease recovery covers expired running attempts, not
+  every orphaned queued state.
+- **ISS-018**: the configured v8 research model may return no standard citation
+  annotations, producing a valid zero-source result but limiting source yield.
+- **TD-001**: the Frontend production build retains the known Recharts bundle-
+  size warning.
+
+Full active technical debt is in `memory/known-issues.md`.
+
+## Current constraints
+
+- `AGENTS.md`, `standards.md`, and `memory/glossary.md` remain binding.
+- Every data-bearing screen retains data-as-of timing and interpretation
+  caution.
+- Normal market collection does not invoke context research or the writer.
+- The API does not call Polymarket or an AI provider directly; it may append
+  generation request/event state.
+- Provider calls, schema changes, dependencies, infrastructure, deployment,
+  production writes, and wording-policy changes require their recorded gates.
+- Existing migrations and accepted ADR/completed-task text are immutable.
+
+## Recent changes
 
 | Date | Change |
-|------|--------|
-| 2026-07-12 | TASK-122 phases 1-3 entered review: added retention/review records, removed 94 temporary session/daily/review/prompt artifacts, consolidated current setup guidance, and removed two obsolete root guides. Review remediation restored immutable audit text and corrected README commands/API boundaries; Backend 488 tests plus all Frontend checks pass with zero missing relative links. Memory/API/design compaction remains unstarted pending review. |
-| 2026-07-12 | TASK-121 replaced the daily data-and-report GitHub Actions workflow with four-hour market-data collection at minute 17 every four UTC hours. The job passes no AI credentials/model and explicitly skips report generation and context research. YAML, all 13 scheduled-batch tests, Ruff, and diff checks pass; no workflow run or external operation was triggered. |
-| 2026-07-12 | Under explicit user approval, TASK-109's stored-data phase removed 241 v1-v7 AI reports, 10 v7 generation requests, and 38 cascading events only from the configured `ENV=local` development DB. All v8 rows remained; orphan checks and actual FastAPI fresh/stale/last-good reconstruction passed. No runtime code, schema, provider, infrastructure, deployment, or production state changed. |
-| 2026-07-12 | TASK-120 moved home desktop navigation into the same right-aligned header group as other routes and applied restrained heading/action/number-card emphasis to methodology. Frontend checks and actual desktop/320px Browser QA pass with consistent navigation, 44px controls, no overflow, and no console warnings/errors. |
-| 2026-07-12 | TASK-119 extended the approved emphasis hierarchy to the full issue list: selected filters, result count, current reflected expectation values, comparison values, row hover, and active pagination. Frontend checks and actual desktop/320px Browser QA pass with 44px mobile filters, no overflow, and no console warnings/errors. |
-| 2026-07-12 | TASK-118 visual follow-up applied `#B84416`/`#FFF2E9` terracotta emphasis and `#466AA3`/`#EDF3FB` comparison styling to the detail flow and shared tokens. Frontend checks plus desktop/320px Browser QA pass without overflow or console warnings/errors. |
-| 2026-07-11 | TASK-118 reorganized the issue detail into four query-linked tabs while preserving v8 generation/source/failure states, exact timing boundaries, data-as-of, and caution. All Frontend checks and actual 1280px/390px/320px Browser QA pass with no clean-tab console errors or page overflow. |
-| 2026-07-11 | TASK-116 activated `v8-contextual-wording-1`: six Korean expressions now require explicit negation/inquiry or source-supported visible attribution, while financial/action and future-outcome blocks remain strict. Historical v8 reports reconstruct as stale last-known-good. Backend 482 tests/Ruff pass. |
-| 2026-07-11 | TASK-115 restored the stopped Frontend server, added explicit v8 prohibited-expression prompt guidance, and made failed requests retryable with stored evidence through append-only event metadata. A real development chart and fresh v8 briefing were verified together; Backend 467 tests/Ruff and all Frontend checks pass. |
-| 2026-07-11 | TASK-114 removed full snapshot/metric materialization from ID routes, bounded history and report evidence reads by market/time/latest row, and moved list/category latest-row selection into portable SQL. Backend 466 tests/Ruff, API/OpenAPI, all Frontend checks, and diff checks pass. ISS-017 remains open only for orphaned queued-request recovery. |
-| 2026-07-11 | TASK-113 widened v8 context retrieval to deterministic 90/180-day horizons, added bounded aliases and exact-excerpt fallback claims, advanced the fingerprint, connected the action to research, and added server-tool/plugin compatibility handling. Backend 459 tests/Ruff and all Frontend checks pass. The approved development run returned no standard annotations, stored no candidate/report, and opened ISS-018. |
-| 2026-07-11 | TASK-112 added and activated the v8 issue-centered prompt, typed output contract, on-demand fingerprint/service/API path, strict Frontend parser, and issue-flow presentation while preserving v7 source and stored rows. Provider-free Backend and Frontend verification passed; no migration, DB write, provider call, deployment, or legacy deletion occurred. |
-| 2026-07-11 | TASK-111 removed v7 numeric-token blocking while retaining structure/reference/source-parent/language/URL gates, advanced policy fingerprinting to v7-positive-evidence-2, and produced the first valid development v7 report in one approved call for USD 0.011714. Stored reconstruction and fresh API serving pass; Backend remains at 446 tests/Ruff. |
-| 2026-07-11 | TASK-110 connected queued report POSTs to a request-scoped local/dev child worker while preserving the provider-free API boundary. Backend passes 446 tests and Ruff. |
-| 2026-07-11 | TASK-108 applied migration 004 only to the approved development DB and compared the same two v6/v7 issues. V6 was 2/2 for USD 0.007316; v7 was 0/8 for USD 0.077962. ISS-016 blocks v7 acceptance and legacy deletion. Backend passes 440 tests. |
-| 2026-07-11 | TASK-105 activated POST generate, request polling, and strict v7 fresh/stale/generating/failure/last-good report reads with exact reconstruction. Backend passes 437 tests. |
-| 2026-07-11 | TASK-104 removed report calls from normal collection and added the tested v7 fingerprint/request/lease/context/worker/report service. Full Backend suite passes 428 tests. |
-| 2026-07-11 | TASK-103 added the tested v7 30-day context path, A-D source levels, excerpt-backed claims, and conditional independent verification without a live provider call. |
-| 2026-07-11 | TASK-102 added unapplied migration 004 and tested immutable request plus append-only lease/outcome event models. Earlier migrations remain untouched. |
-| 2026-07-11 | TASK-101 activated the approved positive-first v7 writer/source policy and added strict flexible writer models, opaque evidence refs, parser, validation, and tests. No provider, database, schema, API, or workflow action occurred. |
-| 2026-07-11 | TASK-100 archived the v1-v6 contract map, separated permanent evidence/safety invariants from version-specific shape/style rules, and recorded the retention and separately approved cleanup boundary. No runtime or external state changed. |
-| 2026-07-11 | TASK-099 defined the proposed positive-first, user-requested, cache-backed v7 briefing direction and TASK-100~109 execution sequence. Implementation gates remain pending. |
-| 2026-07-11 | TASK-095 activated the v6-only report endpoint with strict DB evidence reconstruction, four mode unions, exact sources/rule reference, v5 exclusion, and previous-valid-v6 fallback. Full Backend verification passed with 383 tests. |
-| 2026-07-11 | TASK-094 resolved ISS-014: incomplete requested context configuration now records a safe failure reason, failed batch/log state, and CLI exit code one; explicit skip remains normal. No workflow configuration changed. |
-| 2026-07-11 | TASK-093 completed the deterministic four-mode v6 writer/storage contract, metric/rule single-owner enforcement, evidence-basis separation, duplicate/rule-leak/current-fact gates, and append-only batch path. Full Backend verification passed with 369 tests. |
-| 2026-07-11 | TASK-092 proposed ADR-050 and the four deterministic v6 briefing modes, strict evidence bases, single-owner non-duplication rules, collapsed resolution reference, and exact public response shape. TASK-093~098 are dependency-ordered; implementation awaits explicit AI-policy/API approval. |
-| 2026-07-11 | After explicit user approval, append-only migration 003 was applied to the configured `ENV=local` development Supabase database. Table, columns, index, and unique constraint verification passed; `market_resolution_rules` contains zero rows. No provider call or report regeneration occurred. |
-| 2026-07-11 | TASK-081 complete: actual v4/v5 comparison, display-value refinement, ten-report quality regeneration with six successes/four safe rejections, USD 0.376609 total observed v5 writer spend, documented limitations, and open local review screen. TASK-075~081 program complete. |
-| 2026-07-11 | TASK-080 complete: 14 valid v5 rows across 13 development issues, 13/13 strict reconstruction, actual no-source Browser flow, fixture 0/1/3 evidence, responsive/loading/error/link/console QA, USD 0.268466 observed writer spend, 333 Backend tests, and all Frontend checks. TASK-081 activated. |
-| 2026-07-11 | TASK-079 complete: v5 AI briefing UI, scenario/check/watch cards, visible no-source state, safe exact source links, strict parser, full Frontend checks, and responsive Browser QA. TASK-080 activated. |
-| 2026-07-11 | TASK-078 complete: no-migration v5 JSONB storage/read contract, newest-to-oldest last-good reconstruction, exact verified-source API, OpenAPI update, and 332 Backend tests. TASK-079 activated. |
-| 2026-07-11 | TASK-077 complete: user-format v5 contract, 3–4 conditional scenarios, typed check/watch lists, issue-specific/numeric gates, title/entity/official-domain queries, market/forecast-page exclusion, seven guarded development research rows, USD 0.18057005 task spend, and 331 Backend tests. TASK-078 activated. |
-| 2026-07-11 | TASK-076 complete: strict six-field v5 narrative generation, specificity/duplication/evidence/wording gates, append-only batch storage, and 327 Backend tests. TASK-077 activated. |
-| 2026-07-11 | TASK-075 complete: ADR-048 records human approval for the evidence-bounded v5 narrative and exact verified-source-link program; TASK-076 is activated. |
-| 2026-07-11 | TASK-065 complete: 50-target development backfill, 46 distinct completed issues, query/result maxima 5/26, zero public candidates after strict gates, 13 successful v4 issue reports with zero safety/evidence mismatch, five live no-candidate and five local fixture candidate Browser flows, and USD 3.00263875 recorded spend. |
-| 2026-07-11 | ADR-047 human-approved: bounded query reformulation may replace exact-string membership when normalized market topic/entity overlap passes; all annotation, independent-verification, and publication gates remain unchanged. TASK-065 resumed. |
-| 2026-07-11 | Historical TASK-065 checkpoint: development migration applied; 16 bounded preflight runs across five issues recorded USD 0.778926. Bulk backfill paused until the later ADR-047 approval recorded above. |
-| 2026-07-11 | TASK-064 approved after fixing UTC normalization in the SQLite local writer path; full integration/adversarial review reached 311 Backend tests and all Frontend/Browser checks. |
-| 2026-07-11 | TASK-063 completed: strict v4 parser, one-card change episode, candidate/source cards, chart-ID linkage, responsive and state Browser QA. |
-| 2026-07-11 | TASK-062 completed: strict v4 read-time reconstruction, verified-only candidate/source output, legacy/malformed gating, OpenAPI contract, and 309-test Backend verification. |
-| 2026-07-11 | TASK-061 completed: strict seven-field evidence-grounded v4 generation, same-episode metric/candidate references, writer budget accounting, and failure-preserving storage passed the 298-test Backend suite. |
-| 2026-07-11 | ADR-038 accepted and TASK-056~065 activated; TASK-056 policy/contract documentation completed without provider calls or DB writes. |
-| 2026-07-11 | TASK-096 completed the strict four-mode v6 Frontend, collapsed resolution reference, safe exact source links, and 20-combination responsive Browser QA; TASK-097 development regeneration is active. |
-| 2026-07-11 | TASK-097 evaluated the user-limited ten-issue development subset for USD 0.051373. Strict filtering preserved safety but yielded zero successful v6 rows; exact issue-anchor and scenario/material prompt corrections pass locally, while a small provider revalidation remains pending as ISS-015. |
-| 2026-07-11 | TASK-097 completed after the user-approved two-issue retry: actual Trump stable/no-evidence and Israeli-parliament change/no-evidence v6 rows stored and served successfully for USD 0.007316 retry cost (USD 0.058689 total TASK-097 writer cost). ISS-015 is resolved and TASK-098 review is active. |
-| 2026-07-11 | TASK-098 completed the v6 integration review: 388 Backend tests and all Frontend checks pass; four modes pass the 20-case Browser matrix; actual Trump and Israeli v6 flows pass stored/API/UI audits; the actual Trump screen is left open with recorded zero-candidate, prose-polish, pool, and runtime-verifier limits. |
-| 2026-07-11 | TASK-098 reopened after detecting authored `december` repetition and generic English in the two live rows. New date/language read gates pass 390 Backend tests and fail closed both rows; TASK-097 is active pending approval for one clean Trump regeneration. |
-| 2026-07-07 | AI Development Harness v1.1 initial setup (Standard tier) |
-| 2026-07-07 | PRD rescoped to v1.1 (hackathon-narrowed from broader "global issue outlook platform" concept) |
-| 2026-07-07 | Service Design, Technical Design, UX Design written as companion specs to PRD |
-| 2026-07-08 | Day 1 implementation scaffold completed: frontend dummy flow, backend mock API contract, DB schema draft, health endpoint |
-| 2026-07-08 | Polymarket Gamma/CLOB spike completed with 10 sample records and a CLOB history fixture |
-| 2026-07-08 | Day 1 implementation checkpoint completed; the retired daily artifact remains in Git history. |
-| 2026-07-08 | Day 1 closed: API contract accepted (ADR-008), DB schema draft accepted but unapplied (ADR-011), no Day 1 tasks remain active |
-| 2026-07-08 | Day 2 work assigned: `TASK-031` completed the allocation; `TASK-007`, `TASK-008`, `TASK-009`, `TASK-010`, and `TASK-012` moved into active execution order |
-| 2026-07-08 | PR #9 (`TASK-007`) merged 50 normalized sample records and structured skip details |
-| 2026-07-08 | PR #10 (`TASK-010`) added live core API read paths with static fallback behavior |
-| 2026-07-08 | PR #12 (`TASK-012`) reviewed; nullable change metrics now remain visible as insufficient data instead of `0.0pp` |
-| 2026-07-08 | PR #13 (`TASK-008`) merged 24h/7d snapshot metric calculation |
-| 2026-07-08 | PR #14 (`TASK-009`) merged the MVP expectation-shift detector |
-| 2026-07-08 | PR #15 recorded local stack startup verification notes |
-| 2026-07-08 | Day 2 closed; `tasks/active.md` has no remaining Day 2 tasks and Day 3 is ready to start |
-| 2026-07-09 | Day 3 work assigned: `TASK-013`, `TASK-014`, `TASK-017`, `TASK-035`, and `TASK-036` opened in `tasks/active.md`; `TASK-034` retains the durable allocation summary. |
-| 2026-07-09 | `TASK-035` closed: detail/history API contract confirmed sufficient for the Day 3 chart/marker path with no response-shape change; live-read/fallback/unknown-id/history-window test coverage strengthened (62 backend tests passing) |
-| 2026-07-09 | `TASK-013` completed: detail chart windows now require baseline-covered history, 30d no longer falls back to 7d, tooltips include timestamp/value/previous-point pp change, and chart markers consume API `signals` when present while preserving local 5pp fallback detection. |
-| 2026-07-09 | `TASK-036` completed: caution-level thresholds and expectation-shift marker handoff documented in ADR-019. |
-| 2026-07-09 | `TASK-014` completed: caution badge placement and copy aligned across dashboard/detail surfaces. |
-| 2026-07-09 | `TASK-017` completed: brief caution copy, shared footer copy, and a dedicated in-app information notice surface were added without policy, route dependency, API, schema, or infrastructure changes. |
-| 2026-07-09 | Day 3 closed: all Day 3 P0 tasks are merged; durable outcomes remain in `tasks/completed.md`. |
-| 2026-07-09 | Day 4 work assigned from latest `origin/main` at `af83f7e`: `TASK-015`, `TASK-039`, `TASK-016`, `TASK-019`, `TASK-040`, and `TASK-018` are active; `TASK-038` retains the durable allocation summary. |
-| 2026-07-09 | `TASK-015` completed: fixed-template AI report generator, strict schema parse, and banned-phrase/pattern safety filter implemented (`app/core/ai_report.py`, `app/core/ai_report_batch.py`, 38 new tests). ADR-022 records the human-approved AI provider decision (OpenAI, real `OpenAIReportClient`) overriding Day 4's deterministic-template default - no key configured in this environment, so no live call has executed yet. |
-| 2026-07-09 | `TASK-039` completed in PR #29 follow-up: report endpoint live read-path now serves latest successful `ai_reports` rows, keeps `not_yet_generated` for absent/failed reads, and history fallback returns empty points rather than fabricated chart data. |
-| 2026-07-09 | `TASK-016` completed: the frontend detail flow consumes `/api/issues/{id}/report` and renders stored report sections plus loading, not-yet-generated, and fetch-failure states with nearby data-as-of timing and caution context. |
-| 2026-07-09 | Development Supabase connectivity was restored through the pooler URL, `psycopg2-binary==2.9.10` was added for provider-copied `postgresql://...` URLs, and `backend/migrations/001_initial_schema.sql` was applied after explicit human approval. |
-| 2026-07-09 | `ISS-004` seeded the configured development DB with one collector snapshot/metric row per normalized issue, and ADR-025 added the approved local/dev historical seed path for live DB-backed demo charts. |
-| 2026-07-09 | The guarded historical seed path was run against the configured development DB: 33,238 total snapshot rows, 150 metric rows, 2 expectation-shift signal rows, and 7d live chart/metric coverage for the 50 seeded issues. |
-| 2026-07-09 | `TASK-019` completed and merged in PR #36 at `6d0eb44`: related-event candidates are curated for exactly four normalized/live-reachable issue IDs with a guarded local/dev seed script and tests. |
-| 2026-07-09 | `TASK-041` created: AI report generation readiness must close the remaining live/dev gap where `ai_reports=0` and latest historical-seed metric timestamps do not exactly match snapshot timestamps required by the current prompt-input lookup. |
-| 2026-07-09 | `TASK-041` completed from `origin/main` at `01df91b`: report prompt inputs now use the latest snapshot at or before the metric timestamp, tests prove fake-LLM success-row insertion, and approved-only run notes document how to create stored summaries later. |
-| 2026-07-09 | `TASK-042` completed: `app/core/scheduled_batch.py` linked data collection, snapshot/metric generation, signal detection, and historical report generation in one command; its retired daily workflow ran every 24h. TASK-121 later replaced that schedule with isolated four-hour market-data collection. |
-| 2026-07-09 | `TASK-043` accepted and implemented: AI report output changed from numeric 5-section summaries to 8-section issue explainers with three neutral conditional scenario sections, and `/api/issues/{id}/report` now treats legacy v1 stored report content as `not_yet_generated` rather than serving a mismatched shape. |
-| 2026-07-09 | `TASK-044` completed: dashboard/detail issue headings now use Korean topic labels, issue display names, and one-line 기준 조건 while preserving raw Polymarket titles only as detail-screen provenance. |
-| 2026-07-09 | `ISS-007` resolved: report reads now require current `PROMPT_VERSION`, report regeneration treats same-timestamp current rows as fresh, `/api/categories` reflects live servable categories, category filtering is case-insensitive, and the configured development DB has v2 summaries for the default top-20 heat-sorted issues. |
-| 2026-07-09 | Category filters were localized through ADR-031 and then simplified per user clarification: `/api/categories` now returns broad Korean groups such as `정치`, `경제`, `기술`, `세계`, and `스포츠`, while detailed labels such as `우크라이나 전쟁` and future `이란 전쟁` remain card-level display labels. |
-| 2026-07-09 | `TASK-040` completed: Day 4 deck outline, demo script, fallback narration, Day 5 screenshot/rehearsal checklist, and judge Q&A draft are recorded in `reports/task-040-demo-script-deck-draft.md`; final cross-surface wording lint remains `TASK-018`. |
-| 2026-07-09 | `TASK-018` completed: final Day 4 copy/wording lint passed with notes in `reports/task-018-copy-lint.md`; prompt-template wording, dashboard weekly-row data-as-of timing, and one TASK-044 report wording hit were resolved, with no policy/API/schema/dependency/infrastructure/deployment changes. |
-| 2026-07-10 | Day 4 closed: latest `origin/main` includes PR #42 (`TASK-018`), no active Day 4 tasks remain, and durable outcomes remain in `tasks/completed.md`. |
-| 2026-07-10 | `TASK-047` completed: ADR-032 approved the v3 AI report policy, the exact v3 report field list, limited public API shape changes, tightened wording-safety criteria, manual-only context-candidate scope, and maintained prohibitions before implementation begins. |
-| 2026-07-10 | `TASK-048` completed: ADR-033 supersedes ADR-032 for the v3 content/display contract, accepting the eight-field schema, Option A external context, exact caution matrix, evidence-first Frontend order, Unicode character bounds, and a maximum of five concise sentences per field without changing runtime v2 paths. |
-| 2026-07-10 | `TASK-052` completed: latest `origin/main` at `106af52` was confirmed, and Day 5 v3 implementation was split into `TASK-049` Data/AI generation, `TASK-050` Backend API/read contract, `TASK-051` Frontend dynamic report cards, and `TASK-053` final integration copy/contract review. |
-| 2026-07-10 | `TASK-053` completed on the Reviewer integration branch: TASK-049/050/051 were combined, ADR-033 sentence/semantic/copy gaps were closed, 198 Backend tests and all Frontend checks passed, and 320px/375px null/non-null context Browser QA passed. |
-| 2026-07-10 | `ISS-010` resolved the daily GitHub Actions failure: repository secrets/model configuration were restored without exposing values, the v3 prompt was aligned with existing ADR-033 constraints, and run `29073226485` passed with 50 processed, 0 failed, and 10 successful reports. Draft PR #51 contains the code/test changes. |
-| 2026-07-10 | `TASK-054` information-architecture alignment merged through PR #52, adding routed discovery/list/detail/methodology flows and the revised 7-day Home. |
-| 2026-07-10 | `ISS-011` resolved the final ES2020 Frontend build blocker in PR #53. ADR-037 closes Day 5 as a verified technical MVP milestone and defers deployment plus final presentation operations to TASK-020/TASK-021. |
+|---|---|
+| 2026-07-12 | TASK-122 phases 1-3 removed temporary coordination artifacts, consolidated setup guidance, restored immutable audit text after review, and passed 488 Backend tests plus all Frontend checks. |
+| 2026-07-12 | TASK-121 replaced the retired daily combined workflow with four-hour market-data-only collection and no provider configuration. |
+| 2026-07-12 | The approved local cleanup removed stored v1-v7 reports and v7 request history while preserving active v8 rows and reconstruction. |
+| 2026-07-12 | TASK-118~120 completed the four-tab detail structure and shared visual/navigation alignment. |
+| 2026-07-11 | TASK-117 activated validated-block SSE and preserved polling plus last-known-good fallbacks. |
+| 2026-07-11 | TASK-112~116 activated the current v8 evidence, source, retry, and wording boundaries. |
 
-## Constraints
+## Next
 
-- 5-day build window, 4-person team — see `../ORCHESTRATOR.md` and `../roadmap.md` for day-by-day allocation
-- No accounts/login/saving/notifications/reports/team-sharing in MVP (PRD §6.5)
-- No free-form AI analysis, no automated news matching, no wallet-level participant features (see `AGENTS.md` Absolute Restrictions)
-- V3 runtime follows ADR-033 and is present on `main`; PR #53 must merge before
-  its ES2020 compatibility repair and Day 5 closeout records reach `main`.
-- No service deployment or final presentation capture is claimed by the Day 5
-  technical closeout; those remain TASK-020 and TASK-021.
-- Every data-bearing screen requires a data-as-of timestamp + interpretation-caution badge (PRD §8.10)
-- Strict prohibited-wording policy — see `glossary.md` and `../standards.md`
+Complete TASK-122 phases 4-7, then review ISS-017 and ISS-018 separately.
+Another provider evaluation, workflow dispatch, deployment, or production
+operation requires its own authorization.

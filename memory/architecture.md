@@ -1,277 +1,124 @@
 <!--
-Purpose:        System design decisions and architecture structure
-Owner:          Backend Implementer (acting Architect)
-Update Trigger: New component added, design decision changed, dependency structure changed
+Purpose:        Current implemented architecture and invariants
+Owner:          Backend Implementer / Data-AI Implementer
+Update Trigger: Implemented architecture or boundary change
 Harness Version: 1.1
 -->
 
 # Architecture — Outlook Signals
 
-_Last updated: 2026-07-11_
-_Full detail: [Technical Design](../docs/tech-design/README.md) — this file is the working summary agents update as the build progresses._
+_Last updated: 2026-07-12_
 
-## System Overview
+## System overview
 
-A read-heavy, batch-fed dashboard built to achieve: surface Polymarket-based issue-change signals with strict interpretation-caution safeguards, in 5 days.
-
-**Pattern**: no live trading engine, no synchronous user write path, no message queue/websockets/auth in MVP.
-
-## Component Structure
-
+```text
+Polymarket Gamma API
+        |
+        v
+four-hour collection workflow
+  fetch -> normalize -> snapshots -> metrics -> signals -> collection log
+        |
+        v
+PostgreSQL <-> FastAPI <-> React/Vite
+        ^          |
+        |          v
+        +---- on-demand generation request
+                    |
+                    v
+              isolated v8 worker
+      stored evidence -> optional context refresh -> NDJSON writer
+                    |
+                    v
+       validated blocks -> final report -> request outcome
+                    |
+                    v
+              SSE replay / polling
 ```
-Polymarket public APIs (Gamma + CLOB)
-        |  scheduled fetch (GitHub Actions, every 24h)
-        v
-Batch Collector (Python) -- fetch -> normalize -> snapshot -> metrics -> signals -> verified context -> evidence-grounded reports -> logs
-        |  writes
-        v
-PostgreSQL -- existing tables + context evidence + unapplied resolution-rule extension
-        |  reads only
-        v
-FastAPI backend -- read issue data + append v7 generation requests; never call providers
-        |  HTTPS/JSON
-        v
-React + Vite + React Router frontend -- `/` Home / `/issues` Issue List / `/issues/:id` Detail / `/methodology` Disclaimer
-```
 
-Key rule: **the API layer never calls the AI provider or Polymarket directly**.
-It reads issue/report data and may append only ADR-051 generation request/event
-rows. In local/development, a committed queued request starts a request-scoped
-child worker; that isolated worker performs provider calls and report writes.
+## Runtime boundaries
 
-## Data Flow
+### Market collection
 
-1. Batch collector fetches public Polymarket data for a curated 30–50 market list
-2. Normalizes into Pydantic models, validates required fields, quarantines bad records (log + skip, never crash the run)
-3. Diffs against the most recent snapshot, inserts a new `market_snapshots` row (append-only)
-4. Computes `change_24h`/`change_7d`/`heat_score`/`confidence_level` into `market_metrics`
-5. Evaluates the ±5pp threshold for `issue_signals` (cooldown-gated to avoid duplicate firing)
-6. Qualifying markets (new expectation-shift row, no report yet, or stale >24h) get a new `ai_reports` row via template-constrained generation plus a safety filter; report prompt inputs use the latest snapshot at or before the metric timestamp so historical-seed metric rows remain usable without fabricating values
-7. FastAPI serves the available read-only data; the report endpoint accepts only current `v3` rows whose ADR-033 content and metric-linked timestamp validate, while legacy/failed/malformed rows preserve the neutral empty state
-8. React Router renders Home -> Issue List -> Detail -> Chart -> Summary with shareable list query state; detail core, history, and report requests are independent, and the v3 report shows one evidence-first section at a time while keeping report timing plus snapshot caution in the same card
-9. TASK-056~065 inserts bounded OpenRouter research after signal detection,
-   accepts only API citation annotations, applies deterministic and independent
-   verification, stores candidates append-only, and serves only evidence-linked
-   v4 reports and verified candidate sources
-10. ADR-047 treats deterministic queries as scope anchors and permits only
-    unique, bounded provider reformulations with normalized distinctive
-    topic/entity overlap. Reported queries are retained in run audit JSON; the
-    annotation, source, verifier, publication, and budget gates are unchanged
-11. TASK-083 preserves exact source resolution evidence in live normalized
-    collector output and appends changed definitions to
-    `market_resolution_rules`; checked/local JSON artifacts still omit raw
-    source descriptions. Migration 003 is checked in but not applied.
-12. TASK-084 injects the latest resolution-rule record into v5 writer and
-    context-research inputs. New v5 payloads retain that rule snapshot so API
-    reconstruction uses generation-time evidence; legacy payloads default to
-    no rule evidence.
-13. TASK-088 reloads the closest snapshot at or before each 24h/7d metric
-    boundary, sends its value and timestamp to the writer, and revalidates that
-    the stored delta is reproducible during generation and API reconstruction.
-14. TASK-089 summarizes snapshots within the fixed seven-day metric window into
-    deterministic start/end/min/max/sample fields and adds activity, liquidity,
-    and explicit evidence gaps to writer input.
-15. TASK-090 adds a four-value basis to every authored scenario/check/watch
-    item. Generation, API reconstruction, and Frontend parsing validate both
-    shape and evidence availability before the UI renders an evidence-range
-    label.
+- `.github/workflows/four-hour-collection.yml` runs at minute 17 every four
+  UTC hours and supports manual dispatch.
+- The job receives `DATABASE_URL` only and explicitly skips report and context
+  stages.
+- Gamma data is normalized to active binary issues. Invalid records are
+  quarantined without stopping the full run.
+- `market_snapshots`, `market_metrics`, signals, and collection logs are
+  append-only. Only market status and last-seen metadata update in place.
+- `backend/app/core/historical_seed.py` is a guarded local/development-only CLOB
+  history path; it never rewrites existing snapshots.
 
-## Design Decision Summary
+### Public API
 
-> See `decisions.md` for full ADRs
+- Issue list/detail/history reads are market- and time-bounded and degrade to
+  timestamped static fallback states when configured data is unavailable.
+- `POST /api/issues/{id}/report/generate` appends or joins an immutable
+  fingerprinted request. The API does not construct a provider client.
+- Request status reads one request plus its latest append-only event.
+- The SSE endpoint replays only already validated blocks for the active
+  request attempt and supports `Last-Event-ID`.
 
-| Decision | Choice | Date |
-|----------|--------|------|
-| Repo structure | Single monorepo (`/frontend`, `/backend`) | 2026-07-07 |
-| Package managers | npm (frontend), pip (backend) | 2026-07-07 |
-| CI/CD | GitHub Actions (batch schedule + lint/test) | 2026-07-07 |
-| AI generation approach | Template-constrained, LLM only polishes phrasing, banned-phrase filter mandatory | 2026-07-07 (PRD §8.8, Service Design §6) |
-| AI report content schema | ADR-033 v3 eight-field report: issue overview, current data reading, nullable external context, reviewed candidate comparison, conditional developments, checks, data limitations, and caution | 2026-07-10 (ADR-033, human-approved public API shape change) |
-| AI provider | OpenAI-compatible Chat Completions via `openai==2.44.0`; OpenRouter selected by `OPENROUTER_API_KEY` or `sk-or-` key shape | 2026-07-09 (ADR-022, ADR-027, human-approved) |
-| Scheduled report model | GitHub Actions `OPENAI_MODEL` repository variable aligned with the approved project model; workflow keeps its existing fallback only when the variable is absent | 2026-07-10 (ADR-035, human-approved configuration repair) |
-| Frontend browser routing | React Router 7 on React 18; `/`, `/issues`, `/issues/:issueId`, and `/methodology`, with scoped Vercel SPA rewrites | 2026-07-10 (ADR-036, human-approved dependency and deployment configuration) |
-| Data update strategy | Append-only inserts, no upserts | 2026-07-07 (Technical Design §4.10) |
-| Postgres driver | `psycopg[binary]` (psycopg3) | 2026-07-08 (ADR-007, human-approved) |
-| Postgres URL compatibility | `psycopg2-binary==2.9.10` for provider-copied `postgresql://...` URLs | 2026-07-09 (ADR-023, human-approved) |
-| Migration format (interim) | Plain SQL (`backend/migrations/*.sql`), not Alembic | 2026-07-08 (ADR-007) |
-| Automated context v4 | Citation annotations + deterministic hard gates + different verifier model + verified-only public reads; cumulative USD 100, local/dev writes only | 2026-07-11 (ADR-038, human-approved) |
-| Evidence-bounded narrative v5 | Six authored narrative fields plus deterministic relationship/limitation/caution fields; verified exact-source links; genericity/evidence/safety gates | 2026-07-11 (ADR-048, human-approved) |
-| Resolution-rule evidence | Separate append-only source condition/deadline/exclusion/source records from display copy; hash-idempotent versions | 2026-07-11 (ADR-049, human-approved code change) |
-| Server-tool query scope | Deterministic anchors + bounded normalized metadata overlap; exact reported strings audited | 2026-07-11 (ADR-047, human-approved) |
-| V7 briefing boundary | Positive-first flexible sections with opaque evidence refs; backend-owned metrics/source/timing/cache; A-C public source levels; v7-positive-evidence-2 keeps shape/ref/source-parent/language/URL blockers while numeric tokens are prompt-guided | 2026-07-11 (ADR-051, ADR-054, human-approved) |
-| V7 request lifecycle | Immutable market/fingerprint request plus append-only queued/running/succeeded/failed events with expiring leases | 2026-07-11 (TASK-102, human-approved) |
-| V7 context policy | Bounded 30-day issue context, deterministic A-D levels and excerpt claims, verifier only for conflict/ambiguity/high-impact/material C | 2026-07-11 (TASK-103, human-approved) |
-| V8 context policy | Issue-specific 90/180-day retrieval, deterministic aliases, exact-excerpt fallback claims, unchanged A-C attribution and publication blockers | 2026-07-11 (ADR-056, human-approved) |
-| V7 generation service | Versioned evidence fingerprint, duplicate join, append-only lease recovery, optional context successor, one-shot writer, strict storage, standalone worker | 2026-07-11 (TASK-104, human-approved) |
-| Local/dev worker auto-launch | A queued POST spawns the guarded CLI for the exact request ID; API remains provider-free and spawn failure preserves queued recovery | 2026-07-11 (TASK-110, user-directed) |
-| V7 public API | Append-only generate POST, request polling, strict reconstructed fresh/stale/generating/failure/last-good GET; API never calls provider | 2026-07-11 (TASK-105, human-approved) |
-| API query scope | ID routes use primary-key/market/time/latest-row bounds; lists use portable latest-per-market window subqueries | 2026-07-11 (ADR-057 / TASK-114) |
-| V8 failed-request retry | Failed immutable requests may append a queued-event refresh preference and retry with stored evidence; prompt lists existing wording blockers explicitly | 2026-07-11 (ADR-058 / TASK-115) |
-| Active-v8 wording validation | Sentence-level hard/negation/inquiry/source-supported-attribution classifier with legacy fingerprint reconstruction | 2026-07-11 (ADR-059 / TASK-116) |
-| Evidence-aware briefing v6 | Four deterministic change/evidence modes, strict basis union, one-owner metric/rule display, and v6-only fallback | 2026-07-11 (ADR-050, human-approved and implemented) |
+### V8 briefing worker
 
-## V6 evidence-aware briefing implementation (TASK-092~098)
+- A local/development child worker claims queued or expired-running requests
+  with bounded leases.
+- Input fingerprints cover prompt, policy, input schema, metric/snapshot,
+  definition, context, and source evidence.
+- Context refresh accepts only source records passing URL, identity, relevance,
+  timing, supported-claim, duplicate, and contradiction gates.
+- One NDJSON response emits a headline/summary block, consecutive section
+  blocks, and a complete object. Each complete block is validated before
+  persistence; the final report repeats full-envelope validation.
+- Failure never replaces the previous valid report. The UI removes failed
+  partial content and retains polling plus last-known-good fallbacks.
 
-ADR-050 defines a no-migration v6 extension over append-only
-`ai_reports.content`. The selector reuses the existing 24-hour ±5pp signal rule
-and the current verified-candidate reconstruction gates to choose one of four
-report modes before generation. The public response adds deterministic
-`observed_change`, `resolution_reference`, `report_mode`, and a strict
-mode-discriminated briefing union. V1-v5 remain audit-only and only a
-contract-compatible v6 row could satisfy fallback.
+## Storage
 
-TASK-093 implements mode-constrained generation and append-only storage;
-TASK-095 reconstructs the strict public response from DB evidence and excludes
-v1-v5 rows; TASK-096 renders the four layouts and collapsed rule reference;
-TASK-097 stores two actual development successes after bounded fail-closed
-evaluation; and TASK-098 verifies stored/API/UI integration. The user approved
-the AI-policy, public API, and bounded provider calls. No schema, dependency,
-workflow, infrastructure, deployment, or production-write change is included.
+| Migration | Active purpose | Applied state |
+|---|---|---|
+| 001 | Markets, outcomes, snapshots, metrics, signals, reports, related material, collection logs | Approved local development DB only |
+| 002 | Context candidates and collection runs | Approved local development DB only |
+| 003 | Versioned market resolution rules | Approved local development DB only |
+| 004 | Immutable generation requests and append-only events/leases | Approved local development DB only |
+| 005 | Individually validated generation blocks for SSE replay | Approved local development DB only |
 
-## Architecture Constraints
+Historical v1-v7 stored report/request rows were removed under explicit local
+approval. Migrations, ADRs, compatibility code, and retained evidence reports
+remain.
 
-- Sequential batch script only — no queue/worker infra until report volume or latency demands it (Phase 2)
-- API surface uses `issues`/`signals`/`reports`/`categories` naming — never `markets`/`bets`/`trades`/`positions`/`profits` in any public path, including internal code (Technical Design §5)
-- No `users`/`watchlists`/wallet-level tables exist even in dormant form — schema itself is a policy signal (Technical Design §4.12)
-- `/api/categories` is a read-only broad Korean filter taxonomy derived from currently servable live issue titles/categories when DB data exists; DB-free/failure mode keeps the documented Korean sample fallback. `/api/issues?category=...` accepts those broad Korean labels and raw stored category values. Detailed labels such as `우크라이나 전쟁` and `이란 전쟁` are frontend card-display labels, not top-level filter values.
-- TASK-112 keeps the v7 append-only request/source/storage architecture but
-  activates a v8 writer and public report. V8 uses issue-centered unique
-  sections, section-level evidence refs, and versioned fingerprints; existing
-  tables and JSONB storage require no migration. V1-v7 rows remain audit-only.
-- TASK-113 advances the active context policy to `v8-source-level-2`. The
-  request action asks the local/dev worker to refresh bounded public context;
-  evidence changes produce the existing immutable successor request, which the
-  request-scoped worker processes before exiting. URL provenance, excerpt
-  support, A-C attribution, conditional verification, cumulative budget, and
-  publication blockers remain intact.
-- TASK-114 makes SQL query scope an API boundary. Request status never reads
-  snapshot or metric tables; issue/report/history/generation reads are bounded
-  by the requested market and latest/time-window limits; lists/categories use
-  `row_number()` latest-per-market subqueries compatible with SQLite and
-  PostgreSQL instead of materializing accumulated history in Python.
-- TASK-115 preserves immutable request identity while allowing a failed retry
-  to append `context_refresh_requested=false` in queued-event usage. Claiming
-  the retry uses that event-local preference; initial requests still follow
-  their immutable refresh setting. The v8 prompt enumerates the existing
-  wording blockers so writer failures are less likely without relaxing the
-  validator.
-- TASK-116 activates `v8-contextual-wording-1`. The active validator evaluates
-  each authored sentence with its exact section evidence scope. Positive
-  certainty/guarantee/recommendation/opportunity/outlook/cause wording requires
-  an exact source ref, same-strength supported-claim marker, and visible
-  attribution; negative/limitation/inquiry forms may pass source-free. Legacy
-  v8 fingerprints reconstruct independently and appear stale under the new
-  current fingerprint.
+## Core invariants
 
-## Implementation Status (2026-07-10 Day 5 v3 Integrated)
+- Aggregate market data only; no user account or wallet-level feature.
+- Every data surface keeps data-as-of timing and interpretation caution.
+- Missing history or evidence remains absent; values and sources are never
+  fabricated.
+- External material may provide attributed context but cannot be presented as
+  the explanation for an observed movement.
+- Authored factual sections require reconstructible evidence references.
+- Source URLs, domains, titles, claims, levels, and parent links are checked at
+  generation and read time.
+- Prohibited-language validation runs before storage and again during public
+  reconstruction where required.
+- Production writes, deployments, schema changes, dependencies, infrastructure,
+  and wording-policy changes retain human approval gates.
 
-- `/backend` scaffold exists (FastAPI app, `app/api/routes`, `app/core`, `app/db`, `app/schemas`) — see `backend/README.md`. App imports and boots cleanly; smoke-tested via a local venv (`pytest` + a live `uvicorn` request).
-- `/frontend` scaffold exists (Vite + React + TS + Tailwind, npm scripts). PR #53 verifies `npm run typecheck`, `npm run lint`, the report-parser regression, and `npm run build` against the TASK-054 route/dashboard baseline. Production build still reports the known Recharts chunk-size warning tracked as TD-001.
-- `GET /api/health` is live (mock/no DB dependency).
-- `GET /api/issues`, `/api/issues/:id`, and `/api/issues/:id/history` read latest available snapshot/metric/history rows when a database is configured, and otherwise serve the documented static fallback with honest `data_as_of` timestamps (ADR-013). `/api/issues` category filters use the broad Korean taxonomy in `app/core/category_taxonomy.py`, mapping conflict/security topics such as Ukraine or future Iran issues into `세계` while preserving raw source-category compatibility. `/api/issues/:id/history` returns empty `points` when history is unavailable rather than fabricating a latest-point chart. `/api/issues/:id/report` reads the latest successful current-prompt-version `ai_reports` row in live mode and preserves the accepted no-report-yet response when no current successful report exists or the report read fails.
-- DB schema draft is accepted (`backend/migrations/001_initial_schema.sql` + `backend/app/db/models.py`) and was applied to the currently configured development Supabase DB on 2026-07-09 after explicit human approval. The configured development DB has been seeded once with 50 normalized issues/snapshots/metrics, so issue list reads can use DB-backed payloads. Applying schema changes to any other shared or production DB remains approval-gated.
-- `TASK-007` collector now fetches active Gamma events, validates binary market candidates, writes 50 normalized sample records, and quarantines skipped candidates with structured reasons. Per ADR-014, the artifact emits a display-safe `description: str` and omits raw source descriptions.
-- `TASK-008` snapshot/metrics logic computes `change_24h`, `change_7d`, placeholder `heat_score`, and confidence levels through a local/dev-safe path. `TASK-036` adds MVP `caution_low_activity` and `caution_high_volatility` thresholds documented in ADR-019.
-- `TASK-009` expectation-shift detector inserts `expectation_shift` rows for the MVP ±5pp threshold with a 24h cooldown and no evaluation for insufficient data.
-- `backend/app/core/historical_seed.py` is the guarded local/dev-only path for demo chart history (ADR-025): it appends missing CLOB price-history points, inserts fresh metrics, runs the existing expectation-shift detector, and records a collection log without schema/API changes or rewrites of existing snapshot rows.
-- `TASK-054` replaces the dashboard-v1 state flow with real browser routes. Home defaults to 7 days and derives one featured rank-1 issue, a featured-only real-history Recharts preview, a direction summary, a featured-inclusive top-five table, and per-category valid-change arithmetic means from the existing read APIs. `/issues` keeps its 24-hour default plus URL-backed client search/filter/sort/pagination; detail core/history/report reads remain independently cancellable; every route has a main landmark, shared navigation, and direct-entry handling. Scoped Vercel SPA rewrites do not intercept `/api`.
-- `TASK-035` verified the existing detail/history read paths for the Day 3 chart/marker flow without changing accepted response shapes.
-- `TASK-013` hardened the issue detail chart: 24h/7d/30d windows require baseline-covered history, tooltip values include timestamp/value/previous-point pp change, and markers consume API-provided rows when present.
-- `TASK-014` aligned caution badge labels, visual treatment, accessibility labels, and placement across dashboard and detail surfaces.
-- `TASK-017` added shared brief caution copy, reusable footer copy, and a dedicated in-app information notice surface without adding a routing dependency.
-- `TASK-038` assigned Day 4 active work: `TASK-015` template report generation and safety filter, `TASK-039` report API/fallback readiness, `TASK-016` report display UI, `TASK-019` manual event candidates, `TASK-040` demo/deck draft, and `TASK-018` final wording lint.
-- `TASK-049` advances the constrained report pipeline to `PROMPT_VERSION=v3`. Three prose slots are model-authored from structured inputs; candidate comparison, external context, verification items, limitations, and caution are deterministic. Storage is blocked on strict field/length/sentence validation, prohibited wording, metric consistency, public-participant-data scope, conditional later-data scope, reviewed candidate provenance, and exact caution semantics.
-- `TASK-039` is now complete via PR #29 follow-up: the report endpoint serves latest successful stored `ai_reports` rows in live mode and keeps the accepted empty state for absent/failed reads.
-- `TASK-050` and `TASK-051` implement the v3 report read schema and dynamic UI. The API validates current-version stored content and metric-linked timing; the Frontend parser repeats the frozen bounds/sentence contract and renders the approved Korean labels in evidence-first order, with one visible body and null-only external-context hiding. TASK-053 verified this integration at 320px and 375px.
-- `TASK-019` is complete via PR #36 at `6d0eb44`: `backend/app/db/seed_related_events.py` can seed exactly four manually curated related-event candidates for normalized/live-reachable issue IDs, with tests covering wording and schema boundaries.
-- `TASK-057` adds `002_context_candidates.sql` and matching ORM models for
-  append-only candidate/run storage. Duplicate evidence is unique per market
-  episode, verification/run states are constrained, and parent-market deletion
-  cascades consistently. TASK-065 applied this migration only to the approved
-  development DB; production remains untouched.
-- `TASK-058` adds the DB-free OpenRouter research client. It submits the
-  `openrouter:web_search` server tool through the existing OpenAI SDK, clamps
-  searches/results, and converts only API citation annotations into normalized
-  evidence. Candidate URLs must exactly match annotations; model-body URLs are
-  ignored. ADR-047 additionally audits unique provider-reported query strings
-  and requires normalized market metadata overlap.
-- `TASK-059` adds deterministic canonical URL, date, entity, condition,
-  official/independent-source, duplicate-content, and wording gates followed by
-  one no-web verifier call using a different provider family. A model cannot
-  override a failed gate; only verified decisions may flow downstream.
-- `TASK-060` connects context after signals and before reports. Targets are
-  selected by signal/change/heat/staleness or explicit backfill; each market
-  commits independently, no-candidate is normal, verified public output is
-  capped at three, and recorded cost plus a pre-call reservation is bounded by
-  the approved USD 100 program cap.
-- `TASK-061` adds the v4 report writer. The model can fill only the issue
-  overview and later-check slots; observed metrics, verified context,
-  relationship boundary, limitations, and caution are assembled
-  deterministically. Stored envelopes link exactly one metric plus same-episode
-  verified candidates, retain legacy rows for audit, and charge writer usage to
-  the same cumulative budget before TASK-062 exposes any v4 row.
-- `TASK-065` completed a 50-target development backfill: 46 distinct issues
-  reached normal completed research, no candidate passed every publication
-  gate, and the final DB-recorded program spend was USD 3.00263875. Thirteen
-  issues have latest successful v4 reports with zero evidence or safety
-  mismatches. Guarded offset and stored-context writer modes avoid repeating
-  paid research during local evaluation.
-- `TASK-062` makes v4 the only public report version. The read helper loads a
-  successful v4 row with its linked metric, latest prior snapshot, and only
-  verified candidate rows. The route reconstructs deterministic content and
-  checks metric/candidate references, episode/timing, strict stored citation
-  fields, and URL/domain consistency before exposing the seven fields plus
-  approved source metadata. Every legacy, malformed, or mismatched bundle
-  returns the neutral empty state; static fallback never invents evidence.
-- `TASK-063` consumes only the strict v4 response. The detail chart receives
-  public candidate IDs and maps each event time to the nearest visible stored
-  observation, while chart markers and candidate cards retain the same ID and
-  link in both directions. The report is one evidence-first change episode;
-  the context block is omitted entirely for zero candidates, while timing,
-  relationship boundary, limitations, and caution remain visible. Source links
-  expose only the approved fields and open with `noopener noreferrer`.
-- `TASK-064` adds an executable full-flow fixture from research through public
-  API output. Review found that SQLite strips timezone information; v4 report
-  inputs now normalize snapshot, episode, candidate-event, and end-date values
-  to UTC-aware timestamps before deterministic assembly, matching PostgreSQL
-  and the API's independent reconstruction boundary.
-- `TASK-075` activates the ADR-048 v5 program. The generator may author six
-  named narrative fields, while every fact remains bound to market, metric, or
-  verified-candidate evidence. Exact stored source links are public only for
-  verified candidates; zero-candidate reports expose an explicit no-source
-  state. TASK-076~081 implement, regenerate, verify, and present real results
-  for user review without deployment or production writes.
-- `TASK-065` has applied migration 002 to the approved development DB. The
-  guarded batch now supports `--context-max-markets`, retries research once,
-  and retains usage from failed billed responses. Bulk execution is stopped:
-  OpenRouter's server tool generates/reformulates queries, while ADR-040
-  currently requires exact membership in the deterministic suggestion list.
-  No read/API/publication gate has been relaxed.
-- `TASK-041` is complete: `build_prompt_inputs_for_market()` now selects the latest `market_snapshots` row with `captured_at <= market_metrics.computed_at`, matching the historical-seed `+1 microsecond` metric timestamp without fabricating values. Tests cover prompt-input construction, future-only snapshot rejection, and `run_ai_report_batch` inserting a `status=success` row with a fake `LLMClient`. Local/demo run notes live in `reports/task-041-report-generation-readiness.md`; OpenAI report calls are covered by ADR-022 and the provided-key clarification, while writes to the configured development DB remain separately approval-gated.
-- `TASK-042` added the combined scheduled/manual path and historical
-  `--reports-only` compatibility. TASK-121 supersedes its workflow: GitHub
-  Actions now runs `.github/workflows/four-hour-collection.yml` every four
-  hours with market fetch, snapshot/metric storage, signal detection, and
-  collection logging only. The scheduled job does not receive provider keys or
-  invoke context research or briefing generation.
-- `TASK-121` supersedes TASK-042's scheduled-workflow configuration. GitHub
-  Actions now uses `.github/workflows/four-hour-collection.yml` at minute 17
-  every four UTC hours. The job receives only `DATABASE_URL` and explicitly
-  passes `--skip-ai-reports --skip-context-research`; AI briefing generation
-  remains isolated to the user-requested on-demand worker. Historical guarded
-  `--reports-only` runtime code is not reachable from the scheduled workflow.
-- `ISS-010` restored the repository Actions secrets/model variable and aligned the three LLM-authored v3 prompt fields with ADR-033's existing bounds and scope checks. Branch run `29073226485` completed with 50 processed rows, no collection failures, and 10 successful v3 reports; the latest 10 stored rows passed structural, wording-safety, and semantic validation.
-- Backend local setup should use Python 3.11 on this machine; the default Python 3.9 runtime could not install the pinned `psycopg[binary]==3.2.3` binary package.
-- Day 4 is closed from this baseline with `TASK-040`, `TASK-018`, and `TASK-045`
-  complete. Day 5 can focus on final screenshots, rehearsal, deployment
-  approval handling, and presentation polish. Any shared or production schema
-  application, non-project paid external AI call, public API shape change,
-  deployment, or infrastructure change remains separately approval-gated.
-- `TASK-117` adds no queue or WebSocket infrastructure. The existing child
-  worker performs one NDJSON streaming writer call, validates and commits each
-  complete block to append-only `ai_report_generation_blocks`, and the FastAPI
-  SSE read path replays active-attempt rows with `Last-Event-ID`. The final
-  `ai_reports` envelope and request success/failure event remain authoritative;
-  polling and last-known-good remain fallbacks. Migration 005 was subsequently
-  applied only to the approved `ENV=local` development database; any other
-  database remains separately gated.
+## Current implementation
+
+- Frontend: shared Home/list/detail/methodology navigation; query-linked detail
+  tabs; strict v8 parser; generation, streaming, failure, stale, and source
+  states; responsive and accessibility checks.
+- Backend: FastAPI issue and generation routes; SQLAlchemy models; scoped
+  latest-row queries; static fallback; local worker launcher.
+- Data: Gamma collector, CLOB historical seed, snapshot/metric calculations,
+  fixed signal detection, source research/verification, v8 writer validation.
+- Verification baseline: 488 Backend tests plus Frontend typecheck, lint, v8
+  parser regression, and production build. The known bundle-size warning is
+  tracked as TD-001.
+
+## Open architecture work
+
+- ISS-017 queued-request recovery after a lost worker.
+- ISS-018 provider-compatible citation annotation handling.
+- Future retention/downsampling for extended snapshot history.

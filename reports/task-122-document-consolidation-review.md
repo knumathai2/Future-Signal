@@ -1,4 +1,4 @@
-# TASK-122: Document consolidation phases 1-3
+# TASK-122: Document consolidation phases 1-7
 
 Date: 2026-07-12
 Owner: PM / Reviewer
@@ -7,49 +7,45 @@ Status: Review
 
 ## Scope completed
 
-1. Added `docs/document-retention-manifest.md` with keep, consolidate,
-   delete, and later-review boundaries.
-2. Removed 76 archived session handoffs, 10 daily coordination records, six
-   completed review notes, and two obsolete prompt drafts.
-3. Replaced the empty root README, aligned the Frontend README with checked-in
-   package scripts, aligned the Backend README with the active four-hour
-   market-data workflow and v8 on-demand path, and removed the obsolete
-   `commands.md` and redundant `tech-stack.md`.
-
-Current memory compaction, API/design history compaction, and broader task-
-report pruning were intentionally not performed.
+1. Classified documents with an explicit retention manifest.
+2. Removed 76 archived handoffs, 10 daily coordination records, six completed
+   review notes, two obsolete prompt drafts, and two redundant root guides.
+3. Rebuilt the project entry point and aligned Frontend/Backend operating
+   commands with checked-in behavior.
+4. Compacted current project, session, architecture, and issue memory.
+5. Made the public API and active Service, Technical, and UX guidance
+   v8-centered, with v1-v7 detail routed to the historical archive.
+6. Removed 30 superseded implementation summaries and reduced the backlog to
+   current release, reliability, and maintenance work.
+7. Repeated link, wording, scope, Backend, and Frontend verification.
 
 ## Result
 
 | Measure | Before | After | Change |
 |---|---:|---:|---:|
-| Markdown files | 202 | 108 | -94 |
-| Markdown bytes | 1,278,899 | 962,061 | -316,838 |
-| Deleted files | 0 | 96 | 76 sessions + 18 reports + 2 redundant root guides |
+| Markdown files | 202 | 78 | -124 |
+| Markdown bytes | 1,278,899 | 656,309 | -622,590 |
+| Deleted files | 0 | 126 | 76 handoffs + 48 reports + 2 root guides |
 | New retention/review records | 0 | 2 | +2 |
+
+Thirty reports remain. They preserve approval, cost, database, safety,
+evidence, failure, current v8, presentation, and consolidation-review records.
 
 ## Verification
 
 - `git diff --check` passes.
 - Missing relative Markdown links: 0.
-- No active relative Markdown link points to a deleted document. Immutable
-  historical ADR, completed-task, and evidence text may retain a literal
-  retired path, whose artifact remains recoverable from Git history.
-- `scheduled_batch`, `historical_seed`, and `on_demand_worker` README commands
-  import and return `--help` successfully from `backend/`.
-- Root README verification commands use independent working directories.
+- Added-line wording scan: no prohibited token remains.
+- Accepted ADR and completed-task history remains unchanged except for the two
+  append-only TASK-122 decisions.
+- All changed files are Markdown.
 - Backend Ruff and all 488 tests pass.
-- Frontend typecheck, lint, v8 report-parser regression, and production build
-  pass; the known bundle-size warning remains.
-- Historical `memory/decisions.md`, `tasks/completed.md`, TASK-018, and TASK-040
-  text matches the pre-cleanup commit exactly. Only new ADR-064 records the
-  retirement decision.
-- All changed files are Markdown; no source, API, schema, database, provider,
-  dependency, infrastructure, deployment, or product wording-policy state
-  changed.
+- Frontend typecheck, lint, v8 parser regression, and production build pass;
+  the known bundle-size warning remains.
+- No source code, API behavior, schema, database, provider, dependency,
+  infrastructure, deployment, production, or wording-policy state changed.
 
 ## Review boundary
 
-Review the root/Frontend/Backend READMEs, the retention manifest, and the
-reference rewrites. Do not start phase 4 memory/API/design compaction until the
-user accepts this diff.
+TASK-122 remains in review until the user accepts the final document diff.
+The remote branch is not updated by this task without separate direction.
