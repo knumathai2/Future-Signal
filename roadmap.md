@@ -22,7 +22,7 @@ Ship a genuinely working web MVP within 5 days that lets a user check today's mo
 - [x] Backend: DB schema, API contract, server project setup
 - [x] Data/AI: confirm Polymarket data structure (live spike against Gamma/CLOB), collect 10 sample markets
 - **Deliverables**: screen structure, API contract doc, sample data, MVP scope doc, draft presentation key messages
-- **Status note (2026-07-08)**: Day 1 is closed. Frontend dummy-data flow, accepted backend mock API contract, accepted-unapplied schema draft, and Polymarket samples exist. Full checkpoint: `reports/day-1-implementation-status.md`; closeout record: `reports/day-1-closeout-plan.md`.
+- **Status note (2026-07-08)**: Day 1 is closed. Frontend dummy-data flow, accepted backend mock API contract, accepted-unapplied schema draft, and Polymarket samples exist. Durable outcomes are indexed in `tasks/completed.md`; temporary daily records remain available in Git history.
 
 ### Day 2 — Data pipeline + core UI
 - [x] PM: organize user scenarios, prep judging-panel Q&A
@@ -30,7 +30,7 @@ Ship a genuinely working web MVP within 5 days that lets a user check today's mo
 - [x] Backend: market-list API, ranking API
 - [x] Data/AI: calculate 24h/7d change, normalize 30–50 samples
 - **Deliverables**: dashboard v1, ranking API, change-calculation data, candidate issue list for demo
-- **Status note (2026-07-08)**: Day 2 is closed. The data pipeline, core read API, and dashboard v1 path are merged and verified; closeout evidence is recorded in `reports/day-2-closeout-plan.md`. P1/P2 items remain deferred unless the PM reassigns scope.
+- **Status note (2026-07-08)**: Day 2 is closed. The data pipeline, core read API, and dashboard v1 path are merged and verified in `tasks/completed.md`. P1/P2 items remain deferred unless the PM reassigns scope.
 
 ### Day 3 — Detail screen + chart + badges
 - [x] PM: interpretation-caution text, disclaimer text, terminology revisions
@@ -39,8 +39,8 @@ Ship a genuinely working web MVP within 5 days that lets a user check today's mo
 - [x] Data/AI: inflection-point threshold logic (±5pp), interpretation-caution badge logic
 - **Deliverables**: issue detail screen, time-series chart, inflection-point markers, caution badge
 - **Status note (2026-07-09)**: Day 3 is closed. The detail/chart/badge/notice
-  path is merged through PR #27, no active Day 3 tasks remain, and closeout
-  evidence is recorded in `reports/day-3-closeout-plan.md`. Shared/dev
+  path is merged through PR #27, no active Day 3 tasks remain, and the durable
+  completion record is in `tasks/completed.md`. Shared/dev
   database schema application remains approval-gated; template summary
   generation moves to Day 4.
 
@@ -53,7 +53,7 @@ Ship a genuinely working web MVP within 5 days that lets a user check today's mo
 - **Status note (2026-07-10)**: Day 4 is closed. The summary/report path,
   related-event candidates, API fallback/readiness, report display states,
   demo/deck draft, and final `TASK-018` wording-safety lint are complete.
-  Closeout evidence is recorded in `reports/day-4-closeout-plan.md`.
+  Durable results are indexed in `tasks/completed.md`.
 
 ### Day 5 — Integration QA + technical MVP closeout
 - [x] PM: coordinate the final v3 review and record the technical MVP closeout; final deck production, screenshots, rehearsal, and backup capture are deferred by ADR-037
@@ -64,8 +64,8 @@ Ship a genuinely working web MVP within 5 days that lets a user check today's mo
 - **Deferred deliverables**: deployment, final presentation file, final screenshots, rehearsal, and backup video/screen captures (`TASK-020`, `TASK-021`)
 - **Status note (2026-07-10)**: Day 5 is closed as a technical MVP milestone by
   explicit user direction. PR #53 merges the latest `main`, fixes the final
-  ES2020 TypeScript build blocker, and records the closeout evidence in
-  `reports/day-5-closeout.md`. The branch passes Frontend typecheck, lint,
+  ES2020 TypeScript build blocker, with the durable closeout recorded in
+  `tasks/completed.md`. The branch passes Frontend typecheck, lint,
   report-parser regression, production build, and changed-file formatting, plus
   200 Backend tests and Ruff. PR #53 still requires the normal review/merge
   flow; deferred release and presentation work is not represented as completed.

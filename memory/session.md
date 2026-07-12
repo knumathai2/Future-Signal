@@ -7,7 +7,8 @@ Harness Version: 1.1
 
 # Current Session - Outlook Signals
 
-> After this session, copy this file to `memory/sessions/YYYY-MM-DD-[ROLE].md`.
+> Keep only the current handoff here. Git history preserves earlier session states;
+> do not create per-session archive files.
 
 ---
 
@@ -25,8 +26,31 @@ Harness Version: 1.1
 
 ## Work Completed
 
+- Completed TASK-122 documentation cleanup phases 1-3 and left the task in
+  review. Added the retention manifest; removed 76 archived session handoffs,
+  10 daily records, six review notes, and two obsolete prompt drafts.
+- Replaced the empty root README, aligned Frontend commands with `package.json`,
+  aligned Backend guidance with the current four-hour collection workflow and
+  v8 on-demand path, and removed stale `commands.md` plus duplicate
+  `tech-stack.md`.
+- Rewrote retained references without changing historical decisions or safety
+  policy. Markdown count fell from 202 to 108 and bytes from 1,278,899 to
+  962,061.
+- `git diff --check`, zero-missing-link validation, active-path scans, scope
+  checks, and three Backend CLI help checks pass. No source, API, schema,
+  database, provider, dependency, infrastructure, deployment, or wording-
+  policy state changed. Memory/API/design compaction remains pending review.
+- TASK-122 review remediation restored accepted ADRs, completed-task entries,
+  and retained TASK-018/TASK-040 reports exactly to their pre-cleanup text;
+  ADR-064 alone records the retirement decision. Fixed independent README
+  working directories, the current append-only API boundary, the new-document
+  wording hit, and Markdown trailing whitespace.
+- Reverification passes Backend Ruff and 488 tests, Frontend typecheck/lint/
+  v8 parser/build, combined-range `git diff --check`, zero missing relative
+  links, new-wording scan, Markdown-only scope, and protected-history diff.
+
 - Completed TASK-121 under the user's explicit infrastructure-workflow
-  approval. Replaced `.github/workflows/daily-batch.yml` with
+  approval. Replaced the retired daily workflow with
   `.github/workflows/four-hour-collection.yml`, renamed the workflow and job
   for four-hour market-data collection, and changed the cron to minute 17
   every four UTC hours.

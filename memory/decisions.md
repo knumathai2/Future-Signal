@@ -1989,3 +1989,29 @@ provider work. Context refresh remains available only through separately
 authorized on-demand generation. This changes workflow configuration only; it
 does not dispatch a run, deploy code, call a provider, write a database, or
 change schema, dependencies, public APIs, or wording policy.
+
+---
+
+### ADR-064: Keep active guidance and retire temporary coordination documents
+
+- **Date**: 2026-07-12
+- **Status**: Accepted for TASK-122 phases 1-3
+- **Decided by**: User direction after document inventory and cleanup-plan review
+
+**Context**: The repository contained 202 Markdown files. Archived session
+handoffs, daily allocation/closeout records, completed review notes, obsolete
+prompt drafts, an invalid command guide, and a duplicate technology guide made
+current v8 operating guidance harder to find. Durable outcomes already exist
+in Git history, task/decision ledgers, canonical specs, and retained evidence
+reports.
+
+**Decision**: Add a retention manifest; remove the named temporary artifacts;
+consolidate setup commands into root and component READMEs; and stop before
+memory, API, design, or broader task-report compaction. Preserve all safety,
+approval, cost, migration, evidence, completed-task, and active v8 records.
+Historical ADR and completed-task text remains unchanged even when it names a
+retired path; Git history preserves the referenced artifact.
+
+**Consequences**: The obsolete command and stack guides are replaced by
+canonical README and Technical Design guidance. Phase 4+ requires review of
+the current diff before proceeding. No runtime or external state changes.
