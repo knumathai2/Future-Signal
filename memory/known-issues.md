@@ -42,6 +42,9 @@ data limitations.
 
 ## Recently closed
 
+- **ISS-019**: issue-list re-search now preserves Korean IME composition by
+  keeping a local draft and deferring URL synchronization until composition
+  ends.
 - **ISS-016**: superseded by the accepted v8 on-demand path and successful
   stored/API/UI reconstruction.
 - **TD-011**: obsolete stored v1-v7 report rows were removed from the approved
