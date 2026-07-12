@@ -201,5 +201,12 @@ request claim before any provider work. Running or terminal attempts are never
 automatically relaunched. The preserved queued request recovered after restart
 with one USD 0.00634325 call and stored one assistant turn plus three blocks.
 
+TASK-135 preserves complete response validation and append-only block storage,
+then progressively replays those stored scenario blocks over authenticated SSE.
+The first block is immediate and later blocks are paced at 0.2-second intervals.
+Event payloads are materialized and the read transaction is released before
+network pacing, so slow clients do not hold a database connection. Raw provider
+fragments remain private and never cross the public API boundary.
+
 No shared rate-limit infrastructure, scheduled cleanup, deployment, or
 production state exists. The server feature flag defaults off.

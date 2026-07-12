@@ -54,6 +54,7 @@ from app.schemas.scenarios import (
 
 router = APIRouter(tags=["scenario-conversations"])
 _QUEUED_RELAUNCH_AFTER = timedelta(seconds=5)
+_VALIDATED_BLOCK_REPLAY_DELAY_SECONDS = 0.2
 
 
 def _as_utc(value: datetime) -> datetime:
@@ -463,46 +464,68 @@ def stream_turn(
                 yield _sse_event("failed", {"error_code": "request_state_unavailable"})
                 return
             _maybe_relaunch_queued_request(generation_request, latest)
-            status_key = (latest.state, latest.attempt_number)
+            latest_state = latest.state
+            latest_attempt_number = latest.attempt_number
+            latest_updated_at = _as_utc(latest.recorded_at).isoformat()
+            latest_assistant_turn_id = latest.assistant_turn_id
+            latest_error_code = latest.error_code
+            status_key = (latest_state, latest_attempt_number)
+            snapshot_event = None
             if status_key != last_status:
-                yield _sse_event(
+                snapshot_event = _sse_event(
                     "snapshot",
                     {
-                        "state": latest.state,
-                        "attempt_number": latest.attempt_number,
-                        "updated_at": _as_utc(latest.recorded_at).isoformat(),
+                        "state": latest_state,
+                        "attempt_number": latest_attempt_number,
+                        "updated_at": latest_updated_at,
                     },
                 )
                 last_status = status_key
-            if latest.state != "queued":
-                blocks = db.execute(
+            block_events: list[tuple[int, str]] = []
+            if latest_state != "queued":
+                blocks = list(
+                    db.execute(
                     select(ScenarioResponseBlock)
                     .where(
                         ScenarioResponseBlock.request_id == generation_request.id,
-                        ScenarioResponseBlock.attempt_number == latest.attempt_number,
+                        ScenarioResponseBlock.attempt_number == latest_attempt_number,
                         ScenarioResponseBlock.id > after_block_id,
                     )
                     .order_by(ScenarioResponseBlock.sequence_number.asc())
-                ).scalars()
+                    ).scalars()
+                )
                 for block in blocks:
                     after_block_id = block.id
-                    yield _sse_event(
-                        "block",
-                        {
-                            "sequence": block.sequence_number,
-                            "block_type": block.block_type,
-                            "payload": block.payload,
-                        },
-                        event_id=block.id,
+                    block_events.append(
+                        (
+                            block.id,
+                            _sse_event(
+                                "block",
+                                {
+                                    "sequence": block.sequence_number,
+                                    "block_type": block.block_type,
+                                    "payload": block.payload,
+                                },
+                                event_id=block.id,
+                            ),
+                        )
                     )
-            if latest.state == "succeeded":
+            # Do not retain a database connection while the client receives paced SSE.
+            db.rollback()
+            if snapshot_event is not None:
+                yield snapshot_event
+            for index, (_, block_event) in enumerate(block_events):
+                if index > 0:
+                    time.sleep(_VALIDATED_BLOCK_REPLAY_DELAY_SECONDS)
+                yield block_event
+            if latest_state == "succeeded":
                 yield _sse_event(
                     "complete",
-                    {"assistant_turn_id": str(latest.assistant_turn_id)},
+                    {"assistant_turn_id": str(latest_assistant_turn_id)},
                 )
                 return
-            if latest.state == "failed":
-                yield _sse_event("failed", {"error_code": latest.error_code})
+            if latest_state == "failed":
+                yield _sse_event("failed", {"error_code": latest_error_code})
                 return
             if time.monotonic() - last_heartbeat >= 15:
                 yield ": keep-alive\n\n"
