@@ -1962,3 +1962,30 @@ no v7 block existed. Six v8 reports, 11 requests, 60 events, and 17 blocks
 remain. Orphan checks and actual FastAPI v8 fresh/stale/last-good reads pass.
 No schema, provider, dependency, infrastructure, deployment, production, or
 wording-policy change occurred.
+
+---
+
+### ADR-063: Run scheduled collection every four hours without AI stages
+
+- **Date**: 2026-07-12
+- **Status**: Accepted and implemented in TASK-121 ⚠️ HUMAN APPROVAL
+- **Decided by**: Explicit user direction after GitHub Actions policy review
+
+**Context**: TASK-104 prevents normal collection from invoking the briefing
+writer, but the scheduled workflow retained its historical daily data-and-AI
+name, AI credentials/model environment, and implicit context-research request.
+The latest scheduled run stored market data and made zero report calls, then
+failed because the requested verifier was unavailable.
+
+**Decision**: Run the collection-only workflow at minute 17 every four UTC
+hours. Name the workflow and job for four-hour market-data collection, pass no
+AI credential or model setting, and explicitly set both report and context
+skip flags. Keep briefing generation in the existing user-requested on-demand
+worker boundary.
+
+**Consequences**: Scheduled runs collect public market data, snapshots,
+metrics, signals, and logs without constructing AI clients or requesting paid
+provider work. Context refresh remains available only through separately
+authorized on-demand generation. This changes workflow configuration only; it
+does not dispatch a run, deploy code, call a provider, write a database, or
+change schema, dependencies, public APIs, or wording policy.
