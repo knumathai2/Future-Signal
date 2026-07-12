@@ -67,13 +67,16 @@ local/development environment guard:
 | `/api/issues/:id/scenario-sessions/:session_id` | GET | Read only the caller-owned validated session state |
 | `/api/issues/:id/scenario-sessions/:session_id/turns` | POST | Append one bounded user turn with bearer capability and idempotency key |
 | `/api/issues/:id/scenario-sessions/:session_id/turns/:turn_id` | GET | Read caller-owned queued/running/succeeded/failed turn state |
-| `/api/issues/:id/scenario-sessions/:session_id/turns/:turn_id/stream` | GET | Replay complete validated blocks through authenticated fetch-SSE |
+| `/api/issues/:id/scenario-sessions/:session_id/turns/:turn_id/stream` | GET | Replay complete validated blocks progressively through authenticated fetch-SSE |
 | `/api/issues/:id/scenario-sessions/:session_id` | DELETE | Invalidate the capability and request ephemeral-content deletion |
 
 The session ID never grants access. Every operation except creation requires a
 256-bit bearer capability whose hash alone is stored. The capability is never
 placed in a URL. The Frontend uses `fetch` streaming so the authorization and
 `Last-Event-ID` headers remain available; native `EventSource` is not used.
+Stored blocks are materialized and the read transaction is released before
+delivery. The first block is immediate; remaining blocks are paced in sequence.
+Raw provider fragments never cross the public API boundary.
 
 The API validates issue/session ownership, expiry, fixed limits, one in-flight
 turn, idempotency, current input fingerprint, and local request ceilings before

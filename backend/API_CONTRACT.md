@@ -329,8 +329,9 @@ Authorization: Bearer <session capability>
   queued/running/succeeded/failed state and safe terminal metadata.
 - `GET /api/issues/{id}/scenario-sessions/{session_id}/turns/{turn_id}/stream`
   uses authenticated fetch-SSE to replay only stored complete paragraph/list
-  blocks. Capabilities are forbidden in URLs; raw provider chunks are never
-  events.
+  blocks. The first available block is immediate and subsequent blocks are
+  paced in sequence for progressive rendering. Capabilities are forbidden in
+  URLs; raw provider chunks are never events.
 - `DELETE /api/issues/{id}/scenario-sessions/{session_id}` returns `204` and
   hard-deletes only the authenticated ephemeral scenario graph.
 

@@ -15,9 +15,24 @@ files.
 ## Session
 
 - **Role**: Backend / Data-AI Implementer
-- **Branch**: `backend/TASK-134-scenario-queued-recovery`
-- **Goal**: Recover attempt-zero queued scenario requests safely.
-- **Status**: Complete; preserved request recovered and response stored
+- **Branch**: `backend/TASK-135-validated-block-stream`
+- **Goal**: Render scenario answers progressively through validated-block SSE.
+- **Status**: Complete; paced stored-block delivery verified
+
+## Completed in TASK-135
+
+- Kept complete-output validation and persistence as the public safety boundary;
+  raw provider chunks are still never sent to the browser.
+- Changed authenticated scenario SSE replay to send the first stored block
+  immediately and subsequent paragraph/list blocks at 0.2-second intervals.
+- Materialized plain event payloads and rolled back the read transaction before
+  paced delivery, so a slow client does not retain a database connection.
+- Added a three-block regression for event count, sequence order, timing, final
+  completion, and capability non-disclosure.
+- Passed Ruff, the focused 15 scenario API tests, all 546 Backend tests, and
+  Frontend typecheck, lint, build, and scenario parser checks.
+- No provider call, database write, migration, dependency, deployment,
+  production action, activation, or wording-policy change occurred.
 
 ## Completed in TASK-134
 
