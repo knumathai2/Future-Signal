@@ -69,40 +69,42 @@ export function SiteHeader({
         <Link to="/" className="inline-flex min-h-11 items-center text-ink">
           <BrandMark />
         </Link>
-        <nav
-          aria-label="주요 메뉴"
-          className="hidden items-center gap-1 md:flex"
-        >
-          {navigation}
-        </nav>
-        {onRefresh ? (
-          <button
-            type="button"
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-line px-0 font-bold text-ink-soft transition hover:border-accent hover:text-accent disabled:cursor-wait disabled:opacity-60 md:min-w-0 md:px-4 md:text-xs"
-            aria-label={isRefreshing ? "데이터 갱신 중" : "데이터 새로고침"}
+        <div className="flex shrink-0 items-center gap-2">
+          <nav
+            aria-label="주요 메뉴"
+            className="hidden items-center gap-1 md:flex"
           >
-            <svg
-              aria-hidden="true"
-              viewBox="0 0 24 24"
-              className={`h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`}
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.8"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+            {navigation}
+          </nav>
+          {onRefresh ? (
+            <button
+              type="button"
+              onClick={onRefresh}
+              disabled={isRefreshing}
+              className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full border border-line px-0 font-bold text-ink-soft transition hover:border-accent hover:text-accent disabled:cursor-wait disabled:opacity-60 md:min-w-0 md:px-4 md:text-xs"
+              aria-label={isRefreshing ? "데이터 갱신 중" : "데이터 새로고침"}
             >
-              <path d="M20 7v5h-5" />
-              <path d="M4 17v-5h5" />
-              <path d="M6.1 8.5A7 7 0 0 1 18.7 7L20 12" />
-              <path d="M17.9 15.5A7 7 0 0 1 5.3 17L4 12" />
-            </svg>
-            <span className="ml-2 hidden md:inline">
-              {isRefreshing ? "데이터 갱신 중" : "데이터 새로고침"}
-            </span>
-          </button>
-        ) : null}
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                className={`h-5 w-5 ${isRefreshing ? "animate-spin" : ""}`}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M20 7v5h-5" />
+                <path d="M4 17v-5h5" />
+                <path d="M6.1 8.5A7 7 0 0 1 18.7 7L20 12" />
+                <path d="M17.9 15.5A7 7 0 0 1 5.3 17L4 12" />
+              </svg>
+              <span className="ml-2 hidden md:inline">
+                {isRefreshing ? "데이터 갱신 중" : "데이터 새로고침"}
+              </span>
+            </button>
+          ) : null}
+        </div>
       </div>
 
       <nav
