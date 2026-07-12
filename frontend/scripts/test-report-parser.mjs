@@ -137,6 +137,14 @@ const withSource = report({
   ],
 });
 assert.equal(parseReportResponse(withSource).status, "ready");
+const rootSourceUrl = "https://example.gov";
+const rootSourceReport = {
+  ...withSource,
+  sources: [{ ...source, url: rootSourceUrl }],
+};
+const parsedRootSourceReport = parseReportResponse(rootSourceReport);
+assert.equal(parsedRootSourceReport.status, "ready");
+assert.equal(parsedRootSourceReport.response.sources[0].url, rootSourceUrl);
 
 const streamedHeader = {
   sequence: 0,

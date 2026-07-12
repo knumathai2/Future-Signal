@@ -103,6 +103,7 @@ function parseSource(raw: unknown, generatedAt: string): V8ReportSource | null {
   const contextRef = text(raw.context_ref, 3, 200);
   const citationId = text(raw.citation_id, 1, 500);
   const title = text(raw.title, 1, 500);
+  const sourceUrl = text(raw.url, 1, 2048);
   const domain = text(raw.domain, 1, 253)?.toLowerCase() ?? null;
   const retrievedAt = timestamp(raw.retrieved_at);
   if (
@@ -110,6 +111,7 @@ function parseSource(raw: unknown, generatedAt: string): V8ReportSource | null {
     !contextRef?.startsWith("context:") ||
     !citationId ||
     !title ||
+    !sourceUrl ||
     !domain ||
     !retrievedAt ||
     after(retrievedAt, generatedAt) ||
@@ -121,7 +123,7 @@ function parseSource(raw: unknown, generatedAt: string): V8ReportSource | null {
     return null;
   let url: URL;
   try {
-    url = new URL(String(raw.url));
+    url = new URL(sourceUrl);
   } catch {
     return null;
   }
@@ -143,7 +145,7 @@ function parseSource(raw: unknown, generatedAt: string): V8ReportSource | null {
     context_ref: contextRef,
     citation_id: citationId,
     title,
-    url: url.toString(),
+    url: sourceUrl,
     domain,
     source_level: raw.source_level as "A" | "B" | "C",
     supported_claims: claims as V8SupportedClaim[],
