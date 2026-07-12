@@ -8,6 +8,7 @@ import {
   parseGenerationStreamBlock,
   parseReportResponse,
 } from "./reportParser";
+import { apiUrl } from "./apiUrl";
 
 export class HttpError extends Error {
   status: number;
@@ -25,7 +26,7 @@ export async function fetchJson<T>(
   message: string,
   signal?: AbortSignal,
 ): Promise<T> {
-  const response = await fetch(url, { signal });
+  const response = await fetch(apiUrl(url), { signal });
   if (!response.ok) {
     throw new HttpError(message, response.status);
   }
@@ -40,7 +41,7 @@ export async function loadIssueReport(
 ): Promise<IssueReportLoadState> {
   try {
     const response = await fetch(
-      `/api/issues/${encodeURIComponent(issueId)}/report`,
+      apiUrl(`/api/issues/${encodeURIComponent(issueId)}/report`),
       { signal },
     );
     if (!response.ok) {
@@ -65,7 +66,7 @@ export async function requestIssueReport(
   signal?: AbortSignal,
 ): Promise<GenerationRequestResponse> {
   const response = await fetch(
-    `/api/issues/${encodeURIComponent(issueId)}/report/generate`,
+    apiUrl(`/api/issues/${encodeURIComponent(issueId)}/report/generate`),
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -105,7 +106,9 @@ export function subscribeToGenerationStream(
   handlers: GenerationStreamHandlers,
 ): () => void {
   const source = new EventSource(
-    `/api/issues/${encodeURIComponent(issueId)}/report/requests/${encodeURIComponent(requestId)}/stream`,
+    apiUrl(
+      `/api/issues/${encodeURIComponent(issueId)}/report/requests/${encodeURIComponent(requestId)}/stream`,
+    ),
   );
   const block = (event: Event) => {
     try {

@@ -30,6 +30,7 @@ data limitations.
 | TD-007 | Invalid issue-list enum parameters use FastAPI's current 422 response rather than the original 400 plan. | Low contract inconsistency. | Keep documented behavior unless a public API change is separately approved. |
 | TD-009 | Static Backend fallback issue titles may be English while the primary Frontend presentation is Korean. | Language inconsistency during fallback use. | Localize only through a reviewed copy task without changing timing/caution behavior. |
 | TD-012 | GitHub Actions reports an action-runtime compatibility warning. | Non-blocking workflow maintenance risk. | Review current official action releases under infrastructure approval. |
+| TD-013 | Split-origin Frontend hosting now supports an explicit API origin in code, but the hosting environment and Backend CORS allowlist are not configured. | A separately hosted Frontend cannot reach REST or SSE endpoints until approved infrastructure settings are applied together. | Follow `reports/iss-021-api-base-url.md`; approve and verify the Frontend environment plus Backend CORS before deployment. |
 
 ## Durable data limitations
 

@@ -14,22 +14,24 @@ files.
 
 ## Session
 
-- **Role**: Debugger / Backend / Frontend
-- **Branch**: `debug/ISS-020-url-hardening`
-- **Goal**: Correct public-source, canonical, route-state, and API-path URL errors.
+- **Role**: Frontend Implementer / Debugger
+- **Branch**: `frontend/ISS-021-api-base-url`
+- **Goal**: Make the configured Frontend API origin apply consistently to REST and SSE.
 - **Status**: Completed
 
-## Completed in ISS-020
+## Completed in ISS-021
 
-- Added one shared Backend public HTTP(S) URL parser that rejects credentials,
-  localhost, single-label/numeric browser aliases, and non-global IP targets.
-- Preserved IPv6 brackets during canonicalization and applied the public URL
-  boundary to context, v7, and resolution-source response schemas.
-- Preserved the exact stored source URL after Frontend validation.
-- Normalized invalid detail-tab query values and consistently encoded report
-  path IDs.
-- Passed 502 Backend tests, Ruff, Frontend typecheck/lint/parser tests,
-  production build, Prettier checks, diff checks, and Browser verification.
+- Added an origin-only `VITE_API_BASE_URL` utility shared by JSON, report,
+  generation, polling, and SSE requests.
+- Preserved relative `/api` paths when the setting is empty so local Vite proxy
+  behavior remains unchanged.
+- Rejected malformed bases, credentials, paths, queries, fragments, and
+  protocol-relative API paths.
+- Added a dedicated URL regression script and updated Frontend setup guidance.
+- Documented but did not apply the hosting-environment, Backend CORS, Vercel,
+  deployment, and production follow-up.
+- Passed Frontend typecheck, lint, URL/parser scripts, configured/default
+  production builds, Prettier and diff checks, plus actual Backend/Browser QA.
 
 ## Boundaries
 
@@ -39,5 +41,5 @@ files.
 
 ## Next handoff
 
-Review and merge `debug/ISS-020-url-hardening` through the project review flow.
+Review and merge `frontend/ISS-021-api-base-url` through the project review flow.
 TASK-122 remains in review on its existing branch.
