@@ -14,28 +14,30 @@ files.
 
 ## Session
 
-- **Role**: Frontend Implementer / Debugger
-- **Branch**: `frontend/ISS-019-korean-ime-search`
-- **Goal**: Preserve Korean IME composition during issue-list re-search.
+- **Role**: Debugger / Backend / Frontend
+- **Branch**: `debug/ISS-020-url-hardening`
+- **Goal**: Correct public-source, canonical, route-state, and API-path URL errors.
 - **Status**: Completed
 
-## Completed in ISS-019
+## Completed in ISS-020
 
-- Reproduced the first-search and result-page re-search path.
-- Traced the fault to URL state updates during intermediate IME composition.
-- Added an input-local search draft and composition lifecycle handling.
-- Kept filtering responsive while deferring URL synchronization until the
-  composition completes.
-- Passed Frontend typecheck, lint, Prettier, production build, diff checks, and
-  Browser verification for first search and Korean re-search.
+- Added one shared Backend public HTTP(S) URL parser that rejects credentials,
+  localhost, single-label/numeric browser aliases, and non-global IP targets.
+- Preserved IPv6 brackets during canonicalization and applied the public URL
+  boundary to context, v7, and resolution-source response schemas.
+- Preserved the exact stored source URL after Frontend validation.
+- Normalized invalid detail-tab query values and consistently encoded report
+  path IDs.
+- Passed 502 Backend tests, Ruff, Frontend typecheck/lint/parser tests,
+  production build, Prettier checks, diff checks, and Browser verification.
 
 ## Boundaries
 
-- No user-facing copy, dependency, public API, schema, database, provider,
+- No user-facing copy, dependency, public API shape, schema, database, provider,
   infrastructure, deployment, or production state changed.
 - The existing TD-001 bundle-size warning remains unchanged.
 
 ## Next handoff
 
-Review and merge `frontend/ISS-019-korean-ime-search` through the project review
-flow. TASK-122 remains in review on its existing branch.
+Review and merge `debug/ISS-020-url-hardening` through the project review flow.
+TASK-122 remains in review on its existing branch.

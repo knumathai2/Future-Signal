@@ -620,6 +620,15 @@ export function IssueDetail({
   const [chartWindow, setChartWindow] = useState<ChartWindow>("7d");
 
   useEffect(() => {
+    if (requestedTab === null || isDetailTab(requestedTab)) {
+      return;
+    }
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete("tab");
+    setSearchParams(nextParams, { replace: true });
+  }, [requestedTab, searchParams, setSearchParams]);
+
+  useEffect(() => {
     const frame = window.requestAnimationFrame(focusRouteHeading);
     return () => window.cancelAnimationFrame(frame);
   }, [issue.id]);

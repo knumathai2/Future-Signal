@@ -24,6 +24,7 @@ from app.core.context_research import (
     ResearchCandidateDraft,
     ResearchInputs,
 )
+from app.core.url_safety import parse_public_http_url
 
 MAX_RULE_PASSING_CANDIDATES = 8
 MAX_VERIFIER_CANDIDATES = 5
@@ -223,20 +224,20 @@ class ChatCompletionsTransport(Protocol):
 
 def canonicalize_url(url: str) -> str | None:
     """Return a stable HTTP(S) URL or ``None`` for unsafe/invalid input."""
-    try:
-        parsed = urlsplit(url.strip())
-        port = parsed.port
-    except ValueError:
-        return None
-    if parsed.scheme.lower() not in {"http", "https"} or not parsed.hostname:
-        return None
-    if parsed.username or parsed.password:
+    parsed = parse_public_http_url(url)
+    if parsed is None:
         return None
 
     scheme = parsed.scheme.lower()
     host = parsed.hostname.lower().rstrip(".")
+    port = parsed.port
     default_port = (scheme == "http" and port == 80) or (scheme == "https" and port == 443)
-    netloc = host if port is None or default_port else f"{host}:{port}"
+    canonical_host = f"[{host}]" if ":" in host else host
+    netloc = (
+        canonical_host
+        if port is None or default_port
+        else f"{canonical_host}:{port}"
+    )
     path = re.sub(r"/{2,}", "/", parsed.path or "/")
     if path != "/":
         path = path.rstrip("/")
