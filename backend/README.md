@@ -10,6 +10,13 @@ exist in the target database before this path is enabled. It was subsequently
 applied only to the explicitly approved `ENV=local` development database;
 other environments remain separately gated.
 
+TASK-126 adds a default-off, local/development-only scenario-session API and
+unapplied migration 006. Setting `SCENARIO_CONVERSATION_ENABLED=true` exposes
+only capability-authenticated session/turn/request storage and validated-block
+replay; it does not launch a worker or call a provider. The feature remains
+unavailable outside `ENV=local` or `ENV=development`. Migration 006 must exist
+before enabling the flag against a database.
+
 ## Setup
 
 Use Python 3.11 for local setup on macOS arm. The pinned Postgres binary driver may not install under the system Python 3.9 runtime on this machine.

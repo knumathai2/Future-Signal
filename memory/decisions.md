@@ -2154,3 +2154,34 @@ migration proposal, including the explicit ephemeral-data deletion exception.
 Shared multi-instance rate limiting and cleanup scheduling remain separate
 infrastructure decisions. No API, schema, migration, provider, dependency,
 database, infrastructure, deployment, or production state changed in TASK-125.
+
+---
+
+### ADR-070: Implement the scenario boundary default-off before adding a writer
+
+- **Date**: 2026-07-12
+- **Status**: Accepted and implemented in TASK-126
+- **Decided by**: Explicit user approval of the TASK-125 handoff packet
+
+**Context**: TASK-125 required separate approval for the public API, append-only
+schema, fixed 24-hour deletion exception, capability authentication, and initial
+limits. The user approved that bounded work while provider calls, migration
+application, dependencies, shared infrastructure, Frontend, deployment, and
+production remained outside scope.
+
+**Decision**: Add migration 006 without applying it and implement matching
+constrained models plus a feature-flagged local/development API. Return a random
+capability once and store only its SHA-256 hash. Scope every read, append,
+stream, and delete to both issue and session. Append user turns and queued
+generation state idempotently, but do not launch or import a scenario writer.
+Replay only complete stored response blocks over authenticated fetch-SSE. Use
+fixed expiry, turn/text/in-flight checks, a stable input fingerprint, and
+process-local keyed request ceilings. Hard-delete only the ephemeral scenario
+graph on owner request or expiry.
+
+**Consequences**: The storage and transport boundary can be tested without an
+AI call or live database mutation. The feature defaults off and is unsupported
+until migration 006 is separately approved and applied to the target local or
+development database. A future worker, provider evaluation, distributed abuse
+controls, scheduled cleanup, Frontend, deployment, and production activation
+remain independently gated.

@@ -83,6 +83,7 @@ PostgreSQL <-> FastAPI <-> React/Vite
 | 003 | Versioned market resolution rules | Approved local development DB only |
 | 004 | Immutable generation requests and append-only events/leases | Approved local development DB only |
 | 005 | Individually validated generation blocks for SSE replay | Approved local development DB only |
+| 006 | Ephemeral scenario sessions, turns, premises, requests, events, and validated response blocks | Unapplied |
 
 Historical v1-v7 stored report/request rows were removed under explicit local
 approval. Migrations, ADRs, compatibility code, and retained evidence reports
@@ -110,10 +111,11 @@ remain.
   tabs; strict v8 parser; generation, streaming, failure, stale, and source
   states; responsive and accessibility checks.
 - Backend: FastAPI issue and generation routes; SQLAlchemy models; scoped
-  latest-row queries; static fallback; local worker launcher.
+  latest-row queries; static fallback; local worker launcher; default-off,
+  local/development-only scenario session boundary.
 - Data: Gamma collector, CLOB historical seed, snapshot/metric calculations,
   fixed signal detection, source research/verification, v8 writer validation.
-- Verification baseline: 488 Backend tests plus Frontend typecheck, lint, v8
+- Verification baseline: 526 Backend tests plus Frontend typecheck, lint, v8
   parser regression, and production build. The known bundle-size warning is
   tracked as TD-001.
 
@@ -122,11 +124,13 @@ remain.
 - ISS-017 queued-request recovery after a lost worker.
 - ISS-018 provider-compatible citation annotation handling.
 - Future retention/downsampling for extended snapshot history.
+- Scenario writer/worker, shared rate limiting, scheduled expiry cleanup, and
+  separate Frontend experience remain approval-gated follow-up work.
 
-## Approved design, not implemented — scenario conversation
+## Implemented default-off boundary — scenario conversation
 
-TASK-124/125 define a Phase 2 design that remains behind future approval and a
-disabled feature flag:
+TASK-124/125 define the Phase 2 policy and threat model. TASK-126 implements
+only the API/storage boundary behind a disabled feature flag:
 
 ```text
 anonymous browser + issue-scoped capability
@@ -148,7 +152,13 @@ Conversation content is append-only while live and is hard-deleted after expiry
 or owner deletion. Existing issue/report/evidence history remains append-only
 and untouched.
 
-No scenario schema, public endpoint, worker, provider call, rate-limit
-infrastructure, cleanup schedule, Frontend tab, migration application,
-deployment, or production state currently exists. TASK-126 requires explicit
-API/schema approval before implementation.
+Migration 006 and matching ORM models now exist but the migration is unapplied.
+The local/development-only API can create capability-scoped sessions, append
+idempotent queued turns, read status, replay already validated stored blocks,
+and hard-delete the ephemeral graph. It uses process-local keyed request
+ceilings and exposes no capability in a URL or stored plaintext field.
+
+No scenario worker, provider call, shared rate-limit infrastructure, scheduled
+cleanup, Frontend tab, migration application, deployment, or production state
+exists. The feature flag defaults off, and enabling it against a database
+without migration 006 is unsupported.

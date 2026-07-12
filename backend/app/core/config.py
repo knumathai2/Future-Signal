@@ -67,6 +67,12 @@ def _bounded_float(
     return min(max(value, minimum), maximum)
 
 
+def _enabled(raw_value: str | None, *, default: bool = False) -> bool:
+    if raw_value is None:
+        return default
+    return raw_value.strip().lower() in {"1", "true", "yes", "on"}
+
+
 class Settings:
     def __init__(self) -> None:
         self.env: str = os.getenv("ENV", "local")
@@ -79,6 +85,12 @@ class Settings:
             ).split(",")
             if origin.strip()
         ]
+        # TASK-126: the approved scenario API exists only behind a default-off
+        # local/development feature flag. Production enablement remains outside
+        # the approved boundary.
+        self.scenario_conversation_enabled: bool = _enabled(
+            os.getenv("SCENARIO_CONVERSATION_ENABLED")
+        )
         # TASK-015/TASK-042: report generation uses an OpenAI-compatible chat
         # client. OpenRouter is supported without adding a dependency by
         # pointing the existing OpenAI SDK at OpenRouter's compatible endpoint.

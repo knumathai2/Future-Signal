@@ -183,7 +183,7 @@ Provider usage plus first-validated-block and total-writer milliseconds are
 recorded on the terminal request event. A non-streaming client is retained only
 as a compatibility path and publishes blocks after the full output validates.
 
-### 10.9 Proposed tool-free scenario worker (TASK-125)
+### 10.9 Approved tool-free scenario boundary (TASK-126)
 
 The next-contract scenario path is separate from active v8 and has no agent
 loop. One authenticated user turn appends one immutable request; one isolated
@@ -204,9 +204,11 @@ and validates complete paragraph/list blocks before storage and authenticated
 fetch-SSE replay. Raw provider chunks, links, HTML, images, forms, and embedded
 content never become public blocks.
 
-Expiry or owner deletion prevents later persistence and removes the ephemeral
+TASK-126 implements the default-off API/session/request boundary and validated-
+block replay only; it does not implement or launch the future worker. Expiry or
+owner deletion prevents later persistence and removes the ephemeral
 conversation graph. Earlier active-v8 reports and all issue/evidence history
-remain untouched. TASK-126 implementation requires separate API/schema
-approval; provider evaluation remains TASK-130-gated.
+remain untouched. Migration 006 remains unapplied; provider evaluation remains
+TASK-130-gated.
 
 ---

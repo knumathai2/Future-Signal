@@ -167,6 +167,20 @@ consumed by one migration application and one OpenRouter call costing USD
 0.010567. It does not authorize another provider call, another database,
 context research, deployment, infrastructure mutation, or production action.
 
+### TASK-126 approved scenario-conversation boundary
+
+The user's 2026-07-12 approval authorizes the proposed public scenario-session
+API, 256-bit bearer-capability authentication, authenticated fetch-SSE replay,
+one new append-only migration for ephemeral session/turn/premise/request/event/
+block state, 24-hour expiry and owner-requested hard deletion of only that
+ephemeral conversation graph, and the initial message/turn/rate/concurrency
+limits recorded by TASK-125. Implementation must remain behind a default-off
+feature flag, and the migration must remain unapplied. The API may append a
+generation request but may not construct a provider client. This approval does
+not authorize a provider call, new dependency, shared rate-limit or cleanup
+infrastructure, migration application, Frontend implementation, deployment,
+production writes, or active-v8 transition.
+
 ---
 
 ## Branch Policy

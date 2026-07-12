@@ -33,9 +33,9 @@ movement to an external event without accepted source support.
   development database. Production writes and deployment remain unapproved.
 - **Documentation**: TASK-122 phases 1-3 are complete and reviewed; phases 4-7
   are active on `pm/TASK-122-document-consolidation`.
-- **Phase 2 planning**: TASK-123~125 now lock the next summary/scenario policy
-  and an approval-ready capability-scoped threat/API/storage design. Active v8
-  remains unchanged; TASK-126 still requires explicit API/schema approval.
+- **Phase 2 boundary**: TASK-123~125 lock the next summary/scenario policy and
+  capability-scoped threat model. TASK-126 implements the approved default-off
+  local/development API and unapplied migration 006; active v8 is unchanged.
 
 ## Implementation snapshot
 
@@ -47,6 +47,7 @@ movement to an external event without accepted source support.
 | Data | Append-only snapshots and metrics, fixed 24h/7d changes, caution levels, ±5pp signal detection, guarded historical seed |
 | Briefing | TASK-112~117: v8 issue-centered prompt, source refinement, safe retry, contextual wording, validated-block streaming |
 | Safety | Aggregate-only data, deterministic evidence/source/timestamp checks, exact caution handling, prohibited-language validation |
+| Scenario boundary | Default-off capability-scoped session API, append-only live graph, authenticated stored-block SSE, 24-hour deletion contract; no writer/provider/UI |
 
 ## Active issues
 
@@ -76,6 +77,7 @@ Full active technical debt is in `memory/known-issues.md`.
 
 | Date | Change |
 |---|---|
+| 2026-07-12 | TASK-126 implemented the approved default-off local/development scenario API, capability authentication, append-only migration 006 (unapplied), stored-block SSE, limits, and hard deletion without a provider, worker, dependency, or database action. |
 | 2026-07-12 | TASK-124/125 locked the next summary/scenario policy and documented the ephemeral capability-scoped threat/API/storage proposal without runtime mutation. |
 | 2026-07-12 | TASK-123 documented the approval-ready relaxed-summary and secure scenario-conversation plan without changing active policy or runtime state. |
 | 2026-07-12 | ISS-021 connected all Frontend REST and SSE requests to one optional validated API origin while leaving split-origin hosting and Backend CORS unconfigured pending approval. |
@@ -89,8 +91,9 @@ Full active technical debt is in `memory/known-issues.md`.
 
 ## Next
 
-Review and explicitly approve or revise TASK-125's public API/schema/retention
-packet before TASK-126. Complete TASK-122 phases 4-7, then review ISS-017 and
-ISS-018 separately.
+Complete TASK-122 phases 4-7. Plan TASK-127's premise-state boundary and keep
+the scenario writer/provider, migration application, shared abuse controls,
+cleanup scheduling, and Frontend work behind their separate approvals. Review
+ISS-017 and ISS-018 separately.
 Another provider evaluation, workflow dispatch, deployment, or production
 operation requires its own authorization.

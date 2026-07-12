@@ -296,6 +296,52 @@ and strict payload. `Last-Event-ID` resumes after the last received block.
 Connection comments are keep-alives only. Raw provider fragments are never
 emitted.
 
+## Scenario conversation (TASK-126, default off)
+
+The approved scenario API is registered but returns `404 feature_unavailable`
+unless `SCENARIO_CONVERSATION_ENABLED=true` and `ENV` is `local` or
+`development`. TASK-126 never launches a worker or calls a provider.
+
+### `POST /api/issues/{id}/scenario-sessions`
+
+Creates one issue-scoped, fixed 24-hour session and returns HTTP `201`. The
+response contains session ID, issue ID, creation/expiry/data times, eight-turn
+limit, policy version, caution, and a random 256-bit `session_capability`. The
+capability is returned only here; only its hash is stored. The response uses
+`Cache-Control: no-store` and `Referrer-Policy: no-referrer`.
+
+### Owned session operations
+
+Every later operation requires:
+
+```text
+Authorization: Bearer <session capability>
+```
+
+- `GET /api/issues/{id}/scenario-sessions/{session_id}` returns validated owned
+  turns, premise classes, remaining turns, data time, and caution.
+- `POST /api/issues/{id}/scenario-sessions/{session_id}/turns` requires a UUID
+  `Idempotency-Key`, appends one user turn plus immutable queued request/event,
+  and returns HTTP `202`. It never calls or launches a provider.
+- `GET /api/issues/{id}/scenario-sessions/{session_id}/turns/{turn_id}` returns
+  queued/running/succeeded/failed state and safe terminal metadata.
+- `GET /api/issues/{id}/scenario-sessions/{session_id}/turns/{turn_id}/stream`
+  uses authenticated fetch-SSE to replay only stored complete paragraph/list
+  blocks. Capabilities are forbidden in URLs; raw provider chunks are never
+  events.
+- `DELETE /api/issues/{id}/scenario-sessions/{session_id}` returns `204` and
+  hard-deletes only the authenticated ephemeral scenario graph.
+
+Unknown, mismatched, expired, deleted, and wrong-capability sessions return the
+same non-enumerating `404 session_unavailable` code. A missing/malformed bearer
+header returns `401 session_token_required`. Fixed message/session/in-flight/
+rate limits return safe `409`, `413`, or `429` codes. Storage/current-bundle
+failure returns `409` or `503` without provider or database detail.
+
+Migration 006 remains unapplied. The API must not be enabled against a database
+without that migration and a separate environment-specific application
+approval.
+
 ## Validation and fallback
 
 - Invalid enum/query values use FastAPI's `422` detail response.
