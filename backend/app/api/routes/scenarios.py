@@ -12,7 +12,7 @@ import threading
 import time
 from collections import defaultdict, deque
 from collections.abc import Generator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response, status
@@ -31,8 +31,10 @@ from app.core.scenario_conversation import (
     enqueue_scenario_turn,
     latest_scenario_event,
 )
+from app.core.scenario_worker_launcher import launch_scenario_worker
 from app.db.models import (
     Market,
+    ScenarioGenerationEvent,
     ScenarioGenerationRequest,
     ScenarioPremise,
     ScenarioResponseBlock,
@@ -51,6 +53,7 @@ from app.schemas.scenarios import (
 )
 
 router = APIRouter(tags=["scenario-conversations"])
+_QUEUED_RELAUNCH_AFTER = timedelta(seconds=5)
 
 
 def _as_utc(value: datetime) -> datetime:
@@ -173,6 +176,21 @@ def _turn_out(turn: ScenarioTurn) -> ScenarioTurnOut:
         content=turn.content,
         created_at=_as_utc(turn.created_at),
     )
+
+
+def _maybe_relaunch_queued_request(
+    generation_request: ScenarioGenerationRequest,
+    latest: ScenarioGenerationEvent,
+    *,
+    now: datetime | None = None,
+) -> bool:
+    """Relaunch only an attempt-zero request that never reached provider work."""
+    checked_at = _as_utc(now or datetime.now(UTC))
+    if latest.state != "queued" or latest.attempt_number != 0:
+        return False
+    if checked_at - _as_utc(latest.recorded_at) < _QUEUED_RELAUNCH_AFTER:
+        return False
+    return launch_scenario_worker(generation_request.id, env=settings.env)
 
 
 @router.post(
@@ -321,6 +339,10 @@ def create_turn(
         raise _public_error(
             status.HTTP_503_SERVICE_UNAVAILABLE, "generation_unavailable"
         ) from exc
+    if result.created:
+        # The API commits first, then starts a request-scoped child. Provider
+        # construction and all response validation remain outside this process.
+        launch_scenario_worker(result.request.id, env=settings.env)
     return ScenarioTurnCreateResponse(
         turn_id=result.turn.id,
         sequence=result.turn.sequence_number,
@@ -374,6 +396,7 @@ def get_turn(
     latest = latest_scenario_event(db, generation_request.id)
     if latest is None:
         raise _public_error(status.HTTP_409_CONFLICT, "request_state_unavailable")
+    _maybe_relaunch_queued_request(generation_request, latest)
     return ScenarioTurnStatusResponse(
         turn_id=turn.id,
         sequence=turn.sequence_number,
@@ -439,6 +462,7 @@ def stream_turn(
             if latest is None:
                 yield _sse_event("failed", {"error_code": "request_state_unavailable"})
                 return
+            _maybe_relaunch_queued_request(generation_request, latest)
             status_key = (latest.state, latest.attempt_number)
             if status_key != last_status:
                 yield _sse_event(

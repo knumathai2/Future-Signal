@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Project: Outlook Signals
 
-_Last updated: 2026-07-12_
+_Last updated: 2026-07-13_
 
 ## Summary
 
@@ -36,19 +36,22 @@ movement to an external event without accepted source support.
 - **Phase 2 boundary**: TASK-123~125 lock the next summary/scenario policy and
   capability-scoped threat model. TASK-126 implements the approved default-off
   local/development API. TASK-128's guarded writer is implemented; two bounded
-  evaluations failed closed and a successful response still awaits approval.
+  evaluations failed closed. TASK-129 adds the isolated Frontend, and TASK-132
+  adds local auto-launch. TASK-133's single post-fix evaluation stored and
+  reconstructed the first validated scenario response. TASK-134 adds bounded
+  attempt-zero recovery and conservative DB pooling; activation stays gated.
 
 ## Implementation snapshot
 
 | Area | Active implementation |
 |---|---|
-| Frontend | TASK-118~120: four detail tabs, shared navigation, restrained terracotta current-context emphasis, muted-blue comparison styling, accessibility and responsive QA |
+| Frontend | Five detail tabs with an isolated scenario conversation, shared navigation, restrained terracotta current-context emphasis, muted-blue comparison styling, accessibility and responsive QA |
 | API | Market-scoped issue/history/report reads; append-only generation-request POST; request status and validated-block SSE endpoints |
 | Collection | TASK-121: collection-only GitHub Actions workflow every four hours; no scheduled provider stage |
 | Data | Append-only snapshots and metrics, fixed 24h/7d changes, caution levels, ±5pp signal detection, guarded historical seed |
 | Briefing | TASK-112~117: v8 issue-centered prompt, source refinement, safe retry, contextual wording, validated-block streaming |
 | Safety | Aggregate-only data, deterministic evidence/source/timestamp checks, exact caution handling, prohibited-language validation |
-| Scenario boundary | Default-off capability-scoped API, guarded tool-free local writer, complete-output safety gates, authenticated stored-block SSE, 24-hour deletion contract; no UI |
+| Scenario boundary | Default-off capability-scoped API and separate UI, guarded tool-free local writer with new-request auto-launch, complete-output safety gates, authenticated stored-block SSE, session recovery, restricted rendering, and 24-hour deletion contract |
 
 ## Active issues
 

@@ -137,6 +137,17 @@ def test_valid_output_persists_assistant_blocks_premise_and_usage(db_session):
     assert events[-1].usage["writer_cost_usd"] == 0.01
     assert events[-1].usage["model"] == "fake/scenario"
 
+    replay_client = FakeClient(_output(db_session, request))
+    replay = process_scenario_request(
+        db_session,
+        request.id,
+        replay_client,
+        "fake/scenario",
+        now=NOW + timedelta(seconds=3),
+    )
+    assert replay.state == "not_claimed"
+    assert replay_client.calls == 0
+
 
 def test_provider_failure_stores_no_assistant_or_block(db_session):
     _session, request, _turn = _queued(db_session)
@@ -279,3 +290,31 @@ def test_restricted_markdown_splits_paragraph_and_list():
     )
     assert [block.block_type for block in blocks] == ["paragraph", "list"]
     assert blocks[1].payload["ordered"] is False
+
+
+def test_ordered_list_markers_are_not_treated_as_factual_numbers(db_session):
+    _session, request, _turn = _queued(db_session)
+    state = build_scenario_state(db_session, request, now=NOW + timedelta(seconds=2))
+    ordered = ScenarioWriterOutput.model_validate_json(
+        _output(
+            db_session,
+            request,
+            answer_markdown=(
+                "조건부 시나리오에서는 현재 정보와 사용자 가정을 분리합니다.\n\n"
+                "1. 공식 자료가 제시되는 경우 판정 조건과 비교합니다.\n"
+                "2. 추가 자료가 없는 경우 관찰 범위의 한계를 유지합니다."
+            ),
+            new_scenario_premises=[],
+        )
+    )
+
+    validation, blocks = validate_scenario_output(ordered, state)
+
+    assert validation.passed is True
+    assert blocks[1].payload == {
+        "ordered": True,
+        "items": [
+            "공식 자료가 제시되는 경우 판정 조건과 비교합니다.",
+            "추가 자료가 없는 경우 관찰 범위의 한계를 유지합니다.",
+        ],
+    }

@@ -2216,3 +2216,110 @@ phrases such as `조건부 경로`, and equivalent ISO/Korean date numbers canon
 without accepting new values. Both fixes have regression coverage. A third
 provider call requires explicit approval; no automatic retry, Frontend,
 scheduler, deployment, or production activation was introduced.
+
+---
+
+### ADR-072: Keep the scenario Frontend isolated and capability-scoped
+
+- **Date**: 2026-07-13
+- **Status**: Accepted and implemented in TASK-129
+- **Decided by**: Explicit user approval of the TASK-129 Frontend work
+
+**Context**: TASK-126 and TASK-128 provided a default-off API and guarded local
+writer, but the product had no browser experience for short-lived scenario
+sessions. The Frontend had to preserve the stable briefing boundary, bearer
+secrecy, complete-block publication, and safe rendering without adding a new
+dependency or activating the feature.
+
+**Decision**: Add a fifth peer detail tab. Hold the raw capability only in
+memory and sessionStorage, authenticate every operation and fetch-SSE replay,
+preserve the replay cursor across bounded reconnects, and fall back to polling.
+Strictly validate every public response and render only inert paragraph/list
+structures. Preserve earlier validated turns on failure and expose safe
+unavailable, expiry, limit, stale, recovery, and owner-deletion states with
+data timing and caution.
+
+**Consequences**: The default-off local/development flow can be exercised from
+the browser without exposing credentials in URLs or activating authored HTML,
+links, images, or media. TASK-129 used no provider call, dependency, schema,
+migration, deployment, infrastructure, production write, or TASK-131 policy
+transition. Security/quality evaluation and activation remain separate gates.
+
+---
+
+### ADR-073: Auto-launch scenario work only after a new local request commits
+
+- **Date**: 2026-07-13
+- **Status**: Accepted and implemented in TASK-132
+- **Decided by**: Explicit user approval of one additional local evaluation
+
+**Context**: The TASK-129 browser could create a turn, but the request remained
+queued because TASK-128 exposed only a manual worker CLI. The API still cannot
+construct a provider client, idempotent replay cannot create duplicate spend,
+and production activation remains outside scope.
+
+**Decision**: After a newly created local/development turn commits, start the
+existing request-scoped worker as a detached child. Do not launch for an
+idempotent replay or outside the allowed environment. Keep the worker's one-call
+path, budget check, complete validation, append-only events, and fail-closed
+persistence unchanged. Advance the writer to version 2 so ordered Markdown list
+indices are excluded from factual number comparison only after the Markdown
+block has passed its strict parser; list-item and prose numbers remain gated.
+
+**Consequences**: The local browser-to-worker path is connected without placing
+a provider client in the API. The one approved response cost USD 0.0058895 and
+failed closed with `unsupported_number`; no assistant content was stored and no
+retry occurred. The deterministic ordered-list conflict is fixed and covered,
+but a successful post-fix live response remains unverified and requires a new
+explicit call approval.
+
+---
+
+### ADR-074: Accept writer-v2 local success as evaluation evidence, not activation
+
+- **Date**: 2026-07-13
+- **Status**: Accepted evaluation result
+- **Decided by**: Explicit user approval of the TASK-133 post-fix call
+
+**Context**: TASK-132 connected automatic local worker launch, but its bounded
+response failed before persistence. Writer version 2 corrected the deterministic
+ordered-list number conflict. A fresh immutable request was required to verify
+the corrected complete path without retrying a historical request.
+
+**Decision**: Run exactly one new tool-free call through the real Frontend,
+public session API, detached worker, complete validator, stored blocks,
+authenticated SSE, and reload path. Treat success as local evaluation evidence
+only; do not change the default-off flag or active-v8/TASK-131 state.
+
+**Consequences**: The USD 0.006425 response passed every gate and stored one
+assistant turn plus three paragraph blocks. The Frontend rendered and recovered
+the result with no console errors. No additional call is authorized. TASK-130
+may review this evidence, while deployment and activation remain separately
+gated. A transient session-mode pool ceiling is tracked as ISS-023.
+
+---
+
+### ADR-075: Recover only scenario requests that never reached provider work
+
+- **Date**: 2026-07-13
+- **Status**: Accepted and implemented in TASK-134
+- **Decided by**: Explicit user approval to fix and recover the queued request
+
+**Context**: A user turn committed successfully but remained `queued` at
+attempt zero after its detached child exited before claim. The Frontend kept
+waiting because SSE remained healthy, while SQLAlchemy's per-process 5+10 pool
+default could exhaust the 15-client Supabase session-mode ceiling when the API
+and worker overlapped.
+
+**Decision**: Bound each PostgreSQL process to three pooled plus one overflow
+connection. Let authenticated status/SSE reads relaunch only requests still
+queued at attempt zero after five seconds, with a 20-second process-local
+cooldown and maximum three launches. Row-lock the immutable request before
+appending `running`; once any child claims it, all others stop without a model
+call. Never recover running or terminal attempts automatically.
+
+**Consequences**: After 546 tests passed, server restart caused the original
+browser connection to recover the preserved request automatically. One
+OpenRouter call cost USD 0.00634325 and stored one assistant turn plus three
+validated blocks. No duplicate call or pool-ceiling recurrence occurred. The
+feature remains default-off and deployment/activation remain separately gated.

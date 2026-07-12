@@ -223,7 +223,7 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
   wording rather than gain/loss color semantics.
 - **Responsive acceptance**: No horizontal overflow at 320px, 375px, or desktop.
 
-### 3.12 Proposed scenario-conversation navigation (TASK-124/TASK-125)
+### 3.12 Implemented default-off scenario-conversation navigation (TASK-129)
 
 - **Purpose**: Add a distinct `시나리오 대화` tab for free-form conditional
   exploration without mixing assumptions into the stable briefing or accepted
@@ -244,5 +244,8 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
   authorization detail.
 - **Transport**: Authenticated fetch-SSE replays complete validated blocks; raw
   provider fragments never render.
+- **Activation**: The tab and safe unavailable state are implemented, but the
+  server feature remains default-off and active v8 is unchanged pending
+  TASK-130 evaluation and TASK-131 acceptance.
 
 ---
