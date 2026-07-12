@@ -14,35 +14,40 @@ files.
 
 ## Session
 
-- **Role**: PM / Planner
-- **Branch**: `pm/TASK-123-scenario-chatbot-plan`
-- **Goal**: Plan a freer current summary and secure scenario conversation.
+- **Role**: PM / Planner + Backend contract planner
+- **Branch**: `backend/TASK-125-scenario-threat-contract`
+- **Goal**: Complete TASK-124 policy lock and TASK-125 security/API/storage contract.
 - **Status**: Completed
 
-## Completed in TASK-123
+## Completed in TASK-124/125
 
-- Separated the stable current summary from a flexible issue-scoped scenario
-  conversation.
-- Defined server-owned premise classes so assumptions cannot become current
-  facts across turns.
-- Chose a tool-free, read-only model boundary with no database, browser, URL,
-  secret, or side-effect access.
-- Documented prompt-injection, indirect-source, session-isolation, output,
-  privacy, cost, conventional API, and operational controls.
-- Proposed TASK-124~131 with independent policy, API, schema, provider,
-  infrastructure, migration, deployment, and activation gates.
-- Added acceptance, evaluation, rollout, rollback, and open-decision sections.
+- Locked the next current-summary/scenario-conversation policy while leaving
+  active v8 unchanged.
+- Made exact observations and current external facts blocking, ordinary safe
+  prose/structure diagnostic, and premise classes server-owned.
+- Selected a one-issue, 24-hour anonymous session with a random 256-bit bearer
+  capability returned once and stored only as a hash.
+- Selected authenticated fetch-SSE, eight turns, no model-authored compaction,
+  one in-flight turn, one tool-free provider attempt, and complete-block
+  validation.
+- Defined 14 threats, request/cost limits, proposed endpoints, proposed tables,
+  safe errors, hard deletion, output rendering, provider privacy, and security
+  tests.
+- Recorded ADR-068 and ADR-069 and updated canonical policy, service, UX,
+  technical, glossary, and architecture guidance.
 
 ## Boundaries
 
-- This is a proposal and Phase 2 backlog record only.
-- No active wording policy, user-facing runtime text, code, public API, schema,
-  dependency, provider call, database, infrastructure, deployment, or
-  production state changed.
-- Active v8 and all existing approval boundaries remain unchanged.
+- TASK-124 is an approved next-contract policy design, not runtime activation.
+- TASK-125 is an approval-ready API/schema/retention proposal, not an
+  implementation approval.
+- No code, public API, schema, migration, dependency, provider call, database,
+  infrastructure, deployment, or production state changed.
+- Active v8 and historical reconstruction remain unchanged.
 
 ## Next handoff
 
-Review the TASK-123 plan. If its direction is accepted, approve and start only
-TASK-124 (policy lock) and TASK-125 (threat/API/storage proposal) before any
-implementation. TASK-122 remains in review on its existing branch.
+Review TASK-125's approval packet. TASK-126 may start only after explicit
+approval of the proposed public API, append-only migration, 24-hour ephemeral
+hard-deletion behavior, and initial limits. Migration application, provider,
+infrastructure, Frontend, deployment, and production remain later gates.

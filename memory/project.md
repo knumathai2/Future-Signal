@@ -33,9 +33,9 @@ movement to an external event without accepted source support.
   development database. Production writes and deployment remain unapproved.
 - **Documentation**: TASK-122 phases 1-3 are complete and reviewed; phases 4-7
   are active on `pm/TASK-122-document-consolidation`.
-- **Phase 2 planning**: TASK-123 documents a proposed freer current summary and
-  isolated scenario conversation with security, approval, evaluation, and
-  rollback gates. Active v8 remains unchanged.
+- **Phase 2 planning**: TASK-123~125 now lock the next summary/scenario policy
+  and an approval-ready capability-scoped threat/API/storage design. Active v8
+  remains unchanged; TASK-126 still requires explicit API/schema approval.
 
 ## Implementation snapshot
 
@@ -76,6 +76,7 @@ Full active technical debt is in `memory/known-issues.md`.
 
 | Date | Change |
 |---|---|
+| 2026-07-12 | TASK-124/125 locked the next summary/scenario policy and documented the ephemeral capability-scoped threat/API/storage proposal without runtime mutation. |
 | 2026-07-12 | TASK-123 documented the approval-ready relaxed-summary and secure scenario-conversation plan without changing active policy or runtime state. |
 | 2026-07-12 | ISS-021 connected all Frontend REST and SSE requests to one optional validated API origin while leaving split-origin hosting and Backend CORS unconfigured pending approval. |
 | 2026-07-12 | ISS-020 hardened public source URLs, IPv6 canonicalization, exact Frontend source links, detail-tab query normalization, and report path encoding. |
@@ -88,8 +89,8 @@ Full active technical debt is in `memory/known-issues.md`.
 
 ## Next
 
-Review TASK-123's TASK-124 policy and TASK-125 threat/contract gates before any
-scenario-conversation implementation. Complete TASK-122 phases 4-7, then
-review ISS-017 and ISS-018 separately.
+Review and explicitly approve or revise TASK-125's public API/schema/retention
+packet before TASK-126. Complete TASK-122 phases 4-7, then review ISS-017 and
+ISS-018 separately.
 Another provider evaluation, workflow dispatch, deployment, or production
 operation requires its own authorization.

@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # standards.md — Outlook Signals Standards
 
-_Last updated: 2026-07-11_
+_Last updated: 2026-07-12_
 
 ## Code Style
 
@@ -125,6 +125,17 @@ V1-v7 keep their historical flat filters for reconstructibility.
   before storage and during read-time reconstruction. Positive contextual terms
   require same-section source support and attribution; explicit negation or
   verification-inquiry forms remain source-free. Ambiguous uses fail closed.
+- TASK-124 locks the approved next-contract distinction between a freer current
+  summary and a free-form scenario conversation. Active v8 remains unchanged
+  until TASK-131 acceptance. The summary may treat ordinary explanatory prose,
+  ordering, section count, and zero-source coverage as diagnostics, but exact
+  observations and current external facts remain blocking and reconstructible.
+- Scenario conversation has no required visible section template. Every premise
+  remains server-classified as confirmed fact, stored observation, user
+  assumption, model scenario, or unverified context. An assumption cannot be
+  promoted by the model. Permanent financial/action, real-world-result,
+  unsupported-relationship, privacy, individual-participant, secret-leakage,
+  and unsafe-rendering rules remain blocking in every conversational context.
 - Policy/lint docs and tests may quote prohibited expressions only to define or verify the blocking rule; demo-visible docs and product copy may not normalize those terms as user-facing language
 
 ## Documentation Standards

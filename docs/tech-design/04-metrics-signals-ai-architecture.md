@@ -183,4 +183,30 @@ Provider usage plus first-validated-block and total-writer milliseconds are
 recorded on the terminal request event. A non-streaming client is retained only
 as a compatibility path and publishes blocks after the full output validates.
 
+### 10.9 Proposed tool-free scenario worker (TASK-125)
+
+The next-contract scenario path is separate from active v8 and has no agent
+loop. One authenticated user turn appends one immutable request; one isolated
+worker makes at most one provider call. The model receives a typed, read-only
+bundle containing the selected issue definition, exact observations, accepted
+sanitized source excerpts, server-owned premise classes, bounded prior turns,
+and the latest untrusted user message.
+
+The model has no database, browser, URL fetch, code execution, external action,
+or second-call capability. It cannot change a premise class. The initial
+release permits at most eight user turns and does not use model-authored
+conversation compaction.
+
+Free-form presentation uses a minimal internal envelope with authored Markdown,
+referenced premise IDs, and optional generic new scenario premises. The server
+forces new premises to `model_scenario`, adds timing/policy/caution metadata,
+and validates complete paragraph/list blocks before storage and authenticated
+fetch-SSE replay. Raw provider chunks, links, HTML, images, forms, and embedded
+content never become public blocks.
+
+Expiry or owner deletion prevents later persistence and removes the ephemeral
+conversation graph. Earlier active-v8 reports and all issue/evidence history
+remain untouched. TASK-126 implementation requires separate API/schema
+approval; provider evaluation remains TASK-130-gated.
+
 ---

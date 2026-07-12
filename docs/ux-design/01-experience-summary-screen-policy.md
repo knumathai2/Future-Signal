@@ -223,4 +223,26 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
   wording rather than gain/loss color semantics.
 - **Responsive acceptance**: No horizontal overflow at 320px, 375px, or desktop.
 
+### 3.12 Proposed scenario-conversation navigation (TASK-124/TASK-125)
+
+- **Purpose**: Add a distinct `시나리오 대화` tab for free-form conditional
+  exploration without mixing assumptions into the stable briefing or accepted
+  source flow.
+- **Boundary**: The existing four tabs and active v8 behavior remain unchanged
+  until TASK-131 acceptance. The future tab is a fifth peer, not content nested
+  inside `AI 이슈 브리핑`.
+- **Session**: One anonymous, issue-scoped session lasts at most 24 hours and
+  eight user turns. It is not an account, saved history, or cross-device state.
+- **Presentation**: Each assistant response carries a compact conditional label;
+  current information and user assumptions remain distinguishable. Accepted
+  source links render separately from authored prose.
+- **Safety**: No raw HTML, model-authored active links/media, urgency styling,
+  countdown, or direction-colored emphasis. Data-bearing responses retain the
+  data-as-of time and caution.
+- **Failure**: A failed current turn disappears while earlier validated turns
+  remain. Expired/deleted sessions become unavailable without exposing
+  authorization detail.
+- **Transport**: Authenticated fetch-SSE replays complete validated blocks; raw
+  provider fragments never render.
+
 ---

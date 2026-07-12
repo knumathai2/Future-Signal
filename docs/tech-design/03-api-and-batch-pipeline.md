@@ -55,6 +55,30 @@ JSON, versionless for hackathon (`/api/...` prefix is enough, no `/v1` needed ye
 ### Naming discipline
 Every path uses `issues`, `signals`, `reports`, `categories` — never `markets` in the public-facing path even though the DB table is named `markets` internally (an internal DB name is fine; the *API surface* is the part users' browsers see in network tabs, and `issues` reinforces the product framing from UX Design). No `/bets`, `/trades`, `/positions`, `/profits` anywhere, including in internal code — naming leaks into product framing over time even when it's "just" a variable name.
 
+### 5.1 Proposed scenario-conversation API (TASK-125)
+
+The following public-interface proposal is inactive until explicit approval:
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/issues/:id/scenario-sessions` | POST | Create one issue-scoped, fixed-expiry anonymous session and return its capability once |
+| `/api/issues/:id/scenario-sessions/:session_id` | GET | Read only the caller-owned validated session state |
+| `/api/issues/:id/scenario-sessions/:session_id/turns` | POST | Append one bounded user turn with bearer capability and idempotency key |
+| `/api/issues/:id/scenario-sessions/:session_id/turns/:turn_id` | GET | Read caller-owned queued/running/succeeded/failed turn state |
+| `/api/issues/:id/scenario-sessions/:session_id/turns/:turn_id/stream` | GET | Replay complete validated blocks through authenticated fetch-SSE |
+| `/api/issues/:id/scenario-sessions/:session_id` | DELETE | Invalidate the capability and request ephemeral-content deletion |
+
+The session ID never grants access. Every operation except creation requires a
+256-bit bearer capability whose hash alone is stored. The capability is never
+placed in a URL. The Frontend uses `fetch` streaming so the authorization and
+`Last-Event-ID` headers remain available; native `EventSource` is not used.
+
+The API validates issue/session ownership, expiry, fixed limits, one in-flight
+turn, idempotency, current input fingerprint, and global budget before
+appending a request. It never constructs a provider client. Safe public errors
+do not distinguish unknown, mismatched, expired, deleted, or unauthorized
+sessions in a way that permits enumeration.
+
 ---
 
 ## 6. Batch Data Collection Architecture

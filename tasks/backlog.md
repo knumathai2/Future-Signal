@@ -26,15 +26,13 @@ _Current assignments live in `tasks/active.md`; completed work lives in `tasks/c
 
 ## Summary and Scenario Chat — Phase 2 Proposal
 
-TASK-123 records the approval-ready plan in
-`reports/task-123-summary-scenario-chatbot-plan.md`. The rows below are not
-authorized implementation work. They enter active work only after their stated
-scope and approval gates are satisfied.
+TASK-123~125 record the plan, approved next-contract policy, and approval-ready
+threat/API/storage proposal. The rows below are not authorized implementation
+work. They enter active work only after their stated scope and approval gates
+are satisfied.
 
 | ID | Task | Owner | Resume condition |
 |----|------|-------|------------------|
-| TASK-124 | Lock the relaxed-summary and scenario-conversation policy | PM / Data-AI / Reviewer | Explicit Phase 2 scope and wording-policy approval |
-| TASK-125 | Finalize threat model, retention, public API, and storage proposal | Backend / PM / Reviewer | TASK-124 policy matrix is accepted |
 | TASK-126 | Implement the approved append-only conversation boundary | Backend Implementer | Separate schema and public API approval; migration remains unapplied |
 | TASK-127 | Implement a feature-flagged relaxed summary writer and validator | Data/AI Implementer | TASK-124 approval; provider evaluation remains separately gated |
 | TASK-128 | Implement the tool-free scenario writer and premise-state validation | Data/AI / Backend | TASK-125~127 complete; provider budget separately approved |
