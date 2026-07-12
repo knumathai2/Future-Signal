@@ -14,9 +14,9 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-12
-- **Agent Role**: Frontend Implementer with PM / safety review
-- **Session Goal**: Split the issue detail into four question-led tabs.
-- **Branch**: `frontend/TASK-118-issue-detail-tabs`
+- **Agent Role**: Reviewer / Backend
+- **Session Goal**: Align scheduled GitHub Actions with four-hour collection-only policy.
+- **Branch**: `backend/TASK-121-four-hour-collection`
 
 ## Context Read
 
@@ -24,6 +24,66 @@ Harness Version: 1.1
 - Current project/session/task state, standards, glossary, detail/report components, types, and browser QA guidance
 
 ## Work Completed
+
+- Completed TASK-121 under the user's explicit infrastructure-workflow
+  approval. Replaced `.github/workflows/daily-batch.yml` with
+  `.github/workflows/four-hour-collection.yml`, renamed the workflow and job
+  for four-hour market-data collection, and changed the cron to minute 17
+  every four UTC hours.
+- Removed `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, and `OPENAI_MODEL` from the
+  scheduled environment. Added explicit `--skip-ai-reports` and
+  `--skip-context-research` flags, so the workflow performs only market fetch,
+  snapshot/metric storage, signal detection, and collection logging.
+- YAML parsing, all 13 scheduled-batch tests, Ruff, and `git diff --check`
+  pass. No Action was dispatched, no deployment/provider/database operation
+  occurred, and no schema, dependency, public API, or policy changed.
+
+- Audited the configured database read-only before deletion. The database was
+  about 18.2 MB; `market_snapshots` held 33,638 rows, while 241 of 247 stored
+  AI reports used superseded v1-v7 prompt versions.
+- Under the user's explicit approval, deleted 241 v1-v7 `ai_reports`, 10 v7
+  generation requests, and 38 request-owned events in one transaction guarded
+  to `ENV=local`. There were no v7 validated blocks.
+- Preserved six v8 reports, 11 v8 requests, 60 v8 events, 17 validated blocks,
+  and all market, metric, snapshot, context, rule, and migration state.
+- Verified zero legacy rows, zero orphan events/blocks, zero broken succeeded
+  report references, FastAPI health 200, and four real v8 report reads covering
+  fresh, stale, and failed-with-last-good states.
+- No runtime code, schema, provider call, infrastructure, deployment,
+  production write, or wording-policy change occurred. Historical runtime-code
+  cleanup remains a separate TASK-109 scope.
+
+- Completed TASK-120 at the user's direction. Moved the home desktop navigation
+  into the same right-aligned shared-header group used by detail/list routes;
+  the refresh action remains immediately after the navigation instead of
+  pushing navigation toward the center.
+- Applied restrained methodology emphasis: terracotta heading marker and
+  eyebrow, soft outlined return action, and five numbered neutral guidance
+  cards in a desktop two-column/mobile one-column layout.
+- Frontend typecheck, lint, parser regression, build, desktop main/methodology
+  Browser review, and 320px Browser QA pass. Navigation remains shared, the
+  mobile return action is 44px, cards are 288px within the 320px viewport, and
+  both routes have no overflow or console warnings/errors. The known bundle-
+  size warning remains.
+- No dependency, public API, schema, database write, provider call,
+  infrastructure, deployment, production action, wording-policy change, or
+  legacy deletion occurred.
+
+- Completed TASK-119 at the user's direction. Extended the approved
+  terracotta/current-context and muted-blue/comparison hierarchy to the full
+  issue list without changing search, filters, sorting, pagination, list data,
+  or route behavior.
+- Added a restrained heading marker, soft selected-filter pills, focused search
+  ring, accented result-count badge, terracotta current reflected expectation
+  values, muted-blue observed changes, soft row hover, and accented active
+  pagination.
+- Frontend typecheck, lint, parser regression, build, desktop full-list Browser
+  review, and 320px Browser QA pass. Mobile selected filters retain 44px
+  controls; the page has no horizontal overflow and the clean console has zero
+  warnings/errors. The known bundle-size warning remains.
+- No dependency, public API, schema, database write, provider call,
+  infrastructure, deployment, production action, wording-policy change, or
+  legacy deletion occurred.
 
 - Applied the user's TASK-118 visual follow-up. Updated the shared accent, soft
   accent, ink, and muted comparison tokens; aligned the brand and chart's

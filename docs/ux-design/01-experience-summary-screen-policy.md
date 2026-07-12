@@ -78,6 +78,11 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
 - **Hide/minimize**: Anything resembling a "hot picks" tone — no badges that look like "trending stock," no fire/rocket icons implying opportunity.
 - **Betting-perception risk**: **Medium** — a ranked list of "movers" structurally resembles a market-mover ticker. Mitigate with framing copy ("Today's most reassessed public issues") and non-financial iconography.
 - **UX direction**: Editorial/dashboard tone (think "a data journalism front page"), not a ticker tape. Static card grid, not a scrolling live-price feed.
+- **TASK-120 shared header**: Desktop primary navigation sits in the same
+  right-aligned group used by issue detail and list screens. When refresh is
+  available it follows the navigation in that group; the navigation must not
+  drift into a centered layout on the home route. Mobile retains the shared
+  three-column navigation row.
 
 ### 3.2 Issue List
 
@@ -88,6 +93,11 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
 - **Hide/minimize**: Any sort option framed as "best opportunity" or "biggest swing to catch" — sort labels should read "Largest change (24h)," not "Biggest movers to watch."
 - **Betting-perception risk**: **Medium** — a sortable list with percentages is visually close to an odds board. Mitigate with typography/layout that looks like a research index, not a trading screen (e.g., no monospace ticker font, no dense multi-column price-grid look).
 - **UX direction**: Card or row list with generous whitespace, editorial typography, not a dense grid of numbers.
+- **TASK-119 visual emphasis**: Use a small terracotta heading marker, soft
+  terracotta selected filters/result count/current reflected expectation
+  values, and muted-blue comparison values. List-row hover may use the soft
+  terracotta surface, but the entire resting list remains neutral. Direction
+  continues to rely on the sign and label rather than green/red coding.
 
 ### 3.3 Market / Issue Detail
 
@@ -149,6 +159,11 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
 - **Hide/minimize**: Nothing — this screen should be maximally visible, not buried.
 - **Betting-perception risk**: N/A — this screen exists specifically to reduce that risk.
 - **UX direction**: Simple static content page, linked persistently from the global footer.
+- **TASK-120 visual emphasis**: Use the shared terracotta heading marker and
+  eyebrow, an outlined soft-accent return action, and numbered neutral cards
+  with soft-accent number markers. Desktop may use two columns; mobile returns
+  to one column. The explanatory body remains ink/neutral so emphasis does not
+  make policy text feel promotional.
 
 ### 3.9 Settings screen (Phase 2)
 

@@ -149,32 +149,55 @@ export function InformationNoticeScreen() {
         aria-labelledby="methodology-title"
         className="mt-8 outline-none"
       >
-        <span className="text-xs font-bold text-ink-faint">정보 해석 안내</span>
-        <h1
-          id="methodology-title"
-          className="mt-3 max-w-3xl text-3xl font-bold text-ink"
-        >
-          공개 데이터 기반 이슈 관찰을 위한 안내
-        </h1>
-        <p className="mt-3 max-w-3xl text-sm leading-6 text-ink-soft">
-          이 화면은 Outlook Signals가 보여주는 수치와 요약을 어떤 범위 안에서
-          읽어야 하는지 정리합니다. 모든 데이터 화면의 짧은 안내와 같은 정책을
-          따릅니다.
-        </p>
+        <div className="flex items-start gap-3">
+          <span
+            aria-hidden="true"
+            className="mt-1 h-16 w-1 shrink-0 rounded-full bg-accent"
+          />
+          <div>
+            <span className="text-xs font-bold text-accent">
+              정보 해석 안내
+            </span>
+            <h1
+              id="methodology-title"
+              className="mt-2 max-w-3xl text-3xl font-bold text-ink"
+            >
+              공개 데이터 기반 이슈 관찰을 위한 안내
+            </h1>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-ink-soft">
+              이 화면은 Outlook Signals가 보여주는 수치와 요약을 어떤 범위
+              안에서 읽어야 하는지 정리합니다. 모든 데이터 화면의 짧은 안내와
+              같은 정책을 따릅니다.
+            </p>
+          </div>
+        </div>
 
         <ShortCautionNotice context="dashboard" className="mt-6" />
 
         <Link
           to="/"
-          className="mt-5 inline-flex min-h-11 items-center text-sm font-bold text-accent"
+          className="mt-5 inline-flex min-h-11 items-center rounded-full border border-accent bg-accent-soft px-4 text-sm font-bold text-accent transition hover:brightness-95"
         >
           ← 메인으로 돌아가기
         </Link>
 
-        <div className="mt-8 divide-y divide-line rounded-lg border border-line bg-card">
-          {POLICY_SECTIONS.map((section) => (
-            <section key={section.title} className="px-5 py-5">
-              <h2 className="text-base font-bold text-ink">{section.title}</h2>
+        <div className="mt-8 grid gap-3 md:grid-cols-2">
+          {POLICY_SECTIONS.map((section, index) => (
+            <section
+              key={section.title}
+              className={`rounded-xl border border-line bg-card px-5 py-5 transition hover:border-accent ${index === POLICY_SECTIONS.length - 1 ? "md:col-span-2" : ""}`}
+            >
+              <div className="flex items-center gap-3">
+                <span
+                  aria-hidden="true"
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-extrabold text-accent"
+                >
+                  {index + 1}
+                </span>
+                <h2 className="text-base font-bold text-ink">
+                  {section.title}
+                </h2>
+              </div>
               <p className="mt-2 max-w-3xl text-sm leading-7 text-ink-soft">
                 {section.body}
               </p>
