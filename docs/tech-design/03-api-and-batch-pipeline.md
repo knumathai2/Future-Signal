@@ -81,8 +81,19 @@ appending a request. It never constructs a provider client. Safe public errors
 do not distinguish unknown, mismatched, expired, deleted, or unauthorized
 sessions in a way that permits enumeration.
 
-TASK-126 stops at `queued`; it does not launch a worker. Migration 006 remains
-unapplied, and provider/Frontend/infrastructure/deployment work is still gated.
+TASK-132 starts one detached request-scoped worker after a newly created local/
+development turn commits; idempotent replay does not spawn a duplicate. The API
+process still constructs no provider client. TASK-129 provides the separate
+default-off Frontend using authenticated fetch-SSE, strict response parsing,
+restricted rendering, sessionStorage recovery, and polling fallback. Shared
+infrastructure, deployment, and production activation remain gated.
+
+TASK-134 adds bounded recovery for child processes that exit before claiming a
+scenario request. Only attempt-zero rows still queued after five seconds are
+eligible; authenticated status/SSE access triggers relaunch through a
+20-second process-local cooldown and three-launch cap. The worker row-locks the
+request before appending `running`, preventing duplicate provider work. Running
+or terminal attempts never enter this recovery path.
 
 ---
 

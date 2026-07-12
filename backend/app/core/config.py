@@ -77,6 +77,17 @@ class Settings:
     def __init__(self) -> None:
         self.env: str = os.getenv("ENV", "local")
         self.database_url: str | None = os.getenv("DATABASE_URL")
+        # Keep each API/worker process well below the small Supabase session-
+        # mode ceiling. TASK-134 permits bounded code defaults but no .env edit.
+        self.db_pool_size: int = _bounded_int(
+            os.getenv("DB_POOL_SIZE"), default=3, minimum=1, maximum=5
+        )
+        self.db_max_overflow: int = _bounded_int(
+            os.getenv("DB_MAX_OVERFLOW"), default=1, minimum=0, maximum=2
+        )
+        self.db_pool_timeout_seconds: int = _bounded_int(
+            os.getenv("DB_POOL_TIMEOUT_SECONDS"), default=10, minimum=1, maximum=30
+        )
         # Comma-separated list; always includes localhost dev ports per standards.md CORS rule.
         self.cors_origins: list[str] = [
             origin.strip()

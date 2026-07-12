@@ -11,7 +11,7 @@ Harness Version: 1.1
 > In case of conflict, this document takes highest priority.
 > Product-level source of truth lives in [PRD](docs/prd/README.md), [Service Design](docs/service-design/README.md), [Technical Design](docs/tech-design/README.md), [UX Design](docs/ux-design/README.md) — this file governs *how agents work*, those four govern *what the product is*.
 
-_Last updated: 2026-07-11_
+_Last updated: 2026-07-13_
 
 ---
 
@@ -209,6 +209,78 @@ That additional authorization was consumed by one response costing USD
 0.0054035. The response failed closed before assistant-turn or block storage
 because the numeric validator treated ISO date separators as negative signs.
 The date/number canonicalization fix is tested, but no third call is authorized.
+
+### TASK-129 approved scenario-conversation Frontend boundary
+
+The user's 2026-07-13 approval authorizes implementing the isolated scenario
+conversation Frontend against the already approved TASK-126 public API and
+TASK-128 fixtures. It includes the fifth detail tab, capability-held anonymous
+session lifecycle, authenticated fetch-SSE replay with polling fallback, safe
+restricted-content rendering, session/turn/error/expiry/deletion states, and
+responsive and accessibility QA. The feature must remain behind the existing
+default-off server boundary and active v8 remains unchanged. This approval does
+not authorize a provider call, schema or dependency change, migration action,
+deployment, production write, infrastructure mutation, wording-policy change,
+or TASK-131 activation.
+
+### TASK-132 approved local scenario auto-worker and evaluation boundary
+
+The user's 2026-07-13 approval authorizes connecting newly queued scenario
+turns to the existing isolated TASK-128 worker in local/development only and
+making exactly one additional OpenRouter call against one newly created local
+scenario request. The call has no automatic retry and must retain every
+premise, evidence, wording, leakage, numeric, Markdown, budget, and complete-
+output validation gate before persistence. This approval also permits the
+local session/request/response writes required for that single evaluation.
+It does not authorize a second call, `.env` modification, context/web research,
+model tools, dependency or schema changes, another database, deployment,
+infrastructure mutation, production writes, feature activation outside the
+existing default-off local/development guard, or TASK-131 transition.
+
+That one-call authorization was consumed on 2026-07-13 by an OpenRouter
+response costing USD 0.0058895. The response failed closed before assistant-
+turn or block storage with `unsupported_number`; no retry occurred. A
+deterministic ordered-list-marker false positive was found and corrected with
+regression coverage, but no further provider call is authorized.
+
+### TASK-133 approved post-fix scenario evaluation boundary
+
+The user's 2026-07-13 approval authorizes exactly one additional OpenRouter
+call against one newly created local scenario request to evaluate writer
+version 2 after the ordered-list numeric correction. The call must use the
+existing tool-free, single-attempt worker and retain every premise, evidence,
+wording, leakage, numeric, Markdown, budget, and complete-output validation
+gate. It also permits the local ephemeral session/request/response writes for
+that evaluation. It does not authorize a retry or second call, `.env` change,
+context/web research, model tools, dependency or schema changes, another
+database, deployment, infrastructure mutation, production writes, default-
+feature activation, or TASK-131 transition.
+
+That authorization was consumed on 2026-07-13 by one successful OpenRouter
+response costing USD 0.006425. Writer version 2 stored one validated assistant
+turn and three complete paragraph blocks, and authenticated Frontend reload
+reconstructed them successfully. No retry or second call occurred, and no
+further provider call is authorized by this boundary.
+
+### TASK-134 approved queued-recovery and one-call boundary
+
+The user's 2026-07-13 approval authorizes fixing the observed attempt-zero
+scenario request that remained queued after its child worker exited before
+claim. The work may add bounded local/development queued-request relaunch,
+process-local launch cooldown/attempt limits, atomic database claim protection,
+and conservative SQLAlchemy pool sizing without a new dependency or schema
+change. It also authorizes processing the existing latest queued local request
+with at most one OpenRouter call after all tests pass. No retry or second model
+call is authorized. This boundary does not authorize `.env` edits, recovery of
+running/expired provider attempts, context/web research, model tools, another
+database, infrastructure or deployment changes, production writes, default-
+feature activation, or TASK-131 transition.
+
+That authorization was consumed on 2026-07-13 when the preserved attempt-zero
+request was automatically relaunched after server restart. One OpenRouter call
+costing USD 0.00634325 succeeded and stored one assistant turn plus three
+validated blocks. No retry or second call occurred. No further provider call
+is authorized by this boundary.
 
 ---
 

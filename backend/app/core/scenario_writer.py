@@ -44,7 +44,7 @@ from app.db.models import (
     ScenarioTurn,
 )
 
-SCENARIO_WRITER_VERSION = "scenario-writer-1"
+SCENARIO_WRITER_VERSION = "scenario-writer-2"
 SCENARIO_LEASE_DURATION = timedelta(minutes=3)
 SCENARIO_PROGRAM_BUDGET_USD = 5.0
 SCENARIO_CALL_RESERVATION_USD = 0.5
@@ -343,6 +343,10 @@ def validate_scenario_output(
         premise_wording = _validate_v8_scoped_text(value, selected_evidence)
         if not premise_wording.passed:
             return premise_wording, []
+    try:
+        blocks = split_scenario_blocks(output.answer_markdown)
+    except ScenarioWriterError as exc:
+        return SafetyFilterResult(False, exc.code), []
     allowed_text = " ".join(
         [item.text for item in selected_evidence]
         + [
@@ -353,15 +357,20 @@ def validate_scenario_output(
         + [turn.content for turn in state.turns if f"turn:{turn.id}" in output.premise_refs]
     )
     allowed_numbers = _numeric_tokens(allowed_text, include_absolute_signed=True)
+    # Ordered-list markers are presentation metadata, not authored factual
+    # numbers. Validate the already parsed block content so list indices cannot
+    # cause false unsupported-number failures while item/body numbers still do.
+    authored_content = []
+    for block in blocks:
+        if block.block_type == "paragraph":
+            authored_content.append(str(block.payload["text"]))
+        else:
+            authored_content.extend(str(item) for item in block.payload["items"])
     authored_numbers = _numeric_tokens(
-        " ".join([output.answer_markdown, *output.new_scenario_premises])
+        " ".join([*authored_content, *output.new_scenario_premises])
     )
     if not authored_numbers.issubset(allowed_numbers):
         return SafetyFilterResult(False, "unsupported_number"), []
-    try:
-        blocks = split_scenario_blocks(output.answer_markdown)
-    except ScenarioWriterError as exc:
-        return SafetyFilterResult(False, exc.code), []
     return SafetyFilterResult(True), blocks
 
 
@@ -465,7 +474,11 @@ def process_scenario_request(
 ) -> ScenarioProcessResult:
     """Claim one queued request, call once, then persist only validated output."""
     processed_at = _as_utc(now or datetime.now(UTC))
-    request = db.get(ScenarioGenerationRequest, request_id)
+    request = db.execute(
+        select(ScenarioGenerationRequest)
+        .where(ScenarioGenerationRequest.id == request_id)
+        .with_for_update()
+    ).scalar_one_or_none()
     if request is None:
         return ScenarioProcessResult(request_id, "not_claimed")
     latest = latest_scenario_event(db, request.id)

@@ -10,6 +10,7 @@
     "format": "prettier --write .",
     "test:api-url": "node scripts/test-api-url.mjs",
     "test:report-parser": "node scripts/test-report-parser.mjs",
+    "test:scenario-parser": "node scripts/test-scenario-parser.mjs",
     "typecheck": "tsc -b --noEmit",
     "preview": "vite preview"
   },

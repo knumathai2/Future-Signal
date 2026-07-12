@@ -146,7 +146,9 @@ secret-leakage, and unsafe-rendering rules remain blocking.
 The first implementation remains issue-scoped, anonymous, short-lived,
 tool-free, and unable to browse, query the database, execute code, open user
 URLs, or perform external actions. TASK-125 owns the threat, retention, API,
-and storage proposal. TASK-131 must record a separate activation decision.
+and storage proposal. TASK-129 implements the separate default-off Frontend
+without changing the active-v8 contract. TASK-131 must record a separate
+activation decision.
 
 ---
 

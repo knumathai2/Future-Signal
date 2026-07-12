@@ -26,6 +26,7 @@ from tests.conftest import MARKET_ID, seed_basic_market
 def enabled_local_scenario(monkeypatch):
     monkeypatch.setattr(scenarios.settings, "scenario_conversation_enabled", True)
     monkeypatch.setattr(scenarios.settings, "env", "local")
+    monkeypatch.setattr(scenarios, "launch_scenario_worker", lambda *_args, **_kwargs: True)
     scenarios._rate_limiter.reset()
 
 
@@ -126,6 +127,69 @@ def test_turn_is_idempotent_and_one_in_flight(live_client, db_session):
     assert db_session.query(ScenarioTurn).count() == 1
     assert db_session.query(ScenarioGenerationRequest).count() == 1
     assert db_session.query(ScenarioGenerationEvent).count() == 1
+
+
+def test_new_turn_launches_worker_once_after_commit(live_client, db_session, monkeypatch):
+    seed_basic_market(db_session)
+    created = _create_session(live_client)
+    calls = []
+    monkeypatch.setattr(
+        scenarios,
+        "launch_scenario_worker",
+        lambda request_id, *, env: calls.append((request_id, env)) or True,
+    )
+    path = f"/api/issues/{MARKET_ID}/scenario-sessions/{created['session_id']}/turns"
+    idempotency = str(uuid.uuid4())
+    headers = {**_auth(created), "Idempotency-Key": idempotency}
+
+    first = live_client.post(path, headers=headers, json={"message": "조건을 살펴봐 주세요."})
+    repeated = live_client.post(path, headers=headers, json={"message": "같은 요청"})
+
+    assert first.status_code == 202
+    assert repeated.status_code == 202
+    assert repeated.json()["created"] is False
+    assert len(calls) == 1
+    assert calls[0][1] == "local"
+    request = db_session.query(ScenarioGenerationRequest).one()
+    assert calls[0][0] == request.id
+
+
+def test_stale_attempt_zero_request_is_relaunched_with_bounded_helper(
+    live_client,
+    db_session,
+    monkeypatch,
+):
+    seed_basic_market(db_session)
+    created = _create_session(live_client)
+    response = live_client.post(
+        f"/api/issues/{MARKET_ID}/scenario-sessions/{created['session_id']}/turns",
+        headers={**_auth(created), "Idempotency-Key": str(uuid.uuid4())},
+        json={"message": "조건을 살펴봐 주세요."},
+    )
+    assert response.status_code == 202
+    request = db_session.query(ScenarioGenerationRequest).one()
+    event = db_session.query(ScenarioGenerationEvent).one()
+    calls = []
+    monkeypatch.setattr(
+        scenarios,
+        "launch_scenario_worker",
+        lambda request_id, *, env: calls.append((request_id, env)) or True,
+    )
+
+    assert (
+        scenarios._maybe_relaunch_queued_request(
+            request,
+            event,
+            now=event.recorded_at + timedelta(seconds=4),
+        )
+        is False
+    )
+    assert scenarios._maybe_relaunch_queued_request(
+        request,
+        event,
+        now=event.recorded_at + timedelta(seconds=6),
+    )
+    assert calls == [(request.id, "local")]
 
 
 def test_message_limit_returns_413_before_append(live_client, db_session):

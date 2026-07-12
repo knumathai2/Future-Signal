@@ -300,7 +300,7 @@ emitted.
 
 The approved scenario API is registered but returns `404 feature_unavailable`
 unless `SCENARIO_CONVERSATION_ENABLED=true` and `ENV` is `local` or
-`development`. TASK-126 never launches a worker or calls a provider.
+`development`. The API process never constructs a provider client.
 
 ### `POST /api/issues/{id}/scenario-sessions`
 
@@ -322,7 +322,9 @@ Authorization: Bearer <session capability>
   turns, premise classes, remaining turns, data time, and caution.
 - `POST /api/issues/{id}/scenario-sessions/{session_id}/turns` requires a UUID
   `Idempotency-Key`, appends one user turn plus immutable queued request/event,
-  and returns HTTP `202`. It never calls or launches a provider.
+  and returns HTTP `202`. After a newly created request commits, TASK-132 starts
+  one isolated local/development worker; an idempotent replay does not spawn a
+  duplicate. The API process itself never calls a provider.
 - `GET /api/issues/{id}/scenario-sessions/{session_id}/turns/{turn_id}` returns
   queued/running/succeeded/failed state and safe terminal metadata.
 - `GET /api/issues/{id}/scenario-sessions/{session_id}/turns/{turn_id}/stream`
@@ -342,11 +344,20 @@ Migration 006 is applied only to the approved local development database. The
 API must not be enabled against another database without that migration and a
 separate environment-specific application approval.
 
-TASK-128 adds a guarded local/development worker invoked outside the public API
-for exactly one queued request. It receives no capability, exposes no new
-endpoint, uses no model tools, and stores only a completely validated assistant
-turn and paragraph/list blocks. The first bounded provider response failed
-closed before content storage; a successful live response remains pending.
+TASK-128 adds a guarded local/development worker outside the public API process
+for exactly one queued request. TASK-132 connects newly committed turns to that
+worker without exposing a new endpoint or capability. It uses no model tools
+and stores only a completely validated assistant turn and paragraph/list
+blocks. Three bounded provider responses have failed closed before content
+storage. TASK-133 subsequently stored and reconstructed the first validated
+writer-v2 response; the feature remains default-off.
+
+TASK-134 permits authenticated status and SSE reads to relaunch only a request
+that has remained `queued` at attempt zero for at least five seconds. Relaunch
+uses a process-local 20-second cooldown and three-launch cap. The worker locks
+the immutable request row before changing it to `running`, so concurrent child
+processes cannot create duplicate provider calls. Running, succeeded, and
+failed attempts are not automatically retried.
 
 ## Validation and fallback
 
