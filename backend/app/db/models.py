@@ -6,8 +6,10 @@ remains local/development-only until a guarded application step is explicitly
 run. Production application still requires separate approval.
 
 Append-only rule (Technical Design §4.10): market_snapshots, market_metrics,
-issue_signals, ai_reports, context candidates/runs, resolution rules, and v8
-generation requests/events/validated blocks are insert-only.
+issue_signals, ai_reports, context candidates/runs, resolution rules, v8
+generation state, and live scenario-conversation rows are insert-only.
+Scenario rows alone may be hard-deleted as one ephemeral graph after their
+fixed expiry or an authenticated owner deletion request.
 Only markets.last_seen_at/status are ever updated in place. Do not add
 update/upsert helpers for the append-only tables.
 """
@@ -21,6 +23,7 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Index,
     Integer,
     Numeric,
@@ -399,6 +402,248 @@ class AiReportGenerationBlock(Base):
     request_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("ai_report_generation_requests.id", ondelete="CASCADE"),
+    )
+    attempt_number: Mapped[int] = mapped_column(Integer)
+    sequence_number: Mapped[int] = mapped_column(Integer)
+    block_type: Mapped[str] = mapped_column(Text)
+    payload: Mapped[dict] = mapped_column(JSONB)
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ScenarioSession(Base):
+    """Ephemeral issue-scoped session authorized by a hashed capability."""
+
+    __tablename__ = "scenario_sessions"
+    __table_args__ = (
+        CheckConstraint(
+            "length(capability_hash) = 64 AND capability_hash = lower(capability_hash)",
+            name="ck_scenario_sessions_capability_hash",
+        ),
+        CheckConstraint(
+            "length(input_fingerprint) = 64 AND input_fingerprint = lower(input_fingerprint)",
+            name="ck_scenario_sessions_fingerprint",
+        ),
+        CheckConstraint("max_turns = 8", name="ck_scenario_sessions_max_turns"),
+        CheckConstraint("expires_at > created_at", name="ck_scenario_sessions_expiry"),
+        Index("idx_scenario_sessions_market_created", "market_id", "created_at"),
+        Index("idx_scenario_sessions_expiry", "expires_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    market_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("markets.id", ondelete="CASCADE")
+    )
+    capability_hash: Mapped[str] = mapped_column(Text, unique=True)
+    definition_ref: Mapped[str] = mapped_column(Text)
+    input_fingerprint: Mapped[str] = mapped_column(Text)
+    policy_version: Mapped[str] = mapped_column(Text)
+    input_schema_version: Mapped[str] = mapped_column(Text)
+    data_as_of: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    caution_note: Mapped[str] = mapped_column(Text)
+    max_turns: Mapped[int] = mapped_column(Integer, default=8)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ScenarioTurn(Base):
+    """Immutable user or validated-assistant turn within a live session."""
+
+    __tablename__ = "scenario_turns"
+    __table_args__ = (
+        CheckConstraint("sequence_number >= 1", name="ck_scenario_turns_sequence"),
+        CheckConstraint("role IN ('user', 'assistant')", name="ck_scenario_turns_role"),
+        CheckConstraint(
+            "(role = 'user' AND length(content) BETWEEN 1 AND 1000) OR "
+            "(role = 'assistant' AND length(content) BETWEEN 1 AND 2500)",
+            name="ck_scenario_turns_content",
+        ),
+        CheckConstraint(
+            "(role = 'user' AND length(idempotency_key_hash) = 64) OR "
+            "(role = 'assistant' AND idempotency_key_hash IS NULL)",
+            name="ck_scenario_turns_idempotency",
+        ),
+        UniqueConstraint(
+            "session_id", "sequence_number", name="uq_scenario_turns_session_sequence"
+        ),
+        UniqueConstraint("id", "session_id", name="uq_scenario_turns_id_session"),
+        UniqueConstraint(
+            "session_id",
+            "idempotency_key_hash",
+            name="uq_scenario_turns_session_idempotency",
+        ),
+        Index("idx_scenario_turns_session_created", "session_id", "created_at"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("scenario_sessions.id", ondelete="CASCADE")
+    )
+    sequence_number: Mapped[int] = mapped_column(Integer)
+    role: Mapped[str] = mapped_column(Text)
+    content: Mapped[str] = mapped_column(Text)
+    idempotency_key_hash: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ScenarioPremise(Base):
+    """Immutable server-classified premise; no promotion/update path exists."""
+
+    __tablename__ = "scenario_premises"
+    __table_args__ = (
+        CheckConstraint(
+            "premise_class IN ('confirmed_fact', 'stored_observation', "
+            "'user_assumption', 'model_scenario', 'unverified_context')",
+            name="ck_scenario_premises_class",
+        ),
+        CheckConstraint(
+            "length(text) BETWEEN 1 AND 2000", name="ck_scenario_premises_text"
+        ),
+        ForeignKeyConstraint(
+            ["origin_turn_id", "session_id"],
+            ["scenario_turns.id", "scenario_turns.session_id"],
+            ondelete="CASCADE",
+            name="fk_scenario_premises_origin_session",
+        ),
+        Index("idx_scenario_premises_session_created", "session_id", "created_at", "id"),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("scenario_sessions.id", ondelete="CASCADE")
+    )
+    premise_class: Mapped[str] = mapped_column(Text)
+    text: Mapped[str] = mapped_column(Text)
+    origin_turn_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    evidence_refs: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ScenarioGenerationRequest(Base):
+    """Immutable request identity for one authenticated scenario user turn."""
+
+    __tablename__ = "scenario_generation_requests"
+    __table_args__ = (
+        CheckConstraint(
+            "length(input_fingerprint) = 64 AND input_fingerprint = lower(input_fingerprint)",
+            name="ck_scenario_generation_requests_fingerprint",
+        ),
+        Index(
+            "idx_scenario_generation_requests_session_requested",
+            "session_id",
+            "requested_at",
+            "id",
+        ),
+        UniqueConstraint(
+            "id", "session_id", name="uq_scenario_generation_requests_id_session"
+        ),
+        ForeignKeyConstraint(
+            ["user_turn_id", "session_id"],
+            ["scenario_turns.id", "scenario_turns.session_id"],
+            ondelete="CASCADE",
+            name="fk_scenario_generation_requests_turn_session",
+        ),
+    )
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True)
+    session_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("scenario_sessions.id", ondelete="CASCADE")
+    )
+    user_turn_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), unique=True)
+    input_fingerprint: Mapped[str] = mapped_column(Text)
+    policy_version: Mapped[str] = mapped_column(Text)
+    input_schema_version: Mapped[str] = mapped_column(Text)
+    input_premise_refs: Mapped[list[str]] = mapped_column(JSONB, default=list)
+    requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class ScenarioGenerationEvent(Base):
+    """Append-only lease/outcome event for a scenario generation request."""
+
+    __tablename__ = "scenario_generation_events"
+    __table_args__ = (
+        CheckConstraint(
+            "state IN ('queued', 'running', 'succeeded', 'failed')",
+            name="ck_scenario_generation_events_state",
+        ),
+        CheckConstraint("attempt_number >= 0", name="ck_scenario_generation_events_attempt"),
+        CheckConstraint(
+            "(state = 'queued' AND attempt_number = 0 AND lease_token IS NULL "
+            "AND lease_expires_at IS NULL AND assistant_turn_id IS NULL "
+            "AND error_code IS NULL) OR "
+            "(state = 'running' AND attempt_number >= 1 AND lease_token IS NOT NULL "
+            "AND lease_expires_at IS NOT NULL AND assistant_turn_id IS NULL "
+            "AND error_code IS NULL) OR "
+            "(state = 'succeeded' AND attempt_number >= 1 AND lease_token IS NULL "
+            "AND lease_expires_at IS NULL AND assistant_turn_id IS NOT NULL "
+            "AND error_code IS NULL) OR "
+            "(state = 'failed' AND attempt_number >= 1 AND lease_token IS NULL "
+            "AND lease_expires_at IS NULL AND assistant_turn_id IS NULL "
+            "AND error_code IS NOT NULL)",
+            name="ck_scenario_generation_events_shape",
+        ),
+        ForeignKeyConstraint(
+            ["request_id", "session_id"],
+            ["scenario_generation_requests.id", "scenario_generation_requests.session_id"],
+            ondelete="CASCADE",
+            name="fk_scenario_generation_events_request_session",
+        ),
+        ForeignKeyConstraint(
+            ["assistant_turn_id", "session_id"],
+            ["scenario_turns.id", "scenario_turns.session_id"],
+            name="fk_scenario_generation_events_assistant_session",
+        ),
+        Index(
+            "idx_scenario_generation_events_request_recorded",
+            "request_id",
+            "recorded_at",
+            "id",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    request_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    session_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True))
+    state: Mapped[str] = mapped_column(Text)
+    attempt_number: Mapped[int] = mapped_column(Integer, default=0)
+    recorded_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    lease_token: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    lease_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    assistant_turn_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True))
+    error_code: Mapped[str | None] = mapped_column(Text)
+    usage: Mapped[dict] = mapped_column(JSONB, default=dict)
+
+
+class ScenarioResponseBlock(Base):
+    """Append-only complete paragraph/list block safe for replay."""
+
+    __tablename__ = "scenario_response_blocks"
+    __table_args__ = (
+        CheckConstraint(
+            "attempt_number >= 1 AND sequence_number >= 0",
+            name="ck_scenario_response_blocks_nonnegative",
+        ),
+        CheckConstraint(
+            "block_type IN ('paragraph', 'list')",
+            name="ck_scenario_response_blocks_type",
+        ),
+        UniqueConstraint(
+            "request_id",
+            "attempt_number",
+            "sequence_number",
+            name="uq_scenario_response_blocks_request_attempt_sequence",
+        ),
+        Index(
+            "idx_scenario_response_blocks_request_attempt_sequence",
+            "request_id",
+            "attempt_number",
+            "sequence_number",
+        ),
+    )
+
+    id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
+    request_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("scenario_generation_requests.id", ondelete="CASCADE"),
     )
     attempt_number: Mapped[int] = mapped_column(Integer)
     sequence_number: Mapped[int] = mapped_column(Integer)

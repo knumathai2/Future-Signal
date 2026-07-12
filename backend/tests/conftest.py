@@ -23,6 +23,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.api.routes import categories as categories_routes
 from app.api.routes import issues as issues_routes
+from app.api.routes import scenarios as scenarios_routes
 from app.core.ai_report import (
     ResolutionRulesInput,
     V4ContextSource,
@@ -54,6 +55,12 @@ from app.db.models import (
     MarketResolutionRule,
     MarketSnapshot,
     RelatedEvent,
+    ScenarioGenerationEvent,
+    ScenarioGenerationRequest,
+    ScenarioPremise,
+    ScenarioResponseBlock,
+    ScenarioSession,
+    ScenarioTurn,
 )
 from app.main import app
 
@@ -97,6 +104,7 @@ def db_session():
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
     )
+
     Base.metadata.create_all(
         engine,
         tables=[
@@ -114,6 +122,12 @@ def db_session():
             ContextCollectionRun.__table__,
             DataCollectionLog.__table__,
             RelatedEvent.__table__,
+            ScenarioSession.__table__,
+            ScenarioTurn.__table__,
+            ScenarioPremise.__table__,
+            ScenarioGenerationRequest.__table__,
+            ScenarioGenerationEvent.__table__,
+            ScenarioResponseBlock.__table__,
         ],
     )
     session = sessionmaker(bind=engine)()
@@ -131,6 +145,7 @@ def live_client(db_session):
 
     app.dependency_overrides[categories_routes._get_optional_db] = override
     app.dependency_overrides[issues_routes._get_optional_db] = override
+    app.dependency_overrides[scenarios_routes._get_optional_db] = override
     try:
         yield TestClient(app)
     finally:

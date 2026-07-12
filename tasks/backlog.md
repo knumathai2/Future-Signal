@@ -33,7 +33,6 @@ are satisfied.
 
 | ID | Task | Owner | Resume condition |
 |----|------|-------|------------------|
-| TASK-126 | Implement the approved append-only conversation boundary | Backend Implementer | Separate schema and public API approval; migration remains unapplied |
 | TASK-127 | Implement a feature-flagged relaxed summary writer and validator | Data/AI Implementer | TASK-124 approval; provider evaluation remains separately gated |
 | TASK-128 | Implement the tool-free scenario writer and premise-state validation | Data/AI / Backend | TASK-125~127 complete; provider budget separately approved |
 | TASK-129 | Build the isolated scenario conversation UI and safe renderer | Frontend Implementer | Public API approved and TASK-128 fixtures available |

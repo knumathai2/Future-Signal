@@ -55,9 +55,11 @@ JSON, versionless for hackathon (`/api/...` prefix is enough, no `/v1` needed ye
 ### Naming discipline
 Every path uses `issues`, `signals`, `reports`, `categories` — never `markets` in the public-facing path even though the DB table is named `markets` internally (an internal DB name is fine; the *API surface* is the part users' browsers see in network tabs, and `issues` reinforces the product framing from UX Design). No `/bets`, `/trades`, `/positions`, `/profits` anywhere, including in internal code — naming leaks into product framing over time even when it's "just" a variable name.
 
-### 5.1 Proposed scenario-conversation API (TASK-125)
+### 5.1 Approved default-off scenario-conversation API (TASK-126)
 
-The following public-interface proposal is inactive until explicit approval:
+The following approved interface is implemented behind
+`SCENARIO_CONVERSATION_ENABLED=false` by default and an additional
+local/development environment guard:
 
 | Endpoint | Method | Purpose |
 |---|---|---|
@@ -74,10 +76,13 @@ placed in a URL. The Frontend uses `fetch` streaming so the authorization and
 `Last-Event-ID` headers remain available; native `EventSource` is not used.
 
 The API validates issue/session ownership, expiry, fixed limits, one in-flight
-turn, idempotency, current input fingerprint, and global budget before
+turn, idempotency, current input fingerprint, and local request ceilings before
 appending a request. It never constructs a provider client. Safe public errors
 do not distinguish unknown, mismatched, expired, deleted, or unauthorized
 sessions in a way that permits enumeration.
+
+TASK-126 stops at `queued`; it does not launch a worker. Migration 006 remains
+unapplied, and provider/Frontend/infrastructure/deployment work is still gated.
 
 ---
 

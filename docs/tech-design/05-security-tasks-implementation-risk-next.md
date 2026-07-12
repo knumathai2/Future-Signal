@@ -17,7 +17,7 @@ _Source: former project-root Technical Design sections 11-17._
 | Rate limiting on public endpoints | A basic per-IP rate limit (e.g., via a FastAPI middleware) is a reasonable should-have to prevent accidental scraping load during the demo period, though not critical for a 5-day hackathon audience |
 | Logging hygiene | Never log full LLM prompts/responses containing user data (moot for MVP since there's no user data, but worth stating as a standing rule before Phase 2 personalization exists) |
 
-### 11.1 Proposed scenario-conversation security boundary (TASK-125)
+### 11.1 Approved scenario-conversation security boundary (TASK-126)
 
 - One anonymous session belongs to one issue and expires after 24 hours without
   extension.
@@ -37,7 +37,9 @@ _Source: former project-root Technical Design sections 11-17._
 - Conversation content is deleted on expiry or owner request. Logs retain only
   content-free correlation, timing, usage, and safe failure metadata.
 - Multi-instance rate limiting, cleanup scheduling, schema, API, dependency,
-  provider, infrastructure, and deployment decisions remain separately gated.
+  provider, infrastructure, migration application, and deployment decisions
+  remain separately gated. TASK-126 provides only a process-local keyed limiter
+  under the local/development feature guard.
 
 ---
 
