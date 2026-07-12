@@ -63,6 +63,7 @@ Future Signal/
 
 | Date | Change |
 |------|--------|
+| 2026-07-12 | TASK-121 replaced the daily data-and-report GitHub Actions workflow with four-hour market-data collection at minute 17 every four UTC hours. The job passes no AI credentials/model and explicitly skips report generation and context research. YAML, all 13 scheduled-batch tests, Ruff, and diff checks pass; no workflow run or external operation was triggered. |
 | 2026-07-12 | Under explicit user approval, TASK-109's stored-data phase removed 241 v1-v7 AI reports, 10 v7 generation requests, and 38 cascading events only from the configured `ENV=local` development DB. All v8 rows remained; orphan checks and actual FastAPI fresh/stale/last-good reconstruction passed. No runtime code, schema, provider, infrastructure, deployment, or production state changed. |
 | 2026-07-12 | TASK-120 moved home desktop navigation into the same right-aligned header group as other routes and applied restrained heading/action/number-card emphasis to methodology. Frontend checks and actual desktop/320px Browser QA pass with consistent navigation, 44px controls, no overflow, and no console warnings/errors. |
 | 2026-07-12 | TASK-119 extended the approved emphasis hierarchy to the full issue list: selected filters, result count, current reflected expectation values, comparison values, row hover, and active pagination. Frontend checks and actual desktop/320px Browser QA pass with 44px mobile filters, no overflow, and no console warnings/errors. |

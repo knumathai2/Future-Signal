@@ -15,8 +15,8 @@ Harness Version: 1.1
 
 - **Date**: 2026-07-12
 - **Agent Role**: Reviewer / Backend
-- **Session Goal**: Remove explicitly approved legacy stored AI-report data while preserving active v8 state.
-- **Branch**: `review/TASK-109-v8-legacy-data-cleanup`
+- **Session Goal**: Align scheduled GitHub Actions with four-hour collection-only policy.
+- **Branch**: `backend/TASK-121-four-hour-collection`
 
 ## Context Read
 
@@ -24,6 +24,19 @@ Harness Version: 1.1
 - Current project/session/task state, standards, glossary, detail/report components, types, and browser QA guidance
 
 ## Work Completed
+
+- Completed TASK-121 under the user's explicit infrastructure-workflow
+  approval. Replaced `.github/workflows/daily-batch.yml` with
+  `.github/workflows/four-hour-collection.yml`, renamed the workflow and job
+  for four-hour market-data collection, and changed the cron to minute 17
+  every four UTC hours.
+- Removed `OPENROUTER_API_KEY`, `OPENAI_API_KEY`, and `OPENAI_MODEL` from the
+  scheduled environment. Added explicit `--skip-ai-reports` and
+  `--skip-context-research` flags, so the workflow performs only market fetch,
+  snapshot/metric storage, signal detection, and collection logging.
+- YAML parsing, all 13 scheduled-batch tests, Ruff, and `git diff --check`
+  pass. No Action was dispatched, no deployment/provider/database operation
+  occurred, and no schema, dependency, public API, or policy changed.
 
 - Audited the configured database read-only before deletion. The database was
   about 18.2 MB; `market_snapshots` held 33,638 rows, while 241 of 247 stored

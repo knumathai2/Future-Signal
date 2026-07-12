@@ -1,19 +1,16 @@
-name: Daily data and AI report batch
+name: Four-hour market data collection
 
 on:
   schedule:
-    - cron: "17 18 * * *"
+    - cron: "17 */4 * * *"
   workflow_dispatch:
 
 jobs:
-  daily-batch:
+  four-hour-collection:
     runs-on: ubuntu-latest
     env:
       ENV: dev
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-      OPENAI_MODEL: ${{ vars.OPENAI_MODEL || 'gpt-4o-mini' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -25,10 +22,12 @@ jobs:
         working-directory: backend
         run: pip install -r requirements.txt
 
-      - name: Run scheduled batch
+      - name: Run market data collection
         working-directory: backend
         run: |
           python -m app.core.scheduled_batch \
             --use-live-fetch \
             --max-samples 50 \
+            --skip-ai-reports \
+            --skip-context-research \
             --confirm-local-dev-write
