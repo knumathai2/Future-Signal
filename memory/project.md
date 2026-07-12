@@ -29,13 +29,14 @@ movement to an external event without accepted source support.
 - **Briefing**: Active v8 on-demand worker with strict evidence reconstruction,
   validated NDJSON blocks, SSE replay, polling fallback, cache fingerprints,
   and last-known-good behavior.
-- **Database**: Migrations 001-005 are applied only to the approved local
+- **Database**: Migrations 001-006 are applied only to the approved local
   development database. Production writes and deployment remain unapproved.
 - **Documentation**: TASK-122 phases 1-3 are complete and reviewed; phases 4-7
   are active on `pm/TASK-122-document-consolidation`.
 - **Phase 2 boundary**: TASK-123~125 lock the next summary/scenario policy and
   capability-scoped threat model. TASK-126 implements the approved default-off
-  local/development API and unapplied migration 006; active v8 is unchanged.
+  local/development API. TASK-128's guarded writer is implemented; two bounded
+  evaluations failed closed and a successful response still awaits approval.
 
 ## Implementation snapshot
 
@@ -47,7 +48,7 @@ movement to an external event without accepted source support.
 | Data | Append-only snapshots and metrics, fixed 24h/7d changes, caution levels, ±5pp signal detection, guarded historical seed |
 | Briefing | TASK-112~117: v8 issue-centered prompt, source refinement, safe retry, contextual wording, validated-block streaming |
 | Safety | Aggregate-only data, deterministic evidence/source/timestamp checks, exact caution handling, prohibited-language validation |
-| Scenario boundary | Default-off capability-scoped session API, append-only live graph, authenticated stored-block SSE, 24-hour deletion contract; no writer/provider/UI |
+| Scenario boundary | Default-off capability-scoped API, guarded tool-free local writer, complete-output safety gates, authenticated stored-block SSE, 24-hour deletion contract; no UI |
 
 ## Active issues
 
@@ -77,6 +78,7 @@ Full active technical debt is in `memory/known-issues.md`.
 
 | Date | Change |
 |---|---|
+| 2026-07-12 | Migration 006 was applied to the approved local DB. TASK-128 added the guarded tool-free writer; two calls costing USD 0.0117605 failed closed on framing and date normalization with no assistant content stored. |
 | 2026-07-12 | TASK-126 implemented the approved default-off local/development scenario API, capability authentication, append-only migration 006 (unapplied), stored-block SSE, limits, and hard deletion without a provider, worker, dependency, or database action. |
 | 2026-07-12 | TASK-124/125 locked the next summary/scenario policy and documented the ephemeral capability-scoped threat/API/storage proposal without runtime mutation. |
 | 2026-07-12 | TASK-123 documented the approval-ready relaxed-summary and secure scenario-conversation plan without changing active policy or runtime state. |
@@ -91,9 +93,9 @@ Full active technical debt is in `memory/known-issues.md`.
 
 ## Next
 
-Complete TASK-122 phases 4-7. Plan TASK-127's premise-state boundary and keep
-the scenario writer/provider, migration application, shared abuse controls,
-cleanup scheduling, and Frontend work behind their separate approvals. Review
-ISS-017 and ISS-018 separately.
+Approve one additional bounded TASK-128 provider call to produce the first
+stored scenario response after the framing and date-normalization corrections,
+or leave the task active. Complete TASK-122 phases 4-7; shared abuse controls, cleanup
+scheduling, Frontend work, deployment, and production remain separately gated.
 Another provider evaluation, workflow dispatch, deployment, or production
 operation requires its own authorization.

@@ -338,9 +338,15 @@ header returns `401 session_token_required`. Fixed message/session/in-flight/
 rate limits return safe `409`, `413`, or `429` codes. Storage/current-bundle
 failure returns `409` or `503` without provider or database detail.
 
-Migration 006 remains unapplied. The API must not be enabled against a database
-without that migration and a separate environment-specific application
-approval.
+Migration 006 is applied only to the approved local development database. The
+API must not be enabled against another database without that migration and a
+separate environment-specific application approval.
+
+TASK-128 adds a guarded local/development worker invoked outside the public API
+for exactly one queued request. It receives no capability, exposes no new
+endpoint, uses no model tools, and stores only a completely validated assistant
+turn and paragraph/list blocks. The first bounded provider response failed
+closed before content storage; a successful live response remains pending.
 
 ## Validation and fallback
 

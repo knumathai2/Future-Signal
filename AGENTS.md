@@ -181,6 +181,35 @@ not authorize a provider call, new dependency, shared rate-limit or cleanup
 infrastructure, migration application, Frontend implementation, deployment,
 production writes, or active-v8 transition.
 
+### TASK-128 approved local scenario-writer evaluation boundary
+
+The user's 2026-07-12 approval authorizes applying migration 006 to the
+currently configured `ENV=local` development database, implementing the
+tool-free scenario writer and deterministic premise/output validation against
+the already approved TASK-124~126 contract, and making one bounded provider
+call to generate and persist one validated scenario response. This approval
+does not authorize applying migration 006 to another database, context/web
+research, model tools, a second provider call, a new dependency, shared
+rate-limit or cleanup infrastructure, Frontend work, deployment, production
+writes, or activation of the relaxed-summary contract.
+
+The migration-application authorization was consumed on 2026-07-12 against
+the configured `ENV=local` database. The single provider-call authorization
+was also consumed by one OpenRouter response costing USD 0.006357; deterministic
+assumption-framing validation rejected it before assistant-turn or block
+storage. No second call is authorized by this boundary.
+
+The user's subsequent 2026-07-12 approval authorizes exactly one additional
+OpenRouter call against a newly queued local scenario request after the tested
+assumption-framing correction. It does not authorize an automatic retry, a
+third call, another database, context/web research, model tools, Frontend,
+infrastructure, deployment, or production action.
+
+That additional authorization was consumed by one response costing USD
+0.0054035. The response failed closed before assistant-turn or block storage
+because the numeric validator treated ISO date separators as negative signs.
+The date/number canonicalization fix is tested, but no third call is authorized.
+
 ---
 
 ## Branch Policy

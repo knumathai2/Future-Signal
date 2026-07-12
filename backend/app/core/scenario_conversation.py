@@ -7,6 +7,7 @@ external service.
 
 import hashlib
 import secrets
+import unicodedata
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -73,6 +74,17 @@ def hash_secret(value: str) -> str:
 def generate_session_capability() -> str:
     """Return 256 bits of URL-safe random material."""
     return secrets.token_urlsafe(32)
+
+
+def normalize_scenario_message(value: str) -> str:
+    """Normalize compatibility forms and reject hidden control characters."""
+    normalized = unicodedata.normalize("NFKC", value).strip()
+    if any(
+        unicodedata.category(character).startswith("C") and character not in {"\n", "\t"}
+        for character in normalized
+    ):
+        raise ScenarioStateError("invalid_request")
+    return normalized
 
 
 def latest_scenario_event(
@@ -171,7 +183,7 @@ def enqueue_scenario_turn(
     requested_at = _as_utc(now or datetime.now(UTC))
     if _as_utc(session.expires_at) <= requested_at:
         raise ScenarioUnavailableError("session_unavailable")
-    normalized_message = message.strip()
+    normalized_message = normalize_scenario_message(message)
     if not 1 <= len(normalized_message) <= SCENARIO_MAX_MESSAGE_CHARS:
         raise ScenarioStateError("message_too_large")
     idempotency_hash = hash_secret(idempotency_key)
@@ -272,7 +284,14 @@ def enqueue_scenario_turn(
         error_code=None,
         usage={},
     )
-    db.add_all([turn, request, event])
+    # Composite same-session FKs intentionally do not rely on ORM relationship
+    # objects. Flush the parent rows explicitly so Postgres cannot schedule the
+    # queued event before its request within the same unit of work.
+    db.add(turn)
+    db.flush([turn])
+    db.add(request)
+    db.flush([request])
+    db.add(event)
     db.commit()
     return EnqueuedScenarioTurn(request=request, turn=turn, created=True)
 

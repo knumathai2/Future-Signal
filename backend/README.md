@@ -11,11 +11,23 @@ applied only to the explicitly approved `ENV=local` development database;
 other environments remain separately gated.
 
 TASK-126 adds a default-off, local/development-only scenario-session API and
-unapplied migration 006. Setting `SCENARIO_CONVERSATION_ENABLED=true` exposes
+migration 006, applied only to the approved local DB. Setting
+`SCENARIO_CONVERSATION_ENABLED=true` exposes
 only capability-authenticated session/turn/request storage and validated-block
 replay; it does not launch a worker or call a provider. The feature remains
 unavailable outside `ENV=local` or `ENV=development`. Migration 006 must exist
 before enabling the flag against a database.
+
+TASK-128 adds a separately invoked local/development worker for one queued
+scenario request:
+
+```bash
+python -m app.core.scenario_worker --request-id <uuid> --confirm-local-dev-write
+```
+
+It performs one tool-free call and stores only output that passes the complete
+premise, safety, leakage, number, and restricted-Markdown gates. It is not
+launched by the API or scheduled collector.
 
 ## Setup
 

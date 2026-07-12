@@ -48,9 +48,11 @@ capability-scoped scenario-conversation extension. It stores ephemeral sessions,
 turns, immutable premise classes, generation requests/events, and complete
 validated response blocks. Rows are append-only while a session is live; only
 the scenario graph may be hard-deleted after its fixed 24-hour expiry or an
-authenticated owner deletion request. The user approved implementation but not
-application. Do not apply migration 006 to any database without a separate,
-environment-specific approval.
+authenticated owner deletion request. The user approved and completed
+application to the currently configured `ENV=local` development database on
+2026-07-12; six tables and 29 scenario constraints were verified. Do not apply
+migration 006 to another database without separate environment-specific
+approval.
 
 Once approved, running it against a real Postgres instance is:
 
@@ -84,8 +86,8 @@ approval:
 psql "$DATABASE_URL" -f migrations/005_ai_report_generation_blocks.sql
 ```
 
-Migration 006 remains unapplied until a separate environment-specific
-approval:
+Migration 006 was applied only to the approved local development database;
+the guarded command for a separately approved target remains:
 
 ```bash
 psql "$DATABASE_URL" -f migrations/006_scenario_conversations.sql
