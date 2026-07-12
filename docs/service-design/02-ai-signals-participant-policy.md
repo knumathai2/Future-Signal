@@ -8,149 +8,52 @@ _Source: former project-root Service Design sections 6-8._
 
 **Design decision consistent with PRD §8.8: the default AI is a template-filling engine over computed metrics, not a free-form LLM analyst.** An LLM may be used only to smooth the phrasing of a template-constrained output — never to generate open-ended interpretation, causal claims, or predictions. This is both a safety constraint and a scope constraint: free-form LLM analysis was explicitly deferred in the hackathon PRD (§6.5) pending a proper evaluation/guardrail framework.
 
-### AI Inputs (all structured, all pre-computed — no raw scraping handed to a model)
-- Market title, description, category
-- Outcome definition (for binary MVP: which side "the price" refers to)
-- Probability history for the selected window
-- Volume history for the selected window
-- Computed metrics: change %, volatility, attention, heat, confidence/caution level
-- v3 manually curated related-event candidates; v4 verified context candidates
-  may be included only from stored `url_citation` evidence accepted under
-  ADR-038
-- User-selected time range
-- Data-as-of timestamp
+### Active v8 inputs
 
-### AI Outputs
+- Exact market definition revision and tracked outcome
+- Generation-time metric and closest eligible snapshot
+- Fixed 24-hour and 7-day observed changes when available
+- Bounded observed-history summary and data limitations
+- Accepted context, source, and supported-claim records
+- Data, context, and generation timestamps
+- Opaque evidence references plus prompt, policy, and input-schema versions
 
-| Output | Purpose | Required input | Format | Example | Limitations | Safety constraints |
-|---|---|---|---|---|---|---|
-| Issue summary | One-paragraph plain-language framing of what the market question is about | Title, description, category | 2–3 sentences | "This market tracks whether [event] will be resolved as 'Yes' by [date], based on public trading activity on Polymarket." | Can't add outside context the description doesn't contain | Must not restate the question as if it were a real-world fact |
-| Probability movement explanation | Describes the size/direction/timing of a change | Price history, change %, inflection points | Template with computed values filled in (matches PRD §8.8 template exactly) | "Over the past 7 days, the expectation reflected in this market rose by 8.2 percentage points, with the largest shift occurring around [date]." | Says *what* moved, never *why* with certainty | No causal verbs ("because," "due to," "caused by") — use "coincides with," "occurred alongside" |
-| Key change factors | Surfaces the manually curated related-event candidate, if one exists for this market | Related-event candidate list | 1 sentence, clearly labeled as a candidate | "A related event candidate around this time: [event]. This is offered as context, not as a confirmed cause." | Only available for the curated demo set in MVP | Must always carry the "candidate, not cause" qualifier — no exceptions |
-| Neutral context comparison | Compare verified public information with a change episode without asserting a relationship | Verified candidate sources, price history, evidence IDs | Short structured section | — | Approved for TASK-056~065 v4 | Same causal-language ban applies; missing evidence fails closed |
-| Market trend summary | Rolls up change/volatility/attention into one readable status line | All computed metrics | 1 sentence | "This issue has seen a moderate, steady increase in reflected expectation over the past week, with typical trading activity." | Purely descriptive of computed values | Must not use words like "trending toward" a specific outcome |
-| Sudden change explanation | Explains a triggered signal (Section 7) in plain language | Signal type, magnitude, window | 1–2 sentences | "A larger-than-usual shift in reflected expectation was detected in the last 6 hours, alongside increased trading activity." | Only as good as the threshold tuning | Must use the neutral signal vocabulary from Section 7, never "alert" framing |
-| Risk / uncertainty summary | States the interpretation-caution basis in plain language | Confidence/uncertainty score inputs | 1 sentence | "Trading activity on this market has been limited recently, so this change should be interpreted with caution." | Can't quantify precisely how much caution is "enough" — stays qualitative | Always appears attached to the metric it qualifies, never standalone |
-| Related issue clustering | Groups markets by category/topic for browsing | Category, tags | List | — | Category-based only in MVP; no semantic clustering | Cluster by topic, not by "similar outcome" (avoids implying correlated bets) |
-| Timeline-based analysis | Chronological list of the market's own inflection points | Price history, detected inflection points | Timeline/list UI | — | MVP: single-market timeline only, no cross-market timeline | Each entry stays in "observed change" language |
-| User-friendly report | Bundles summary + movement + caution into one shareable block | All of the above | Structured card (title, 3–5 sentence body, caution footer) | Matches PRD §8.8 template | This *is* the P0 "template summary" feature | Must always include the standard disclaimer footer (PRD §17.1) |
-| Newsletter-style briefing | Batches several issue summaries for a periodic digest | Multiple issue summaries | Multi-section digest | — | **Phase 3** (PRD already defers "weekly report" to Phase 3) | Same per-item constraints as above, plus an overall disclaimer at the top of the digest |
+The writer receives a frozen, typed evidence bundle. It does not receive
+unbounded browsing output or permission to create identifiers, source metadata,
+metrics, dates, or URLs.
 
-### Hard constraints on every AI output (non-negotiable, enforce at the template/prompt layer, not just via instructions)
-- No buy/sell/hold, position, or trade language.
-- No "this will / won't happen" framing — only "expectation reflected in the data has moved."
-- No "follow this trader/user" language (there is no per-user output surface at all — see Section 8).
-- No numeric confidence stated as a probability of a real-world outcome (e.g., never "73% likely to happen" — only "the market-reflected value is 73%").
-- No financial or betting advice, explicit or implied.
-- Every output that touches a specific market must carry a caution qualifier if the underlying confidence/uncertainty score is below the "sufficient data" threshold.
+### Active v8 outputs
 
-### 6.1 Approved v4 research and verification contract
+- One issue-centered headline
+- One two-to-four sentence summary
+- Two-to-six uniquely typed sections
+- Paragraph or bullet presentation with exact evidence references
+- Zero or more exact stored A-C sources
+- Deterministic cache state, limitations, caution, and timing
 
-TASK-056~065 adds a bounded research step between signal detection and report
-generation. It uses one research model with OpenRouter web search, parses only
-API `url_citation` annotations, applies deterministic URL/domain/date/entity/
-source-independence gates, and then uses a different model without web access
-for independent verification. A model cannot override a failed hard gate.
+Required sections are `current_situation` and `recent_change`. Optional
+sections are `interpretation`, `key_conditions`, `what_to_watch`, and one
+`limitations` section.
 
-Public candidates require either one official source directly supporting the
-tracked condition or at least two independent sources supporting the same
-event and date. Conflicts, weak entity/condition matches, generated URLs,
-unsupported claims, verifier disagreement, and unsafe relationship language
-produce `withheld` or `rejected` state and remain outside the public API.
+### Permanent constraints
 
-Research, verification, and v4 writing share a cumulative USD 100 budget for
-TASK-056~065. Per-run usage is audited without storing secrets, prompts, or full
-responses. `no_candidate` is a successful result, and prior successful public
-content remains available when the provider fails.
+- Every factual authored section must reconstruct from supplied evidence.
+- The writer cannot create or alter metrics, identifiers, source metadata,
+  supported claims, timestamps, or links.
+- External material cannot be presented as the explanation for an observed
+  movement.
+- Missing evidence produces an explicit zero-source or limitation state.
+- The current prohibited-language policy remains in `standards.md` and
+  `memory/glossary.md`; generation and read-time validation share it.
+- Every full report retains data-as-of timing and interpretation caution.
+- Provider or validation failure preserves the previous valid report.
 
-### 6.9 Approved v5 narrative-summary contract (ADR-048)
+### Historical contracts
 
-TASK-075~081 supersedes v4's two model-authored fields with six fixed narrative
-fields: `executive_summary`, `current_data_interpretation`,
-`conditional_scenarios`, `factors_to_check`, `signals_to_watch`, and nullable
-`evidence_synthesis`. The model may write
-natural Korean prose inside those fields, but it may use only the supplied
-market definition, stored metric/snapshot values, and same-episode verified
-context candidates. This is structured narrative generation, not evidence-free
-or open-ended analysis.
-
-Every number, date, named entity, event, and source statement must be traceable
-to an input evidence reference. Generic prose that could be reused across
-unrelated issues, unsupported claims, causal language, outcome assertions,
-duplicated sections, incomplete Korean sentences, and prohibited wording block
-storage. Deterministic relationship-boundary, data-limitation, and caution
-fields remain mandatory and are reconstructed at read time.
-
-Verified source cards expose the exact stored title, domain, publication time,
-source type, and URL. No verified candidate means `evidence_synthesis=null` and
-an explicit UI state that no source passed the public criteria; the system must
-not substitute an unverified article or generic search link.
-
-TASK-077 further requires three or four explicitly conditional scenarios,
-typed issue-specific check/watch items, title/entity/condition/date/official-
-domain search anchors, and deterministic rejection of market-listing or
-forecast pages. These improvements do not weaken the same-window, official-
-source, independent-source, annotation, or verifier gates.
-
-### 6.10 Approved v6 evidence-aware briefing contract (ADR-050)
-
-V6 selects one of four report modes with deterministic code before writer
-invocation. The two inputs are independent: the latest linked metric qualifies
-as a significant change only under the existing 24-hour ±5pp
-`expectation_shift` rule, and verified material is present only when at least
-one same-episode candidate survives the existing strict public read gates.
-
-The four modes are `change_with_evidence`, `change_without_evidence`,
-`stable_with_evidence`, and `stable_without_evidence`. Stable modes may not
-inflate a below-threshold or unavailable movement. No-evidence modes may provide
-clearly labelled general conditional scenarios, but those scenarios are not
-evidence of the current situation and cannot add unsupported recent facts,
-named-person states, concrete procedures, causal claims, likelihood rankings,
-outcome assertions, or action prompts.
-
-V6 separates `observed_data`, `market_definition`, `verified_context`,
-`general_scenario`, and `data_limitation` bases. Current value, change amount,
-metric time, mode, no-source state, limitations, caution, and resolution-rule
-reference are deterministic. The writer receives only the authored fields
-allowed by the selected mode. Exact resolution rules appear only in the
-collapsed reference region, not in the briefing body. Generation and read paths
-reject metric/rule repetition, cross-section duplicates, unsupported evidence
-bases, and mode/field mismatches.
-
-The exact decision table, response proposal, duplication checks, and approval
-boundary are recorded in
-`reports/task-092-evidence-aware-briefing-policy.md`. The user approved the
-bounded AI-policy and public report API changes on 2026-07-11. This approval
-does not authorize deployment, production writes, workflow mutation, new
-dependencies, or a schema change.
-
-### 6.11 Approved v7 on-demand briefing and source-level contract (ADR-051)
-
-V7 separates market collection, context collection, and briefing generation.
-Normal market collection never invokes the writer. An explicit user request or
-approved development evaluation builds a fingerprinted evidence bundle and
-creates or joins one generation request.
-
-The writer receives opaque market-definition, metric, history, context,
-source, and limitation references and returns a positive-first flexible
-`headline`, `summary`, and two-to-eight broad sections. Section count, order,
-title, and paragraph/list presentation may vary. The backend owns identifiers,
-values, timestamps, source metadata, source level, cache state, caution, and
-last-known-good selection.
-
-Accepted sources use visible levels A (official/primary), B (established
-reporting or recognized institution), or C (attributed supporting material).
-Level D remains internal rejection. Every A-C source must pass deterministic
-access, identity, relevance, time, supported-claim, duplicate, and
-contradiction checks. A no-search verifier is reserved for conflict,
-ambiguity, high-impact claims, strong relationship language, or materially
-used level-C claims. It can withhold but cannot promote failed evidence.
-
-Unknown or mismatched references, unsupported facts, unsafe links, invented
-metadata, unattributed C material, unsupported future/causal assertions, and
-irreconstructible envelopes block publication. Style, section ordering,
-English terms, and moderate repetition are quality diagnostics. The exact
-contract is `reports/task-101-v7-briefing-contract.md`.
+V1-v7 shapes and their supersession records are historical. Their concise map
+is in `docs/archive/ai-report-contracts/README.md`; accepted decisions remain
+in `memory/decisions.md`, and detailed artifacts remain recoverable from Git
+history.
 
 ### 6.12 Approved v8 issue-centered narrative contract
 
@@ -187,7 +90,7 @@ not the requested JSON body, v8 ignores body links and creates narrow
 annotation-only candidates from the citation title, URL, and excerpt before
 running the same relevance and publication gates.
 
-### 6.11 Active-v8 contextual wording policy (TASK-116)
+### 6.14 Active-v8 contextual wording policy (TASK-116)
 
 Active v8 no longer treats every Korean occurrence of `확정`, `보장`, `추천`,
 `기회`, `전망`, and `원인` as equivalent. Explicit negation, limitation, and
