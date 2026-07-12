@@ -73,6 +73,7 @@ Full active technical debt is in `memory/known-issues.md`.
 
 | Date | Change |
 |---|---|
+| 2026-07-12 | ISS-020 hardened public source URLs, IPv6 canonicalization, exact Frontend source links, detail-tab query normalization, and report path encoding. |
 | 2026-07-12 | TASK-122 phases 1-3 removed temporary coordination artifacts, consolidated setup guidance, restored immutable audit text after review, and passed 488 Backend tests plus all Frontend checks. |
 | 2026-07-12 | TASK-121 replaced the retired daily combined workflow with four-hour market-data-only collection and no provider configuration. |
 | 2026-07-12 | The approved local cleanup removed stored v1-v7 reports and v7 request history while preserving active v8 rows and reconstruction. |

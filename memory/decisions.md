@@ -2042,3 +2042,27 @@ report set is evidence-oriented. Removed detail remains recoverable from Git,
 so immutable historical ledgers may still name retired files. No source code,
 runtime contract, schema, database, provider, dependency, infrastructure,
 deployment, production, or wording-policy state changed.
+
+---
+
+### ADR-066: Expose only deterministic public HTTP(S) source targets
+
+- **Date**: 2026-07-12
+- **Status**: Accepted and implemented in ISS-020
+- **Decided by**: Debugger finding and user-directed correction
+
+**Context**: Existing URL checks required HTTP(S), no credentials, and a
+matching stored domain, but still accepted localhost and non-global IP targets.
+IPv6 canonicalization also removed required brackets, and the Frontend parser
+re-serialized a validated source rather than retaining the exact stored URL.
+
+**Decision**: Use one Backend parser for deterministic public HTTP(S) checks.
+Reject localhost, local browser aliases, and non-global or multicast IP
+addresses before context verification or public schema output. Preserve IPv6
+brackets in canonical URLs. Let the Frontend validate with `URL` but retain the
+exact validated source string for the rendered link.
+
+**Consequences**: Local/private targets fail closed, valid public IPv6 URLs
+remain syntactically correct, and rendered source links preserve stored
+provenance. This changes no response shape, dependency, database schema,
+provider path, infrastructure, deployment, production state, or wording policy.

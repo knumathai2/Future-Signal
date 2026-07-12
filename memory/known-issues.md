@@ -42,6 +42,10 @@ data limitations.
 
 ## Recently closed
 
+- **ISS-020**: public source validation now rejects local/private targets,
+  public IPv6 canonicalization preserves brackets, exact stored source links
+  remain unchanged in the Frontend, invalid detail tabs normalize to overview,
+  and report-read issue IDs use consistent path encoding.
 - **ISS-019**: issue-list re-search now preserves Korean IME composition by
   keeping a local draft and deferring URL synchronization until composition
   ends.

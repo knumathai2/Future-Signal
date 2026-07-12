@@ -39,7 +39,10 @@ export async function loadIssueReport(
   signal?: AbortSignal,
 ): Promise<IssueReportLoadState> {
   try {
-    const response = await fetch(`/api/issues/${issueId}/report`, { signal });
+    const response = await fetch(
+      `/api/issues/${encodeURIComponent(issueId)}/report`,
+      { signal },
+    );
     if (!response.ok) {
       throw new HttpError("Failed to load issue report", response.status);
     }

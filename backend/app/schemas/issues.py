@@ -8,10 +8,11 @@ executable draft of that contract, not a new design.
 import re
 from datetime import datetime
 from typing import Annotated, Literal
-from urllib.parse import urlparse
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+from app.core.url_safety import parse_public_http_url
 
 ConfidenceLevel = Literal[
     "sufficient",
@@ -168,12 +169,10 @@ class ContextSourceOut(BaseModel):
 
     @model_validator(mode="after")
     def validate_annotation_url(self) -> "ContextSourceOut":
-        parsed = urlparse(self.url)
+        parsed = parse_public_http_url(self.url)
         if (
-            parsed.scheme not in {"http", "https"}
-            or not parsed.hostname
-            or parsed.username is not None
-            or parsed.password is not None
+            parsed is None
+            or parsed.hostname is None
             or parsed.hostname.lower() != self.domain.lower().rstrip(".")
         ):
             raise ValueError("Public source URL and domain must match stored citation data")
@@ -317,9 +316,8 @@ class V6ResolutionReferenceOut(BaseModel):
         ):
             raise ValueError("Unavailable resolution reference cannot expose rule fields")
         if self.source_url is not None:
-            parsed = urlparse(self.source_url)
-            if parsed.scheme not in {"http", "https"} or not parsed.hostname:
-                raise ValueError("Resolution source URL must be absolute HTTP(S)")
+            if parse_public_http_url(self.source_url) is None:
+                raise ValueError("Resolution source URL must be public HTTP(S)")
         return self
 
 
@@ -393,12 +391,10 @@ class V7SourceOut(BaseModel):
 
     @model_validator(mode="after")
     def validate_url_domain(self) -> "V7SourceOut":
-        parsed = urlparse(self.url)
+        parsed = parse_public_http_url(self.url)
         if (
-            parsed.scheme not in {"http", "https"}
-            or not parsed.hostname
-            or parsed.username is not None
-            or parsed.password is not None
+            parsed is None
+            or parsed.hostname is None
             or parsed.hostname.casefold().rstrip(".") != self.domain.casefold().rstrip(".")
         ):
             raise ValueError("V7 public source URL and domain must match")
