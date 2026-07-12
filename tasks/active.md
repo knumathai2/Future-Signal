@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Active Tasks — Outlook Signals
 
-_Last updated: 2026-07-11_
+_Last updated: 2026-07-12_
 
 ## In Progress
 
@@ -33,8 +33,11 @@ deletion remained outside this work.
 TASK-108 did not accept the first v7 policy after eight bounded calls produced
 zero valid reports. TASK-111 removed numeric-token blocking at the user's
 direction and produced the first valid development v7 report. TASK-109 may
-audit cleanup candidates but cannot delete legacy runtime without explicit v7
-acceptance and the user's separate deletion approval.
+audit cleanup candidates. On 2026-07-12 the user approved and the Reviewer
+completed only the configured `ENV=local` stored-data cleanup: 241 v1-v7
+reports, 10 v7 requests, and 38 cascading events were removed while all v8
+rows remained. Historical compatibility/runtime-code removal remains assigned
+and was not implied by that database-specific approval.
 
 Deployment and production writes remain outside the approved program.
 

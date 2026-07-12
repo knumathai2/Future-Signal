@@ -1936,3 +1936,29 @@ infrastructure, deployment, provider, or database change.
 timeline marker, and briefing action/summary use terracotta `#B84416` with
 `#FFF2E9`; comparison values use muted blue `#466AA3` with `#EDF3FB`. Direction
 still uses signs and labels rather than green/red gain-loss semantics.
+
+---
+
+### ADR-062: Remove superseded stored reports while retaining active v8 state
+
+- **Date**: 2026-07-12
+- **Status**: Accepted and executed for the configured local development DB ⚠️ HUMAN APPROVAL
+- **Decided by**: Explicit user approval after a read-only retention audit
+
+**Context**: The active public report API reconstructs only successful v8
+reports, but the configured development database retained 241 v1-v7 reports
+and 10 v7 generation requests. These rows were audit-only; six v8 reports and
+their request/event/block evidence support current cache, stale, streaming,
+and last-known-good behavior.
+
+**Decision**: In one `ENV=local` transaction, delete v1-v7 `ai_reports`, then
+delete v7 generation requests with their request-owned events/blocks. Preserve
+all v8 rows and all market, snapshot, metric, source, resolution-rule, schema,
+migration, and historical documentation state. This approval applies to stored
+development data only and does not authorize legacy runtime-code deletion.
+
+**Consequences**: The cleanup removed 241 reports, 10 requests, and 38 events;
+no v7 block existed. Six v8 reports, 11 requests, 60 events, and 17 blocks
+remain. Orphan checks and actual FastAPI v8 fresh/stale/last-good reads pass.
+No schema, provider, dependency, infrastructure, deployment, production, or
+wording-policy change occurred.
