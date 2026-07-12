@@ -1,82 +1,72 @@
-# Historical AI report contracts: v1-v6
+# Historical AI report contracts: v1-v7
 
-Status: historical contract index prepared by TASK-100 on 2026-07-11.
+_Status: archive index updated for the active v8 runtime on 2026-07-12._
 
-This directory records how the report contract evolved before the proposed v7
-on-demand briefing program. It is an archive map, not an active writer prompt.
-Stored report rows, migrations, ADRs, and audit records remain authoritative
-history. The current runtime remains v6 until a later approved task activates
-v7.
+This file summarizes superseded report contracts. It is not an active prompt,
+API contract, or wording policy. Current behavior is documented in
+`backend/API_CONTRACT.md`, current design documents, and executable schemas.
+Accepted decisions remain unchanged in `memory/decisions.md`; detailed removed
+artifacts remain recoverable from Git history.
 
 ## Version map
 
-| Version | Active period | Governing record | Public shape and generation model | Superseded by | Runtime state at TASK-100 |
-|---|---|---|---|---|---|
-| v1 | 2026-07-09 to 2026-07-10 | ADR-003, ADR-008, TASK-015 | Initial fixed template stored in `ai_reports`; read route returned a successful stored row or the neutral empty state. | ADR-028 / v2 | Audit-only rows; legacy generator compatibility remains in shared code. |
-| v2 | 2026-07-10 | ADR-028, ADR-030, TASK-043 | Fixed issue explainer with issue meaning, current reading, conditional developments, checks, limitations, and caution. | ADR-033 / v3 | Audit-only rows and legacy schema compatibility. |
-| v3 | 2026-07-10 to 2026-07-11 | ADR-033, ADR-034, TASK-049~053 | Eight-field fixed contract. Three prose fields were model-authored; evidence comparison, context, limitations, and caution were deterministic. Context remained manual-only. | ADR-038 / v4 | Historical MVP contract; generator, tests, and API documentation remain. |
-| v4 | 2026-07-11 | ADR-038, ADR-043~047, TASK-056~065 | Seven-field change episode linked to one metric and zero-to-three independently verified context candidates. Only two prose fields were model-authored. | ADR-048 / v5 | Audit-only public rows; research, verification, writer, query, and compatibility code remain. |
-| v5 | 2026-07-11 | ADR-048, ADR-049, TASK-075~091 | Evidence-bounded structured narrative with one-to-four scenarios, resolution-rule evidence, reference values, observed history, basis labels, exact-source links, and explicit no-source state. | ADR-050 / v6 | Audit-only public rows; generator, read helpers, schemas, fixtures, and tests remain. |
-| v6 | 2026-07-11 onward | ADR-050, TASK-092~098 | Four deterministic modes selected from significant 24-hour change and verified-context presence. Strict evidence bases, single-owner metric/rule display, mode unions, and v6-only fallback. | Proposed ADR-051 / v7, not active | Current runtime contract. Two development rows were later withheld after stricter authored-date and non-anchor-language checks; the endpoint may honestly return the neutral empty state. |
+| Version | Active period | Governing record | Historical shape | Superseded by |
+|---|---|---|---|---|
+| v1 | 2026-07-09 to 2026-07-10 | ADR-003, ADR-008, TASK-015 | Initial fixed template and stored success/empty read state | ADR-028 / v2 |
+| v2 | 2026-07-10 | ADR-028, ADR-030, TASK-043 | Fixed issue explainer with conditional sections, checks, limitations, and caution | ADR-033 / v3 |
+| v3 | 2026-07-10 to 2026-07-11 | ADR-033, ADR-034, TASK-049~053 | Eight-field evidence-first template with three authored prose fields | ADR-038 / v4 |
+| v4 | 2026-07-11 | ADR-038, ADR-043~047, TASK-056~065 | Seven-field change episode linked to one metric and verified context candidates | ADR-048 / v5 |
+| v5 | 2026-07-11 | ADR-048, ADR-049, TASK-075~091 | Evidence-bounded narrative, scenarios/checks, resolution rules, exact sources, and explicit zero-source state | ADR-050 / v6 |
+| v6 | 2026-07-11 | ADR-050, TASK-092~098 | Four deterministic modes based on observed change and accepted context | ADR-051 / v7 |
+| v7 | 2026-07-11 | ADR-051, TASK-099~111 | Fingerprinted on-demand request/lease/cache flow with flexible evidence-linked sections and A-C sources | TASK-112 / v8 |
 
-The dates above identify repository contract activation, not deployment dates.
-No deployment is implied by this archive.
+Dates identify repository contract activation, not deployment.
 
-## Authoritative references
+## Current v8 transition
 
-| Concern | Historical source |
-|---|---|
-| Decisions and supersession | `memory/decisions.md` (ADR-003, ADR-028, ADR-030, ADR-033, ADR-034, ADR-038, ADR-043~050) |
-| Public response history | `backend/API_CONTRACT.md` and the corresponding task reports |
-| Writer/storage implementations | `backend/app/core/ai_report.py`, `backend/app/core/ai_report_batch.py` |
-| Read-time reconstruction | `backend/app/api/routes/issues.py`, `backend/app/db/queries.py`, `backend/app/schemas/issues.py` |
-| Frontend contracts | `frontend/src/types/issue.ts`, `frontend/src/utils/reportParser.ts`, `frontend/src/data/reportFixtures.ts` |
-| Product/service/UX policy | `docs/prd/`, `docs/service-design/`, `docs/tech-design/`, `docs/ux-design/` |
-| v3-v6 task evidence | `reports/task-043-issue-explainer-report.md`, `reports/task-049-*`, `reports/task-055-*`, `reports/task-064-*`, `reports/task-075-*`, `reports/task-082-*`, `reports/task-092-*`, `reports/task-098-*` |
+V8 keeps the durable evidence, source-parent, request, lease, cache,
+last-known-good, timing, limitation, caution, and publication blockers from v7.
+It changes the authored structure to an issue-centered headline, summary, and
+two-to-six typed sections. TASK-113~117 add wider bounded source discovery,
+safe retry, contextual wording validation, and individually validated NDJSON
+blocks delivered through SSE.
 
-## Cross-version invariants that are not archived away
+The active API reconstructs successful v8 rows only. Under explicit approval,
+the configured local development database removed stored v1-v7 reports and v7
+request/event history. V8 reports, requests, events, blocks, metrics,
+snapshots, context, and definition evidence remain. No production database was
+modified.
 
-The following constraints come from the project constitution or current
-product policy and remain binding unless separately amended with human
-approval:
+## Permanent invariants
 
-- aggregate public data only; no individual-participant browsing;
-- no assertion of a future result and no invented causal explanation;
-- every data-bearing screen keeps an honest data-as-of timestamp and an
-  interpretation-caution notice;
-- public source URLs, titles, claims, metrics, dates, entities, and evidence
-  references must reconstruct from stored inputs;
+These rules are not archived away:
+
+- aggregate public data only;
+- no unsupported future-result or relationship assertion;
+- honest data-as-of timing and interpretation caution on every data surface;
+- exact reconstruction of source URLs, titles, claims, metrics, dates,
+  entities, evidence references, and fingerprints;
 - unsafe links or mismatched evidence block publication;
-- report and context writes are append-only, with prior rows retained for
-  audit;
-- provider failure keeps the last valid result when one exists and never
-  corrupts market-data collection;
-- current prohibited product-language and non-inducement rules remain active
-  until an explicitly approved policy amendment says otherwise; and
-- deployment, production writes, new dependencies, schema changes, public API
-  changes, infrastructure changes, and legacy deletion retain their separate
-  approval gates.
+- provider or validation failure preserves the previous valid result;
+- current prohibited-language and source-attribution policy remains active;
+- deployment, production writes, dependencies, schema, public API,
+  infrastructure, and wording-policy changes retain their approval gates.
 
-## Transition and cleanup map
+## Authoritative history
 
-TASK-109 may consider removal only after v7 has passed TASK-107 and TASK-108
-and the user has accepted v7. Even then, deletion needs separate approval.
+| Concern | Source |
+|---|---|
+| Accepted decisions and approval boundaries | `memory/decisions.md` |
+| Completed implementation ledger | `tasks/completed.md` |
+| Active v8 public contract | `backend/API_CONTRACT.md` and `app/schemas/issues.py` |
+| Writer and reconstruction implementation | `backend/app/core/ai_report.py`, `backend/app/core/on_demand_briefing.py`, `backend/app/api/routes/issues.py` |
+| Current policy | `AGENTS.md`, `standards.md`, `memory/glossary.md`, Service Design, Technical Design, UX Design |
+| Retained cost/evidence/failure reports | `reports/` entries selected by `docs/document-retention-manifest.md` |
+| Removed detailed artifacts | Git history before TASK-122 |
 
-Preserve permanently:
+## Runtime compatibility
 
-- migration files and database rows;
-- ADRs, task reports, cost/evidence audits, and this archive;
-- the minimum reader or diagnostic tooling needed to explain stored history;
-- source provenance and evidence records referenced by historical reports;
-- current safety, timestamp, and aggregate-data controls.
-
-Potential cleanup candidates after acceptance:
-
-- v1-v6 prompt builders and generation dispatch paths no longer called by v7;
-- v1-v6 public response schemas and Frontend parsers no longer reachable;
-- version-specific fixtures and tests duplicated by v7 coverage;
-- scheduled report-generation flags and compatibility branches superseded by
-  the approved on-demand service;
-- active product-document paragraphs that describe v1-v6 as current behavior.
-
-TASK-100 does not delete, disable, or relabel any runtime implementation.
+Historical writer, schema, fixture, and batch compatibility code may still
+exist for tests or reconstruction support. Its presence does not make a
+historical public contract active. Removing that code remains a separately
+scoped TASK-109 action; migrations and accepted audit records are permanent.
