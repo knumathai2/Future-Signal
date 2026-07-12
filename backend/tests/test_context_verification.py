@@ -165,8 +165,19 @@ def _verifier(response=None, *, error=None, research_model="openai/gpt-4o-mini")
             "https://www.example.gov/a/b?a=1&b=2",
         ),
         ("http://example.com:80/", "http://example.com/"),
+        (
+            "https://[2606:4700:4700::1111]:443/a",
+            "https://[2606:4700:4700::1111]/a",
+        ),
         ("file:///tmp/source", None),
         ("https://user:secret@example.com/path", None),
+        ("https://localhost/internal", None),
+        ("https://service.localhost/internal", None),
+        ("https://127.0.0.1/admin", None),
+        ("https://10.0.0.1/admin", None),
+        ("https://[::1]/admin", None),
+        ("https://[2001:db8::1]/documentation", None),
+        ("https://2130706433/admin", None),
     ],
 )
 def test_canonicalize_url_is_deterministic_and_rejects_unsafe_inputs(raw, expected):
