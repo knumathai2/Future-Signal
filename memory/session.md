@@ -14,32 +14,35 @@ files.
 
 ## Session
 
-- **Role**: Frontend Implementer / Debugger
-- **Branch**: `frontend/ISS-021-api-base-url`
-- **Goal**: Make the configured Frontend API origin apply consistently to REST and SSE.
+- **Role**: PM / Planner
+- **Branch**: `pm/TASK-123-scenario-chatbot-plan`
+- **Goal**: Plan a freer current summary and secure scenario conversation.
 - **Status**: Completed
 
-## Completed in ISS-021
+## Completed in TASK-123
 
-- Added an origin-only `VITE_API_BASE_URL` utility shared by JSON, report,
-  generation, polling, and SSE requests.
-- Preserved relative `/api` paths when the setting is empty so local Vite proxy
-  behavior remains unchanged.
-- Rejected malformed bases, credentials, paths, queries, fragments, and
-  protocol-relative API paths.
-- Added a dedicated URL regression script and updated Frontend setup guidance.
-- Documented but did not apply the hosting-environment, Backend CORS, Vercel,
-  deployment, and production follow-up.
-- Passed Frontend typecheck, lint, URL/parser scripts, configured/default
-  production builds, Prettier and diff checks, plus actual Backend/Browser QA.
+- Separated the stable current summary from a flexible issue-scoped scenario
+  conversation.
+- Defined server-owned premise classes so assumptions cannot become current
+  facts across turns.
+- Chose a tool-free, read-only model boundary with no database, browser, URL,
+  secret, or side-effect access.
+- Documented prompt-injection, indirect-source, session-isolation, output,
+  privacy, cost, conventional API, and operational controls.
+- Proposed TASK-124~131 with independent policy, API, schema, provider,
+  infrastructure, migration, deployment, and activation gates.
+- Added acceptance, evaluation, rollout, rollback, and open-decision sections.
 
 ## Boundaries
 
-- No user-facing copy, dependency, public API shape, schema, database, provider,
-  infrastructure, deployment, or production state changed.
-- The existing TD-001 bundle-size warning remains unchanged.
+- This is a proposal and Phase 2 backlog record only.
+- No active wording policy, user-facing runtime text, code, public API, schema,
+  dependency, provider call, database, infrastructure, deployment, or
+  production state changed.
+- Active v8 and all existing approval boundaries remain unchanged.
 
 ## Next handoff
 
-Review and merge `frontend/ISS-021-api-base-url` through the project review flow.
-TASK-122 remains in review on its existing branch.
+Review the TASK-123 plan. If its direction is accepted, approve and start only
+TASK-124 (policy lock) and TASK-125 (threat/API/storage proposal) before any
+implementation. TASK-122 remains in review on its existing branch.

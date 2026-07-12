@@ -72,6 +72,10 @@ Ship a genuinely working web MVP within 5 days that lets a user check today's mo
 
 ## Backlog Ideas (Phase 2+ — do not build during the hackathon without HUMAN APPROVAL)
 
+- Freer current summary plus a separate tool-free, issue-scoped scenario
+  conversation. Planning and approval gates are in
+  `reports/task-123-summary-scenario-chatbot-plan.md`; no runtime policy or
+  implementation is active.
 - Chart image export (content-creator tooling)
 - Saved issues / watchlist (requires minimal account system)
 - Change notifications (digest-style, neutral copy only)
