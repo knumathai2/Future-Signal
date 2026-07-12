@@ -17,6 +17,28 @@ _Source: former project-root Technical Design sections 11-17._
 | Rate limiting on public endpoints | A basic per-IP rate limit (e.g., via a FastAPI middleware) is a reasonable should-have to prevent accidental scraping load during the demo period, though not critical for a 5-day hackathon audience |
 | Logging hygiene | Never log full LLM prompts/responses containing user data (moot for MVP since there's no user data, but worth stating as a standing rule before Phase 2 personalization exists) |
 
+### 11.1 Proposed scenario-conversation security boundary (TASK-125)
+
+- One anonymous session belongs to one issue and expires after 24 hours without
+  extension.
+- A high-entropy bearer capability authorizes every owned operation; only its
+  hash is stored, and it never appears in a URL, log, provider prompt, or
+  analytics event.
+- The chat model has no tools or direct data access. Server code constructs a
+  minimal typed bundle and treats external excerpts as untrusted quoted data.
+- Server-owned premise classes prevent user/model assumptions from becoming
+  current facts across turns.
+- Raw HTML and model-authored active links/media are disabled; complete blocks
+  pass safety, leakage, premise, and restricted-Markdown validation before
+  authenticated replay.
+- Message, turn, context, concurrency, IP, global request, timeout, and USD
+  limits fail before provider queueing where possible. No safety/parse failure
+  receives an automatic retry.
+- Conversation content is deleted on expiry or owner request. Logs retain only
+  content-free correlation, timing, usage, and safe failure metadata.
+- Multi-instance rate limiting, cleanup scheduling, schema, API, dependency,
+  provider, infrastructure, and deployment decisions remain separately gated.
+
 ---
 
 ## 12. MVP Development Task Breakdown

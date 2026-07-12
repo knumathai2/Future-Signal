@@ -122,3 +122,33 @@ remain.
 - ISS-017 queued-request recovery after a lost worker.
 - ISS-018 provider-compatible citation annotation handling.
 - Future retention/downsampling for extended snapshot history.
+
+## Approved design, not implemented — scenario conversation
+
+TASK-124/125 define a Phase 2 design that remains behind future approval and a
+disabled feature flag:
+
+```text
+anonymous browser + issue-scoped capability
+  -> scoped API validation / limits / idempotency
+  -> immutable turn request
+  -> isolated tool-free worker
+  -> typed issue facts + premise registry + bounded turns
+  -> one provider call
+  -> complete-block safety / leakage / Markdown validation
+  -> ephemeral session storage
+  -> authenticated fetch-SSE replay
+```
+
+The capability is 256-bit random material returned once; only its hash is
+stored. A session is fixed to one issue, eight user turns, and a 24-hour
+lifetime. The initial path has no model tools, live browser, user URL/file
+ingestion, model-authored compaction, active links, or cross-device history.
+Conversation content is append-only while live and is hard-deleted after expiry
+or owner deletion. Existing issue/report/evidence history remains append-only
+and untouched.
+
+No scenario schema, public endpoint, worker, provider call, rate-limit
+infrastructure, cleanup schedule, Frontend tab, migration application,
+deployment, or production state currently exists. TASK-126 requires explicit
+API/schema approval before implementation.

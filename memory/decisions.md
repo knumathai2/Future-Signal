@@ -2090,3 +2090,67 @@ split-origin Backend consistently. Actual hosting environment values, Backend
 CORS, Vercel routing, deployment, and production changes remain separate
 approval-gated infrastructure work documented in
 `reports/iss-021-api-base-url.md` and TD-013.
+
+---
+
+### ADR-068: Separate the next current summary from free-form scenario conversation
+
+- **Date**: 2026-07-12
+- **Status**: Accepted policy design; runtime activation pending
+- **Task**: TASK-124
+
+**Context**: Accepted-source collection can validly produce no source, while
+the active v8 contract remains strict enough that ordinary explanation may be
+sparse. The user requested a somewhat freer summary and a substantially freer
+scenario experience presented as chat, with permanent financial/action safety
+retained. The user then explicitly directed TASK-124 and TASK-125 to proceed.
+
+**Decision**: Lock a two-surface next contract. The current summary may relax
+sentence-level evidence coverage, fixed section order/count, and zero-source
+failure for ordinary safe prose. Exact observations, dates, definitions,
+source identity, current external facts, timing, limitations, and caution
+remain blocking and reconstructible. The scenario conversation has no required
+visible template and may explore conditional paths broadly. Every premise has
+a server-owned class; the model cannot promote assumptions or unverified
+material. Permanent financial/action, real-world-result, unsupported-
+relationship, privacy, individual-participant, secret-leakage, and unsafe-
+rendering rules remain blocking.
+
+**Consequences**: TASK-127~130 may implement and evaluate a newly versioned,
+feature-flagged path after their separate schema/API/provider gates. Active v8
+and historical reconstruction remain unchanged until TASK-131 records an
+explicit activation decision. TASK-124 authorizes no code, schema, API,
+provider, dependency, infrastructure, migration, deployment, or production
+action.
+
+---
+
+### ADR-069: Use an ephemeral capability-scoped, tool-free scenario architecture
+
+- **Date**: 2026-07-12
+- **Status**: Accepted design; API/schema implementation approval pending
+- **Task**: TASK-125
+
+**Context**: A free-form scenario conversation introduces direct and indirect
+prompt injection, multi-turn state poisoning, cross-session disclosure, unsafe
+browser output, resource abuse, and conversation-retention risks that do not
+exist on the same surface in the current read-only briefing. The feature has no
+need for accounts, model tools, arbitrary browsing, or durable conversation
+history.
+
+**Decision**: Scope one anonymous session to one public issue using a random
+256-bit bearer capability returned once and stored only as a hash. Use a fixed
+24-hour lifetime, at most eight user turns, no sliding extension, no model-
+authored context compaction, one in-flight turn, and one provider attempt per
+turn. The API appends an immutable request but never constructs a provider
+client. An isolated tool-free worker receives a typed read-only issue/premise
+bundle. Complete validated paragraph/list blocks are replayed over
+authenticated fetch-SSE; capabilities never enter URLs. Conversation content
+is append-only while live and hard-deleted on expiry or owner request, while
+content-free aggregates may remain.
+
+**Consequences**: TASK-126 has an approval-ready public API and append-only
+migration proposal, including the explicit ephemeral-data deletion exception.
+Shared multi-instance rate limiting and cleanup scheduling remain separate
+infrastructure decisions. No API, schema, migration, provider, dependency,
+database, infrastructure, deployment, or production state changed in TASK-125.
