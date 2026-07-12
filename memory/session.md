@@ -14,9 +14,9 @@ Harness Version: 1.1
 ## Session Info
 
 - **Date**: 2026-07-12
-- **Agent Role**: Frontend Implementer with PM / safety review
-- **Session Goal**: Align shared navigation and extend emphasis to methodology.
-- **Branch**: `frontend/TASK-120-shared-header-methodology-emphasis`
+- **Agent Role**: Reviewer / Backend
+- **Session Goal**: Remove explicitly approved legacy stored AI-report data while preserving active v8 state.
+- **Branch**: `review/TASK-109-v8-legacy-data-cleanup`
 
 ## Context Read
 
@@ -24,6 +24,21 @@ Harness Version: 1.1
 - Current project/session/task state, standards, glossary, detail/report components, types, and browser QA guidance
 
 ## Work Completed
+
+- Audited the configured database read-only before deletion. The database was
+  about 18.2 MB; `market_snapshots` held 33,638 rows, while 241 of 247 stored
+  AI reports used superseded v1-v7 prompt versions.
+- Under the user's explicit approval, deleted 241 v1-v7 `ai_reports`, 10 v7
+  generation requests, and 38 request-owned events in one transaction guarded
+  to `ENV=local`. There were no v7 validated blocks.
+- Preserved six v8 reports, 11 v8 requests, 60 v8 events, 17 validated blocks,
+  and all market, metric, snapshot, context, rule, and migration state.
+- Verified zero legacy rows, zero orphan events/blocks, zero broken succeeded
+  report references, FastAPI health 200, and four real v8 report reads covering
+  fresh, stale, and failed-with-last-good states.
+- No runtime code, schema, provider call, infrastructure, deployment,
+  production write, or wording-policy change occurred. Historical runtime-code
+  cleanup remains a separate TASK-109 scope.
 
 - Completed TASK-120 at the user's direction. Moved the home desktop navigation
   into the same right-aligned shared-header group used by detail/list routes;

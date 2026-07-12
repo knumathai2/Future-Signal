@@ -7,10 +7,11 @@ Harness Version: 1.1
 
 # Completed Tasks — Outlook Signals
 
-_Last updated: 2026-07-11_
+_Last updated: 2026-07-12_
 
 | ID | Task | Completed | Owner | Notes |
 |----|------|-----------|-------|-------|
+| TASK-109-data | Remove superseded stored AI-report rows from the local development DB | 2026-07-12 | Reviewer / Backend | Under explicit user approval, removed 241 v1-v7 `ai_reports`, 10 v7 generation requests, and 38 cascading events in one `ENV=local` transaction. Preserved all v8 reports/requests/events/blocks and verified no orphans plus actual FastAPI fresh/stale/last-good reconstruction. Runtime-code cleanup remains separate. See `reports/task-109-v8-legacy-data-cleanup.md`. |
 | TASK-120 | Align main navigation and emphasize methodology | 2026-07-12 | Frontend Implementer | Moved home desktop navigation into the same right-aligned shared-header group as issue routes and presented methodology with a terracotta heading/action plus five numbered neutral cards. Frontend checks and actual desktop/320px Browser QA pass with shared navigation, 44px controls, no overflow, and no console errors. No API/schema/dependency/provider/DB/infrastructure/deployment change. See `reports/task-120-shared-header-methodology-emphasis.md`. |
 | TASK-119 | Apply restrained emphasis colors to the full issue list | 2026-07-12 | Frontend Implementer | Extended terracotta selected/current-context and muted-blue comparison styling to the page heading, filters, result count, rows, hover, and pagination without changing route/list behavior or direction semantics. Frontend checks and actual desktop/320px Browser QA pass with 44px filters, no overflow, and no console errors. No API/schema/dependency/provider/DB/infrastructure/deployment change. See `reports/task-119-issue-list-emphasis.md`. |
 | TASK-118 | Split issue detail into four question-led tabs | 2026-07-11 | Frontend Implementer | Added query-linked Overview, AI Issue Briefing, Related Materials, and Interpretation Guide tabs while preserving v8 generation/source/failure states, timing/caution, and no-relationship boundaries. The 2026-07-12 follow-up added restrained terracotta emphasis and muted-blue comparison styling without green/red direction coding. Frontend checks and actual desktop/390px/320px Browser QA pass with no page overflow or clean-tab console errors. No API/schema/dependency/provider/DB/infrastructure/deployment change. See `reports/task-118-four-part-issue-detail.md`. |
