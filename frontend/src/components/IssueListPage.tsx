@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { SiteHeader } from "./AppShell";
 import { CompactIssueRow } from "./CompactIssueRow";
@@ -92,6 +92,8 @@ export function IssueListPage({ categories }: IssueListPageProps) {
   const [filtersOpen, setFiltersOpen] = useState(false);
 
   const query = searchParams.get("q") ?? "";
+  const [queryDraft, setQueryDraft] = useState(query);
+  const isComposingQuery = useRef(false);
   const activeCategory = searchParams.get("category") ?? "";
   const activeWindow = parseListWindow(searchParams.get("window"));
   const activeSort = parseListSort(searchParams.get("sort"));
@@ -141,7 +143,13 @@ export function IssueListPage({ categories }: IssueListPageProps) {
     }
   }, [activeCategory, categories, searchParams, setSearchParams]);
 
-  const normalizedQuery = normalizeSearchValue(query);
+  useEffect(() => {
+    if (!isComposingQuery.current) {
+      setQueryDraft(query);
+    }
+  }, [query]);
+
+  const normalizedQuery = normalizeSearchValue(queryDraft);
   const matchingIssues = useMemo(() => {
     if (!normalizedQuery) {
       return issues;
@@ -202,6 +210,13 @@ export function IssueListPage({ categories }: IssueListPageProps) {
     setSearchParams(next, { replace });
   }
 
+  function updateSearchQuery(value: string) {
+    setQueryDraft(value);
+    if (!isComposingQuery.current) {
+      updateParam("q", value, true);
+    }
+  }
+
   return (
     <div className="mx-auto min-h-screen w-full max-w-[1180px] px-4 py-4 sm:px-8 sm:py-6 lg:px-10 lg:py-8">
       <SiteHeader
@@ -250,8 +265,17 @@ export function IssueListPage({ categories }: IssueListPageProps) {
               <span className="sr-only">이슈 검색</span>
               <input
                 type="search"
-                value={query}
-                onChange={(event) => updateParam("q", event.target.value, true)}
+                value={queryDraft}
+                onChange={(event) =>
+                  updateSearchQuery(event.currentTarget.value)
+                }
+                onCompositionStart={() => {
+                  isComposingQuery.current = true;
+                }}
+                onCompositionEnd={(event) => {
+                  isComposingQuery.current = false;
+                  updateSearchQuery(event.currentTarget.value);
+                }}
                 placeholder="이슈 검색"
                 className="min-h-11 w-full rounded-xl border border-line bg-card px-4 text-sm text-ink outline-none transition placeholder:text-ink-faint focus:border-accent focus:ring-2 focus:ring-accent-soft"
               />
@@ -394,7 +418,7 @@ export function IssueListPage({ categories }: IssueListPageProps) {
           <div className="mt-3" aria-busy={isRefreshing}>
             {status === "loading" ? <ListSkeleton /> : null}
             {status !== "loading" && visibleIssues.length === 0 ? (
-              <EmptyResults hasSearch={Boolean(query || activeCategory)} />
+              <EmptyResults hasSearch={Boolean(queryDraft || activeCategory)} />
             ) : null}
             {visibleIssues.length > 0 ? (
               <ul className="overflow-hidden rounded-xl border border-line">
