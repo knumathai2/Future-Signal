@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "format": "prettier --write .",
+    "test:api-url": "node scripts/test-api-url.mjs",
     "test:report-parser": "node scripts/test-report-parser.mjs",
     "typecheck": "tsc -b --noEmit",
     "preview": "vite preview"
