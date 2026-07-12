@@ -7,22 +7,28 @@ React + Vite + TypeScript + Tailwind CSS + Recharts.
 ```bash
 cd frontend
 npm install
-cp .env.example .env
 ```
 
-## Development
+## Run
 
 ```bash
-npm run dev          # Vite dev server at http://localhost:5173
-npm run lint
-npm run format
+npm run dev
+```
+
+Open `http://127.0.0.1:5173`. The development server proxies `/api` to the
+Backend at `http://localhost:8000`.
+
+## Commands
+
+```bash
 npm run typecheck
+npm run lint
+npm run test:report-parser
+npm run build
+npm run format
+npm run preview
 ```
 
-## Build
-
-```bash
-npm run build         # production build, deployed to Vercel on git push
-```
-
-Screen implementation is tracked under `TASK-005` (`frontend/TASK-005-dashboard-skeleton`).
+`npm run format` writes formatting changes; the other verification commands do
+not intentionally modify source files. Deployment requires separate approval
+under the project constitution.

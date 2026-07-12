@@ -148,74 +148,15 @@ Rule of thumb: **short-form disclaimer everywhere a number or signal appears; lo
 >
 > Do not make financial, legal, political, or other significant decisions based solely on information from this service. Always verify independently and consult a qualified professional where appropriate.
 
-### 8.1 V5 AI summary and source-link presentation (ADR-048)
+### 8.1 Historical briefing presentations
 
-The detail screen visually separates `AI 이슈 브리핑` from deterministic
-metrics and caution copy. The AI area shows a concise executive summary,
-current-data interpretation, three to four conditional scenarios, factors to
-check, observable materials/data updates, and verified-evidence synthesis when
-available.
+V5-v7 presentation contracts are superseded by v8. Their approved decisions
+remain in `memory/decisions.md`, the version map is in
+`docs/archive/ai-report-contracts/README.md`, and detailed artifacts remain
+recoverable from Git history. Permanent timing, caution, source attribution,
+safe-link, zero-source, and no-relationship constraints continue below.
 
-Verified source cards show source title, organization/domain, publication time,
-source type, a neutral evidence summary, and a safe external action such as
-`원문 확인`, `공식 자료 확인`, or `기사 원문 확인`. Link proximity must not imply
-that the source explains the observed movement. The relationship boundary stays
-visible beside the source region.
-
-When no verified source exists, the source region remains visible with a plain
-state explaining that no material passed the public criteria for the review
-window and that the background of the numeric movement is not established. It
-may link to the methodology page, but it must not link to an unverified result
-or a generic external search.
-
-Every AI summary retains report/data/episode timing and the interpretation
-caution in the same report surface. Internal model names, scores, reasoning,
-rejected URLs, and verification prompts remain non-public.
-
-### 8.2 Approved v6 evidence-aware briefing presentation (ADR-050)
-
-V6 renders only the sections allowed by the backend-selected report mode. A
-significant change with verified material reads as observed change, verified
-background, conditional interpretation, and exact source links. A significant
-change without verified material replaces the background region with a compact
-fixed absence state and general conditional scenarios. Stable modes begin with
-an issue explanation and never style the stable value as an important movement.
-
-General explanations and scenarios carry a visible and accessible notice with
-this meaning: `현재 상황을 입증하는 검증 자료가 아니라 일반적인 시나리오
-설명입니다.` Verified background uses a separate visual label. No-evidence
-modes do not reserve an empty source-card region or provide unverified links.
-
-The current value and change summary appear once in one observed-change region;
-AI prose cannot repeat them. Exact resolution conditions, dates, exclusions,
-and source reference move to `판정 기준 보기`, collapsed by default. The
-control must support keyboard operation, `aria-expanded`, and visible focus.
-Data-as-of timing and interpretation caution remain in the report viewport.
-
-The strict frontend parser rejects unknown modes, extra or missing fields,
-invalid evidence bases, source mismatches, and duplicated deterministic data.
-Exact stored links alone open in a new tab with safe external-link attributes.
-The user approved the v6 public API and AI-policy contract in
-`reports/task-092-evidence-aware-briefing-policy.md` on 2026-07-11.
-
-### 8.3 Approved v7 flexible briefing presentation (ADR-051)
-
-V7 begins in an idle state with an explicit `AI 브리핑 생성` control. The
-deterministic issue data remains readable during generation. Fresh, stale,
-generating, and failed-with-last-good states show honest generated/data/context
-times and retain the interpretation caution in the briefing surface.
-
-The UI renders two-to-eight broad sections in the order returned by the strict
-parser. Paragraph and short-list sections share consistent typography without
-forcing the v6 four-mode layout. Market observations and external context stay
-visually distinct even when their section order varies.
-
-Source cards show exact stored title, domain, time, supported-claim summary,
-and visible A/B/C level. Level C material is always attributed. Exact stored
-safe URLs alone are interactive. The presence of a source must not imply that
-it explains the observed movement.
-
-### 8.4 Approved v8 issue-centered briefing presentation
+### 8.2 Approved v8 issue-centered briefing presentation
 
 V8 keeps the same request, cache, timestamp, caution, and source-card states but
 changes the authored reading order. The headline and summary begin with the
@@ -226,7 +167,7 @@ categories. If the writer supplies a `limitations` section, the UI does not
 repeat the deterministic data-limitations card; interpretation caution remains
 visible in every full report state.
 
-### 8.5 V8 source-refresh action
+### 8.3 V8 source-refresh action
 
 TASK-113 makes the existing briefing action request a bounded public-source
 refresh before writing. The adjacent copy states that available public material
@@ -235,7 +176,7 @@ failure, last-known-good, source-card, timestamp, and caution states remain
 unchanged; an empty accepted-source set is still shown explicitly rather than
 filled with unverified material.
 
-### 8.6 Validated-block progressive briefing
+### 8.4 Validated-block progressive briefing
 
 During v8 generation, the report surface keeps the issue data-as-of time and
 interpretation caution visible. It receives only complete blocks that have

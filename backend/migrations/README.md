@@ -5,11 +5,10 @@ currently configured development Supabase database on 2026-07-09 after explicit
 human approval. Applying it, or any future schema change, to another shared or
 production database still requires human approval (`AGENTS.md`, `TASK-002`).
 
-Plain SQL is used deliberately instead of a migration framework (e.g.
-Alembic) — the tool choice is listed as an open "Day 1" decision in
-`commands.md` and hasn't been made yet; adding a migration-framework
-dependency needs its own approval + decision, separate from the schema
-draft itself.
+Plain SQL is used deliberately instead of a migration framework. Applying a
+migration uses the reviewed `psql` commands later in this file. Adding a
+migration framework would introduce a dependency and workflow change, so it
+requires its own approval and decision.
 
 `002_context_candidates.sql` is the ADR-038/TASK-057 append-only extension for
 `context_candidates` and `context_collection_runs`. The user's approval covers

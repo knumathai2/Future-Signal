@@ -1,95 +1,45 @@
 <!--
 Purpose:        Prioritized list of tasks not yet started
 Owner:          PM / Planner
-Update Trigger: New task added, priority changed, day allocation changed
+Update Trigger: New task added or priority changed
 Harness Version: 1.1
 -->
 
 # Backlog — Outlook Signals
 
-_Last updated: 2026-07-10_
-_Deferred and post-hackathon backlog after the Day 5 technical closeout; active work lives in `tasks/active.md`._
+_Last updated: 2026-07-12_
+_Current assignments live in `tasks/active.md`; completed work lives in `tasks/completed.md`._
 
-Day 2 allocation moved `TASK-007`, `TASK-008`, `TASK-009`, `TASK-010`, and `TASK-012` to `tasks/active.md`. `TASK-031` was created directly from PRD §14's Day 2 PM work because that PM task was missing from the original backlog.
+## Release and Presentation
 
-Day 3 allocation moved `TASK-013`, `TASK-014`, and `TASK-017` to
-`tasks/active.md`. `TASK-034` was created directly as the PM allocation task,
-and `TASK-035`/`TASK-036` were created directly in `tasks/active.md` to cover
-the Day 3 backend and Data/AI handoffs that were missing from the original
-backlog.
+| ID | Task | Owner | Resume condition |
+|----|------|-------|------------------|
+| TASK-020 | Deploy the approved service set | Backend Implementer | Explicit deployment approval and target-platform access |
+| TASK-021 | Finalize presentation assets, rehearse the demo, and capture the backup sequence | PM | Presentation work resumes |
 
-Day 4 allocation moved `TASK-015`, `TASK-016`, `TASK-018`, and `TASK-019` to
-`tasks/active.md`. `TASK-038` was created directly as the PM allocation task,
-and `TASK-039`/`TASK-040` were created directly in `tasks/active.md` to cover
-the Day 4 backend fallback/readiness and PM deck/demo work that were present in
-PRD section 14 but missing from the original backlog.
+## Reliability Items
 
-## Deferred Release and Presentation Work
+| ID | Task | Owner | Resume condition |
+|----|------|-------|------------------|
+| ISS-017 | Recover queued requests that outlive a worker process | Backend Implementer | Recovery behavior is approved for implementation |
+| ISS-018 | Evaluate cited-source compatibility with the active writer | Data/AI Implementer | A new bounded provider evaluation is approved |
 
-ADR-037 closes the technical MVP milestone without claiming these operational
-deliverables are finished. They can be resumed independently after the
-hackathon closeout.
+## Maintenance
 
-| ID | Task | Owner | Original Day | Size | Resume condition | Notes |
-|----|------|-------|--------------|------|------------------|-------|
-| TASK-020 | Deploy the approved service set | Backend Implementer | 5 | M | Explicit deployment approval and target-platform access | No deployment was performed during Day 5 closeout. |
-| TASK-021 | Finalize presentation assets, rehearse the demo, and capture the backup sequence | PM | 5 | S | Presentation work is resumed | The outline, script, Q&A draft, and static fallback behavior exist; the final deck, screenshots, rehearsal, and backup capture remain. |
+| ID | Task | Owner | Approval note |
+|----|------|-------|---------------|
+| TD-001 | Lazy-load the chart bundle | Frontend Implementer | No external approval unless a dependency changes |
+| TD-002 | Upgrade Vite | Frontend Implementer | Dependency approval required |
+| TD-003 | Declare the minimum supported Python version | Backend Implementer | Confirm hosting-runtime compatibility |
+| TD-007 | Normalize remaining API error payloads | Backend Implementer | Public API approval may be required |
+| TD-009 | Localize remaining fallback strings | Frontend Implementer | Run wording-policy validation |
+| TD-012 | Upgrade GitHub Actions majors | Backend Implementer | Infrastructure approval required |
 
-## Should-Have (P1 — build only if Day 1–4 P0 finishes early)
+## Superseded Planning Detail
 
-| ID | Task | Owner | Day | Size | Notes |
-|----|------|-------|-----|------|-------|
-| TASK-022 | Category filter (frontend + `/api/categories`) | Frontend + Backend | 3–4 | S | |
-| TASK-023 | `/api/signals` feed endpoint + UI | Backend + Frontend | 3–4 | M | |
-| TASK-024 | Volatility/attention metrics | Data/AI Implementer | 3–4 | M | Needs more history accumulated |
-| TASK-025 | Empty/loading/error states polish | Frontend Implementer | 4 | S | |
-| TASK-026 | Sentry integration | Backend Implementer | 4–5 | S | |
+The original Day 1–5 allocation notes and the proposed TASK-066~074 v4
+stretch sequence were absorbed by completed TASK-075~117 work. Their historical
+text remains recoverable from Git and is not an active execution plan.
 
-## Nice-to-Have (P2 — do not build during the hackathon; see `../roadmap.md` Out of Scope)
-
-| ID | Task | Notes |
-|----|------|-------|
-| TASK-027 | Search endpoint + UI | Only if all else done |
-| TASK-028 | Responsive/mobile polish | |
-| TASK-029 | Basic rate-limiting middleware | |
-| TASK-030 | README / setup docs | |
-
-## Automated Context Program — activated by TASK-056
-
-TASK-056~065 moved to `tasks/active.md` after the user's 2026-07-11 approval.
-The binding execution packet remains
+The binding historical v4 approval packet that must remain auditable is
 `reports/task-055-automated-context-execution-plan.md`.
-
-## Proposed Automated Context Stretch Program — after TASK-065
-
-These tasks are optional and remain inactive. Start them only after the core
-20-hour program passes `TASK-064` and `TASK-065`, and only within the policy,
-schema, API, provider, and local/dev-write approvals recorded by `TASK-056`.
-Any new schema/API surface outside that approval requires an addendum before
-implementation.
-
-| ID | Task | Owner | Branch | Hours | Dependency | Notes |
-|----|------|-------|--------|------:|------------|-------|
-| TASK-066 | Build an offline context-evaluation harness | Reviewer + Data/AI Implementer | `review/TASK-066-context-evaluation` | 3.0 | TASK-065 | Replay citations/model output and gate known URL, conflict, duplicate, and evidence failures. |
-| TASK-067 | Add a versioned source-policy registry and official-source adapters | Data/AI Implementer + PM | `data-ai/TASK-067-source-registry` | 3.0 | TASK-066 | Move source classification out of model judgment; honor `resolutionSource`. |
-| TASK-068 | Add claim-level support and contradiction checks | Data/AI Implementer | `data-ai/TASK-068-context-contradiction` | 3.0 | TASK-066, TASK-067 | Withhold candidates whose dates, states, or supported claims conflict. |
-| TASK-069 | Revalidate candidate links, content hashes, and expiry | Backend + Data/AI Implementer | `backend/TASK-069-context-revalidation` | 2.0 | TASK-068 | Append-only checks; stale/invalid candidates leave the public path. |
-| TASK-070 | Backfill and cluster 7d/30d historical change episodes | Data/AI Implementer | `data-ai/TASK-070-historical-context` | 3.0 | TASK-068, TASK-069 | Deterministic episode clustering and idempotent historical research. |
-| TASK-071 | Add bounded multilingual official-source research | Data/AI Implementer | `data-ai/TASK-071-multilingual-context` | 3.0 | TASK-067, TASK-070 | English plus at most one local language; citation-first translation checks. |
-| TASK-072 | Add source provenance and verification-path UI | Frontend + Backend Implementer | `frontend/TASK-072-context-provenance-ui` | 2.5 | TASK-070, TASK-071 | Source title/domain/date and episode timeline without internal model scores. |
-| TASK-073 | Add search cache, provider-failure controls, and observability | Backend + Data/AI Implementer | `backend/TASK-073-context-reliability` | 2.5 | TASK-069, TASK-072 | TTL cache, circuit breaker, usage metrics, and last-good preservation. |
-| TASK-074 | Build a cross-issue event graph | Data/AI + Backend Implementer | `data-ai/TASK-074-cross-issue-context` | 3.0 | TASK-068, TASK-070, TASK-073 | Reuse one event across markets while keeping per-market verification independent. |
-
-The stretch sequence totals 25 additional hours. Prioritized stop points are
-3h, 6h, 9h, 11h, 14h, 17h, 19.5h, 22h, and 25h. Full task packets are in
-`reports/task-055-automated-context-stretch-plan.md`.
-
-## Size Reference
-
-| Size | Estimated Effort |
-|------|-------------------|
-| XS | Under 1 hour |
-| S | 1–4 hours |
-| M | Half day to full day |
-| L | 1–3 days |
-| XL | 3+ days → must be decomposed (should not occur in a 5-day hackathon backlog) |
