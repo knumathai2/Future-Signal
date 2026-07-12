@@ -2066,3 +2066,27 @@ exact validated source string for the rendered link.
 remain syntactically correct, and rendered source links preserve stored
 provenance. This changes no response shape, dependency, database schema,
 provider path, infrastructure, deployment, production state, or wording policy.
+
+---
+
+### ADR-067: Use one optional Frontend API origin for REST and SSE
+
+- **Date**: 2026-07-12
+- **Status**: Accepted and implemented in ISS-021
+- **Decided by**: User direction after URL configuration diagnosis
+
+**Context**: `.env.example` declared `VITE_API_BASE_URL`, but every Frontend
+request used a relative `/api` path. The setting therefore had no effect, and a
+Frontend hosted separately from the Backend would send JSON and SSE requests
+to the wrong origin.
+
+**Decision**: Normalize one optional HTTP(S) origin with no credentials, path,
+query, or fragment. Apply it to every REST and SSE request. Keep it empty during
+local development so Vite continues to proxy relative `/api` paths. Reject
+ambiguous or protocol-relative API paths before transport.
+
+**Consequences**: Frontend code supports same-origin local use and an explicit
+split-origin Backend consistently. Actual hosting environment values, Backend
+CORS, Vercel routing, deployment, and production changes remain separate
+approval-gated infrastructure work documented in
+`reports/iss-021-api-base-url.md` and TD-013.
