@@ -38,6 +38,12 @@ least five seconds. Authenticated status/SSE reads may relaunch the child with a
 claim with a database row lock before any provider call. Running and terminal
 attempts are never automatically retried.
 
+TASK-135 keeps complete validation and storage ahead of public delivery, then
+paces stored scenario paragraph/list blocks over authenticated SSE. The first
+block is immediate and later blocks are separated by 0.2 seconds, allowing the
+Frontend to render progressively without exposing raw provider fragments. The
+read transaction is released before paced network delivery.
+
 PostgreSQL engines default to three pooled plus one overflow connection per
 process (`DB_POOL_SIZE`, `DB_MAX_OVERFLOW`, and `DB_POOL_TIMEOUT_SECONDS` are
 optional bounded overrides). This leaves room for the API and detached worker

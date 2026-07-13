@@ -266,6 +266,7 @@ def test_eight_turn_limit_fails_before_ninth_append(live_client, db_session):
 def test_turn_status_and_authenticated_stream_replay_validated_blocks(
     live_client,
     db_session,
+    monkeypatch,
 ):
     seed_basic_market(db_session)
     created = _create_session(live_client)
@@ -304,16 +305,36 @@ def test_turn_status_and_authenticated_stream_replay_validated_blocks(
         )
     )
     db_session.flush()
-    db_session.add(
-        ScenarioResponseBlock(
-            id=1,
-            request_id=request.id,
-            attempt_number=1,
-            sequence_number=0,
-            block_type="paragraph",
-            payload={"text": assistant_turn.content},
-            recorded_at=datetime.now(UTC),
-        )
+    db_session.add_all(
+        [
+            ScenarioResponseBlock(
+                id=1,
+                request_id=request.id,
+                attempt_number=1,
+                sequence_number=0,
+                block_type="paragraph",
+                payload={"text": assistant_turn.content},
+                recorded_at=datetime.now(UTC),
+            ),
+            ScenarioResponseBlock(
+                id=2,
+                request_id=request.id,
+                attempt_number=1,
+                sequence_number=1,
+                block_type="list",
+                payload={"ordered": False, "items": ["공식 자료를 다시 확인합니다."]},
+                recorded_at=datetime.now(UTC),
+            ),
+            ScenarioResponseBlock(
+                id=3,
+                request_id=request.id,
+                attempt_number=1,
+                sequence_number=2,
+                block_type="paragraph",
+                payload={"text": "공개 정보에는 시간 차이가 있을 수 있습니다."},
+                recorded_at=datetime.now(UTC),
+            ),
+        ]
     )
     db_session.add(
         ScenarioGenerationEvent(
@@ -337,16 +358,21 @@ def test_turn_status_and_authenticated_stream_replay_validated_blocks(
     )
     assert status_response.status_code == 200
     assert status_response.json()["state"] == "succeeded"
+    sleep_calls = []
+    monkeypatch.setattr(scenarios.time, "sleep", sleep_calls.append)
     stream = live_client.get(
         f"{turn_path}/{user_turn_id}/stream",
         headers=_auth(created),
     )
     assert stream.status_code == 200
     assert stream.headers["content-type"].startswith("text/event-stream")
-    assert "event: block" in stream.text
+    assert stream.text.count("event: block") == 3
     assert '"block_type":"paragraph"' in stream.text
+    assert stream.text.index('"sequence":0') < stream.text.index('"sequence":1')
+    assert stream.text.index('"sequence":1') < stream.text.index('"sequence":2')
     assert "event: complete" in stream.text
     assert created["session_capability"] not in stream.text
+    assert sleep_calls == [scenarios._VALIDATED_BLOCK_REPLAY_DELAY_SECONDS] * 2
 
 
 def test_owner_delete_removes_only_ephemeral_graph(live_client, db_session):

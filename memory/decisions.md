@@ -2323,3 +2323,28 @@ browser connection to recover the preserved request automatically. One
 OpenRouter call cost USD 0.00634325 and stored one assistant turn plus three
 validated blocks. No duplicate call or pool-ceiling recurrence occurred. The
 feature remains default-off and deployment/activation remain separately gated.
+
+---
+
+### ADR-076: Stream only complete validated scenario blocks
+
+- **Date**: 2026-07-13
+- **Status**: Accepted and implemented in TASK-135
+- **Decided by**: User request for streamed chatbot responses
+
+**Context**: The scenario UI already consumed authenticated SSE block events,
+but a completed response's stored blocks could arrive in one burst and appear
+as a single finished answer. Streaming raw provider tokens would bypass the
+complete response, evidence, wording, leakage, number, and restricted-Markdown
+validation boundary.
+
+**Decision**: Keep provider output private until complete validation and
+append-only block persistence succeed. Replay the first validated block
+immediately and pace subsequent stored paragraph/list blocks at 0.2-second
+intervals. Materialize event data and release the database transaction before
+network delivery.
+
+**Consequences**: The existing Frontend renders responses progressively without
+a new response shape or parser. Replay ordering, event IDs, completion, and
+fallback behavior remain unchanged. A slow client does not occupy a database
+connection during pacing, and unsafe partial provider output cannot render.

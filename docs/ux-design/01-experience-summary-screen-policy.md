@@ -242,8 +242,8 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
 - **Failure**: A failed current turn disappears while earlier validated turns
   remain. Expired/deleted sessions become unavailable without exposing
   authorization detail.
-- **Transport**: Authenticated fetch-SSE replays complete validated blocks; raw
-  provider fragments never render.
+- **Transport**: Authenticated fetch-SSE renders complete validated blocks
+  progressively in sequence; raw provider fragments never render.
 - **Activation**: The tab and safe unavailable state are implemented, but the
   server feature remains default-off and active v8 is unchanged pending
   TASK-130 evaluation and TASK-131 acceptance.
