@@ -21,6 +21,9 @@ movement to an external event without accepted source support.
 
 - **Product**: React issue discovery/list/detail/methodology flow with four
   question-led detail tabs and responsive 320px support.
+- **Categories**: Public navigation exposes politics, economy, environment,
+  technology, and world groups only; sports and catch-all labels remain
+  internal while stablecoin topics group under economy.
 - **Market data**: Gamma collection, CLOB history support, append-only
   snapshots/metrics/signals, and honest static fallback states.
 - **Schedule**: `.github/workflows/four-hour-collection.yml` runs market-data
@@ -81,6 +84,7 @@ Full active technical debt is in `memory/known-issues.md`.
 
 | Date | Change |
 |---|---|
+| 2026-07-13 | TASK-137 removed sports and catch-all labels from public category navigation, retained underlying issues, and grouped stablecoin topics under economy without a schema or data mutation. |
 | 2026-07-12 | Migration 006 was applied to the approved local DB. TASK-128 added the guarded tool-free writer; two calls costing USD 0.0117605 failed closed on framing and date normalization with no assistant content stored. |
 | 2026-07-12 | TASK-126 implemented the approved default-off local/development scenario API, capability authentication, append-only migration 006 (unapplied), stored-block SSE, limits, and hard deletion without a provider, worker, dependency, or database action. |
 | 2026-07-12 | TASK-124/125 locked the next summary/scenario policy and documented the ephemeral capability-scoped threat/API/storage proposal without runtime mutation. |

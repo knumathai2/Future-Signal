@@ -123,6 +123,17 @@ remain.
   parser regression, and production build. The known bundle-size warning is
   tracked as TD-001.
 
+## Public category-navigation boundary
+
+TASK-137 keeps stored source categories unchanged and continues deriving broad
+Korean labels from the issue title and source category. `/api/categories`
+publishes only `정치`, `경제`, `환경`, `기술`, and `세계` when each group has a
+servable issue. The Frontend uses that response for both home category summaries
+and issue-list filter controls, so `스포츠` and the catch-all `기타` do not
+appear in navigation. Unfiltered issue reads and direct legacy category matching
+remain intact. Stablecoin, Tether, USDC, and USDT topics map to `경제` before the
+catch-all is considered. This requires no schema or stored-data mutation.
+
 ## Open architecture work
 
 - ISS-017 queued-request recovery after a lost worker.
