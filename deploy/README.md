@@ -21,10 +21,11 @@ No application secret is required for the timestamped sample-data mode.
 
 ## Optional live-data value
 
-Copy `.env.example` to `.env` and set `DATABASE_URL` only when an approved
-PostgreSQL database with migrations 001-005 is ready. Do not enable the
-scenario feature in production. AI provider keys are intentionally excluded:
-the production API does not start the approved local/development-only workers.
+Copy `.env.example` to `.env` and set `DATABASE_URL` plus an approved
+OpenAI-compatible provider key when the target PostgreSQL database with
+migrations 001-006 is ready. Production Compose enables the scenario feature
+and starts the guarded on-demand workers; keep the provider key only in the
+untracked `.env` file.
 
 ## Commands
 

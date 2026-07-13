@@ -19,6 +19,15 @@ files.
 - **Goal**: Refresh the configured DB and publish the refreshed read path on the current server.
 - **Status**: Server restarted and public HTTPS now serves the refreshed 20-issue dataset
 
+## Completed in approved production activation
+
+- Added guarded production execution for on-demand v8 briefing and scenario workers; local/development defaults remain unchanged.
+- Production Compose now passes the existing provider credential reference without printing or modifying the secret, enables both generation workers and scenario sessions, and was rebuilt/restarted successfully.
+- Confirmed production DB already contained migrations 005 and 006; no migration write was needed.
+- Recovered the previously queued briefing request; one validated v8 report was stored and public GET returned `fresh`.
+- Created, processed, streamed, and deleted one production scenario session after a final successful writer evaluation.
+- Early bounded scenario probes failed closed on `unsupported_number` and `unconditional_model_premise`; the deterministic input-date allowance and prompt restrictions were added before the successful final probe.
+
 ## Completed in server restart and DB-path recovery
 
 - Rebuilt and recreated both Compose services under the user's deployment

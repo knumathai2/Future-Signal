@@ -43,6 +43,9 @@ data limitations.
 
 ## Recently closed
 
+- **ISS-025**: Production Compose previously accepted briefing requests but skipped the worker and disabled scenario sessions; guarded production worker enablement, provider wiring, and scenario flag activation now pass live API/SSE verification.
+- **ISS-026**: Scenario writer rejected provider-added date numbers and optional unconditional premises; the validator now recognizes the supplied session timestamp and the initial prompt requires no new premises, with a successful stored response verified.
+
 - **ISS-024**: Root and nested `.env` files are now excluded from the Docker
   build context; both images rebuilt with the Backend context reduced to 2.35 kB.
 

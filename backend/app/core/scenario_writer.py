@@ -50,8 +50,7 @@ SCENARIO_PROGRAM_BUDGET_USD = 5.0
 SCENARIO_CALL_RESERVATION_USD = 0.5
 
 _NUMBER_PATTERN = re.compile(
-    r"(?<![\w\d])(?P<signed>[-+]\d+(?:[.,]\d+)*)|"
-    r"(?<![\w])(?P<unsigned>\d+(?:[.,]\d+)*)",
+    r"(?<![\w\d])(?P<signed>[-+]\d+(?:[.,]\d+)*)|" r"(?<![\w])(?P<unsigned>\d+(?:[.,]\d+)*)",
     re.IGNORECASE,
 )
 _CONDITIONAL_PATTERN = re.compile(r"만약|가정|경우|조건|시나리오|전제|이라면|된다면")
@@ -104,6 +103,9 @@ SCENARIO_SYSTEM_PROMPT = (
 10. 아래 hard_block 표현과 행동 유도 표현을 어떤 문맥에서도 쓰지 마십시오.
 11. 아래 contextual_avoid 표현도 이번 응답에서는 사용하지 마십시오. 부정 문장을
     만들기보다 다른 안전한 표현으로 바꾸십시오.
+    12. 답변에는 숫자나 날짜를 새로 쓰지 마십시오. 수치가 필요한 내용은 숫자
+    없이 방향과 관찰의 범위로만 설명하십시오. 현재 답변에서는
+    new_scenario_premises를 반드시 빈 배열 []로 반환하십시오.
 
 정확히 하나의 JSON 객체만 반환하십시오. 추가 설명이나 코드 블록은 금지합니다.
 answer_markdown은 60~2500자의 자유로운 답변입니다. premise_refs에는 실제로 사용한
@@ -262,7 +264,7 @@ def build_scenario_prompt(state: ScenarioPromptState) -> tuple[str, str]:
         "required_output": {
             "answer_markdown": "60-2500 character string",
             "premise_refs": ["one or more exact supplied ref"],
-            "new_scenario_premises": ["zero to four conditional strings"],
+            "new_scenario_premises": [],
         },
     }
     return SCENARIO_SYSTEM_PROMPT, json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
@@ -285,9 +287,7 @@ def split_scenario_blocks(markdown: str) -> list[ScenarioBlock]:
             items = [re.sub(pattern, "", line).strip() for line in lines]
             if any(not 10 <= len(item) <= 500 for item in items) or len(items) > 8:
                 raise ScenarioWriterError("invalid_list_block")
-            blocks.append(
-                ScenarioBlock("list", {"ordered": ordered, "items": items})
-            )
+            blocks.append(ScenarioBlock("list", {"ordered": ordered, "items": items}))
             continue
         if len(lines) > 1:
             raw_block = "\n".join(line.strip() for line in lines)
@@ -331,9 +331,7 @@ def validate_scenario_output(
         )
         for ref in output.premise_refs
     )
-    if selected_assumption and not _ASSUMPTION_FRAMING_PATTERN.search(
-        output.answer_markdown
-    ):
+    if selected_assumption and not _ASSUMPTION_FRAMING_PATTERN.search(output.answer_markdown):
         return SafetyFilterResult(False, "assumption_promotion"), []
     if any(not _CONDITIONAL_PATTERN.search(value) for value in output.new_scenario_premises):
         return SafetyFilterResult(False, "unconditional_model_premise"), []
@@ -355,6 +353,7 @@ def validate_scenario_output(
             if f"premise:{premise.id}" in output.premise_refs
         ]
         + [turn.content for turn in state.turns if f"turn:{turn.id}" in output.premise_refs]
+        + [_as_utc(state.session.data_as_of).isoformat()]
     )
     allowed_numbers = _numeric_tokens(allowed_text, include_absolute_signed=True)
     # Ordered-list markers are presentation metadata, not authored factual
@@ -366,9 +365,7 @@ def validate_scenario_output(
             authored_content.append(str(block.payload["text"]))
         else:
             authored_content.extend(str(item) for item in block.payload["items"])
-    authored_numbers = _numeric_tokens(
-        " ".join([*authored_content, *output.new_scenario_premises])
-    )
+    authored_numbers = _numeric_tokens(" ".join([*authored_content, *output.new_scenario_premises]))
     if not authored_numbers.issubset(allowed_numbers):
         return SafetyFilterResult(False, "unsupported_number"), []
     return SafetyFilterResult(True), blocks
@@ -445,9 +442,7 @@ def _append_event(
 def _recorded_scenario_spend(db: Session) -> float:
     usages = db.execute(select(ScenarioGenerationEvent.usage)).scalars().all()
     return sum(
-        float(usage.get("writer_cost_usd") or 0)
-        for usage in usages
-        if isinstance(usage, dict)
+        float(usage.get("writer_cost_usd") or 0) for usage in usages if isinstance(usage, dict)
     )
 
 

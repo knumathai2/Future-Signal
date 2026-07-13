@@ -23,7 +23,7 @@ from tests.conftest import MARKET_ID, NOW, seed_basic_market
 def worker_launches(monkeypatch):
     launches = []
 
-    def record_launch(request_id, *, env):
+    def record_launch(request_id, *, env, **_kwargs):
         launches.append((request_id, env))
         return True
 

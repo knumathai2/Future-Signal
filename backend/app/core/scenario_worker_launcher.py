@@ -40,10 +40,14 @@ def launch_scenario_worker(
     request_id: uuid.UUID,
     *,
     env: str,
+    allow_production: bool = False,
     now: float | None = None,
 ) -> bool:
     """Start one request-scoped worker only in an approved local environment."""
-    if env.strip().lower() not in _AUTO_LAUNCH_ENVS:
+    normalized_env = env.strip().lower()
+    if normalized_env not in _AUTO_LAUNCH_ENVS and not (
+        normalized_env == "production" and allow_production
+    ):
         logger.warning(
             "Scenario worker auto-launch skipped outside local/development: env=%s",
             env,
@@ -65,7 +69,7 @@ def launch_scenario_worker(
         "app.core.scenario_worker",
         "--request-id",
         str(request_id),
-        "--confirm-local-dev-write",
+        "--confirm-generation-write",
     ]
     try:
         process = subprocess.Popen(
