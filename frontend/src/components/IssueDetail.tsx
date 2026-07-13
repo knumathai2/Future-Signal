@@ -12,6 +12,7 @@ import { GlobalFooter, ShortCautionNotice } from "./InformationNotice";
 import { IssueReportCard } from "./IssueReportCard";
 import { IssueTrendChart } from "./IssueTrendChart";
 import { MetricTile } from "./MetricTile";
+import { ScenarioConversation } from "./ScenarioConversation";
 import {
   formatCategoryLabel,
   formatDataTimestamp,
@@ -44,13 +45,14 @@ type IssueDetailProps = {
   streamedBriefing: StreamingBriefingState | null;
 };
 
-type DetailTab = "overview" | "briefing" | "materials" | "guide";
+type DetailTab = "overview" | "briefing" | "materials" | "scenario" | "guide";
 
 const CHART_WINDOWS: ChartWindow[] = ["24h", "7d", "30d"];
 const DETAIL_TABS: Array<{ id: DetailTab; label: string }> = [
   { id: "overview", label: "개요" },
   { id: "briefing", label: "AI 이슈 브리핑" },
   { id: "materials", label: "관련 자료" },
+  { id: "scenario", label: "시나리오 대화" },
   { id: "guide", label: "해석 안내" },
 ];
 
@@ -600,7 +602,7 @@ function GuidePanel({ issue }: { issue: Issue }) {
   );
 }
 
-/** Four-part issue detail view organized by observation, briefing, materials, and guidance. */
+/** Five-part issue detail view with an isolated, conditional scenario conversation. */
 export function IssueDetail({
   issue,
   dataStatus = "ready",
@@ -739,6 +741,10 @@ export function IssueDetail({
               historyStatus={historyStatus}
               reportState={reportState}
             />
+          ) : null}
+
+          {activeTab === "scenario" ? (
+            <ScenarioConversation issue={issue} />
           ) : null}
 
           {activeTab === "guide" ? <GuidePanel issue={issue} /> : null}

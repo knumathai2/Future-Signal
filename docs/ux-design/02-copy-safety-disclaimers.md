@@ -192,4 +192,29 @@ poller without clearing already stored complete-report content. Mobile layout
 uses the same single-column report flow and live region without flashing,
 countdowns, or alert-style visual grammar.
 
+### 8.5 Approved next-contract summary and scenario conversation (TASK-124)
+
+The future detail experience keeps the current summary and scenario
+conversation visually separate. The summary is the stable reading of the issue
+definition, observed data, accepted material, timing, and limitations. The
+conversation is a distinct conditional exploration surface and never appears
+inside the confirmed-source card flow.
+
+Approved labels are `시나리오 대화`, `조건부 시나리오`, `현재 확인된 정보`,
+`사용자가 제시한 가정`, `추가 확인이 필요한 정보`, and `데이터 기준 시각`.
+The persistent conversation notice is:
+
+> 이 대화는 이슈의 조건부 전개를 살펴봅니다. 시나리오는 현재 사실이나 실제 결과에 대한 단정이 아닙니다.
+
+The response body may use natural paragraphs and lists without required
+headings or a fixed scenario count. When an answer combines stored information
+and an assumption, their labels remain visible in the same response. Data-
+bearing answers show the data-as-of time. Accepted evidence links are rendered
+by the application outside the authored prose.
+
+The conversation uses neutral document/chat presentation without urgency,
+countdowns, direction-colored emphasis, or gamified elements. A declined
+request redirects to safe issue understanding without exposing internal policy
+or detection detail. Active v8 remains unchanged until TASK-131 acceptance.
+
 ---

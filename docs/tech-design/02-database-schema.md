@@ -173,4 +173,30 @@ its recorded time. The table has no update path. A request/attempt/sequence
 unique constraint makes replay deterministic, and request deletion cascades
 only as part of the existing market/request lifecycle.
 
+### 4.16 Approved ephemeral scenario-conversation extension (TASK-126)
+
+Migration `006_scenario_conversations.sql` is implemented under explicit schema
+and retention approval but remains unapplied. It adds:
+
+- `scenario_sessions`: issue FK, hashed 256-bit capability, exact definition/
+  input fingerprint, policy versions, creation, and fixed 24-hour expiry. It
+  stores no raw capability, IP, user agent, or provider content.
+- `scenario_turns`: session FK, immutable user/assistant text, unique session
+  sequence, hashed idempotency key, and creation time.
+- `scenario_premises`: immutable server-owned premise class, normalized text,
+  origin turn, and optional evidence refs. No update/promotion operation exists.
+- `scenario_generation_requests` and `scenario_generation_events`: immutable
+  turn request plus append-only queued/running/succeeded/failed lease events,
+  safe errors, and aggregate usage only.
+- `scenario_response_blocks`: consecutive already-validated paragraph/list
+  objects for authenticated replay.
+
+Composite FKs keep premise origins, user-turn requests, and assistant outcomes
+inside the same session. Conversation rows are append-only during the live
+session. Expiry or an owner deletion request hard-deletes the entire ephemeral
+conversation graph. Only content-free daily aggregates may remain. This privacy
+exception does not permit deletion or mutation of issue, metric, evidence,
+report, or historical audit rows. Cleanup scheduling and migration application
+remain separately approval-gated.
+
 ---

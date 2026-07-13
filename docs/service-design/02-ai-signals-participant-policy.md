@@ -122,6 +122,34 @@ earlier individually valid blocks from that attempt remain audit-only and the
 Frontend removes them when the request fails. The previous complete valid
 briefing remains the last-known-good public fallback.
 
+### 6.16 Approved next-contract summary and scenario policy (TASK-124)
+
+TASK-124 separates the future AI experience into a current summary and an
+issue-scoped scenario conversation. It is an approved policy design, not an
+active-v8 replacement.
+
+The current summary may use a flexible narrative order, omit unhelpful
+sections, and remain useful with definition plus metric evidence when no
+accepted external source exists. Exact values, dates, units, definitions,
+source identities, current external facts, timing, limitations, and caution
+remain blocking and reconstructible. Ordinary safe explanation and preferred
+organization become diagnostics rather than whole-report blockers.
+
+The scenario conversation has no required visible content template. It may
+explore user assumptions, generic counter-cases, variables, and information
+that would change an assessment. The server owns premise classes for confirmed
+facts, stored observations, user assumptions, model scenarios, and unverified
+context. The model cannot promote a premise. Permanent financial/action,
+real-world-result, unsupported-relationship, privacy, individual-participant,
+secret-leakage, and unsafe-rendering rules remain blocking.
+
+The first implementation remains issue-scoped, anonymous, short-lived,
+tool-free, and unable to browse, query the database, execute code, open user
+URLs, or perform external actions. TASK-125 owns the threat, retention, API,
+and storage proposal. TASK-129 implements the separate default-off Frontend
+without changing the active-v8 contract. TASK-131 must record a separate
+activation decision.
+
 ---
 
 ## 7. Sudden Change Signal Design
