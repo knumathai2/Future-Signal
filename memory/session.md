@@ -14,11 +14,29 @@ files.
 
 ## Session
 
-- **Role**: Frontend Implementer
-- **Branch**: `frontend/TASK-136-generation-loading`
-- **Goal**: Add visible, accessible loading feedback to briefing and scenario
-  generation.
-- **Status**: TASK-136 complete; latest main deployment and data-refresh handoff preserved
+- **Role**: Backend Implementer
+- **Branch**: `backend/TASK-137-category-visibility`
+- **Goal**: Remove sports and catch-all labels from public category navigation
+  without deleting source data.
+- **Status**: TASK-137 complete; latest main deployment and data-refresh handoff preserved
+
+## Completed in TASK-137
+
+- Limited `/api/categories` to the five approved public navigation groups:
+  `정치`, `경제`, `환경`, `기술`, and `세계`, returning only groups with
+  currently servable issues.
+- Kept sports and catch-all issue rows in storage and in the unfiltered issue
+  list; existing direct category matching remains available for compatibility.
+- Mapped stablecoin, Tether, USDC, and USDT topics to `경제`, so the current
+  USDT issue no longer falls into the catch-all group.
+- Confirmed the configured local database now derives the visible category
+  response `정치`, `경제`, `기술`, `세계`; no category was fabricated for the
+  currently empty `환경` group.
+- Passed Ruff, focused 79 API tests, all 548 Backend tests, and Frontend
+  typecheck, lint, and production build. The known Recharts bundle-size warning
+  remains unchanged.
+- No schema, dependency, database write, provider call, infrastructure,
+  deployment, production action, or wording-policy change occurred.
 
 ## Completed in TASK-136
 

@@ -118,6 +118,37 @@ def test_broad_korean_category_supports_future_iran_conflict(live_client, db_ses
     assert body["issues"][0]["id"] == str(MARKET_ID)
 
 
+def test_category_navigation_hides_sports_without_removing_issue(live_client, db_session):
+    seed_basic_market(db_session)
+    market = db_session.get(Market, MARKET_ID)
+    market.title = "Will Spain win the 2026 FIFA World Cup?"
+    market.category = "Sports"
+    db_session.commit()
+
+    categories = live_client.get("/api/categories").json()["categories"]
+    all_issues = live_client.get("/api/issues").json()["issues"]
+    sports_issues = live_client.get("/api/issues?category=스포츠").json()["issues"]
+
+    assert categories == []
+    assert [issue["id"] for issue in all_issues] == [str(MARKET_ID)]
+    assert [issue["id"] for issue in sports_issues] == [str(MARKET_ID)]
+
+
+def test_stablecoin_issue_is_grouped_under_economy(live_client, db_session):
+    seed_basic_market(db_session)
+    market = db_session.get(Market, MARKET_ID)
+    market.title = "Will USDT market cap hit $200B before 2027?"
+    market.category = "Stablecoins"
+    db_session.commit()
+
+    categories = live_client.get("/api/categories").json()["categories"]
+    response = live_client.get("/api/issues?category=경제")
+
+    assert categories == ["경제"]
+    assert response.status_code == 200
+    assert [issue["id"] for issue in response.json()["issues"]] == [str(MARKET_ID)]
+
+
 def test_get_issue_detail_live_data(live_client, db_session):
     seed_basic_market(db_session)
 

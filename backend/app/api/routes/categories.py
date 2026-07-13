@@ -21,7 +21,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["categories"])
 
-_SAMPLE_CATEGORIES = ["정치", "경제", "환경", "기술", "세계"]
+_PUBLIC_CATEGORIES = ["정치", "경제", "환경", "기술", "세계"]
+_PUBLIC_CATEGORY_SET = frozenset(_PUBLIC_CATEGORIES)
 
 
 def _get_optional_db() -> Generator[Session | None, None, None]:
@@ -51,8 +52,9 @@ def list_categories(
                         label
                         for li in live_issues
                         for label in issue_category_labels(li.market.title, li.market.category)
+                        if label in _PUBLIC_CATEGORY_SET
                     }
                 )
                 return CategoryListResponse(categories=categories)
 
-    return CategoryListResponse(categories=_SAMPLE_CATEGORIES)
+    return CategoryListResponse(categories=_PUBLIC_CATEGORIES)
