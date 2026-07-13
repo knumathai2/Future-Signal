@@ -18,7 +18,7 @@ export function BrandMark() {
         <rect x="14" y="1" width="4" height="17" fill="#b84416" />
       </svg>
       <span className="text-base font-extrabold sm:text-xl">
-        Outlook Signals
+        Outlook AI Signals
       </span>
     </span>
   );

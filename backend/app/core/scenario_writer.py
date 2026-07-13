@@ -44,7 +44,8 @@ from app.db.models import (
     ScenarioTurn,
 )
 
-SCENARIO_WRITER_VERSION = "scenario-writer-3"
+SCENARIO_WRITER_VERSION = "scenario-writer-5"
+SCENARIO_REQUIRED_ASSUMPTION_PREFIX = "사용자가 제시한 가정에 따른 조건부 경로로 보면, "
 SCENARIO_LEASE_DURATION = timedelta(minutes=3)
 SCENARIO_PROGRAM_BUDGET_USD = 5.0
 SCENARIO_CALL_RESERVATION_USD = 0.5
@@ -111,13 +112,16 @@ SCENARIO_SYSTEM_PROMPT = (
 answer_markdown은 60~2500자의 자유로운 답변입니다.
 
 출력 참조 규칙:
-- reference_contract.required_premise_ref의 문자열을 글자 하나도 바꾸지 말고
-  premise_refs의 첫 번째 항목으로 복사하십시오. 이 항목은 선택 사항이 아닙니다.
-- 답변에 다른 입력을 실제로 사용했다면 reference_contract의
-  allowed_optional_premise_refs에서 해당 문자열만 premise_refs 뒤에 추가하십시오.
-- 예시용 문자열이나 설명 문구를 premise_refs에 넣지 마십시오.
-- required_output에 제공된 premise_refs 배열을 최소 출력 형태로 그대로 사용하고,
-  필요한 선택 참조만 그 뒤에 추가하십시오.
+- reference_contract.required_premise_refs 배열을 글자 하나도 바꾸지 말고
+  premise_refs에 같은 순서로 복사하십시오.
+- premise_refs에서 항목을 빼거나 더하거나 순서를 바꾸지 마십시오.
+- 예시용 문자열, 설명 문구, 또는 다른 ref를 premise_refs에 넣지 마십시오.
+
+답변 조건부 표현 규칙:
+- answer_contract.required_prefix의 문자열을 글자 하나도 바꾸지 말고
+  answer_markdown의 첫 문장 시작 부분에 복사하십시오.
+- 이 접두문 뒤에서 현재 정보와 사용자 가정을 분리하고, 조건이 달라질 때 확인할
+  내용을 설명하십시오.
 
 새 조건부 전제가 필요할 때만 new_scenario_premises에 20~300자의 일반적 조건문을
 넣으십시오.
@@ -227,9 +231,22 @@ def _numeric_tokens(text: str, *, include_absolute_signed: bool = False) -> set[
     return tokens
 
 
+def _required_scenario_premise_refs(state: ScenarioPromptState) -> list[str]:
+    """Fix the minimal refs to the current turn and stored market definition."""
+    refs = [f"turn:{state.user_turn.id}"]
+    definition_ref = next(
+        (item.ref for item in state.evidence if item.kind == "market_definition"),
+        None,
+    )
+    if definition_ref is not None:
+        refs.append(definition_ref)
+    return refs
+
+
 def build_scenario_prompt(state: ScenarioPromptState) -> tuple[str, str]:
     """Serialize only typed, issue-scoped, non-secret state for one call."""
     current_turn_ref = f"turn:{state.user_turn.id}"
+    required_premise_refs = _required_scenario_premise_refs(state)
     premise_payload = [
         {
             "ref": f"premise:{premise.id}",
@@ -278,13 +295,19 @@ def build_scenario_prompt(state: ScenarioPromptState) -> tuple[str, str]:
         },
         "current_user_turn_ref": current_turn_ref,
         "reference_contract": {
-            "required_premise_ref": current_turn_ref,
-            "required_position": "premise_refs[0]",
-            "allowed_optional_premise_refs": sorted(state.allowed_refs - {current_turn_ref}),
+            "required_premise_refs": required_premise_refs,
+            "allow_additional_premise_refs": False,
+        },
+        "answer_contract": {
+            "required_prefix": SCENARIO_REQUIRED_ASSUMPTION_PREFIX,
+            "required_position": "answer_markdown start",
         },
         "required_output": {
-            "answer_markdown": "60-2500 character string",
-            "premise_refs": [current_turn_ref],
+            "answer_markdown": (
+                SCENARIO_REQUIRED_ASSUMPTION_PREFIX
+                + "이어서 현재 정보와 조건부 경로를 구분한 60-2500자 답변"
+            ),
+            "premise_refs": required_premise_refs,
             "new_scenario_premises": [],
         },
     }
@@ -327,6 +350,8 @@ def validate_scenario_output(
     current_turn_ref = f"turn:{state.user_turn.id}"
     if current_turn_ref not in output.premise_refs:
         return SafetyFilterResult(False, "current_turn_ref_missing"), []
+    if output.premise_refs != _required_scenario_premise_refs(state):
+        return SafetyFilterResult(False, "unexpected_premise_ref"), []
     if _LEAKAGE_PATTERN.search(output.answer_markdown):
         return SafetyFilterResult(False, "sensitive_output"), []
     selected_evidence = [item for item in state.evidence if item.ref in output.premise_refs]

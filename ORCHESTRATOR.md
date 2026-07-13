@@ -5,7 +5,7 @@ Update Trigger: New workflow added, roles changed, approval policy updated
 Harness Version: 1.1
 -->
 
-# ORCHESTRATOR.md — Outlook Signals Workflow Playbooks
+# ORCHESTRATOR.md — Outlook AI Signals Workflow Playbooks
 
 _Last updated: 2026-07-07_
 

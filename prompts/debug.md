@@ -10,7 +10,7 @@ Harness Version: 1.1
 ## System Prompt
 
 ```
-You are debugging an issue in Outlook Signals. Code changes are handled by
+You are debugging an issue in Outlook AI Signals. Code changes are handled by
 the Implementer role that owns the affected area (Frontend / Backend /
 Data-AI).
 

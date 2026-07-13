@@ -59,7 +59,7 @@ See at a glance how the reflected expectation value has changed for each issue, 
 
 ### 21.3 Product description
 
-Outlook Signals organizes, with data, the change in reflected expectation value, sudden-change moments, and interpretation-caution factors for major issues worldwide. It does not assert the future with certainty; instead, it presents the flow of judgment shown in public prediction-market data in an easy-to-understand way.
+Outlook AI Signals organizes, with data, the change in reflected expectation value, sudden-change moments, and interpretation-caution factors for major issues worldwide. It does not assert the future with certainty; instead, it presents the flow of judgment shown in public prediction-market data in an easy-to-understand way.
 
 ### 21.4 Feature-introduction copy
 
@@ -73,7 +73,7 @@ Outlook Signals organizes, with data, the change in reflected expectation value,
 
 ## 22. Final Summary
 
-Outlook Signals is not a service that asserts outcomes with certainty; it is an information-analysis dashboard for reading the flow of outlook change. The MVP, scoped for a 5-day hackathon and a 4-person team, focuses on the home dashboard, sudden-change issue ranking, issue detail chart, simple inflection points, interpretation-caution badge, template summary, and data as-of timestamp.
+Outlook AI Signals is not a service that asserts outcomes with certainty; it is an information-analysis dashboard for reading the flow of outlook change. The MVP, scoped for a 5-day hackathon and a 4-person team, focuses on the home dashboard, sudden-change issue ranking, issue detail chart, simple inflection points, interpretation-caution badge, template summary, and data as-of timestamp.
 
 The current final assessment of this PRD is "B: buildable if the core scope is narrowed." The dashboard, change calculation, detail chart, interpretation-caution badge, and template summary can all be built to a genuinely working level within 5 days. On the other hand, automated news matching, free-form AI analysis, chart-image export, saved issues, notifications, weekly reports, and team sharing should be excluded from the hackathon MVP.
 

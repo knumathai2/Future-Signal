@@ -1,4 +1,4 @@
-# Technical Architecture Design: Outlook Signals MVP
+# Technical Architecture Design: Outlook AI Signals MVP
 
 Document version: v1.0
 Date: 2026-07-07

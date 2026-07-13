@@ -1,6 +1,6 @@
-# Outlook Signals
+# Outlook AI Signals
 
-Outlook Signals는 Polymarket의 공개 집계 데이터를 이용해 주요 이슈에 반영된
+Outlook AI Signals는 Polymarket의 공개 집계 데이터를 이용해 주요 이슈에 반영된
 기대값의 변화를 보여 주는 모니터링 대시보드입니다. 모든 데이터 화면에 기준
 시각과 해석 주의사항을 함께 표시하며, 미래 결과를 단정하거나 근거 없이 변화의
 배경을 설명하지 않습니다.

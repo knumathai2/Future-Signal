@@ -327,7 +327,7 @@ def run_scheduled_batch(
 
 def build_arg_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Run the Outlook Signals data/metric/signal/report batch."
+        description="Run the Outlook AI Signals data/metric/signal/report batch."
     )
     source = parser.add_mutually_exclusive_group()
     source.add_argument(

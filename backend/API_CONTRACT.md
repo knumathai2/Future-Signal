@@ -1,4 +1,4 @@
-# API Contract — Outlook Signals
+# API Contract — Outlook AI Signals
 
 _Status: implemented active v8 contract, 2026-07-12._
 

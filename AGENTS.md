@@ -5,7 +5,7 @@ Update Trigger: New agent role added, constraints changed, routing rules updated
 Harness Version: 1.1
 -->
 
-# AGENTS.md — Outlook Signals Project Constitution
+# AGENTS.md — Outlook AI Signals Project Constitution
 
 > This is the project constitution. Every AI agent must read this file first.
 > In case of conflict, this document takes highest priority.
@@ -19,7 +19,7 @@ _Last updated: 2026-07-13_
 
 | Field | Value |
 |-------|-------|
-| Project | Outlook Signals ("Outlook Signals" — working title, per PRD) |
+| Project | Outlook AI Signals ("Outlook AI Signals" — working title, per PRD) |
 | Goal | Show how public expectations on major global issues have shifted, using Polymarket's public prediction-market data — surfacing sudden-change issues, time-series charts, and template-based summaries, without predicting outcomes or encouraging betting/trading behavior. |
 | Timeline | 5-day hackathon build, 4-person team |
 | Language | TypeScript (frontend) + Python (backend/data/AI) |

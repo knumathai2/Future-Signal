@@ -783,7 +783,7 @@ def test_build_openai_client_passes_openrouter_base_url_and_headers(monkeypatch)
         "openai/gpt-4o-mini",
         base_url=OPENROUTER_BASE_URL,
         provider_name="openrouter",
-        extra_headers={"X-OpenRouter-Title": "Outlook Signals"},
+        extra_headers={"X-OpenRouter-Title": "Outlook AI Signals"},
     )
 
     assert client.complete("system", "user") == '{"ok": true}'
@@ -792,7 +792,9 @@ def test_build_openai_client_passes_openrouter_base_url_and_headers(monkeypatch)
         "base_url": OPENROUTER_BASE_URL,
     }
     assert stub.completions.kwargs["model"] == "openai/gpt-4o-mini"
-    assert stub.completions.kwargs["extra_headers"] == {"X-OpenRouter-Title": "Outlook Signals"}
+    assert stub.completions.kwargs["extra_headers"] == {
+        "X-OpenRouter-Title": "Outlook AI Signals"
+    }
 
 
 # --- ADR-038 v4 evidence-grounded report ---------------------------------

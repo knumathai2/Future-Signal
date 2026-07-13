@@ -1,8 +1,8 @@
-# Service Design: Data, Metrics, AI & Signal Layer for Outlook Signals
+# Service Design: Data, Metrics, AI & Signal Layer for Outlook AI Signals
 
 Document version: v1.0
 Date: 2026-07-07
-Companion to: [PRD](../prd/README.md) (Outlook Signals — 5-day hackathon PRD, v1.1)
+Companion to: [PRD](../prd/README.md) (Outlook AI Signals — 5-day hackathon PRD, v1.1)
 Purpose: Define the Polymarket data collection plan, analysis metrics, AI I/O contract, sudden-change signal rules, and participant-analysis policy that underlie the product. Written to convert directly into engineering tickets and a Phase-2 PRD.
 
 Assumption: this document does not replace PRD. Where the hackathon PRD already made a decision (binary markets only, 30–50 markets, template-first summaries, no auto context matching, no accounts), this document treats that as a hard constraint for the frozen v3 MVP. ADR-038 is the narrow post-MVP exception for TASK-056~065.
@@ -11,7 +11,7 @@ Assumption: this document does not replace PRD. Where the hackathon PRD already 
 
 ## 1. Service Design Summary
 
-Outlook Signals turns Polymarket's public order-book and market metadata into a **neutral issue-monitoring layer**: what changed, by how much, how fast, and how much confidence the underlying data supports. It is not a forecasting tool, not a trading dashboard, and not a leaderboard of participants.
+Outlook AI Signals turns Polymarket's public order-book and market metadata into a **neutral issue-monitoring layer**: what changed, by how much, how fast, and how much confidence the underlying data supports. It is not a forecasting tool, not a trading dashboard, and not a leaderboard of participants.
 
 Three design commitments run through every section below:
 

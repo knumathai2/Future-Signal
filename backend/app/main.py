@@ -11,7 +11,7 @@ from app.api.routes import categories, health, issues, scenarios
 from app.core.config import settings
 
 app = FastAPI(
-    title="Outlook Signals API",
+    title="Outlook AI Signals API",
     description=(
         "Read-only API for issue-change signals derived from public " "prediction-market data."
     ),
