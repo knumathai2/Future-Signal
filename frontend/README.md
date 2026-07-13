@@ -1,4 +1,4 @@
-# 프런트엔드 — Outlook Signals
+# 프런트엔드 — Outlook AI Signals
 
 React 18, Vite, TypeScript, Tailwind CSS, Recharts로 구성된 웹 애플리케이션입니다.
 

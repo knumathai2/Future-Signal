@@ -127,7 +127,9 @@ class Settings:
             os.getenv("OPENAI_BASE_URL"),
         )
         self.openrouter_http_referer: str | None = os.getenv("OPENROUTER_HTTP_REFERER")
-        self.openrouter_app_title: str | None = os.getenv("OPENROUTER_APP_TITLE", "Outlook Signals")
+        self.openrouter_app_title: str | None = os.getenv(
+            "OPENROUTER_APP_TITLE", "Outlook AI Signals"
+        )
         # TASK-058: bounded OpenRouter server-tool research. These limits are
         # clamped at the ADR-038/TASK-055 maxima even if environment values are
         # larger, so configuration cannot silently expand paid research scope.

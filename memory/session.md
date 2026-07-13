@@ -5,7 +5,7 @@ Update Trigger: Every session
 Harness Version: 1.1
 -->
 
-# Current Session — Outlook Signals
+# Current Session — Outlook AI Signals
 
 _Last updated: 2026-07-13_
 
@@ -14,37 +14,40 @@ files.
 
 ## Session
 
-- **Role**: Data/AI Implementer and Debugger
-- **Branch**: `data-ai/ISS-027-scenario-first-response`
-- **Goal**: Restore the missing first response in scenario conversation.
+- **Role**: PM / Planner
+- **Branch**: `pm/TASK-138-outlook-ai-signals`
+- **Goal**: Rename the product display name throughout the project.
 - **Status**: Complete
 
 ## Completed
 
-- Matched the reported screen to the session created at
-  `2026-07-13T05:59:41.717500+00:00` and identified terminal
-  `current_turn_ref_missing` validation.
-- Confirmed the reported request and seven immediately preceding requests
-  shared the same failure after normal queue, worker claim, and provider
-  completion.
-- Advanced the prompt to `scenario-writer-3` and made the exact current-turn ref
-  explicit in a typed current-turn object, dedicated reference contract, and
-  minimum JSON output example.
-- Kept optional refs separate and deterministic, and retained the unchanged
-  fail-closed validator without server-side ref injection or automatic retry.
-- Added a regression that verifies the exact serialized reference contract.
+- Applied `Outlook AI Signals` as the display name in the React UI, page
+  title, information notice, FastAPI title, batch help, provider attribution
+  default, tests, source-of-truth docs, harness files, scripts, and presentation
+  narration.
+- Preserved technical slugs and paths (`outlook-signals-api`, npm package name,
+  scenario local-storage keys, repository/output filenames) so the display-name
+  change does not mutate public or stored contracts.
+- Updated all four tracked PowerPoint decks with inherited formatting intact.
+  Replaced every embedded product screenshot with a verified local-app capture
+  showing the new product name and updated image alternative text.
+- Recorded TASK-138 and ADR-082 without changing product safety policy.
 
 ## Verification
 
-- Ruff passes.
-- All 549 Backend tests pass.
-- One purpose-bound local/development evaluation made exactly one OpenRouter
-  call, cost USD 0.0063915, and reached `succeeded` without retry.
-- The evaluation stored one assistant turn and three validated response blocks.
-- No public API, schema, dependency, secret, infrastructure, deployment,
-  production, or wording-policy state changed.
+- Backend Ruff passes; `backend/tests/test_ai_report.py` passes 97 tests.
+- Frontend Prettier, typecheck, lint, and production build pass; the known
+  Recharts bundle-size warning remains unchanged.
+- All four decks pass template-fidelity, overflow, ZIP-integrity, and visual
+  checks; identical slide renders were verified by SHA-256 before deduplicated
+  full-size review.
+- The local app DOM and capture show `Outlook AI Signals` with current data
+  timestamp and interpretation caution present.
+- Exact old display-name and changed-surface content-safety scans pass.
+- No schema, dependency, API shape, infrastructure, deployment, database,
+  provider, secret, production, or wording-policy action occurred.
 
 ## Next handoff
 
-ISS-027 is complete. The code is not deployed; deployment remains separately
-approval-gated. TASK-128, TASK-109, and TASK-021 remain separate active work.
+TASK-138 is complete. TASK-128, TASK-109, and TASK-021 remain separate active
+work. Deployment and production actions remain separately approval-gated.

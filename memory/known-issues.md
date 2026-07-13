@@ -5,7 +5,7 @@ Update Trigger: New issue, resolution, or priority change
 Harness Version: 1.1
 -->
 
-# Known Issues — Outlook Signals
+# Known Issues — Outlook AI Signals
 
 _Last updated: 2026-07-13_
 
@@ -43,6 +43,11 @@ data limitations.
 
 ## Recently closed
 
+- **ISS-028**: a post-ISS-027 user turn passed the required current-ref check
+  but failed assumption framing, and the first follow-up prompt then allowed an
+  unknown optional ref. Scenario writer v5 now requires an exact fixed ref
+  array plus an explicit assumption prefix. All 550 Backend tests and one
+  purpose-bound v5 evaluation succeeded with three validated blocks.
 - **ISS-027**: scenario writer v3 places the exact current user-turn reference
   in an explicit reference contract and the minimum JSON output example. The
   fail-closed validator remains unchanged; all 549 Backend tests and one

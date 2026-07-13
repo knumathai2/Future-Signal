@@ -5,7 +5,7 @@ Update Trigger: Day completed, new feature request received, priorities changed
 Harness Version: 1.1
 -->
 
-# roadmap.md — Outlook Signals Roadmap
+# roadmap.md — Outlook AI Signals Roadmap
 
 _Last updated: 2026-07-11_
 _Source: PRD §14 (5-Day Development Schedule) — this file tracks execution against it._

@@ -5,7 +5,7 @@ Update Trigger: Code style changes, new tooling, wording policy changes
 Harness Version: 1.1
 -->
 
-# standards.md — Outlook Signals Standards
+# standards.md — Outlook AI Signals Standards
 
 _Last updated: 2026-07-12_
 

@@ -1,4 +1,4 @@
-# 백엔드 — Outlook Signals
+# 백엔드 — Outlook AI Signals
 
 FastAPI 기반 이슈 데이터 API, PostgreSQL 저장 계층, 시장 데이터 수집기, 근거 기반
 v8 브리핑 및 시나리오 작업자로 구성됩니다.

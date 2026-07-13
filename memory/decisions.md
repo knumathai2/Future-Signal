@@ -5,7 +5,7 @@ Update Trigger: Record immediately after any significant technical or scope deci
 Harness Version: 1.1
 -->
 
-# Decision Log — Outlook Signals
+# Decision Log — Outlook AI Signals
 
 _Last updated: 2026-07-11_
 
@@ -2459,3 +2459,53 @@ evaluation made exactly one OpenRouter call costing USD 0.0063915, passed the
 unchanged complete-output gates, and stored one assistant turn plus three
 validated blocks. No public API, schema, dependency, secret, infrastructure,
 deployment, production, or wording-policy state changed.
+
+---
+
+### ADR-081: Fix scenario refs and assumption framing as exact output values
+
+- **Date**: 2026-07-13
+- **Status**: Accepted and implemented in ISS-028
+- **Decided by**: User follow-up after the first-response screen still failed
+
+**Context**: After ISS-027, a new local user turn passed the required current-ref
+gate but failed `assumption_promotion`. Writer v4 made a safe conditional prefix
+explicit, then its single evaluation failed closed because the model appended
+an unknown optional ref. Letting the model select identifiers kept moving the
+failure between structural gates.
+
+**Decision**: Advance to `scenario-writer-5`. Require the answer to start with
+an exact assumption-framing prefix. Build one fixed ordered ref array from the
+current user turn and stored market definition, expose no optional ref choice,
+and require the provider to copy that exact array. Keep unknown, missing, and
+unexpected ref validation before content storage. Do not inject refs into the
+provider response and do not retry a failed request.
+
+**Consequences**: Ruff and all 550 Backend tests pass. The one v4 evaluation
+failed closed at USD 0.006011. One new v5 evaluation cost USD 0.0072395, passed
+all gates, and stored one assistant turn plus three validated blocks. The local
+reload process loaded v5 and both direct and proxied health reads succeed. No
+public API, schema, dependency, secret, infrastructure, deployment, production,
+or wording-policy state changed.
+
+---
+
+### ADR-082: Rename the product display name without changing technical identities
+
+- **Date**: 2026-07-13
+- **Status**: Accepted and implemented in TASK-138
+- **Decided by**: User request to rename the project product
+
+**Decision**: Use `Outlook AI Signals` as the product display name across UI,
+HTML and Backend metadata, provider attribution defaults, project documentation,
+tests, scripts, and presentation assets. Replace embedded presentation screen
+captures with a verified local-app capture showing the new name. Preserve
+existing technical identifiers and paths such as `outlook-signals-api`, the npm
+package name, scenario local-storage keys, output filenames, and repository
+directory names.
+
+**Consequences**: Every user-visible and prose occurrence now uses the new
+display name, while public response values, stored browser state, package
+identity, and file references remain backward compatible. No schema, dependency,
+infrastructure, deployment, database, provider-call, secret, production, or
+wording-policy change was required.

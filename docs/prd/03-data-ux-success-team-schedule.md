@@ -142,15 +142,15 @@ Prohibited wording:
 
 ### 11.1 Difference from news
 
-News centers its explanation on the occurrence of an event. Outlook Signals shows how the expectation reflected in public prediction-market data moved after the event.
+News centers its explanation on the occurrence of an event. Outlook AI Signals shows how the expectation reflected in public prediction-market data moved after the event.
 
 ### 11.2 Difference from social media / communities
 
-Social media and communities react quickly but mix signal with noise. Outlook Signals organizes issues around the quantitative change and time-series flow of public prediction-market data.
+Social media and communities react quickly but mix signal with noise. Outlook AI Signals organizes issues around the quantitative change and time-series flow of public prediction-market data.
 
 ### 11.3 Difference from research reports
 
-Research reports have depth but update slowly. Outlook Signals is well-suited to daily monitoring because it repeatedly tracks each issue's change magnitude and inflection points.
+Research reports have depth but update slowly. Outlook AI Signals is well-suited to daily monitoring because it repeatedly tracks each issue's change magnitude and inflection points.
 
 ### 11.4 Difference from simple data display
 

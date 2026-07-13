@@ -12,6 +12,7 @@ from app.core.scenario_conversation import (
     normalize_scenario_message,
 )
 from app.core.scenario_writer import (
+    SCENARIO_REQUIRED_ASSUMPTION_PREFIX,
     SCENARIO_WRITER_VERSION,
     ScenarioWriterOutput,
     build_scenario_prompt,
@@ -74,7 +75,7 @@ def _output(db, request: ScenarioGenerationRequest, **updates) -> str:
             "이 이슈의 판정 조건과 일치하는지 살펴볼 수 있습니다. 반대로 추가 자료가 "
             "없다면 저장된 관찰값의 변화만으로 현실의 진행 상태를 단정할 수 없습니다."
         ),
-        "premise_refs": [definition_ref, f"turn:{request.user_turn_id}"],
+        "premise_refs": [f"turn:{request.user_turn_id}", definition_ref],
         "new_scenario_premises": [
             "공식 자료가 새로 제시되는 경우 판정 조건과의 일치 여부를 살펴보는 시나리오"
         ],
@@ -128,14 +129,31 @@ def test_prompt_contract_requires_exact_current_turn_ref(db_session):
         "text": state.user_turn.content,
     }
     assert payload["current_user_turn_ref"] == current_turn_ref
-    assert payload["reference_contract"]["required_premise_ref"] == current_turn_ref
-    assert payload["reference_contract"]["required_position"] == "premise_refs[0]"
-    assert current_turn_ref not in payload["reference_contract"]["allowed_optional_premise_refs"]
-    assert set(payload["reference_contract"]["allowed_optional_premise_refs"]) == (
-        state.allowed_refs - {current_turn_ref}
+    definition_ref = next(item.ref for item in state.evidence if item.kind == "market_definition")
+    required_refs = [current_turn_ref, definition_ref]
+    assert payload["reference_contract"] == {
+        "required_premise_refs": required_refs,
+        "allow_additional_premise_refs": False,
+    }
+    assert payload["required_output"]["premise_refs"] == required_refs
+    assert "항목을 빼거나 더하거나 순서를 바꾸지 마십시오" in system_prompt
+
+
+def test_prompt_contract_requires_explicit_assumption_prefix(db_session):
+    _session, request, _turn = _queued(db_session)
+    state = build_scenario_state(db_session, request, now=NOW + timedelta(seconds=2))
+
+    system_prompt, user_prompt = build_scenario_prompt(state)
+    payload = json.loads(user_prompt)
+
+    assert payload["answer_contract"] == {
+        "required_prefix": SCENARIO_REQUIRED_ASSUMPTION_PREFIX,
+        "required_position": "answer_markdown start",
+    }
+    assert payload["required_output"]["answer_markdown"].startswith(
+        SCENARIO_REQUIRED_ASSUMPTION_PREFIX
     )
-    assert payload["required_output"]["premise_refs"] == [current_turn_ref]
-    assert "premise_refs의 첫 번째 항목" in system_prompt
+    assert "answer_markdown의 첫 문장 시작 부분" in system_prompt
 
 
 def test_valid_output_persists_assistant_blocks_premise_and_usage(db_session):
@@ -199,10 +217,18 @@ def test_unknown_or_missing_current_turn_ref_fails_closed(db_session):
     assert blocks == []
 
     valid_payload = json.loads(_output(db_session, request))
-    valid_payload["premise_refs"] = [valid_payload["premise_refs"][0]]
+    valid_payload["premise_refs"] = [valid_payload["premise_refs"][1]]
     missing = ScenarioWriterOutput.model_validate(valid_payload)
     validation, _ = validate_scenario_output(missing, state)
     assert validation.rule == "current_turn_ref_missing"
+
+    valid_payload = json.loads(_output(db_session, request))
+    valid_payload["premise_refs"].append(
+        next(item.ref for item in state.evidence if item.kind == "metric")
+    )
+    unexpected = ScenarioWriterOutput.model_validate(valid_payload)
+    validation, _ = validate_scenario_output(unexpected, state)
+    assert validation.rule == "unexpected_premise_ref"
 
 
 def test_assumption_promotion_and_sensitive_output_fail(db_session):
@@ -291,9 +317,6 @@ def test_equivalent_iso_and_korean_date_numbers_are_supported(db_session):
     _session, request, _turn = _queued(db_session)
     state = build_scenario_state(db_session, request, now=NOW + timedelta(seconds=2))
     payload = json.loads(_output(db_session, request, new_scenario_premises=[]))
-    payload["premise_refs"].append(
-        next(item.ref for item in state.evidence if item.kind == "metric")
-    )
     payload["answer_markdown"] = (
         "조건부 경로에서는 이 이슈에 저장된 2026년 7월 8일 기준 시각을 현재 "
         "정보의 범위로 유지합니다. 공식 자료가 새로 제시되는 경우에도 사용자 "

@@ -5,7 +5,7 @@
 Harness 버전: 1.1
 -->
 
-# Outlook Signals 제품 기준 문서
+# Outlook AI Signals 제품 기준 문서
 
 제품 기준 문서는 주제와 절 범위에 따라 `docs/` 아래에 나뉘어 있습니다.
 

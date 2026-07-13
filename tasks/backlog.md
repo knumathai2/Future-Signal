@@ -5,7 +5,7 @@ Update Trigger: New task added or priority changed
 Harness Version: 1.1
 -->
 
-# Backlog — Outlook Signals
+# Backlog — Outlook AI Signals
 
 _Last updated: 2026-07-13_
 _Current assignments live in `tasks/active.md`; completed work lives in `tasks/completed.md`._

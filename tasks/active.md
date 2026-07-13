@@ -5,7 +5,7 @@ Update Trigger: Task started, completed, or blocked
 Harness Version: 1.1
 -->
 
-# Active Tasks — Outlook Signals
+# Active Tasks — Outlook AI Signals
 
 _Last updated: 2026-07-13_
 

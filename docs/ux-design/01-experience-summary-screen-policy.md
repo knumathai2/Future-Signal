@@ -1,9 +1,9 @@
-# Product Experience Design: Screen Flow, Copy Policy & Safety Guardrails for Outlook Signals
+# Product Experience Design: Screen Flow, Copy Policy & Safety Guardrails for Outlook AI Signals
 
 Document version: v1.0
 Date: 2026-07-07
 Companion to: [PRD](../prd/README.md) (hackathon PRD, v1.1), [Service Design](../service-design/README.md) (data/metrics/AI/signal design, v1.0)
-Purpose: Define the screen flow, UI copy policy, gambling-pattern removal plan, disclaimer strategy, and prohibited-feature list for Outlook Signals, at a level ready to convert into wireframes and PRD requirement text.
+Purpose: Define the screen flow, UI copy policy, gambling-pattern removal plan, disclaimer strategy, and prohibited-feature list for Outlook AI Signals, at a level ready to convert into wireframes and PRD requirement text.
 
 **Scope note**: PRD scopes the 5-day hackathon MVP with no accounts, no save/watchlist, no notifications. This document designs the fuller product experience — including watchlist and settings — as the natural Phase 2 shape of the product, and marks clearly which screens are hackathon-buildable now vs. deferred. Where this document's recommendations differ from PRD's hackathon cut, the hackathon cut wins for the 5-day build; this document governs everything after.
 
@@ -11,7 +11,7 @@ Purpose: Define the screen flow, UI copy policy, gambling-pattern removal plan, 
 
 ## 1. Product Experience Design Summary
 
-Outlook Signals reads like a **monitoring dashboard for how public expectations shift**, not a market terminal. The experience is built around three UX commitments that run through every screen below:
+Outlook AI Signals reads like a **monitoring dashboard for how public expectations shift**, not a market terminal. The experience is built around three UX commitments that run through every screen below:
 
 1. **Read-only, always.** No screen ever asks the user to act on a market. There is no "enter," no "place," no "follow this outcome." The only user actions are *view, filter, save-to-watch, and read a summary*.
 2. **Every number has a companion caveat.** No probability, chart, or ranking appears without its interpretation-caution badge and a visible data-as-of timestamp in the same viewport.
