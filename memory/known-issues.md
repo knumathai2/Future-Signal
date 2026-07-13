@@ -43,6 +43,10 @@ data limitations.
 
 ## Recently closed
 
+- **ISS-027**: scenario writer v3 places the exact current user-turn reference
+  in an explicit reference contract and the minimum JSON output example. The
+  fail-closed validator remains unchanged; all 549 Backend tests and one
+  purpose-bound local evaluation succeeded with three validated blocks.
 - **ISS-025**: Production Compose previously accepted briefing requests but skipped the worker and disabled scenario sessions; guarded production worker enablement, provider wiring, and scenario flag activation now pass live API/SSE verification.
 - **ISS-026**: Scenario writer rejected provider-added date numbers and optional unconditional premises; the validator now recognizes the supplied session timestamp and the initial prompt requires no new premises, with a successful stored response verified.
 

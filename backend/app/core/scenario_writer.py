@@ -44,7 +44,7 @@ from app.db.models import (
     ScenarioTurn,
 )
 
-SCENARIO_WRITER_VERSION = "scenario-writer-2"
+SCENARIO_WRITER_VERSION = "scenario-writer-3"
 SCENARIO_LEASE_DURATION = timedelta(minutes=3)
 SCENARIO_PROGRAM_BUDGET_USD = 5.0
 SCENARIO_CALL_RESERVATION_USD = 0.5
@@ -103,14 +103,24 @@ SCENARIO_SYSTEM_PROMPT = (
 10. 아래 hard_block 표현과 행동 유도 표현을 어떤 문맥에서도 쓰지 마십시오.
 11. 아래 contextual_avoid 표현도 이번 응답에서는 사용하지 마십시오. 부정 문장을
     만들기보다 다른 안전한 표현으로 바꾸십시오.
-    12. 답변에는 숫자나 날짜를 새로 쓰지 마십시오. 수치가 필요한 내용은 숫자
+12. 답변에는 숫자나 날짜를 새로 쓰지 마십시오. 수치가 필요한 내용은 숫자
     없이 방향과 관찰의 범위로만 설명하십시오. 현재 답변에서는
     new_scenario_premises를 반드시 빈 배열 []로 반환하십시오.
 
 정확히 하나의 JSON 객체만 반환하십시오. 추가 설명이나 코드 블록은 금지합니다.
-answer_markdown은 60~2500자의 자유로운 답변입니다. premise_refs에는 실제로 사용한
-입력 ref만 넣고 current_user_turn_ref를 반드시 포함하십시오. 새 조건부 전제가
-필요할 때만 new_scenario_premises에 20~300자의 일반적 조건문을 넣으십시오.
+answer_markdown은 60~2500자의 자유로운 답변입니다.
+
+출력 참조 규칙:
+- reference_contract.required_premise_ref의 문자열을 글자 하나도 바꾸지 말고
+  premise_refs의 첫 번째 항목으로 복사하십시오. 이 항목은 선택 사항이 아닙니다.
+- 답변에 다른 입력을 실제로 사용했다면 reference_contract의
+  allowed_optional_premise_refs에서 해당 문자열만 premise_refs 뒤에 추가하십시오.
+- 예시용 문자열이나 설명 문구를 premise_refs에 넣지 마십시오.
+- required_output에 제공된 premise_refs 배열을 최소 출력 형태로 그대로 사용하고,
+  필요한 선택 참조만 그 뒤에 추가하십시오.
+
+새 조건부 전제가 필요할 때만 new_scenario_premises에 20~300자의 일반적 조건문을
+넣으십시오.
 """
     + "\nhard_block: "
     + ", ".join([*BANNED_PHRASES, *V8_HARD_BLOCKED_KOREAN_TERMS])
@@ -219,6 +229,7 @@ def _numeric_tokens(text: str, *, include_absolute_signed: bool = False) -> set[
 
 def build_scenario_prompt(state: ScenarioPromptState) -> tuple[str, str]:
     """Serialize only typed, issue-scoped, non-secret state for one call."""
+    current_turn_ref = f"turn:{state.user_turn.id}"
     premise_payload = [
         {
             "ref": f"premise:{premise.id}",
@@ -260,10 +271,20 @@ def build_scenario_prompt(state: ScenarioPromptState) -> tuple[str, str]:
         ],
         "premises": premise_payload,
         "user_turns": turn_payload,
-        "current_user_turn_ref": f"turn:{state.user_turn.id}",
+        "current_user_turn": {
+            "ref": current_turn_ref,
+            "class": "user_assumption",
+            "text": state.user_turn.content,
+        },
+        "current_user_turn_ref": current_turn_ref,
+        "reference_contract": {
+            "required_premise_ref": current_turn_ref,
+            "required_position": "premise_refs[0]",
+            "allowed_optional_premise_refs": sorted(state.allowed_refs - {current_turn_ref}),
+        },
         "required_output": {
             "answer_markdown": "60-2500 character string",
-            "premise_refs": ["one or more exact supplied ref"],
+            "premise_refs": [current_turn_ref],
             "new_scenario_premises": [],
         },
     }

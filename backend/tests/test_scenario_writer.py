@@ -12,6 +12,7 @@ from app.core.scenario_conversation import (
     normalize_scenario_message,
 )
 from app.core.scenario_writer import (
+    SCENARIO_WRITER_VERSION,
     ScenarioWriterOutput,
     build_scenario_prompt,
     build_scenario_state,
@@ -112,6 +113,31 @@ def test_prompt_contains_only_typed_scoped_state(db_session):
     assert "authorization" not in user_prompt.casefold()
 
 
+def test_prompt_contract_requires_exact_current_turn_ref(db_session):
+    _session, request, _turn = _queued(db_session)
+    state = build_scenario_state(db_session, request, now=NOW + timedelta(seconds=2))
+
+    system_prompt, user_prompt = build_scenario_prompt(state)
+    payload = json.loads(user_prompt)
+    current_turn_ref = f"turn:{request.user_turn_id}"
+
+    assert payload["writer_version"] == SCENARIO_WRITER_VERSION
+    assert payload["current_user_turn"] == {
+        "ref": current_turn_ref,
+        "class": "user_assumption",
+        "text": state.user_turn.content,
+    }
+    assert payload["current_user_turn_ref"] == current_turn_ref
+    assert payload["reference_contract"]["required_premise_ref"] == current_turn_ref
+    assert payload["reference_contract"]["required_position"] == "premise_refs[0]"
+    assert current_turn_ref not in payload["reference_contract"]["allowed_optional_premise_refs"]
+    assert set(payload["reference_contract"]["allowed_optional_premise_refs"]) == (
+        state.allowed_refs - {current_turn_ref}
+    )
+    assert payload["required_output"]["premise_refs"] == [current_turn_ref]
+    assert "premise_refs의 첫 번째 항목" in system_prompt
+
+
 def test_valid_output_persists_assistant_blocks_premise_and_usage(db_session):
     _session, request, _turn = _queued(db_session)
     client = FakeClient(_output(db_session, request))
@@ -130,9 +156,7 @@ def test_valid_output_persists_assistant_blocks_premise_and_usage(db_session):
     assert db_session.query(ScenarioResponseBlock).count() == 1
     premise = db_session.query(ScenarioPremise).one()
     assert premise.premise_class == "model_scenario"
-    events = db_session.query(ScenarioGenerationEvent).order_by(
-        ScenarioGenerationEvent.id
-    ).all()
+    events = db_session.query(ScenarioGenerationEvent).order_by(ScenarioGenerationEvent.id).all()
     assert [event.state for event in events] == ["queued", "running", "succeeded"]
     assert events[-1].usage["writer_cost_usd"] == 0.01
     assert events[-1].usage["model"] == "fake/scenario"
@@ -275,9 +299,7 @@ def test_equivalent_iso_and_korean_date_numbers_are_supported(db_session):
         "정보의 범위로 유지합니다. 공식 자료가 새로 제시되는 경우에도 사용자 "
         "가정과 저장된 관찰을 분리하며 현실의 진행 상태를 단정하지 않습니다."
     )
-    dated = ScenarioWriterOutput.model_validate_json(
-        json.dumps(payload, ensure_ascii=False)
-    )
+    dated = ScenarioWriterOutput.model_validate_json(json.dumps(payload, ensure_ascii=False))
     validation, _ = validate_scenario_output(dated, state)
     assert validation.passed is True
 
