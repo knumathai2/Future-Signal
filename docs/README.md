@@ -1,21 +1,27 @@
 <!--
-Purpose:        Index for authoritative product-spec documents inside the Harness root
-Owner:          PM
-Update Trigger: Product spec section split, renamed, or moved
-Harness Version: 1.1
+목적: 제품 기준 문서의 진입점
+소유자: PM
+갱신 시점: 기준 문서의 분할, 이름 또는 위치가 바뀔 때
+Harness 버전: 1.1
 -->
 
-# docs/ — Outlook Signals Product Specs
+# Outlook Signals 제품 기준 문서
 
-`AI Development Harness/` is the working root for this project. The authoritative product specifications now live inside this `docs/` directory, split by source document and section range.
+제품 기준 문서는 주제와 절 범위에 따라 `docs/` 아래에 나뉘어 있습니다.
 
-## Canonical Spec Entrypoints
+## 기준 문서 진입점
 
-- [PRD](prd/README.md) — product requirements, MVP scope, 5-day schedule, presentation strategy, and copy.
-- [Service Design](service-design/README.md) — Polymarket data collection, metrics, AI I/O design, signal design, and participant-analysis policy.
-- [Technical Design](tech-design/README.md) — stack, architecture, DB schema, API contract, batch pipeline, and AI prompt design.
-- [UX Design](ux-design/README.md) — screen flow, copy policy, gambling-pattern removal plan, disclaimer strategy, and prohibited-feature policy.
+- [PRD](prd/README.md): 제품 요구사항, MVP 범위, 5일 일정, 발표 전략과 문구
+- [서비스 설계](service-design/README.md): 데이터 수집, 지표, AI 입출력, 변화 감지,
+  참여자 분석 정책
+- [기술 설계](tech-design/README.md): 기술 스택, 아키텍처, DB 스키마, API 계약,
+  배치 파이프라인과 AI 설계
+- [UX 설계](ux-design/README.md): 화면 흐름, 문구 정책, 안전 장치, 고지 방식과 제한
+  기능 정책
 
-## Authority
+## 문서 우선순위
 
-The harness process files (`AGENTS.md`, `ORCHESTRATOR.md`, `standards.md`, `dependencies.md`, `roadmap.md`, `memory/`, `tasks/`, and `prompts/`) govern how the team works. The product spec files linked above govern what the product is. When product scope and process guidance conflict, use the relevant spec index here to find the source section, then update the process file to match.
+`AGENTS.md`, `standards.md`, `dependencies.md`, `roadmap.md`, `memory/`, `tasks/`,
+`prompts/`는 팀의 작업 방식을 정합니다. 위 네 문서 묶음은 제품의 요구사항과 설계를
+정합니다. 내용이 충돌하면 관련 기준 문서의 원문 절을 확인하고, 프로젝트 운영 규칙에
+따라 필요한 문서를 함께 갱신합니다.

@@ -1,98 +1,40 @@
-# Migrations
+# 데이터베이스 마이그레이션
 
-`001_initial_schema.sql` was the original schema draft. It was applied to the
-currently configured development Supabase database on 2026-07-09 after explicit
-human approval. Applying it, or any future schema change, to another shared or
-production database still requires human approval (`AGENTS.md`, `TASK-002`).
+이 프로젝트는 별도 마이그레이션 프레임워크 대신 검토 가능한 일반 SQL 파일을
+사용합니다. 기존 마이그레이션은 수정하지 않고 새 번호의 파일만 추가합니다. 새
+의존성 도입이나 스키마 변경, 다른 데이터베이스에 대한 적용은 `AGENTS.md`에 따른
+사전 승인이 필요합니다.
 
-Plain SQL is used deliberately instead of a migration framework. Applying a
-migration uses the reviewed `psql` commands later in this file. Adding a
-migration framework would introduce a dependency and workflow change, so it
-requires its own approval and decision.
+## 파일 목록
 
-`002_context_candidates.sql` is the ADR-038/TASK-057 append-only extension for
-`context_candidates` and `context_collection_runs`. The user's approval covers
-application only to local/development databases. Do not run it against a
-production database or as part of a deployment without separate approval.
-Duplicate `(market_id, episode_at, evidence_hash)` candidate inserts are
-idempotent skips: the database rejects the duplicate and callers keep the
-existing row. Both new tables use `ON DELETE CASCADE` with their parent market,
-matching the lifecycle rule in `001_initial_schema.sql`.
+| 파일                                    | 역할                                                                                 |
+| --------------------------------------- | ------------------------------------------------------------------------------------ |
+| `001_initial_schema.sql`                | 이슈, 결과 항목, 스냅샷, 지표, 변화 감지, 보고서, 관련 자료, 수집 로그의 초기 스키마 |
+| `002_context_candidates.sql`            | 검증 대상 맥락 자료와 수집 실행 기록                                                 |
+| `003_market_resolution_rules.sql`       | 출처를 보존하는 이슈 판정 기준 근거                                                  |
+| `004_ai_report_generation_requests.sql` | 온디맨드 브리핑 요청, 상태 이벤트, 임대와 캐시 식별자                                |
+| `005_ai_report_generation_blocks.sql`   | v8 검증 완료 브리핑 블록                                                             |
+| `006_scenario_conversations.sql`        | 24시간 만료 시나리오 세션, 대화 차례, 전제, 요청·이벤트·응답 블록                    |
 
-`003_market_resolution_rules.sql` is the ADR-049/TASK-083 append-only extension
-for provenance-preserving market resolution evidence. Its code implementation
-was approved during TASK-083 and the user separately approved application to
-the configured development database on 2026-07-11. The application and schema
-verification passed; production application remains prohibited without
-separate approval.
+001~006은 명시적으로 승인된 현재 로컬·개발 데이터베이스에만 적용되어 있습니다.
+공유·운영 환경이나 다른 데이터베이스에는 별도의 환경별 승인 없이 적용하면 안
+됩니다. 시나리오 세션 그래프는 유효 기간 중 추가 전용이며, 만료 뒤 또는 소유자의
+인증된 삭제 요청이 있을 때 해당 임시 그래프만 완전 삭제할 수 있습니다.
 
-`004_ai_report_generation_requests.sql` is the ADR-051/TASK-102 append-only
-on-demand briefing extension. It adds one immutable request identity per
-`(market_id, input_fingerprint)` and append-only queued/running/succeeded/failed
-events. Running events carry a bounded lease token/expiry; completed events
-carry either an exact report FK or a safe error code. The user approved local
-and development application under TASK-099 items 1-7. Production application
-and deployment remain prohibited without separate approval.
+## 적용 방법
 
-`005_ai_report_generation_blocks.sql` is the ADR-060/TASK-117 append-only
-validated-block extension. It stores only complete headline/summary or section
-objects that passed the active v8 validators, uniquely ordered by request,
-attempt, and sequence. The user subsequently approved and completed application
-to the currently configured `ENV=local` development database on 2026-07-11;
-table, constraint, and index verification passed. Any other database,
-production application, and deployment remain prohibited without separate
-approval.
-
-`006_scenario_conversations.sql` is the ADR-070/TASK-126 default-off,
-capability-scoped scenario-conversation extension. It stores ephemeral sessions,
-turns, immutable premise classes, generation requests/events, and complete
-validated response blocks. Rows are append-only while a session is live; only
-the scenario graph may be hard-deleted after its fixed 24-hour expiry or an
-authenticated owner deletion request. The user approved and completed
-application to the currently configured `ENV=local` development database on
-2026-07-12; six tables and 29 scenario constraints were verified. Do not apply
-migration 006 to another database without separate environment-specific
-approval.
-
-Once approved, running it against a real Postgres instance is:
+대상 데이터베이스와 실행 자체를 승인받은 경우, 저장소의 `backend` 디렉터리에서
+번호 순서대로 실행합니다.
 
 ```bash
 psql "$DATABASE_URL" -f migrations/001_initial_schema.sql
-```
-
-After the initial schema exists, an explicitly guarded local/development
-application may use:
-
-```bash
 psql "$DATABASE_URL" -f migrations/002_context_candidates.sql
-```
-
-The same guarded procedure applies to migration 003:
-
-```bash
 psql "$DATABASE_URL" -f migrations/003_market_resolution_rules.sql
-```
-
-And, after its predecessors, migration 004:
-
-```bash
 psql "$DATABASE_URL" -f migrations/004_ai_report_generation_requests.sql
-```
-
-Migration 005 must be applied only after a separate environment-specific
-approval:
-
-```bash
 psql "$DATABASE_URL" -f migrations/005_ai_report_generation_blocks.sql
-```
-
-Migration 006 was applied only to the approved local development database;
-the guarded command for a separately approved target remains:
-
-```bash
 psql "$DATABASE_URL" -f migrations/006_scenario_conversations.sql
 ```
 
-`psql` expects a plain Postgres URL such as `postgresql://...`; if local API
-runtime uses a SQLAlchemy-specific URL like `postgresql+psycopg://...`, convert
-only the scheme back to `postgresql://...` before invoking `psql`.
+`psql`은 `postgresql://...` 형식의 일반 PostgreSQL URL을 사용합니다. 애플리케이션
+설정이 `postgresql+psycopg://...` 형식이라면 실제 값을 출력하지 말고 스킴만
+`postgresql://...`로 바꿔 별도 셸 변수에 넣은 뒤 실행합니다.

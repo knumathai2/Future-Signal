@@ -34,8 +34,9 @@ movement to an external event without accepted source support.
   and last-known-good behavior.
 - **Database**: Migrations 001-006 are applied only to the approved local
   development database. Production writes and deployment remain unapproved.
-- **Documentation**: TASK-122 phases 1-3 are complete and reviewed; phases 4-7
-  are active on `pm/TASK-122-document-consolidation`.
+- **Documentation**: TASK-122 phases 1-7 are complete. All 11 tracked README
+  files are localized in Korean and revalidated against the current runtime,
+  commands, links, and deployment state.
 - **Phase 2 boundary**: TASK-123~125 lock the next summary/scenario policy and
   capability-scoped threat model. TASK-126 implements the approved default-off
   local/development API. TASK-128's guarded writer is implemented; two bounded
@@ -84,6 +85,7 @@ Full active technical debt is in `memory/known-issues.md`.
 
 | Date | Change |
 |---|---|
+| 2026-07-13 | TASK-122 completed documentation consolidation and Korean localization of all tracked README files, with current code/configuration, link, command, wording, Compose, DNS, and public-health verification. |
 | 2026-07-13 | TASK-137 removed sports and catch-all labels from public category navigation, retained underlying issues, and grouped stablecoin topics under economy without a schema or data mutation. |
 | 2026-07-12 | Migration 006 was applied to the approved local DB. TASK-128 added the guarded tool-free writer; two calls costing USD 0.0117605 failed closed on framing and date normalization with no assistant content stored. |
 | 2026-07-12 | TASK-126 implemented the approved default-off local/development scenario API, capability authentication, append-only migration 006 (unapplied), stored-block SSE, limits, and hard deletion without a provider, worker, dependency, or database action. |
@@ -100,9 +102,7 @@ Full active technical debt is in `memory/known-issues.md`.
 
 ## Next
 
-Approve one additional bounded TASK-128 provider call to produce the first
-stored scenario response after the framing and date-normalization corrections,
-or leave the task active. Complete TASK-122 phases 4-7; shared abuse controls, cleanup
-scheduling, Frontend work, deployment, and production remain separately gated.
-Another provider evaluation, workflow dispatch, deployment, or production
-operation requires its own authorization.
+Finish the TASK-021 live-demo rehearsal and backup capture sequence, decide the
+remaining TASK-128 closeout, and review TASK-109 legacy-runtime cleanup under
+its separate gate. Another provider evaluation, workflow dispatch, deployment,
+or production operation requires its own authorization.

@@ -1,17 +1,17 @@
-# UX Design
+# UX 설계
 
-Screen flow, copy policy, safety guardrails, prohibited features, UX priorities, and open questions.
+화면 흐름, 문구 정책, 안전 장치, 제한 기능, UX 우선순위와 미결 사항을 절 단위로
+나눈 기준 문서입니다.
 
-This document set was split from the former project-root document so `AI Development Harness/` can act as the working root. Use this index as the canonical entry point.
+## 절 구성
 
-## Section Map
+| 절   | 파일                                                                                          |
+| ---- | --------------------------------------------------------------------------------------------- |
+| 1~3  | [경험 요약과 화면 정책](01-experience-summary-screen-policy.md)                               |
+| 4~8  | [문구 정책, 안전 장치, 고지 방식](02-copy-safety-disclaimers.md)                              |
+| 9~15 | [기능 정책, 우선순위, 위험, 미결 사항, 다음 단계](03-feature-policy-priorities-risks-next.md) |
 
-| Sections | File |
-|---|---|
-| 1-3 | [Experience Summary and Screen Policy](01-experience-summary-screen-policy.md) |
-| 4-8 | [Copy Policy, Safety Guardrails, Disclaimers](02-copy-safety-disclaimers.md) |
-| 9-15 | [Feature Policy, Priorities, Risks, Open Questions, Next Steps](03-feature-policy-priorities-risks-next.md) |
+## 교차 참조
 
-## Cross-Reference Rule
-
-When another Harness document cites `UX Design §N`, resolve the section through the map above.
+다른 문서의 `UX Design §N` 표기는 위 표에서 해당 절이 포함된 파일을 찾아
+확인합니다.
