@@ -31,6 +31,9 @@ files.
 - Added an immediate ref-backed submission guard so a repeated click or Enter
   cannot start a second turn while the first POST is still awaiting its queued
   response.
+- Fixed the first-question transition so the empty prompt disappears while the
+  turn POST is pending and an in-transcript loading state remains visible until
+  the queued user turn and response placeholder replace it.
 - Preserved the default-off scenario boundary and made no provider, API, schema,
   database, dependency, infrastructure, deployment, production, or wording-
   policy change.
