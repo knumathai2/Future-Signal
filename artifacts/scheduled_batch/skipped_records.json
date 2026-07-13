@@ -1,11 +1,11 @@
 [
   {
-    "event_id": "17526",
+    "event_id": "17549",
     "reason": "No valid binary market found",
     "market_skip_reasons": [
-      "Market 521028: Closed or inactive",
-      "Market 521029: Closed or inactive",
-      "Market 677404: Missing required fields ['volume_24h']"
+      "Market 521103: Closed or inactive",
+      "Market 2749382: Missing required fields ['volume_24h']",
+      "Market 610236: Closed or inactive"
     ]
   },
   {
@@ -52,20 +52,30 @@
     "title": "Harvey Weinstein prison time?"
   },
   {
+    "event_id": "25009",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 546611: Closed or inactive",
+      "Market 546612: Closed or inactive",
+      "Market 676804: Missing required fields ['volume_24h']"
+    ]
+  },
+  {
+    "event_id": "25391",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 547957: Closed or inactive",
+      "Market 2676035: Missing required fields ['volume_24h']",
+      "Market 644510: Closed or inactive"
+    ]
+  },
+  {
     "event_id": "25413",
     "reason": "No valid binary market found",
     "market_skip_reasons": [
       "Market 548083: Closed or inactive",
       "Market 2749367: End date 2025-12-31T12:00:00Z is in the past",
       "Market 610256: Closed or inactive"
-    ]
-  },
-  {
-    "event_id": "25487",
-    "reason": "No valid binary market found",
-    "market_skip_reasons": [
-      "Market 548324: Closed or inactive",
-      "Market 1068702: Missing required fields ['volume_24h']"
     ]
   },
   {
@@ -87,6 +97,15 @@
     ]
   },
   {
+    "event_id": "33685",
+    "reason": "No valid binary market found",
+    "market_skip_reasons": [
+      "Market 566718: Closed or inactive",
+      "Market 700881: Closed or inactive",
+      "Market 1939065: Missing required fields ['volume_24h']"
+    ]
+  },
+  {
     "event_id": "34768",
     "reason": "No valid binary market found",
     "market_skip_reasons": [
@@ -95,25 +114,23 @@
     ]
   },
   {
-    "event_id": "34863",
+    "event_id": "37568",
     "reason": "No valid binary market found",
     "market_skip_reasons": [
-      "Market 569994: Closed or inactive",
-      "Market 1068728: Missing required fields ['volume_24h']"
+      "Market 2698285: Missing required fields ['volume_24h']",
+      "Market 576154: Closed or inactive",
+      "Market 2749421: Missing required fields ['volume_24h']",
+      "Market 904730: Closed or inactive",
+      "Market 904731: Closed or inactive"
     ]
   },
   {
-    "event_id": "39836",
+    "event_id": "40091",
     "reason": "No valid binary market found",
     "market_skip_reasons": [
-      "Market 2693968: Missing required fields ['volume_24h']",
-      "Market 581639: Closed or inactive",
-      "Market 581644: Closed or inactive",
-      "Market 623307: Closed or inactive",
-      "Market 623607: Closed or inactive",
-      "Market 623608: Closed or inactive",
-      "Market 644804: Closed or inactive",
-      "Market 651769: Closed or inactive"
+      "Market 582465: Closed or inactive",
+      "Market 582466: Closed or inactive",
+      "Market 1068384: Missing required fields ['volume_24h']"
     ]
   },
   {

@@ -282,6 +282,21 @@ costing USD 0.00634325 succeeded and stored one assistant turn plus three
 validated blocks. No retry or second call occurred. No further provider call
 is authorized by this boundary.
 
+### 2026-07-13 approved local end-to-end verification boundary
+
+The user's 2026-07-13 approval removes the prior one-call ceiling for the
+current local/development end-to-end verification. It authorizes excluding
+environment files from the Docker build context, using the already configured
+credentials without modifying or printing them, making the OpenRouter calls
+needed to exercise briefing and scenario generation, and writing the related
+request, evidence, report, session, turn, event, block, and usage records only
+to the currently configured local/development database. Calls must still be
+purpose-bound, recorded, and remain within the existing cumulative USD 100
+program ceiling; this is not authorization for unbounded retries or unrelated
+evaluations. It does not authorize deployment, production writes, schema or
+dependency changes, infrastructure activation beyond the Docker-context
+exclusion, default production scenario activation, or secret-file mutation.
+
 ---
 
 ## Branch Policy
