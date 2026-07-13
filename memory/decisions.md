@@ -2509,3 +2509,24 @@ display name, while public response values, stored browser state, package
 identity, and file references remain backward compatible. No schema, dependency,
 infrastructure, deployment, database, provider-call, secret, production, or
 wording-policy change was required.
+
+---
+
+### ADR-083: Keep the constitution permanent and move task history to audit records
+
+- **Date**: 2026-07-13
+- **Status**: Accepted and implemented in TASK-139
+- **Decided by**: User request to organize `AGENTS.md`
+
+**Decision**: Keep permanent restrictions, approval gates, branch rules, context
+loading, and handoff steps directly visible near the top-level document flow.
+Add a quick reference and contents, express restrictions as rules rather than
+task checkboxes, and remove task-specific approval history and identifiers from
+`AGENTS.md`. Keep those historical records in `memory/decisions.md`,
+`tasks/completed.md`, and corresponding reports; they cannot be reused as
+current authorization.
+
+**Consequences**: Agents can scan the everyday operating contract before the
+audit history, while permanent safety rules remain independent of task numbers.
+No product or wording policy, runtime, API, schema, dependency, database,
+provider, infrastructure, deployment, production, or secret state changed.

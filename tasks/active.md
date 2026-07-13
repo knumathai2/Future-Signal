@@ -31,7 +31,11 @@ plus review and debugging. Names remain blank for final entry. The slide file
 and wording/layout QA are complete. The final user-provided revision was reviewed
 with all four names filled, and a roughly 7.5-minute slide-by-slide Korean script
 with demo and fallback cues was added at `outputs/2팀_발표대본.md`; live-demo
-rehearsal, actual video insertion, and the backup capture sequence remain.
+rehearsal and actual video insertion remain. A verified 49.5-second 1280×720
+silent capture is ready at `outputs/outlook-ai-signals-demo.mp4`; it follows
+Home -> Detail -> 7-day chart -> stored briefing -> interpretation guide ->
+isolated scenario conversation. The capture record and copy check are in
+`reports/task-021-demo-video-capture.md`.
 
 TASK-101~108 and the user-directed TASK-110~111 follow-ups are complete under the
 user's approval of TASK-099 items 1-7.
