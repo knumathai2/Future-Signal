@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CautionBadge } from "./CautionBadge";
+import { LoadingSpinner } from "./LoadingSpinner";
 import type {
   Issue,
   ScenarioContentBlock,
@@ -157,7 +158,8 @@ function TurnCard({ turn }: { turn: ScenarioTurn }) {
 function PendingResponse({ blocks }: { blocks: ScenarioContentBlock[] }) {
   return (
     <article className="mr-auto max-w-[92%] rounded-xl border border-line bg-card px-4 py-3 sm:max-w-[78%]">
-      <span className="text-[11px] font-bold text-accent">
+      <span className="inline-flex items-center gap-2 text-[11px] font-bold text-accent">
+        <LoadingSpinner className="h-3.5 w-3.5" />
         조건부 시나리오 · 작성 중
       </span>
       {blocks.length ? (
@@ -165,11 +167,22 @@ function PendingResponse({ blocks }: { blocks: ScenarioContentBlock[] }) {
           <RestrictedBlocks blocks={blocks} />
         </div>
       ) : (
-        <p className="mt-2 text-sm leading-6 text-ink-soft" role="status">
+        <p className="mt-2 text-sm leading-6 text-ink-soft">
           저장된 정보와 가정을 구분해 응답을 준비하고 있습니다.
         </p>
       )}
     </article>
+  );
+}
+
+function PendingTurnSubmission() {
+  return (
+    <div className="mx-auto flex max-w-xl items-center justify-center gap-2 py-8 text-accent">
+      <LoadingSpinner />
+      <p className="text-sm font-semibold text-ink-soft">
+        질문을 보내는 중입니다.
+      </p>
+    </div>
   );
 }
 
@@ -188,6 +201,8 @@ export function ScenarioConversation({ issue }: { issue: Issue }) {
   const [failedTurnId, setFailedTurnId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [submittingTurn, setSubmittingTurn] = useState(false);
+  const submittingTurnRef = useRef(false);
   const streamCleanup = useRef<() => void>(() => undefined);
   const pollTimer = useRef<number | null>(null);
   const watchVersion = useRef(0);
@@ -320,6 +335,8 @@ export function ScenarioConversation({ issue }: { issue: Issue }) {
     setPendingTurn(null);
     setPendingBlocks([]);
     setFailedTurnId(null);
+    submittingTurnRef.current = false;
+    setSubmittingTurn(false);
     const stored = readCredential(issue.id);
     if (!stored) {
       setCredential(null);
@@ -408,7 +425,16 @@ export function ScenarioConversation({ issue }: { issue: Issue }) {
 
   const submitTurn = async () => {
     const normalized = message.trim();
-    if (!credential || !session || !normalized || pendingTurn) return;
+    if (
+      !credential ||
+      !session ||
+      !normalized ||
+      pendingTurn ||
+      submittingTurnRef.current
+    )
+      return;
+    submittingTurnRef.current = true;
+    setSubmittingTurn(true);
     setActionError(null);
     try {
       const created = await createScenarioTurn(
@@ -448,6 +474,9 @@ export function ScenarioConversation({ issue }: { issue: Issue }) {
         setSession(null);
         setViewState("expired");
       }
+    } finally {
+      submittingTurnRef.current = false;
+      setSubmittingTurn(false);
     }
   };
 
@@ -476,9 +505,11 @@ export function ScenarioConversation({ issue }: { issue: Issue }) {
   if (viewState === "loading") {
     return (
       <section
-        className="mt-6 rounded-xl border border-line bg-card px-4 py-8 text-center"
+        className="mt-6 flex items-center justify-center gap-2 rounded-xl border border-line bg-card px-4 py-8 text-center text-accent"
+        role="status"
         aria-live="polite"
       >
+        <LoadingSpinner />
         <p className="text-sm font-semibold text-ink-soft">
           시나리오 대화 상태를 불러오는 중입니다.
         </p>
@@ -569,7 +600,7 @@ export function ScenarioConversation({ issue }: { issue: Issue }) {
           visibleTurns.map((turn) => (
             <TurnCard key={turn.turn_id} turn={turn} />
           ))
-        ) : (
+        ) : !submittingTurn ? (
           <div className="mx-auto max-w-xl py-8 text-center">
             <h3 className="text-sm font-bold text-ink">
               확인하고 싶은 조건을 입력해 주세요
@@ -579,7 +610,8 @@ export function ScenarioConversation({ issue }: { issue: Issue }) {
               살펴봅니다.
             </p>
           </div>
-        )}
+        ) : null}
+        {submittingTurn ? <PendingTurnSubmission /> : null}
         {pendingTurn ? <PendingResponse blocks={pendingBlocks} /> : null}
         <div ref={transcriptEnd} />
       </div>
@@ -619,7 +651,11 @@ export function ScenarioConversation({ issue }: { issue: Issue }) {
           value={message}
           maxLength={1000}
           rows={3}
-          disabled={Boolean(pendingTurn) || session.remaining_turns === 0}
+          disabled={
+            submittingTurn ||
+            Boolean(pendingTurn) ||
+            session.remaining_turns === 0
+          }
           onChange={(event) => setMessage(event.target.value)}
           onKeyDown={(event) => {
             if (
@@ -642,13 +678,22 @@ export function ScenarioConversation({ issue }: { issue: Issue }) {
             type="button"
             disabled={
               !message.trim() ||
+              submittingTurn ||
               Boolean(pendingTurn) ||
               session.remaining_turns === 0
             }
             onClick={() => void submitTurn()}
-            className="inline-flex min-h-11 items-center rounded-full bg-accent px-5 text-sm font-bold text-card disabled:cursor-not-allowed disabled:opacity-45"
+            aria-busy={submittingTurn}
+            className="inline-flex min-h-11 items-center gap-2 rounded-full bg-accent px-5 text-sm font-bold text-card disabled:cursor-not-allowed disabled:opacity-45"
           >
-            질문 보내기
+            {submittingTurn ? (
+              <>
+                <LoadingSpinner />
+                <span>질문을 보내는 중</span>
+              </>
+            ) : (
+              "질문 보내기"
+            )}
           </button>
         </div>
         {actionError ? (

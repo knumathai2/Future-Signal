@@ -14,19 +14,49 @@ files.
 
 ## Session
 
-- **Role**: Reviewer / Debugger
-- **Branch**: `backend/ISS-024-deploy-osignal`
-- **Goal**: Refresh the configured DB and publish the refreshed read path on the current server.
-- **Status**: Server restarted and public HTTPS now serves the refreshed 20-issue dataset
+- **Role**: Frontend Implementer
+- **Branch**: `frontend/TASK-136-generation-loading`
+- **Goal**: Add visible, accessible loading feedback to briefing and scenario
+  generation.
+- **Status**: TASK-136 complete; latest main deployment and data-refresh handoff preserved
+
+## Completed in TASK-136
+
+- Added one dependency-free neutral spinner component with a reduced-motion
+  fallback.
+- Added visible progress to briefing request submission and queued/running
+  generation while preserving validated-block streaming and the existing
+  caution/timestamp surface.
+- Added visible progress to scenario session loading, question submission, and
+  pending validated response blocks.
+- Added an immediate ref-backed submission guard so a repeated click or Enter
+  cannot start a second turn while the first POST is still awaiting its queued
+  response.
+- Fixed the first-question transition so the empty prompt disappears while the
+  turn POST is pending and an in-transcript loading state remains visible until
+  the queued user turn and response placeholder replace it.
+- TASK-136 itself made no provider, feature-activation, API, schema, database,
+  dependency, infrastructure, deployment, production, or wording-policy change.
+- Passed Prettier, typecheck, lint, report/scenario parser checks, production
+  build, changed-string wording scan, and local Browser verification. The known
+  Recharts bundle-size warning remains unchanged.
 
 ## Completed in approved production activation
 
-- Added guarded production execution for on-demand v8 briefing and scenario workers; local/development defaults remain unchanged.
-- Production Compose now passes the existing provider credential reference without printing or modifying the secret, enables both generation workers and scenario sessions, and was rebuilt/restarted successfully.
-- Confirmed production DB already contained migrations 005 and 006; no migration write was needed.
-- Recovered the previously queued briefing request; one validated v8 report was stored and public GET returned `fresh`.
-- Created, processed, streamed, and deleted one production scenario session after a final successful writer evaluation.
-- Early bounded scenario probes failed closed on `unsupported_number` and `unconditional_model_premise`; the deterministic input-date allowance and prompt restrictions were added before the successful final probe.
+- Added guarded production execution for on-demand v8 briefing and scenario
+  workers; local/development defaults remain unchanged.
+- Production Compose now passes the existing provider credential reference
+  without printing or modifying the secret, enables both generation workers
+  and scenario sessions, and was rebuilt/restarted successfully.
+- Confirmed production DB already contained migrations 005 and 006; no migration
+  write was needed.
+- Recovered the previously queued briefing request; one validated v8 report was
+  stored and public GET returned `fresh`.
+- Created, processed, streamed, and deleted one production scenario session
+  after a final successful writer evaluation.
+- Early bounded scenario probes failed closed on `unsupported_number` and
+  `unconditional_model_premise`; the deterministic input-date allowance and
+  prompt restrictions were added before the successful final probe.
 
 ## Completed in server restart and DB-path recovery
 
@@ -74,10 +104,14 @@ files.
   total for this verification.
 - No deployment, production write, migration, schema/dependency/API change,
   secret mutation or output, production scenario activation, or wording-policy
-  change occurred.
+  change occurred during that local verification stage.
 
 ## Completed in TASK-021 so far
 
+- Reviewed the final user-provided 14-slide deck `2팀 발표a.pptx` at full size
+  and produced `outputs/2팀_발표대본.md`, a roughly 7.5-minute Korean script
+  with slide transitions, a 45-60-second demo cue, a live-demo fallback, a
+  one-page cue sheet, and rehearsal notes.
 - Produced an editable 14-slide PowerPoint covering the user problem, public-
   data insight, product flow, dashboard/detail experience, validated-block
   briefing boundary, product safeguards, architecture, implementation evidence,
@@ -198,16 +232,25 @@ files.
 
 ## Boundaries
 
+- TASK-136 is Frontend-only and does not authorize or perform a provider call,
+  feature activation, API/schema change, database action, infrastructure change,
+  deployment, or production write.
 - The presentation uses stored project evidence only; it does not authorize or
   imply a provider call, deployment, production write, feature activation, or
   infrastructure change.
-- Active v8 and the default-off scenario boundary remain unchanged.
+- The merged main history includes a separately approved guarded production
+  activation; TASK-136 does not broaden that authorization or runtime scope.
 - TASK-021 is not complete until the live-demo rehearsal and backup capture
   sequence are finished.
 
 ## Next handoff
 
-Review `outputs/outlook-signals-presentation-v3.pptx`, insert the final 16:9
-demo video on slide 5, fill the four blank name lines, select the final demo issue,
-then rehearse the live sequence and capture the ordered screenshot/video backup.
-TASK-130 and TASK-131 remain separate scenario evaluation and activation work.
+TASK-136 loading feedback and its first-question transition follow-up are
+complete. The latest main deployment, production-activation, and data-refresh
+records are preserved in this handoff.
+
+Use the final user-provided `/Users/sonmyeong-gwan/Desktop/2팀 발표a.pptx`,
+which has the four names filled, insert the final 16:9 demo video on slide 5,
+select the final demo issue, then rehearse with `outputs/2팀_발표대본.md` and
+capture the ordered screenshot/video backup. TASK-130 and TASK-131 remain
+separate scenario evaluation and activation work.
