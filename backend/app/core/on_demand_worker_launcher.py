@@ -29,9 +29,17 @@ def _reap_worker(process: subprocess.Popen[bytes]) -> None:
         )
 
 
-def launch_on_demand_worker(request_id: uuid.UUID, *, env: str) -> bool:
+def launch_on_demand_worker(
+    request_id: uuid.UUID,
+    *,
+    env: str,
+    allow_production: bool = False,
+) -> bool:
     """Start one request-scoped worker without blocking the API response."""
-    if env.strip().lower() not in _AUTO_LAUNCH_ENVS:
+    normalized_env = env.strip().lower()
+    if normalized_env not in _AUTO_LAUNCH_ENVS and not (
+        normalized_env == "production" and allow_production
+    ):
         logger.warning(
             "On-demand worker auto-launch skipped outside local/development: env=%s",
             env,
@@ -44,7 +52,7 @@ def launch_on_demand_worker(request_id: uuid.UUID, *, env: str) -> bool:
         "app.core.on_demand_worker",
         "--request-id",
         str(request_id),
-        "--confirm-local-dev-write",
+        "--confirm-generation-write",
     ]
     try:
         process = subprocess.Popen(

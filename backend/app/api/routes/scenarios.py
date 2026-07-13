@@ -89,10 +89,9 @@ def _set_private_headers(response: Response) -> None:
 
 
 def _ensure_enabled() -> None:
-    if not settings.scenario_conversation_enabled or settings.env not in {
-        "local",
-        "development",
-    }:
+    if not settings.scenario_conversation_enabled:
+        raise _public_error(status.HTTP_404_NOT_FOUND, "feature_unavailable")
+    if settings.env.strip().lower() == "production" and not settings.generation_workers_enabled:
         raise _public_error(status.HTTP_404_NOT_FOUND, "feature_unavailable")
 
 
@@ -101,11 +100,7 @@ def _parse_capability(authorization: str | None) -> str:
         raise _public_error(status.HTTP_401_UNAUTHORIZED, "session_token_required")
     scheme, separator, capability = authorization.partition(" ")
     capability = capability.strip()
-    if (
-        separator != " "
-        or scheme.lower() != "bearer"
-        or not 40 <= len(capability) <= 80
-    ):
+    if separator != " " or scheme.lower() != "bearer" or not 40 <= len(capability) <= 80:
         raise _public_error(status.HTTP_401_UNAUTHORIZED, "session_token_required")
     return capability
 
@@ -124,11 +119,7 @@ class _LocalRateLimiter:
 
     def allow(self, client_key: str, kind: str, now: float | None = None) -> bool:
         timestamp = time.monotonic() if now is None else now
-        limits = (
-            ((600, 3), (86400, 20))
-            if kind == "session"
-            else ((600, 10), (86400, 60))
-        )
+        limits = ((600, 3), (86400, 20)) if kind == "session" else ((600, 10), (86400, 60))
         digest = hmac.new(
             self._secret,
             client_key.encode("utf-8"),
@@ -191,7 +182,11 @@ def _maybe_relaunch_queued_request(
         return False
     if checked_at - _as_utc(latest.recorded_at) < _QUEUED_RELAUNCH_AFTER:
         return False
-    return launch_scenario_worker(generation_request.id, env=settings.env)
+    return launch_scenario_worker(
+        generation_request.id,
+        env=settings.env,
+        allow_production=settings.generation_workers_enabled,
+    )
 
 
 @router.post(
@@ -220,9 +215,7 @@ def create_session(
         raise
     except SQLAlchemyError as exc:
         db.rollback()
-        raise _public_error(
-            status.HTTP_503_SERVICE_UNAVAILABLE, "generation_unavailable"
-        ) from exc
+        raise _public_error(status.HTTP_503_SERVICE_UNAVAILABLE, "generation_unavailable") from exc
     if created is None:
         raise _public_error(status.HTTP_409_CONFLICT, "current_bundle_unavailable")
     session = created.session
@@ -337,13 +330,15 @@ def create_turn(
         raise _public_error(code_to_status.get(exc.code, 400), exc.code) from exc
     except SQLAlchemyError as exc:
         db.rollback()
-        raise _public_error(
-            status.HTTP_503_SERVICE_UNAVAILABLE, "generation_unavailable"
-        ) from exc
+        raise _public_error(status.HTTP_503_SERVICE_UNAVAILABLE, "generation_unavailable") from exc
     if result.created:
         # The API commits first, then starts a request-scoped child. Provider
         # construction and all response validation remain outside this process.
-        launch_scenario_worker(result.request.id, env=settings.env)
+        launch_scenario_worker(
+            result.request.id,
+            env=settings.env,
+            allow_production=settings.generation_workers_enabled,
+        )
     return ScenarioTurnCreateResponse(
         turn_id=result.turn.id,
         sequence=result.turn.sequence_number,
@@ -419,9 +414,7 @@ def _sse_event(event: str, data: dict, *, event_id: int | None = None) -> str:
     return "\n".join(lines) + "\n\n"
 
 
-@router.get(
-    "/api/issues/{issue_id}/scenario-sessions/{session_id}/turns/{turn_id}/stream"
-)
+@router.get("/api/issues/{issue_id}/scenario-sessions/{session_id}/turns/{turn_id}/stream")
 def stream_turn(
     issue_id: UUID,
     session_id: UUID,
@@ -485,13 +478,13 @@ def stream_turn(
             if latest_state != "queued":
                 blocks = list(
                     db.execute(
-                    select(ScenarioResponseBlock)
-                    .where(
-                        ScenarioResponseBlock.request_id == generation_request.id,
-                        ScenarioResponseBlock.attempt_number == latest_attempt_number,
-                        ScenarioResponseBlock.id > after_block_id,
-                    )
-                    .order_by(ScenarioResponseBlock.sequence_number.asc())
+                        select(ScenarioResponseBlock)
+                        .where(
+                            ScenarioResponseBlock.request_id == generation_request.id,
+                            ScenarioResponseBlock.attempt_number == latest_attempt_number,
+                            ScenarioResponseBlock.id > after_block_id,
+                        )
+                        .order_by(ScenarioResponseBlock.sequence_number.asc())
                     ).scalars()
                 )
                 for block in blocks:
@@ -565,6 +558,4 @@ def delete_session(
         delete_scenario_session(db, session)
     except SQLAlchemyError as exc:
         db.rollback()
-        raise _public_error(
-            status.HTTP_503_SERVICE_UNAVAILABLE, "generation_unavailable"
-        ) from exc
+        raise _public_error(status.HTTP_503_SERVICE_UNAVAILABLE, "generation_unavailable") from exc

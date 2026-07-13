@@ -10,21 +10,19 @@ exist in the target database before this path is enabled. It was subsequently
 applied only to the explicitly approved `ENV=local` development database;
 other environments remain separately gated.
 
-TASK-126 adds a default-off, local/development-only scenario-session API and
-migration 006, applied only to the approved local DB. Setting
-`SCENARIO_CONVERSATION_ENABLED=true` exposes
-capability-authenticated session/turn/request storage and validated-block
-replay. TASK-132 starts the existing isolated worker after a newly created turn
-commits, while the API process itself never constructs a provider client.
-Idempotent replay does not launch a second worker. The feature remains
-unavailable outside `ENV=local` or `ENV=development`. Migration 006 must exist
-before enabling the flag against a database.
+TASK-126 adds a default-off scenario-session API and migration 006. Setting
+`SCENARIO_CONVERSATION_ENABLED=true` exposes capability-authenticated
+session/turn/request storage and validated-block replay; production also
+requires `AI_GENERATION_WORKERS_ENABLED=true`. TASK-132 starts the existing
+isolated worker after a newly created turn commits, while the API process itself
+never constructs a provider client. Idempotent replay does not launch a second
+worker. Migration 006 must exist before enabling the flag against a database.
 
 TASK-128 adds the guarded local/development worker for one queued scenario
 request. It can still be invoked manually for recovery:
 
 ```bash
-python -m app.core.scenario_worker --request-id <uuid> --confirm-local-dev-write
+python -m app.core.scenario_worker --request-id <uuid> --confirm-generation-write
 ```
 
 It performs one tool-free call and stores only output that passes the complete
