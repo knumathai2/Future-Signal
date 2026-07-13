@@ -215,6 +215,14 @@ request claim before any provider work. Running or terminal attempts are never
 automatically relaunched. The preserved queued request recovered after restart
 with one USD 0.00634325 call and stored one assistant turn plus three blocks.
 
+ISS-027 advances the current scenario writer to version 3. The prompt now
+provides the exact required current user-turn reference in a dedicated typed
+contract and in the minimum JSON output example, while optional refs are listed
+separately and deterministically. The validator still rejects a missing or
+unknown ref without correction or retry. All 549 Backend tests and one
+purpose-bound local evaluation passed; the evaluation cost USD 0.0063915 and
+stored one assistant turn plus three validated blocks.
+
 TASK-135 preserves complete response validation and append-only block storage,
 then progressively replays those stored scenario blocks over authenticated SSE.
 The first block is immediate and later blocks are paced at 0.2-second intervals.
