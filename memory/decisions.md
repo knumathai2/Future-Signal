@@ -2431,3 +2431,31 @@ records remain valid. The configured local response is currently `정치`,
 `경제`, `기술`, and `세계`; `환경` will appear only when it has a servable issue.
 No schema, database write, dependency, provider call, infrastructure,
 deployment, production action, or wording-policy change was required.
+
+---
+
+### ADR-080: Make the current scenario turn an explicit output-contract value
+
+- **Date**: 2026-07-13
+- **Status**: Accepted and implemented in ISS-027
+- **Decided by**: User request to fix the reported first-response failure
+
+**Context**: The reported first turn and seven immediately preceding scenario
+requests reached the worker and received one provider response, but failed
+closed with `current_turn_ref_missing`. The system prompt mentioned the
+requirement, while the JSON minimum output example described only a generic
+supplied reference. The provider repeatedly selected evidence refs without
+copying the current user-turn ref.
+
+**Decision**: Advance to `scenario-writer-3`. Supply the current turn as a typed
+object, repeat its exact ref in a dedicated reference contract, and place the
+literal ref in the minimum `premise_refs` output array. List optional refs
+separately in deterministic order. Preserve the existing unknown-ref and
+required-current-ref validators; never inject a missing ref after generation
+and never retry automatically.
+
+**Consequences**: Ruff and all 549 Backend tests pass. One purpose-bound local
+evaluation made exactly one OpenRouter call costing USD 0.0063915, passed the
+unchanged complete-output gates, and stored one assistant turn plus three
+validated blocks. No public API, schema, dependency, secret, infrastructure,
+deployment, production, or wording-policy state changed.

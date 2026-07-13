@@ -14,47 +14,37 @@ files.
 
 ## Session
 
-- **Role**: PM / Planner and Reviewer
-- **Branch**: `pm/TASK-122-korean-readmes`
-- **Goal**: Translate every tracked README into Korean, verify it against the
-  current project, and remove obsolete or duplicated guidance.
+- **Role**: Data/AI Implementer and Debugger
+- **Branch**: `data-ai/ISS-027-scenario-first-response`
+- **Goal**: Restore the missing first response in scenario conversation.
 - **Status**: Complete
 
 ## Completed
 
-- Translated all 11 tracked README files into Korean.
-- Removed the obsolete `AI Development Harness/` working-root explanation and
-  replaced task-by-task Backend history with concise current operating guidance.
-- Corrected Backend production worker behavior to match the guarded production
-  flags and current Compose configuration.
-- Added the missing `test:api-url` and `test:scenario-parser` checks to the root
-  and Frontend verification guidance.
-- Consolidated migration descriptions and preserved the append-only and
-  environment-specific approval boundaries.
-- Verified the deployment README against Compose, the current DNS A record, and
-  the public health endpoint.
-- Moved TASK-122 from the active list to the completed ledger and corrected the
-  current project snapshot.
+- Matched the reported screen to the session created at
+  `2026-07-13T05:59:41.717500+00:00` and identified terminal
+  `current_turn_ref_missing` validation.
+- Confirmed the reported request and seven immediately preceding requests
+  shared the same failure after normal queue, worker claim, and provider
+  completion.
+- Advanced the prompt to `scenario-writer-3` and made the exact current-turn ref
+  explicit in a typed current-turn object, dedicated reference contract, and
+  minimum JSON output example.
+- Kept optional refs separate and deterministic, and retained the unchanged
+  fail-closed validator without server-side ref injection or automatic retry.
+- Added a regression that verifies the exact serialized reference contract.
 
 ## Verification
 
-- All local Markdown links in the 11 README files resolve.
-- Prettier and `git diff --check` pass.
-- Prohibited and contextual wording scans return no matches in changed README
-  files.
-- Backend CLI help checks, Ruff, and all 548 Backend tests pass.
-- Frontend typecheck, lint, API URL, report parser, scenario parser, and
-  production build pass; the known Recharts chunk-size warning remains.
-- Docker Compose configuration, `osignal.gilgop.cloud` DNS, and the public
-  `/api/health` response pass.
-
-## Boundaries
-
-- No runtime, public API, schema, dependency, database, provider, infrastructure,
-  deployment, production, or wording-policy state changed.
-- No real `.env` or secret file was read, printed, or modified.
+- Ruff passes.
+- All 549 Backend tests pass.
+- One purpose-bound local/development evaluation made exactly one OpenRouter
+  call, cost USD 0.0063915, and reached `succeeded` without retry.
+- The evaluation stored one assistant turn and three validated response blocks.
+- No public API, schema, dependency, secret, infrastructure, deployment,
+  production, or wording-policy state changed.
 
 ## Next handoff
 
-TASK-122 is complete. TASK-021 demo rehearsal, TASK-128 closeout, and TASK-109
-legacy-runtime review remain separate work.
+ISS-027 is complete. The code is not deployed; deployment remains separately
+approval-gated. TASK-128, TASK-109, and TASK-021 remain separate active work.

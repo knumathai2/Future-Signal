@@ -85,6 +85,7 @@ Full active technical debt is in `memory/known-issues.md`.
 
 | Date | Change |
 |---|---|
+| 2026-07-13 | ISS-027 advanced the scenario writer to v3 with an explicit exact current-turn reference contract and minimum output example. All 549 Backend tests passed, and one purpose-bound local evaluation cost USD 0.0063915 and stored one assistant turn plus three validated blocks without retry. |
 | 2026-07-13 | TASK-122 completed documentation consolidation and Korean localization of all tracked README files, with current code/configuration, link, command, wording, Compose, DNS, and public-health verification. |
 | 2026-07-13 | TASK-137 removed sports and catch-all labels from public category navigation, retained underlying issues, and grouped stablecoin topics under economy without a schema or data mutation. |
 | 2026-07-12 | Migration 006 was applied to the approved local DB. TASK-128 added the guarded tool-free writer; two calls costing USD 0.0117605 failed closed on framing and date normalization with no assistant content stored. |
