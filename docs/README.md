@@ -21,7 +21,8 @@ Harness 버전: 1.1
 
 ## 문서 우선순위
 
-`AGENTS.md`, `standards.md`, `dependencies.md`, `roadmap.md`, `memory/`, `tasks/`,
-`prompts/`는 팀의 작업 방식을 정합니다. 위 네 문서 묶음은 제품의 요구사항과 설계를
-정합니다. 내용이 충돌하면 관련 기준 문서의 원문 절을 확인하고, 프로젝트 운영 규칙에
-따라 필요한 문서를 함께 갱신합니다.
+`AGENTS.md`, `standards.md`, `dependencies.md`, `memory/project.md`,
+`memory/architecture.md`는 유지보수와 현재 구현 상태를 정합니다. 위 네 문서 묶음은
+제품의 요구사항과 설계를 정합니다. 내용이 충돌하면 실행 가능한 코드와 공개 API
+계약을 확인하고 관련 기준 문서를 함께 갱신합니다. 과거 개발 결정과 완료 이력은
+`memory/decisions.md`와 `tasks/completed.md`에만 보관합니다.

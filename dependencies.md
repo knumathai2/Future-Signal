@@ -1,72 +1,64 @@
 <!--
-Purpose:        External dependency tracking and version constraints
-Owner:          Backend Implementer / Frontend Implementer
-Update Trigger: Dependency added, removed, or version changed (HUMAN APPROVAL required)
+Purpose:        Current external dependencies and runtime constraints
+Owner:          Backend / Frontend maintainers
+Update Trigger: Dependency or supported-runtime change
 Harness Version: 1.1
 -->
 
-# dependencies.md — Outlook AI Signals Dependencies
+# Dependencies — Outlook AI Signals
 
-_Last updated: 2026-07-10_
+_Last updated: 2026-07-13_
 
-## Core Dependencies — Frontend
+Package manifests and lockfiles are the executable source of truth. This file
+summarizes the supported runtime and major integration choices.
 
-| Package | Purpose |
-|---------|---------|
-| react, react-dom | UI framework |
-| react-router-dom `^7.18.0` | React 18-compatible browser routing for Home, full issue list, detail, and methodology — approved for TASK-054 on 2026-07-10 |
-| vite | Build tool / dev server |
-| typescript | Type safety |
-| tailwindcss | Styling |
-| recharts | Line chart rendering (24h/7d/30d, inflection markers) |
+## Frontend
 
-## Core Dependencies — Backend
+| Package           | Version          | Purpose                                 |
+| ----------------- | ---------------- | --------------------------------------- |
+| React / React DOM | ^18.3.1          | Component runtime                       |
+| React Router DOM  | ^7.18.0          | Browser routing                         |
+| Recharts          | ^2.12.7          | Time-series charts                      |
+| Vite              | ^5.4.6           | Development server and production build |
+| TypeScript        | ^5.5.4           | Static typing                           |
+| Tailwind CSS      | ^3.4.10          | Styling                                 |
+| ESLint / Prettier | package manifest | Linting and formatting                  |
 
-| Package | Purpose |
-|---------|---------|
-| fastapi | Read-only REST API |
-| uvicorn | ASGI server |
-| pydantic | Request/response models, data validation |
-| sqlalchemy (or equivalent) | Postgres ORM/query layer |
-| psycopg[binary] | Postgres driver paired with SQLAlchemy — approved 2026-07-08 (TASK-001, human approval) |
-| psycopg2-binary | Compatibility Postgres driver for provider-copied `postgresql://...` URLs, including Supabase connection strings — approved by user request on 2026-07-09 |
-| python-dotenv | Local-dev `.env` loading only, not used in deployed environments — approved 2026-07-08 (TASK-001, human approval) |
-| httpx or requests | Polymarket Gamma/CLOB API calls |
-| openai==2.44.0 | Template-constrained AI report generation client — approved 2026-07-09 for TASK-015 in ADR-022 (human approval; no live calls unless `OPENAI_API_KEY` is configured) |
+## Backend
 
-## Dev Dependencies
+| Package           | Version              | Purpose                                                 |
+| ----------------- | -------------------- | ------------------------------------------------------- |
+| FastAPI           | 0.115.0              | Public API                                              |
+| Uvicorn           | 0.30.6               | ASGI server                                             |
+| Pydantic          | 2.9.2                | Request, response, and provider-output validation       |
+| SQLAlchemy        | 2.0.35               | PostgreSQL persistence                                  |
+| psycopg           | 3.2.3                | Primary PostgreSQL driver                               |
+| psycopg2-binary   | 2.9.10               | Compatibility PostgreSQL driver                         |
+| python-dotenv     | 1.0.1                | Local environment loading                               |
+| OpenAI Python SDK | 2.44.0               | OpenAI-compatible provider client, including OpenRouter |
+| httpx             | 0.27.2               | Development/test HTTP client                            |
+| Ruff / pytest     | requirements-dev.txt | Linting and tests                                       |
 
-| Package | Purpose |
-|---------|---------|
-| eslint / prettier | Frontend lint/format |
-| ruff | Backend lint/format |
-| pytest | Backend tests (change-calc, threshold, banned-phrase filter) |
+The supported local Backend runtime is Python 3.11.
 
-## External Services / APIs
+## External systems
 
-| Service | Purpose | Auth | Notes |
-|---------|---------|------|-------|
-| Polymarket Gamma API | Market/event metadata, categories, volume, liquidity, dates | Public, no auth documented as required | Validate field structure on Day 1 spike (Technical Design §17) |
-| Polymarket CLOB API | Order book, trade prices, `prices-history` | Public | Resolution/retention varies by market age — thin markets have gappy history |
-| OpenAI API | Template-phrasing pass for AI report generation only, never free-form | API key | Provider and package approved 2026-07-09 in ADR-022; cost-gated by missing-key default, signal/staleness regeneration, and batch cap (Technical Design §9) |
-| Supabase or Neon | Managed PostgreSQL hosting | Connection string / API key | Pick one on Day 1, do not evaluate both mid-build |
-| Vercel | Frontend hosting | Git-connected | Auto-deploy on push |
-| Railway or Render | Backend + batch collector hosting | Git-connected | Auto-deploy on push; also hosts the cron-triggered batch job |
-| Sentry (should-have) | Error capture | API key | Optional — only if a role finishes must-haves early |
+| System                                  | Use                                                                             |
+| --------------------------------------- | ------------------------------------------------------------------------------- |
+| Polymarket Gamma API                    | Public market and event metadata                                                |
+| Polymarket CLOB API                     | Historical price data                                                           |
+| PostgreSQL                              | Application, evidence, report, and ephemeral scenario storage                   |
+| OpenAI-compatible provider / OpenRouter | Bounded context research, briefing generation, and tool-free scenario responses |
+| GitHub Actions                          | Four-hour market-data-only collection                                           |
+| Docker Compose                          | Backend and Frontend process orchestration                                      |
+| Caddy                                   | TLS termination and public reverse proxy                                        |
 
-## Explicitly excluded dependencies (do not add without HUMAN APPROVAL + PM sign-off)
+## Dependency policy
 
-- Any auth/accounts library (Supabase Auth, NextAuth, etc.) — no login in hackathon MVP
-- Any message queue / task runner (Celery, RQ, Airflow, Prefect) — sequential batch script is sufficient at 30–50 markets
-- Candlestick/financial charting libraries — line-chart-only per UX Design §3.4
-
-## Version Policy
-
-- Major upgrades: HUMAN APPROVAL + full manual demo-flow retest required
-- Minor / patch: Reviewer sign-off then proceed
-- Security patches: Apply immediately, Reviewer reviews after
-- Given the 5-day window: avoid any dependency upgrade during the hackathon unless it fixes a blocking bug
-
-## Temporary Audit Decisions
-
-- 2026-07-08 / PR #6: Keep frontend on the approved Vite 5.x major range and temporarily accept the Vite/esbuild dev-server audit warning. Clearing it requires a Vite major upgrade, which is deferred to a separate dependency-maintenance task with explicit approval and full manual demo-flow retest (ADR-010).
+- Adding a dependency or changing a major version requires human approval.
+- Minor and patch updates require review and full relevant checks.
+- Dependency changes must update the manifest, lockfile, this summary, and the
+  applicable deployment image.
+- No authentication, account, message-queue, task-runner, or financial-charting
+  dependency may be added without an explicitly approved product and
+  architecture change.

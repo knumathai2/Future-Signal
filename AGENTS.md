@@ -18,62 +18,37 @@ _Last updated: 2026-07-13_
 ## Operational Quick Reference
 
 1. Read the required context in [Context Loading Order](#context-loading-order).
-2. Select the matching role and work only on a compliant role-prefixed branch.
+2. Work only on a compliant role-prefixed maintenance branch.
 3. Check [Absolute Restrictions](#absolute-restrictions-never-do) and
    [Actions Requiring Human Approval](#actions-requiring-human-approval)
    before changing code, data, contracts, infrastructure, or user-facing copy.
 4. Treat every recorded approval as task-, environment-, and action-specific;
    consumed approval does not authorize another call, write, migration, or
    deployment.
-5. Complete the [Session End Checklist](#session-end-checklist) before handoff.
+5. Complete the [Maintenance Handoff Checklist](#maintenance-handoff-checklist)
+   before handoff.
 
 ## Contents
 
 - [Project Overview](#project-overview)
-- [Agent Registry](#agent-registry)
 - [Absolute Restrictions](#absolute-restrictions-never-do)
 - [Actions Requiring Human Approval](#actions-requiring-human-approval)
 - [Branch Policy](#branch-policy)
 - [Context Loading Order](#context-loading-order)
-- [Session End Checklist](#session-end-checklist)
+- [Maintenance Handoff Checklist](#maintenance-handoff-checklist)
 
 ---
 
 ## Project Overview
 
-| Field           | Value                                                                                                                                                                                                                                                                       |
-| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Project         | Outlook AI Signals ("Outlook AI Signals" — working title, per PRD)                                                                                                                                                                                                          |
-| Goal            | Show how public expectations on major global issues have shifted, using Polymarket's public prediction-market data — surfacing sudden-change issues, time-series charts, and template-based summaries, without predicting outcomes or encouraging betting/trading behavior. |
-| Timeline        | 5-day hackathon build, 4-person team                                                                                                                                                                                                                                        |
-| Language        | TypeScript (frontend) + Python (backend/data/AI)                                                                                                                                                                                                                            |
-| Framework       | React 18 + Vite + Tailwind CSS + Recharts (frontend) · FastAPI (backend)                                                                                                                                                                                                    |
-| Database        | PostgreSQL, hosted on Supabase or Neon (free tier)                                                                                                                                                                                                                          |
-| Infrastructure  | Vercel (frontend) + Railway/Render (backend + batch collector) + Supabase/Neon (DB)                                                                                                                                                                                         |
-| Repo Structure  | Single monorepo (`/frontend`, `/backend`)                                                                                                                                                                                                                                   |
-| Package Manager | npm (frontend) · pip (backend)                                                                                                                                                                                                                                              |
-| CI/CD           | GitHub Actions                                                                                                                                                                                                                                                              |
-| Harness Tier    | standard                                                                                                                                                                                                                                                                    |
-
----
-
-## Agent Registry
-
-> Active AI agent roles for this project, mapped to the 4-person team defined in PRD §13.
-> Full generic role definitions: `references/agent-registry.md` (shipped with the harness skill, not duplicated here).
-
-### Active Roles
-
-| Role                 | Status                | Primary Responsibility                                                                                                          | Maps to (PRD §13)                             |
-| -------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| PM / Planner         | ✅ Active             | MVP scope control, wording/safety policy enforcement, presentation & demo script, judge Q&A prep                                | PM / planning / presentation                  |
-| Frontend Implementer | ✅ Active             | Dashboard, issue cards, detail screen, chart, responsive UI, empty/loading/error states                                         | Frontend / UI                                 |
-| Backend Implementer  | ✅ Active             | DB schema, REST API, batch collector orchestration, caching, deployment                                                         | Backend / API / DB                            |
-| Data/AI Implementer  | ✅ Active             | Polymarket data normalization, change/heat metrics, inflection-point + caution-badge logic, template-based AI report generation | Data / AI / visualization logic               |
-| Reviewer             | ⚙️ Shared (rotating)  | Code review, copy/wording-lint pass against the banned-phrase list, safety-policy compliance check                              | Rotates among the 4 — no dedicated 5th person |
-| Debugger             | ⚙️ Shared (as needed) | Reproduce bugs, root-cause analysis                                                                                             | Owned by whichever role's area is affected    |
-
-**Not used in this harness** (explicitly out of scope for a 5-day/4-person hackathon — do not spin these up as separate roles): Architect, Researcher, Tester, Documenter, Refactorer, Release Manager, Security Reviewer, Performance Engineer. Their responsibilities are absorbed into the four active roles above; if the project continues past the hackathon (Phase 2+), promote them back in.
+| Field       | Value                                                                                                                                     |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Project     | Outlook AI Signals                                                                                                                        |
+| Goal        | Show changes in reflected public expectations from aggregate Polymarket data without predicting outcomes or encouraging financial action. |
+| Application | React 18 + Vite + TypeScript frontend; FastAPI + Python backend and workers                                                               |
+| Data        | PostgreSQL with append-only market, evidence, report, and scenario records                                                                |
+| Deployment  | Docker Compose and Caddy on the configured VPS                                                                                            |
+| Automation  | GitHub Actions market-data collection every four hours                                                                                    |
 
 ---
 
@@ -109,23 +84,17 @@ binding as code rules.
   implying the product predicts real-world events
 - Exposing wallet-level or individual-participant browsable/searchable data —
   aggregate-only, per Service Design §8
-- Building unsupported or causal news-to-market matching. The only approved
-  paths are:
-  - The historical strict verified-only v4 path: OpenRouter `url_citation`
-    annotations, deterministic hard gates, an independent verifier model,
-    verified-only public output, and fail-closed handling. The frozen v3 MVP
-    remains manual-only.
-  - The v7 A-C source-level path, only when deterministic access, identity,
-    relevance, time, supported-claim, duplicate, and contradiction checks pass
-    and the public UI retains source level and attribution.
-  - Neither path may claim that context explains an observed movement.
+- Building unsupported or causal news-to-market matching. Current automated
+  context requires OpenRouter `url_citation` annotations, deterministic access,
+  identity, relevance, timing, supported-claim, duplicate and contradiction
+  checks, independent verification, and visible attribution. It may not claim
+  that context explains an observed movement.
 - Shipping any data-bearing screen without a data-as-of timestamp AND an
   interpretation-caution badge/text
 - Adding login, accounts, saving/watchlist, notifications, weekly reports, or
-  team sharing — these are explicitly P2/Phase-2+ (PRD §6.5) and out of
-  hackathon scope
+  team sharing — these remain outside the implemented product scope
 - Letting the AI report generator produce unconstrained or evidence-free
-  analysis — flexible v7 sections are permitted only inside the approved stable
+  analysis — flexible v8 sections are permitted only inside the approved stable
   envelope; every factual section must retain reconstructible evidence
   references, deterministic caution/timing, and the prohibited-language filter
   before storage
@@ -141,15 +110,15 @@ Always confirm with the user before proceeding:
 - Modifying infrastructure or deployment configuration
 - Changing an existing public API interface
 - Any deployment (including staging)
-- Pulling a P1/P2 feature back into the hackathon MVP scope (PM is the scope gatekeeper per PRD §13.1)
+- Expanding the product into an excluded or deferred feature area
 - Changing the wording/safety policy (banned-phrase list, disclaimer copy)
 
 ### Historical approval records
 
 Task-specific approvals and consumed authorization records belong in
-`memory/decisions.md`, `tasks/completed.md`, and the corresponding task
-reports. Historical approval does not authorize a new call, write, migration,
-deployment, policy change, or other gated action.
+`memory/decisions.md`, `tasks/completed.md`, and Git history. Historical
+approval does not authorize a new call, write, migration, deployment, policy
+change, or other gated action.
 
 ---
 
@@ -187,24 +156,24 @@ Rules:
 At the start of every session, read these files in order:
 
 1. `AGENTS.md` (this file) — confirm the rules
-2. [PRD](docs/prd/README.md) — product requirements, scope, schedule
-3. [Service Design](docs/service-design/README.md) — data/metrics/AI/signal spec (only if touching data or AI work)
-4. [Technical Design](docs/tech-design/README.md) — architecture, schema, API contract (only if touching backend/infra)
-5. [UX Design](docs/ux-design/README.md) — screens, copy policy, safety guardrails (only if touching frontend/copy)
-6. `memory/project.md` — current project state
-7. `memory/session.md` — previous session context
-8. `tasks/active.md` — in-progress work
-9. The `prompts/*.md` file matching your role
+2. `README.md` and `memory/project.md` — final product and operating state
+3. `memory/architecture.md` — implemented runtime boundaries and invariants
+4. [PRD](docs/prd/README.md) — product requirements and scope
+5. [Service Design](docs/service-design/README.md) — only for data or AI work
+6. [Technical Design](docs/tech-design/README.md) and
+   `backend/API_CONTRACT.md` — only for backend, schema, API, or infrastructure
+7. [UX Design](docs/ux-design/README.md), `standards.md`, and
+   `memory/glossary.md` — only for frontend, copy, or safety work
 
 ---
 
-## Session End Checklist
+## Maintenance Handoff Checklist
 
-Before ending a session, every agent must:
+Before ending maintenance work:
 
-- [ ] Update `memory/session.md`
-- [ ] Move completed tasks from `tasks/active.md` to `tasks/completed.md`
-- [ ] Record new decisions in `memory/decisions.md`
-- [ ] Record new issues in `memory/known-issues.md`
-- [ ] Update `memory/architecture.md` if needed
+- [ ] Update `memory/project.md` when final operating state changes
+- [ ] Update architecture, API, or design documents when behavior changes
+- [ ] Record lasting decisions in `memory/decisions.md`
+- [ ] Add a concise audit row to `tasks/completed.md` when useful
 - [ ] Run the copy/wording lint pass if any user-facing string changed
+- [ ] Verify local Markdown links and run `git diff --check`
