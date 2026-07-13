@@ -43,6 +43,9 @@ data limitations.
 
 ## Recently closed
 
+- **ISS-024**: Root and nested `.env` files are now excluded from the Docker
+  build context; both images rebuilt with the Backend context reduced to 2.35 kB.
+
 - **ISS-023**: TASK-134 reduced each PostgreSQL process from SQLAlchemy's
   effective 15-connection default to a bounded 3+1 pool. The preserved queued
   scenario request recovered and completed without another pool-ceiling error.

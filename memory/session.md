@@ -14,10 +14,58 @@ files.
 
 ## Session
 
-- **Role**: PM / Planner
-- **Branch**: `pm/TASK-021-presentation-assets`
-- **Goal**: Finalize the current-project presentation asset.
-- **Status**: Presentation complete and ready for review; rehearsal and backup capture remain
+- **Role**: Reviewer / Debugger
+- **Branch**: `backend/ISS-024-deploy-osignal`
+- **Goal**: Refresh the configured DB and publish the refreshed read path on the current server.
+- **Status**: Server restarted and public HTTPS now serves the refreshed 20-issue dataset
+
+## Completed in server restart and DB-path recovery
+
+- Rebuilt and recreated both Compose services under the user's deployment
+  approval; both containers report healthy.
+- The first restart exposed the honest static fallback because Backend was
+  attached only to Docker's internal network and could not resolve Supabase.
+- Added a separate outbound `egress` network to Backend while keeping its port
+  unpublished and preserving the internal Frontend-to-Backend `app` network.
+- Container-side `SELECT 1`, local gateway health, and public HTTPS health pass.
+- Local and public `/api/issues` now both return 20 rows with `data_as_of`
+  `2026-07-13T02:52:01.754303Z`; no OpenRouter call or schema change occurred.
+
+## Completed in local market-data refresh
+
+- Ran the approved collection-only live Gamma path against the configured local
+  development database with a 50-sample ceiling.
+- Appended 50 snapshots and 50 metrics, moving the latest data timestamp from
+  2026-07-12 21:09:15 UTC to 2026-07-13 02:52:01 UTC.
+- Recorded two new expectation-shift signals; three duplicate signals were
+  correctly suppressed by the cooldown and no sample failed processing.
+- `/api/issues` returned 20 rows with top-level `data_as_of` at the new timestamp.
+- AI reports and context research were explicitly skipped, so no OpenRouter call
+  occurred. No schema, dependency, deployment, or production change occurred.
+
+## Completed in local end-to-end verification
+
+- Added root and nested `.env` exclusions to `.dockerignore`; the Backend build
+  context dropped from about 598 kB to 2.35 kB and both images rebuilt.
+- Recorded the user's removal of the previous provider-call count ceiling for
+  purpose-bound local/development verification under the existing USD 100 cap.
+- Confirmed the configured database and OpenRouter-compatible credential load
+  without printing a value, and completed a read-only connection check.
+- Passed Ruff and all 546 Backend tests plus every Frontend parser, typecheck,
+  lint, and production-build check.
+- Confirmed all current issue detail/history GET paths return 200.
+- The first briefing request failed closed before a provider call because its
+  latest metric lacked complete research input. A context-ready unused issue
+  then completed research and writer generation, stored six validated blocks,
+  and returned a fresh public briefing.
+- One scenario call completed, stored the validated assistant turn and three
+  blocks, and reconstructed two turns plus one premise through the public API.
+- Stored usage recorded USD 0.06948625 for context research, USD 0.0097225 for
+  the briefing writer, and USD 0.006077 for the scenario writer: USD 0.08528575
+  total for this verification.
+- No deployment, production write, migration, schema/dependency/API change,
+  secret mutation or output, production scenario activation, or wording-policy
+  change occurred.
 
 ## Completed in TASK-021 so far
 
