@@ -88,11 +88,10 @@ v8 row.
 ### 10.4 Historical contracts
 
 V1-v7 prompts, shapes, and generation modes are no longer active product
-contracts. Their map is `docs/archive/ai-report-contracts/README.md`; accepted
-ADRs remain in `memory/decisions.md`, and detailed artifacts remain
-recoverable from Git history.
+contracts. Accepted decisions remain in `memory/decisions.md`, and detailed
+artifacts remain recoverable from Git history.
 
-### 10.5 V8 issue-centered writer boundary (TASK-112)
+### 10.5 V8 issue-centered writer boundary
 
 V8 preserves v7's opaque evidence records, source-parent linkage, A-C source
 metadata, append-only requests, cache fingerprinting, last-known-good behavior,
@@ -111,7 +110,7 @@ reconstruction. The initial v8 contract used `prompt_version="v8"`,
 `input_schema_version="v8-writer-input-1"`; later active policies retain those
 rows as last-known-good history.
 
-### 10.6 V8 wider source discovery with narrow excerpt claims (TASK-113)
+### 10.6 V8 wider source discovery with narrow excerpt claims
 
 The on-demand v8 path selects a 90-day horizon for shorter operational issues
 and 180 days for longer-horizon or slow-moving policy, diplomatic, legislative,
@@ -146,7 +145,7 @@ usage and no annotations triggers the one bounded compatibility attempt using
 OpenRouter's always-on web plugin. Both paths normalize only `url_citation`
 annotations; a second response without annotations still fails closed.
 
-### 10.7 Active-v8 contextual wording validation (TASK-116)
+### 10.7 Active-v8 contextual wording validation
 
 The active writer policy is `v8-contextual-wording-1`. Transactional,
 financial-return, participant-following, outcome-endorsement, English, URL,
@@ -165,7 +164,7 @@ reconstruction accepts the historical `v8-issue-centered-1` fingerprint so
 previous valid v8 rows remain last-known-good but become stale relative to the
 new policy. No schema or public response change is required.
 
-### 10.8 Validated-block writer transport (TASK-117)
+### 10.8 Validated-block writer transport
 
 The active v8 input schema is `v8-writer-stream-input-1`. The existing
 OpenAI-compatible client makes one streaming Chat Completions request without
@@ -183,7 +182,7 @@ Provider usage plus first-validated-block and total-writer milliseconds are
 recorded on the terminal request event. A non-streaming client is retained only
 as a compatibility path and publishes blocks after the full output validates.
 
-### 10.9 Approved tool-free scenario boundary (TASK-126)
+### 10.9 Tool-free scenario boundary
 
 The next-contract scenario path is separate from active v8 and has no agent
 loop. One authenticated user turn appends one immutable request; one isolated
@@ -204,14 +203,11 @@ and validates complete paragraph/list blocks before storage and authenticated
 fetch-SSE replay. Raw provider chunks, links, HTML, images, forms, and embedded
 content never become public blocks.
 
-TASK-126 implements the default-off API/session/request boundary and validated-
-block replay. TASK-128 adds a guarded local/development CLI that claims one
-queued request, builds the typed bundle, performs one non-tool provider call,
-and stores only a completely validated assistant turn, model-scenario premises,
-blocks, and terminal usage event. Expiry or owner deletion prevents later
-persistence and removes the ephemeral conversation graph. Earlier active-v8
-reports and all issue/evidence history remain untouched. Migration 006 is
-applied only to the approved local DB; deployment and successful provider
-acceptance remain separate decisions.
+The request-scoped worker claims one queued request, builds the typed bundle,
+performs one non-tool provider call, and stores only a completely validated
+assistant turn, model-scenario premises, blocks, and terminal usage event.
+Expiry or owner deletion prevents later persistence and removes the ephemeral
+conversation graph. Earlier v8 reports and all issue/evidence history remain
+untouched. Migration 006 is required wherever the scenario API is enabled.
 
 ---

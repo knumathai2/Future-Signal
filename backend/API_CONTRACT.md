@@ -4,8 +4,7 @@ _Status: implemented active v8 contract, 2026-07-12._
 
 Executable schemas live in `app/schemas/issues.py` and
 `app/schemas/health.py`; routes live in `app/api/routes/`. This document
-describes only the active public contract. Historical v1-v7 report contracts
-are indexed in `docs/archive/ai-report-contracts/README.md` and remain
+describes only the implemented public contract. Superseded contracts remain
 recoverable from Git history.
 
 ## Common boundaries
@@ -23,17 +22,17 @@ recoverable from Git history.
 
 ## Endpoint summary
 
-| Method | Path | Response |
-|---|---|---|
-| GET | `/api/health` | Service health |
-| GET | `/api/issues` | Ranked/paginated issue list |
-| GET | `/api/issues/{id}` | Issue detail with related material and signals |
-| GET | `/api/issues/{id}/history` | 24h, 7d, or 30d time series |
-| GET | `/api/categories` | Currently servable broad categories |
-| GET | `/api/issues/{id}/report` | Active v8 report/generation state |
-| POST | `/api/issues/{id}/report/generate` | Append or join one v8 generation request |
-| GET | `/api/issues/{id}/report/requests/{request_id}` | Latest request state |
-| GET | `/api/issues/{id}/report/requests/{request_id}/stream` | Validated-block SSE replay and live delivery |
+| Method | Path                                                   | Response                                       |
+| ------ | ------------------------------------------------------ | ---------------------------------------------- |
+| GET    | `/api/health`                                          | Service health                                 |
+| GET    | `/api/issues`                                          | Ranked/paginated issue list                    |
+| GET    | `/api/issues/{id}`                                     | Issue detail with related material and signals |
+| GET    | `/api/issues/{id}/history`                             | 24h, 7d, or 30d time series                    |
+| GET    | `/api/categories`                                      | Currently servable broad categories            |
+| GET    | `/api/issues/{id}/report`                              | Active v8 report/generation state              |
+| POST   | `/api/issues/{id}/report/generate`                     | Append or join one v8 generation request       |
+| GET    | `/api/issues/{id}/report/requests/{request_id}`        | Latest request state                           |
+| GET    | `/api/issues/{id}/report/requests/{request_id}/stream` | Validated-block SSE replay and live delivery   |
 
 ## `GET /api/health`
 
@@ -47,13 +46,13 @@ recoverable from Git history.
 
 ## `GET /api/issues`
 
-| Parameter | Type | Default | Constraint |
-|---|---|---|---|
-| `category` | string | omitted | Broad Korean category or accepted raw stored category |
-| `window` | `24h` or `7d` | `24h` | Selects the comparison field |
-| `sort` | `heat`, `change`, or `recent` | `heat` | Ordering rule |
-| `limit` | integer | `20` | 1-100 |
-| `offset` | integer | `0` | At least 0 |
+| Parameter  | Type                          | Default | Constraint                                            |
+| ---------- | ----------------------------- | ------- | ----------------------------------------------------- |
+| `category` | string                        | omitted | Broad Korean category or accepted raw stored category |
+| `window`   | `24h` or `7d`                 | `24h`   | Selects the comparison field                          |
+| `sort`     | `heat`, `change`, or `recent` | `heat`  | Ordering rule                                         |
+| `limit`    | integer                       | `20`    | 1-100                                                 |
+| `offset`   | integer                       | `0`     | At least 0                                            |
 
 ```json
 {
@@ -119,8 +118,8 @@ An unknown issue returns `404`.
   "data_as_of": "2026-07-12T03:00:00Z",
   "window": "7d",
   "points": [
-    {"captured_at": "2026-07-11T03:00:00Z", "value": 0.58},
-    {"captured_at": "2026-07-12T03:00:00Z", "value": 0.63}
+    { "captured_at": "2026-07-11T03:00:00Z", "value": 0.58 },
+    { "captured_at": "2026-07-12T03:00:00Z", "value": 0.63 }
   ]
 }
 ```
@@ -134,7 +133,7 @@ Returns broad Korean labels derived from currently servable issues. A sample
 fallback is used when live data is unavailable.
 
 ```json
-{"categories": ["정치", "경제", "환경", "기술", "세계"]}
+{ "categories": ["정치", "경제", "환경", "기술", "세계"] }
 ```
 
 ## `GET /api/issues/{id}/report`
@@ -144,7 +143,7 @@ The endpoint returns exactly one of four shapes.
 ### Idle
 
 ```json
-{"status": "idle"}
+{ "status": "idle" }
 ```
 
 ### Generating without a previous valid report
@@ -234,7 +233,7 @@ valid report.
 Request:
 
 ```json
-{"refresh_context": true}
+{ "refresh_context": true }
 ```
 
 Response is HTTP `202`:
@@ -296,12 +295,13 @@ and strict payload. `Last-Event-ID` resumes after the last received block.
 Connection comments are keep-alives only. Raw provider fragments are never
 emitted.
 
-## Scenario conversation (TASK-126, default off)
+## Scenario conversation
 
-The approved scenario API is registered but returns `404 feature_unavailable`
-unless `SCENARIO_CONVERSATION_ENABLED=true`; production also requires
-`AI_GENERATION_WORKERS_ENABLED=true`. The API process never constructs a
-provider client.
+The scenario API returns `404 feature_unavailable` unless
+`SCENARIO_CONVERSATION_ENABLED=true`; production generation also requires
+`AI_GENERATION_WORKERS_ENABLED=true`. Both flags default to false in code. The
+checked-in production Compose profile enables both explicitly. The API process
+never constructs a provider client.
 
 ### `POST /api/issues/{id}/scenario-sessions`
 
@@ -323,9 +323,9 @@ Authorization: Bearer <session capability>
   turns, premise classes, remaining turns, data time, and caution.
 - `POST /api/issues/{id}/scenario-sessions/{session_id}/turns` requires a UUID
   `Idempotency-Key`, appends one user turn plus immutable queued request/event,
-  and returns HTTP `202`. After a newly created request commits, TASK-132 starts
-  one isolated local/development worker; an idempotent replay does not spawn a
-  duplicate. The API process itself never calls a provider.
+  and returns HTTP `202`. After a newly created request commits, one isolated
+  worker starts when generation workers are enabled; an idempotent replay does
+  not spawn a duplicate. The API process itself never calls a provider.
 - `GET /api/issues/{id}/scenario-sessions/{session_id}/turns/{turn_id}` returns
   queued/running/succeeded/failed state and safe terminal metadata.
 - `GET /api/issues/{id}/scenario-sessions/{session_id}/turns/{turn_id}/stream`
@@ -342,24 +342,16 @@ header returns `401 session_token_required`. Fixed message/session/in-flight/
 rate limits return safe `409`, `413`, or `429` codes. Storage/current-bundle
 failure returns `409` or `503` without provider or database detail.
 
-Migration 006 is applied only to the approved local development database. The
-API must not be enabled against another database without that migration and a
-separate environment-specific application approval.
+Migration 006 must be applied before enabling this API. The request-scoped
+worker uses no model tools and stores only a completely validated assistant turn
+and paragraph/list blocks.
 
-TASK-128 adds a guarded local/development worker outside the public API process
-for exactly one queued request. TASK-132 connects newly committed turns to that
-worker without exposing a new endpoint or capability. It uses no model tools
-and stores only a completely validated assistant turn and paragraph/list
-blocks. Three bounded provider responses have failed closed before content
-storage. TASK-133 subsequently stored and reconstructed the first validated
-writer-v2 response; the feature remains default-off.
-
-TASK-134 permits authenticated status and SSE reads to relaunch only a request
-that has remained `queued` at attempt zero for at least five seconds. Relaunch
-uses a process-local 20-second cooldown and three-launch cap. The worker locks
-the immutable request row before changing it to `running`, so concurrent child
-processes cannot create duplicate provider calls. Running, succeeded, and
-failed attempts are not automatically retried.
+Authenticated status and SSE reads may relaunch only a request that has remained
+`queued` at attempt zero for at least five seconds. Relaunch uses a process-local
+20-second cooldown and three-launch cap. The worker locks the immutable request
+row before changing it to `running`, so concurrent child processes cannot create
+duplicate provider calls. Running, succeeded, and failed attempts are not
+automatically retried.
 
 ## Validation and fallback
 
@@ -374,11 +366,8 @@ failed attempts are not automatically retried.
 - Active wording and source rules are defined by `memory/glossary.md`,
   `standards.md`, Service Design, and UX Design; this API does not weaken them.
 
-## Historical contracts
+## Version scope
 
-V1-v7 response examples, prompt shapes, and supersession records are no longer
-part of this active contract. See
-`docs/archive/ai-report-contracts/README.md`, `memory/decisions.md`, retained
-task evidence, and Git history. Historical stored v1-v7 report/request rows
-were removed only from the explicitly approved local development database;
-compatibility code and migrations remain until separately changed.
+Only the active v8 report contract and current scenario API are documented
+here. Superseded response examples and prompt shapes are available from Git
+history and are not public compatibility commitments.
