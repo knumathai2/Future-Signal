@@ -2348,3 +2348,38 @@ network delivery.
 a new response shape or parser. Replay ordering, event IDs, completion, and
 fallback behavior remain unchanged. A slow client does not occupy a database
 connection during pacing, and unsafe partial provider output cannot render.
+
+---
+
+### ADR-077: Present the current product through change discovery, evidence, and caution
+
+- **Date**: 2026-07-13
+- **Status**: Accepted for TASK-021 presentation asset
+- **Decided by**: User request to create the current-project PowerPoint
+
+**Context**: The original Day-4 deck draft predated active v8 validated-block
+streaming and the later default-off scenario work. A final presentation needed
+to reflect the implemented product without treating a gated local feature as an
+active public capability.
+
+**Decision**: Use a 14-slide narrative: information-overload problem, public-
+data time series, four-step user flow, dashboard, issue detail, validated-block
+briefing, a separately framed default-off scenario conversation, structural
+safeguards, separated collection/generation architecture, four-person role
+allocation, implementation evidence, and closing synthesis. Show PM as the
+overall coordinator and cross-role helper who also owns review and debugging;
+leave all name fields blank. Use stored project UI captures only where they
+remain representative. Keep scenario activation outside the core story and
+preserve timing, caution, aggregate-only, and no-unverified-relationship
+boundaries in visible copy.
+
+Place a dedicated 16:9 demo-video slide immediately after the four-step user
+flow and before the home/detail breakdown. The placeholder carries only the
+audience-relevant three-scene sequence; the actual video remains a TASK-021
+follow-up asset.
+
+**Consequences**: `outputs/outlook-signals-presentation-v3.pptx` is the current
+reviewable presentation asset; the earlier 11- and 13-slide decks remain
+preserved. TASK-021 still requires video insertion, name entry, live-demo
+rehearsal, and a backup capture sequence before the broader task can be marked
+complete. No deployment or feature activation is implied by the deck.
