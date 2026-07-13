@@ -13,7 +13,7 @@ Purpose: Define the screen flow, UI copy policy, gambling-pattern removal plan, 
 
 Outlook AI Signals reads like a **monitoring dashboard for how public expectations shift**, not a market terminal. The experience is built around three UX commitments that run through every screen below:
 
-1. **Read-only, always.** No screen ever asks the user to act on a market. There is no "enter," no "place," no "follow this outcome." The only user actions are *view, filter, save-to-watch, and read a summary*.
+1. **Read-only, always.** No screen ever asks the user to act on a market. There is no "enter," no "place," no "follow this outcome." The only user actions are _view, filter, save-to-watch, and read a summary_.
 2. **Every number has a companion caveat.** No probability, chart, or ranking appears without its interpretation-caution badge and a visible data-as-of timestamp in the same viewport.
 3. **Vocabulary discipline is a UI contract, not a style guideline.** Section 4/5 below function as a lint list — any copy that fails it should block ship, the same way a failing test blocks a merge.
 
@@ -53,17 +53,17 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
 
 ### Screen inventory and hackathon status
 
-| Screen | Hackathon MVP (PRD) | This document's Phase 2 design |
-|---|---|---|
-| Landing / Home | Yes (P0) | Same, extended with attention/heat metrics as they come online |
-| Issue List | Yes (P0, as "急변 이슈 목록") | Same, extended with category filter and volume-based sort |
-| Market / Issue Detail | Yes (P0) | Same, extended with uncertainty score, attention badge |
-| Probability Movement Analysis | Yes, folded into Detail (P0) | Split into a dedicated deep-dive view once volatility/momentum metrics exist |
-| Sudden Change Signal view | Partial (inflection marker only, P0) | Full signal detail view once Attention Spike / Unusual Activity ship |
-| AI-Generated Issue Report | Yes, as template summary card (P0) | Same shape, richer once more metrics feed the template |
-| Saved issue / Watchlist | **No** (excluded from hackathon per PRD §6.5) | Phase 2, requires minimal account (see Section 12) |
-| Disclaimer / Information Policy | Yes (footer text, P0) | Promoted to a dedicated screen + persistent footer |
-| Settings | **No** | Phase 2 — only once notifications or personalization exist; nothing to configure in hackathon MVP |
+| Screen                          | Hackathon MVP (PRD)                           | This document's Phase 2 design                                                                    |
+| ------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Landing / Home                  | Yes (P0)                                      | Same, extended with attention/heat metrics as they come online                                    |
+| Issue List                      | Yes (P0, as "急변 이슈 목록")                 | Same, extended with category filter and volume-based sort                                         |
+| Market / Issue Detail           | Yes (P0)                                      | Same, extended with uncertainty score, attention badge                                            |
+| Probability Movement Analysis   | Yes, folded into Detail (P0)                  | Split into a dedicated deep-dive view once volatility/momentum metrics exist                      |
+| Sudden Change Signal view       | Partial (inflection marker only, P0)          | Full signal detail view once Attention Spike / Unusual Activity ship                              |
+| AI-Generated Issue Report       | Yes, as template summary card (P0)            | Same shape, richer once more metrics feed the template                                            |
+| Saved issue / Watchlist         | **No** (excluded from hackathon per PRD §6.5) | Phase 2, requires minimal account (see Section 12)                                                |
+| Disclaimer / Information Policy | Yes (footer text, P0)                         | Promoted to a dedicated screen + persistent footer                                                |
+| Settings                        | **No**                                        | Phase 2 — only once notifications or personalization exist; nothing to configure in hackathon MVP |
 
 ---
 
@@ -74,11 +74,11 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
 - **Purpose**: Show, at a glance, which public issues have seen the biggest shift in reflected expectation recently.
 - **Main user action**: Scan the top-movers list; click into an issue.
 - **Key information**: Today's top issues by movement, 24h/7d toggle, data-as-of timestamp, category filter.
-- **Emphasize**: The *direction and magnitude of change*, framed as "expectation reflected in public data," and the caution badge on any thin/volatile entries.
+- **Emphasize**: The _direction and magnitude of change_, framed as "expectation reflected in public data," and the caution badge on any thin/volatile entries.
 - **Hide/minimize**: Anything resembling a "hot picks" tone — no badges that look like "trending stock," no fire/rocket icons implying opportunity.
 - **Betting-perception risk**: **Medium** — a ranked list of "movers" structurally resembles a market-mover ticker. Mitigate with framing copy ("Today's most reassessed public issues") and non-financial iconography.
 - **UX direction**: Editorial/dashboard tone (think "a data journalism front page"), not a ticker tape. Static card grid, not a scrolling live-price feed.
-- **TASK-120 shared header**: Desktop primary navigation sits in the same
+- **Shared header**: Desktop primary navigation sits in the same
   right-aligned group used by issue detail and list screens. When refresh is
   available it follows the navigation in that group; the navigation must not
   drift into a centered layout on the home route. Mobile retains the shared
@@ -93,7 +93,7 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
 - **Hide/minimize**: Any sort option framed as "best opportunity" or "biggest swing to catch" — sort labels should read "Largest change (24h)," not "Biggest movers to watch."
 - **Betting-perception risk**: **Medium** — a sortable list with percentages is visually close to an odds board. Mitigate with typography/layout that looks like a research index, not a trading screen (e.g., no monospace ticker font, no dense multi-column price-grid look).
 - **UX direction**: Card or row list with generous whitespace, editorial typography, not a dense grid of numbers.
-- **TASK-119 visual emphasis**: Use a small terracotta heading marker, soft
+- **Visual emphasis**: Use a small terracotta heading marker, soft
   terracotta selected filters/result count/current reflected expectation
   values, and muted-blue comparison values. List-row hover may use the soft
   terracotta surface, but the entire resting list remains neutral. Direction
@@ -124,7 +124,7 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
 - **Purpose**: Explain, for an issue that triggered a signal, what changed and why the signal fired.
 - **Main user action**: Read the explanation; understand it's a "look closer" flag, not an "act now" flag.
 - **Key information**: Signal name (from Section 5's neutral vocabulary), magnitude/window, plain-language explanation, caution badge.
-- **Emphasize**: That this is a *monitoring flag about data*, explicitly not a recommendation.
+- **Emphasize**: That this is a _monitoring flag about data_, explicitly not a recommendation.
 - **Hide/minimize**: No countdown timers, no "expires in," no urgency-styled color (red flashing, siren icons).
 - **Betting-perception risk**: **Very High** — "signal" screens are the single most alert/trading-coded surface in the product. Mitigate hardest here: neutral naming (Section 7 of Service Design), muted color, no push-style urgency.
 - **UX direction**: Treat like a "notable change" annotation on a news dashboard, not a trading alert card. No bell/alarm iconography.
@@ -134,7 +134,7 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
 - **Purpose**: Present the template-based summary (per Service Design §6) as a standalone, shareable/readable artifact.
 - **Main user action**: Read; optionally copy/export text for content use (per PRD's content-creator persona).
 - **Key information**: Issue summary, movement explanation, related-event candidate (if any), caution summary, disclaimer footer.
-- **Emphasize**: That it's a *data summary*, not "AI's opinion" or "AI's prediction" — label it "Data Summary" or "Issue Report," not "AI Insight" or "AI Prediction."
+- **Emphasize**: That it's a _data summary_, not "AI's opinion" or "AI's prediction" — label it "Data Summary" or "Issue Report," not "AI Insight" or "AI Prediction."
 - **Hide/minimize**: No confidence percentage on the AI's own output (that invites "how sure is the AI this will happen" misreadings, conflating model confidence with outcome likelihood).
 - **Betting-perception risk**: **Medium** — AI-generated text can feel more authoritative/prescriptive than a raw number, so wording discipline matters even more here than elsewhere.
 - **UX direction**: Plain report/document layout, generous line height, disclaimer footer always visible without scrolling past it.
@@ -159,7 +159,7 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
 - **Hide/minimize**: Nothing — this screen should be maximally visible, not buried.
 - **Betting-perception risk**: N/A — this screen exists specifically to reduce that risk.
 - **UX direction**: Simple static content page, linked persistently from the global footer.
-- **TASK-120 visual emphasis**: Use the shared terracotta heading marker and
+- **Visual emphasis**: Use the shared terracotta heading marker and
   eyebrow, an outlined soft-accent return action, and numbered neutral cards
   with soft-accent number markers. Desktop may use two columns; mobile returns
   to one column. The explanatory body remains ink/neutral so emphasis does not
@@ -175,7 +175,7 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
 - **Betting-perception risk**: **Low**, as long as notification copy itself stays neutral (see Section 8, notification example).
 - **UX direction**: Simple form/list UI; not needed at all for hackathon MVP since there's nothing to configure yet.
 
-### 3.10 Change episode (approved TASK-063 v4 extension)
+### 3.10 Change episode
 
 - **Purpose**: Show one observed metric interval, any verified public context in
   the compatible review window, source provenance, what remains unknown, and
@@ -194,7 +194,7 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
   change. The detailed relationship boundary states that timing does not
   establish a relationship with the observed movement.
 
-### 3.11 Four-part issue detail navigation (TASK-118)
+### 3.11 Four-part issue detail navigation
 
 - **Purpose**: Replace the long single-column detail reading path with four
   question-led tabs: `개요`, `AI 이슈 브리핑`, `관련 자료`, and `해석 안내`.
@@ -223,14 +223,13 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
   wording rather than gain/loss color semantics.
 - **Responsive acceptance**: No horizontal overflow at 320px, 375px, or desktop.
 
-### 3.12 Implemented default-off scenario-conversation navigation (TASK-129)
+### 3.12 Scenario-conversation navigation
 
 - **Purpose**: Add a distinct `시나리오 대화` tab for free-form conditional
   exploration without mixing assumptions into the stable briefing or accepted
   source flow.
-- **Boundary**: The existing four tabs and active v8 behavior remain unchanged
-  until TASK-131 acceptance. The future tab is a fifth peer, not content nested
-  inside `AI 이슈 브리핑`.
+- **Boundary**: The scenario tab is a fifth peer and remains separate from
+  `AI 이슈 브리핑`; it does not change v8 briefing behavior.
 - **Session**: One anonymous, issue-scoped session lasts at most 24 hours and
   eight user turns. It is not an account, saved history, or cross-device state.
 - **Presentation**: Each assistant response carries a compact conditional label;
@@ -244,8 +243,8 @@ Entry is always into an **aggregate view** (Home or Issue List), never directly 
   authorization detail.
 - **Transport**: Authenticated fetch-SSE renders complete validated blocks
   progressively in sequence; raw provider fragments never render.
-- **Activation**: The tab and safe unavailable state are implemented, but the
-  server feature remains default-off and active v8 is unchanged pending
-  TASK-130 evaluation and TASK-131 acceptance.
+- **Activation**: Application flags default to disabled. The checked-in
+  production Compose profile enables the scenario API and generation workers
+  explicitly.
 
 ---

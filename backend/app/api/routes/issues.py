@@ -1,23 +1,13 @@
-"""Issues/signals/reports routes.
+"""Issues, signals, reports, categories, and generation routes.
 
-Live-data read path (TASK-010): reads markets / market_snapshots /
-market_metrics / issue_signals / related_events through
-app.db.session.get_db() (see app/db/queries.py for the query helpers).
-Per ADR-051, this API reads issue data and may append a generation request plus
-queued event. It never calls Polymarket or an AI provider directly.
+Live reads use the database query helpers. The API may append immutable
+briefing request and event state, but it never calls Polymarket or an AI
+provider directly.
 
-FALLBACK NOTE: TASK-007/TASK-008 (the batch collector) had not produced any
-market_snapshots/market_metrics rows as of this implementation, and
-DATABASE_URL may also be unset entirely in local dev. Whenever there is no
-live snapshot data to read, these routes fall back to the static sample
-dataset below and log a "FALLBACK:" warning on every request, so this can
-never become a silent, permanent substitute for live data - once TASK-008
-produces real rows the live path takes over automatically, no code change
-needed here. See reports/task-010-core-api-notes.md for detail.
-
-`/api/issues/{id}/report` serves only a reconstructed successful v8 evidence
-bundle and exposes honest idle/generating/fresh/stale/failure states. V1-v6
-rows remain audit-only. Static fallback data never fabricates a report.
+When no live snapshot data is available, the read routes use the timestamped
+static sample dataset and log a ``FALLBACK:`` warning on every request. The
+report endpoint serves reconstructed v8 states; static fallback data never
+fabricates a report.
 """
 
 import json

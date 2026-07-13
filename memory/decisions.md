@@ -2530,3 +2530,25 @@ current authorization.
 audit history, while permanent safety rules remain independent of task numbers.
 No product or wording policy, runtime, API, schema, dependency, database,
 provider, infrastructure, deployment, production, or secret state changed.
+
+---
+
+### ADR-084: Close active documentation and use Git for task-level history
+
+- **Date**: 2026-07-13
+- **Status**: Accepted and implemented in TASK-140
+- **Decided by**: User declaration that development is complete
+
+**Decision**: Remove active/backlog/session workflow documents, role prompts,
+orchestration playbooks, task reports, the obsolete roadmap, the one-time
+retention manifest, and superseded contract index from the working tree. Keep
+only canonical product, runtime, API, deployment, safety, architecture, and
+setup guidance. Retain `memory/decisions.md` and `tasks/completed.md` as compact
+audit ledgers; use Git history for deleted task-level detail. Planned items that
+were not implemented are closed without additional work.
+
+**Consequences**: The working documentation describes the completed product
+rather than the development process. Maintenance context loads from canonical
+documents only. No runtime, API, schema, dependency, database, provider,
+infrastructure, deployment, production, secret, or product-safety behavior
+changed.

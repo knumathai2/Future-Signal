@@ -1,7 +1,7 @@
 <!--
-Purpose:        Current implemented architecture and invariants
-Owner:          Backend Implementer / Data-AI Implementer
-Update Trigger: Implemented architecture or boundary change
+Purpose:        Implemented architecture and invariants
+Owner:          Backend / Data-AI maintainers
+Update Trigger: Runtime boundary, schema, API, or deployment change
 Harness Version: 1.1
 -->
 
@@ -12,27 +12,24 @@ _Last updated: 2026-07-13_
 ## System overview
 
 ```text
-Polymarket Gamma API
+Polymarket Gamma/CLOB
         |
         v
-four-hour collection workflow
-  fetch -> normalize -> snapshots -> metrics -> signals -> collection log
+market-data collector
+  normalize -> snapshots -> metrics -> signals -> collection log
         |
         v
 PostgreSQL <-> FastAPI <-> React/Vite
         ^          |
-        |          v
-        +---- on-demand generation request
-                    |
-                    v
-              isolated v8 worker
-      stored evidence -> optional context refresh -> NDJSON writer
-                    |
-                    v
-       validated blocks -> final report -> request outcome
-                    |
-                    v
-              SSE replay / polling
+        |          +---- briefing generation request
+        |          |
+        |          +---- capability-scoped scenario request
+        |                       |
+        +---- isolated request workers
+                evidence/context -> validated blocks -> final state
+                                      |
+                                      v
+                              SSE replay / polling
 ```
 
 ## Runtime boundaries
@@ -41,203 +38,106 @@ PostgreSQL <-> FastAPI <-> React/Vite
 
 - `.github/workflows/four-hour-collection.yml` runs at minute 17 every four
   UTC hours and supports manual dispatch.
-- The job receives `DATABASE_URL` only and explicitly skips report and context
-  stages.
-- Gamma data is normalized to active binary issues. Invalid records are
-  quarantined without stopping the full run.
-- `market_snapshots`, `market_metrics`, signals, and collection logs are
-  append-only. Only market status and last-seen metadata update in place.
-- `backend/app/core/historical_seed.py` is a guarded local/development-only CLOB
-  history path; it never rewrites existing snapshots.
+- Scheduled collection receives database configuration only and explicitly skips
+  context research and briefing generation.
+- Gamma records are normalized to active binary issues. Invalid records are
+  quarantined without stopping the batch.
+- Snapshots, metrics, signals, and collection logs are append-only.
+- The guarded CLOB history seed is restricted to local/development use and never
+  rewrites existing snapshots.
 
 ### Public API
 
-- Issue list/detail/history reads are market- and time-bounded and degrade to
-  timestamped static fallback states when configured data is unavailable.
-- `POST /api/issues/{id}/report/generate` appends or joins an immutable
-  fingerprinted request. The API does not construct a provider client.
-- Request status reads one request plus its latest append-only event.
-- The SSE endpoint replays only already validated blocks for the active
-  request attempt and supports `Last-Event-ID`.
+- Issue, category, and history reads are market- and time-bounded.
+- Read failures degrade to timestamped static issue data and honest empty report
+  or source states.
+- Briefing and scenario writes append immutable request/event state.
+- The API process never constructs a provider client.
+- Request status and SSE endpoints expose only safe state and already validated
+  blocks.
 
-### V8 briefing worker
+### Briefing worker
 
-- A local/development child worker claims queued or expired-running requests
-  with bounded leases.
-- Input fingerprints cover prompt, policy, input schema, metric/snapshot,
-  definition, context, and source evidence.
-- Context refresh accepts only source records passing URL, identity, relevance,
+- A request-scoped worker claims queued or expired-running requests with bounded
+  leases.
+- Input fingerprints cover prompt, policy, schema, definition, metric, snapshot,
+  context, and source evidence.
+- Optional context refresh accepts only sources passing URL, identity, relevance,
   timing, supported-claim, duplicate, and contradiction gates.
-- One NDJSON response emits a headline/summary block, consecutive section
+- One NDJSON response contains a headline/summary block, consecutive section
   blocks, and a complete object. Each complete block is validated before
   persistence; the final report repeats full-envelope validation.
-- Failure never replaces the previous valid report. The UI removes failed
-  partial content and retains polling plus last-known-good fallbacks.
+- Failure removes partial output and retains the previous valid report.
+
+### Scenario worker
+
+- A random 256-bit bearer capability owns one issue-scoped anonymous session;
+  only its hash is stored.
+- Sessions last 24 hours, allow at most eight user turns, and store no capability,
+  IP address, user agent, or browser history.
+- The worker receives one issue's stored evidence, server-owned premise classes,
+  and bounded turns. It has no browser, external tools, user URLs, or file input.
+- Complete output must pass premise-reference, evidence, wording, leakage,
+  numeric, restricted-Markdown, length, and schema validation before storage.
+- Authenticated fetch-SSE replays stored paragraph/list blocks. Raw provider
+  fragments never cross the public boundary.
+- Owner deletion or expiry removes only the ephemeral conversation graph.
 
 ## Storage
 
-| Migration | Active purpose | Applied state |
-|---|---|---|
-| 001 | Markets, outcomes, snapshots, metrics, signals, reports, related material, collection logs | Approved local development DB only |
-| 002 | Context candidates and collection runs | Approved local development DB only |
-| 003 | Versioned market resolution rules | Approved local development DB only |
-| 004 | Immutable generation requests and append-only events/leases | Approved local development DB only |
-| 005 | Individually validated generation blocks for SSE replay | Approved local development DB only |
-| 006 | Ephemeral scenario sessions, turns, premises, requests, events, and validated response blocks | Approved local development DB only |
+| Migration | Purpose                                                                                        |
+| --------- | ---------------------------------------------------------------------------------------------- |
+| 001       | Markets, outcomes, snapshots, metrics, signals, reports, related material, and collection logs |
+| 002       | Context candidates and collection runs                                                         |
+| 003       | Versioned market resolution rules                                                              |
+| 004       | Immutable briefing generation requests, events, and leases                                     |
+| 005       | Individually validated briefing blocks for SSE replay                                          |
+| 006       | Ephemeral scenario sessions, turns, premises, requests, events, and response blocks            |
 
-Historical v1-v7 stored report/request rows were removed under explicit local
-approval. Migrations, ADRs, compatibility code, and retained evidence reports
-remain.
+Existing migrations are immutable. New schema work must use a new append-only
+migration and follow the approval rules in `AGENTS.md`.
+
+## Request recovery and resource bounds
+
+- Each PostgreSQL process defaults to three persistent connections plus one
+  overflow connection.
+- Briefing workers recover expired-running leases; a queued request may also be
+  processed manually by exact request ID.
+- Scenario status/SSE reads may relaunch only attempt-zero requests that have
+  remained queued for at least five seconds.
+- Scenario relaunch uses a process-local 20-second cooldown, a three-launch cap,
+  and row locking before a request becomes `running`.
+- Running and terminal scenario attempts are never automatically retried.
+
+## Public category boundary
+
+Stored source categories remain unchanged. The public API derives and publishes
+only `정치`, `경제`, `환경`, `기술`, and `세계` when they contain servable
+issues. Sports and catch-all labels do not appear in navigation. Stablecoin,
+Tether, USDC, and USDT topics map to `경제` before the catch-all is considered.
+
+## Deployment
+
+- `deploy/compose.yml` runs the Backend and built Frontend on isolated Docker
+  networks.
+- Only the Frontend gateway is bound to `127.0.0.1:8600`; Caddy terminates TLS
+  for the configured public host.
+- The Backend uses an internal application network plus a separate outbound
+  network for PostgreSQL and provider access.
+- The checked-in production profile explicitly enables generation workers and
+  scenario conversations. Both flags default to disabled in application code.
+- Credentials remain outside the repository in ignored environment files.
 
 ## Core invariants
 
-- Aggregate market data only; no user account or wallet-level feature.
-- Every data surface keeps data-as-of timing and interpretation caution.
-- Missing history or evidence remains absent; values and sources are never
-  fabricated.
-- External material may provide attributed context but cannot be presented as
-  the explanation for an observed movement.
-- Authored factual sections require reconstructible evidence references.
-- Source URLs, domains, titles, claims, levels, and parent links are checked at
-  generation and read time.
-- Prohibited-language validation runs before storage and again during public
-  reconstruction where required.
+- Aggregate market data only; no account or wallet-level feature.
+- Every data surface includes data timing and interpretation caution.
+- Missing history or evidence is never fabricated.
+- External context is attributed and never presented as the explanation for an
+  observed movement.
+- Authored factual content requires reconstructible evidence references.
+- Unsafe URLs, unsupported claims, unknown references, and prohibited wording
+  block storage or public reconstruction.
+- Provider failure never replaces the previous valid result.
 - Production writes, deployments, schema changes, dependencies, infrastructure,
-  and wording-policy changes retain human approval gates.
-
-## Current implementation
-
-- Frontend: shared Home/list/detail/methodology navigation; five query-linked
-  detail tabs; strict v8 and scenario parsers; authenticated fetch-SSE,
-  generation, failure, expiry, deletion, stale, and source states; responsive
-  and accessibility checks.
-- Backend: FastAPI issue and generation routes; SQLAlchemy models; scoped
-  latest-row queries; static fallback; local worker launcher; default-off,
-  local/development-only scenario session boundary.
-- Deployment: Docker Compose keeps Backend unpublished on the internal `app`
-  network while attaching a separate outbound-only `egress` network for the
-  PostgreSQL connection; Frontend alone publishes `127.0.0.1:8600` via `edge`.
-- Data: Gamma collector, CLOB historical seed, snapshot/metric calculations,
-  fixed signal detection, source research/verification, v8 writer validation.
-- Verification baseline: 526 Backend tests plus Frontend typecheck, lint, v8
-  parser regression, and production build. The known bundle-size warning is
-  tracked as TD-001.
-
-## Public category-navigation boundary
-
-TASK-137 keeps stored source categories unchanged and continues deriving broad
-Korean labels from the issue title and source category. `/api/categories`
-publishes only `정치`, `경제`, `환경`, `기술`, and `세계` when each group has a
-servable issue. The Frontend uses that response for both home category summaries
-and issue-list filter controls, so `스포츠` and the catch-all `기타` do not
-appear in navigation. Unfiltered issue reads and direct legacy category matching
-remain intact. Stablecoin, Tether, USDC, and USDT topics map to `경제` before the
-catch-all is considered. This requires no schema or stored-data mutation.
-
-## Open architecture work
-
-- ISS-017 queued-request recovery after a lost worker.
-- ISS-018 provider-compatible citation annotation handling.
-- Future retention/downsampling for extended snapshot history.
-- A successful scenario-writer evaluation, shared rate limiting, scheduled
-  expiry cleanup, and production activation remain approval-gated follow-up work.
-
-## Implemented default-off boundary — scenario conversation
-
-TASK-124/125 define the Phase 2 policy and threat model. TASK-126 implements
-only the API/storage boundary behind a disabled feature flag:
-
-```text
-anonymous browser + issue-scoped capability
-  -> scoped API validation / limits / idempotency
-  -> immutable turn request
-  -> isolated tool-free worker
-  -> typed issue facts + premise registry + bounded turns
-  -> one provider call
-  -> complete-block safety / leakage / Markdown validation
-  -> ephemeral session storage
-  -> authenticated fetch-SSE replay
-```
-
-The capability is 256-bit random material returned once; only its hash is
-stored. A session is fixed to one issue, eight user turns, and a 24-hour
-lifetime. The initial path has no model tools, live browser, user URL/file
-ingestion, model-authored compaction, active links, or cross-device history.
-Conversation content is append-only while live and is hard-deleted after expiry
-or owner deletion. Existing issue/report/evidence history remains append-only
-and untouched.
-
-Migration 006 and matching ORM models now exist and the migration is applied
-only to the approved local development DB.
-The local/development-only API can create capability-scoped sessions, append
-idempotent queued turns, read status, replay already validated stored blocks,
-and hard-delete the ephemeral graph. It uses process-local keyed request
-ceilings and exposes no capability in a URL or stored plaintext field.
-
-TASK-128 adds a guarded local/development single-request writer. It serializes
-only one issue's v8 evidence, server-owned premise classes, and bounded turns;
-it provides no model tools and validates complete JSON, premise refs, wording,
-leakage, numbers, restricted Markdown, and response blocks before storage. The
-first two authorized evaluations cost USD 0.0117605 total and failed closed on
-assumption framing and then ISO-date numeric normalization, leaving no assistant
-turn or block. Both corrected detectors are tested, but a third call is not
-authorized.
-
-TASK-129 adds a fifth query-linked detail tab. The browser retains the raw
-capability only in memory and sessionStorage, authenticates every read/write and
-fetch-SSE replay without URL disclosure, validates exact response/block shapes,
-renders only inert paragraph/list structures, polls after bounded stream
-reconnect failure, preserves earlier turns on failure, and exposes expiry and
-owner deletion states. The Frontend contains no provider client; a newly
-created request may trigger only the guarded Backend child described below.
-
-TASK-132 launches the existing guarded scenario worker as a detached child only
-after a newly created local/development request commits. Idempotent replay does
-not spawn a second child, and the API process still imports no provider client.
-Its one approved response cost USD 0.0058895 and failed closed with
-`unsupported_number`. No assistant turn or response block was stored. Writer
-version 2 now parses allowed Markdown before number validation so ordered-list
-indices are presentation metadata while numbers inside list items remain
-evidence-gated.
-
-TASK-133 consumed one separately approved writer-v2 call costing USD 0.006425.
-It stored one validated assistant turn and three paragraph blocks. Authenticated
-SSE completed, the Frontend rendered the response, and a reload reconstructed
-the stored session with zero browser-console errors. This is the first
-successful local scenario response; the server feature remains default-off.
-
-TASK-134 bounds each PostgreSQL process to a default pool of three persistent
-plus one overflow connection, instead of SQLAlchemy's effective 5+10 default.
-Authenticated status reads and SSE may relaunch only attempt-zero requests that
-remain queued for five seconds. A process-local 20-second cooldown and three-
-launch cap prevent spawn storms, and `SELECT ... FOR UPDATE` serializes the
-request claim before any provider work. Running or terminal attempts are never
-automatically relaunched. The preserved queued request recovered after restart
-with one USD 0.00634325 call and stored one assistant turn plus three blocks.
-
-ISS-027 advances the current scenario writer to version 3. The prompt now
-provides the exact required current user-turn reference in a dedicated typed
-contract and in the minimum JSON output example, while optional refs are listed
-separately and deterministically. The validator still rejects a missing or
-unknown ref without correction or retry. All 549 Backend tests and one
-purpose-bound local evaluation passed; the evaluation cost USD 0.0063915 and
-stored one assistant turn plus three validated blocks.
-
-ISS-028 advances the scenario writer to version 5 after a real follow-up turn
-exposed two additional provider-compliance failures. The answer contract now
-requires an exact assumption-framing prefix. The ref contract supplies the
-complete ordered pair of current user-turn and stored market-definition refs,
-allows no additions, and rejects any different array before content storage.
-All 550 Backend tests pass. A v4 evaluation failed closed on an unknown ref at
-USD 0.006011; the subsequent v5 evaluation cost USD 0.0072395 and stored one
-assistant turn plus three validated blocks without retry.
-
-TASK-135 preserves complete response validation and append-only block storage,
-then progressively replays those stored scenario blocks over authenticated SSE.
-The first block is immediate and later blocks are paced at 0.2-second intervals.
-Event payloads are materialized and the read transaction is released before
-network pacing, so slow clients do not hold a database connection. Raw provider
-fragments remain private and never cross the public API boundary.
-
-No shared rate-limit infrastructure, scheduled cleanup, deployment, or
-production state exists. The server feature flag defaults off.
+  and wording-policy changes require explicit approval.
