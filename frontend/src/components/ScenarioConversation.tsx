@@ -175,6 +175,17 @@ function PendingResponse({ blocks }: { blocks: ScenarioContentBlock[] }) {
   );
 }
 
+function PendingTurnSubmission() {
+  return (
+    <div className="mx-auto flex max-w-xl items-center justify-center gap-2 py-8 text-accent">
+      <LoadingSpinner />
+      <p className="text-sm font-semibold text-ink-soft">
+        질문을 보내는 중입니다.
+      </p>
+    </div>
+  );
+}
+
 /** Capability-scoped, ephemeral scenario conversation with restricted rendering. */
 export function ScenarioConversation({ issue }: { issue: Issue }) {
   const [viewState, setViewState] = useState<ViewState>("loading");
@@ -589,7 +600,7 @@ export function ScenarioConversation({ issue }: { issue: Issue }) {
           visibleTurns.map((turn) => (
             <TurnCard key={turn.turn_id} turn={turn} />
           ))
-        ) : (
+        ) : !submittingTurn ? (
           <div className="mx-auto max-w-xl py-8 text-center">
             <h3 className="text-sm font-bold text-ink">
               확인하고 싶은 조건을 입력해 주세요
@@ -599,7 +610,8 @@ export function ScenarioConversation({ issue }: { issue: Issue }) {
               살펴봅니다.
             </p>
           </div>
-        )}
+        ) : null}
+        {submittingTurn ? <PendingTurnSubmission /> : null}
         {pendingTurn ? <PendingResponse blocks={pendingBlocks} /> : null}
         <div ref={transcriptEnd} />
       </div>
