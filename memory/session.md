@@ -15,39 +15,57 @@ files.
 ## Session
 
 - **Role**: PM / Planner
-- **Branch**: `pm/TASK-138-outlook-ai-signals`
-- **Goal**: Rename the product display name throughout the project.
-- **Status**: Complete
+- **Branch**: `pm/TASK-139-agent-constitution-cleanup`
+- **Goal**: Reorganize `AGENTS.md` without changing its policy boundaries.
+- **Status**: Complete; TASK-021 presentation insertion and rehearsal remain.
 
 ## Completed
 
-- Applied `Outlook AI Signals` as the display name in the React UI, page
-  title, information notice, FastAPI title, batch help, provider attribution
-  default, tests, source-of-truth docs, harness files, scripts, and presentation
-  narration.
-- Preserved technical slugs and paths (`outlook-signals-api`, npm package name,
-  scenario local-storage keys, repository/output filenames) so the display-name
-  change does not mutate public or stored contracts.
-- Updated all four tracked PowerPoint decks with inherited formatting intact.
-  Replaced every embedded product screenshot with a verified local-app capture
-  showing the new product name and updated image alternative text.
-- Recorded TASK-138 and ADR-082 without changing product safety policy.
+- Added an operational quick reference and linked contents to `AGENTS.md`.
+- Replaced task-style checkboxes in permanent restrictions with semantic rule
+  lists and consolidated the duplicated context-path rule.
+- Removed task-specific approval history and task/ADR identifiers from the
+  constitution while retaining the permanent safety constraints. Historical
+  records remain in decisions, completed tasks, and task reports and cannot be
+  reused as current authorization.
+- Preserved the incoming TASK-021 capture work and its uncommitted artifacts.
+- Started the existing local Backend and Frontend without changing environment
+  files, dependencies, schema, public API, infrastructure, or deployment state.
+- Captured one representative issue through Home, Detail, 7-day chart, stored
+  v8 briefing, interpretation guide, and isolated scenario conversation.
+- Produced `outputs/outlook-ai-signals-demo.mp4` as a 49.5-second, 1280×720,
+  30fps silent H.264 video with Korean captions and 0.5-second fades.
+- Added `reports/task-021-demo-video-capture.md` with the screen sequence,
+  provider-use record, verification, copy check, and remaining TASK-021 work.
+- Preserved the prior TASK-138 handoff: the external
+  `/Users/sonmyeong-gwan/Desktop/2팀_발표_수정본.pptx` has an explicit
+  technology-stack slide after team roles, shifted subsequent page markers,
+  and the user-owned video placeholder.
 
 ## Verification
 
-- Backend Ruff passes; `backend/tests/test_ai_report.py` passes 97 tests.
-- Frontend Prettier, typecheck, lint, and production build pass; the known
-  Recharts bundle-size warning remains unchanged.
-- All four decks pass template-fidelity, overflow, ZIP-integrity, and visual
-  checks; identical slide renders were verified by SHA-256 before deduplicated
-  full-size review.
-- The local app DOM and capture show `Outlook AI Signals` with current data
-  timestamp and interpretation caution present.
-- Exact old display-name and changed-surface content-safety scans pass.
-- No schema, dependency, API shape, infrastructure, deployment, database,
-  provider, secret, production, or wording-policy action occurred.
+- Local Markdown targets resolve, heading anchors are unique, the constitution
+  has no concrete task/issue/ADR identifiers outside generic branch examples,
+  Prettier formatting succeeds, and `git diff --check` passes.
+- Permanent restrictions and approval gates remain present; no wording/safety
+  policy, runtime, API, schema, dependency, data, infrastructure, deployment,
+  provider, or production state changed.
+- FFprobe confirms one H.264 video stream, no audio stream, 1280×720, 30fps,
+  49.5 seconds, and a 2.0 MB file with fast-start metadata.
+- A six-frame contact sheet confirms the intended sequence, Korean captions,
+  data timing, interpretation caution, and final validated scenario content.
+- The scenario evaluation used one purpose-bound local OpenRouter call costing
+  USD 0.005936 and stored three validated blocks without retry.
+- The external 18-slide presentation previously passed template fidelity,
+  overflow, LibreOffice rendering, ZIP integrity, technology-term presence,
+  and prohibited-wording checks; it still requires video insertion.
+- New caption text passed the project wording check; no deployment, production
+  write, schema/dependency/API change, secret edit, or environment-file edit
+  occurred.
 
 ## Next handoff
 
-TASK-138 is complete. TASK-128, TASK-109, and TASK-021 remain separate active
-work. Deployment and production actions remain separately approval-gated.
+TASK-139 is complete. Continue TASK-021 by inserting
+`outputs/outlook-ai-signals-demo.mp4` into the final 18-slide presentation,
+verify automatic muted playback and the first frame, then rehearse the full talk
+and static fallback sequence. TASK-128 and TASK-109 remain separate active work.
