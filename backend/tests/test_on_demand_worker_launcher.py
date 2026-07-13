@@ -48,7 +48,7 @@ def test_launcher_starts_request_scoped_detached_worker(monkeypatch):
         "app.core.on_demand_worker",
         "--request-id",
         str(request_id),
-        "--confirm-local-dev-write",
+        "--confirm-generation-write",
     ]
     assert kwargs["cwd"] == launcher._BACKEND_ROOT
     assert kwargs["close_fds"] is True

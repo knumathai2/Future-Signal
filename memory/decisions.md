@@ -2383,3 +2383,24 @@ reviewable presentation asset; the earlier 11- and 13-slide decks remain
 preserved. TASK-021 still requires video insertion, name entry, live-demo
 rehearsal, and a backup capture sequence before the broader task can be marked
 complete. No deployment or feature activation is implied by the deck.
+
+
+---
+
+### ADR-078: Enable guarded production generation and scenario sessions after explicit approval
+
+- **Date**: 2026-07-13
+- **Status**: Accepted for approved production activation
+- **Decided by**: User approval to make AI briefing and scenario conversation available
+
+**Decision**: Keep provider execution outside the API process, but allow the two
+request-scoped workers in production only when `AI_GENERATION_WORKERS_ENABLED=true`
+and the existing provider credential is present. Enable the capability-scoped
+scenario API only when both that worker flag and `SCENARIO_CONVERSATION_ENABLED=true`
+are set. Keep data-seed CLIs local-only and preserve complete-output validation,
+restricted rendering, source/evidence checks, and owner deletion.
+
+**Verification**: Production DB already had migrations 005 and 006. A queued v8
+briefing reached `succeeded` and public `fresh`; a scenario turn reached
+`succeeded`, replayed through authenticated SSE as snapshot, validated blocks, and
+complete, then the test session was deleted.

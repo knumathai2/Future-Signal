@@ -8,7 +8,7 @@ from app.core.ai_report import build_openai_client
 from app.core.config import settings
 from app.core.context_policy_v7 import build_v8_conditional_verifier_from_settings
 from app.core.context_research import build_context_research_client_from_settings
-from app.core.historical_seed import ensure_local_dev_write_allowed
+from app.core.generation_runtime import ensure_generation_worker_allowed
 from app.core.on_demand_briefing import (
     process_v8_request,
     refresh_v8_context_for_market,
@@ -26,7 +26,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
         type=UUID,
         help="Process only this generation request instead of scanning the pending queue.",
     )
-    parser.add_argument("--confirm-local-dev-write", action="store_true")
+    parser.add_argument("--confirm-generation-write", action="store_true")
     return parser
 
 
@@ -55,7 +55,11 @@ def build_context_refresher():
 
 def main() -> int:
     args = build_arg_parser().parse_args()
-    ensure_local_dev_write_allowed(settings.env, args.confirm_local_dev_write)
+    ensure_generation_worker_allowed(
+        settings.env,
+        args.confirm_generation_write,
+        production_enabled=settings.generation_workers_enabled,
+    )
     if not settings.database_url:
         raise SystemExit("DATABASE_URL is not set.")
     if not settings.ai_api_key:

@@ -299,8 +299,9 @@ emitted.
 ## Scenario conversation (TASK-126, default off)
 
 The approved scenario API is registered but returns `404 feature_unavailable`
-unless `SCENARIO_CONVERSATION_ENABLED=true` and `ENV` is `local` or
-`development`. The API process never constructs a provider client.
+unless `SCENARIO_CONVERSATION_ENABLED=true`; production also requires
+`AI_GENERATION_WORKERS_ENABLED=true`. The API process never constructs a
+provider client.
 
 ### `POST /api/issues/{id}/scenario-sessions`
 

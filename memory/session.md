@@ -16,8 +16,9 @@ files.
 
 - **Role**: Frontend Implementer
 - **Branch**: `frontend/TASK-136-generation-loading`
-- **Goal**: Add visible, accessible loading feedback to briefing and scenario generation.
-- **Status**: TASK-136 complete and verified; pre-existing TASK-021 presentation work remains preserved
+- **Goal**: Add visible, accessible loading feedback to briefing and scenario
+  generation.
+- **Status**: TASK-136 complete; latest main deployment and data-refresh handoff preserved
 
 ## Completed in TASK-136
 
@@ -34,12 +35,76 @@ files.
 - Fixed the first-question transition so the empty prompt disappears while the
   turn POST is pending and an in-transcript loading state remains visible until
   the queued user turn and response placeholder replace it.
-- Preserved the default-off scenario boundary and made no provider, API, schema,
-  database, dependency, infrastructure, deployment, production, or wording-
-  policy change.
+- TASK-136 itself made no provider, feature-activation, API, schema, database,
+  dependency, infrastructure, deployment, production, or wording-policy change.
 - Passed Prettier, typecheck, lint, report/scenario parser checks, production
   build, changed-string wording scan, and local Browser verification. The known
   Recharts bundle-size warning remains unchanged.
+
+## Completed in approved production activation
+
+- Added guarded production execution for on-demand v8 briefing and scenario
+  workers; local/development defaults remain unchanged.
+- Production Compose now passes the existing provider credential reference
+  without printing or modifying the secret, enables both generation workers
+  and scenario sessions, and was rebuilt/restarted successfully.
+- Confirmed production DB already contained migrations 005 and 006; no migration
+  write was needed.
+- Recovered the previously queued briefing request; one validated v8 report was
+  stored and public GET returned `fresh`.
+- Created, processed, streamed, and deleted one production scenario session
+  after a final successful writer evaluation.
+- Early bounded scenario probes failed closed on `unsupported_number` and
+  `unconditional_model_premise`; the deterministic input-date allowance and
+  prompt restrictions were added before the successful final probe.
+
+## Completed in server restart and DB-path recovery
+
+- Rebuilt and recreated both Compose services under the user's deployment
+  approval; both containers report healthy.
+- The first restart exposed the honest static fallback because Backend was
+  attached only to Docker's internal network and could not resolve Supabase.
+- Added a separate outbound `egress` network to Backend while keeping its port
+  unpublished and preserving the internal Frontend-to-Backend `app` network.
+- Container-side `SELECT 1`, local gateway health, and public HTTPS health pass.
+- Local and public `/api/issues` now both return 20 rows with `data_as_of`
+  `2026-07-13T02:52:01.754303Z`; no OpenRouter call or schema change occurred.
+
+## Completed in local market-data refresh
+
+- Ran the approved collection-only live Gamma path against the configured local
+  development database with a 50-sample ceiling.
+- Appended 50 snapshots and 50 metrics, moving the latest data timestamp from
+  2026-07-12 21:09:15 UTC to 2026-07-13 02:52:01 UTC.
+- Recorded two new expectation-shift signals; three duplicate signals were
+  correctly suppressed by the cooldown and no sample failed processing.
+- `/api/issues` returned 20 rows with top-level `data_as_of` at the new timestamp.
+- AI reports and context research were explicitly skipped, so no OpenRouter call
+  occurred. No schema, dependency, deployment, or production change occurred.
+
+## Completed in local end-to-end verification
+
+- Added root and nested `.env` exclusions to `.dockerignore`; the Backend build
+  context dropped from about 598 kB to 2.35 kB and both images rebuilt.
+- Recorded the user's removal of the previous provider-call count ceiling for
+  purpose-bound local/development verification under the existing USD 100 cap.
+- Confirmed the configured database and OpenRouter-compatible credential load
+  without printing a value, and completed a read-only connection check.
+- Passed Ruff and all 546 Backend tests plus every Frontend parser, typecheck,
+  lint, and production-build check.
+- Confirmed all current issue detail/history GET paths return 200.
+- The first briefing request failed closed before a provider call because its
+  latest metric lacked complete research input. A context-ready unused issue
+  then completed research and writer generation, stored six validated blocks,
+  and returned a fresh public briefing.
+- One scenario call completed, stored the validated assistant turn and three
+  blocks, and reconstructed two turns plus one premise through the public API.
+- Stored usage recorded USD 0.06948625 for context research, USD 0.0097225 for
+  the briefing writer, and USD 0.006077 for the scenario writer: USD 0.08528575
+  total for this verification.
+- No deployment, production write, migration, schema/dependency/API change,
+  secret mutation or output, production scenario activation, or wording-policy
+  change occurred during that local verification stage.
 
 ## Completed in TASK-021 so far
 
@@ -173,15 +238,16 @@ files.
 - The presentation uses stored project evidence only; it does not authorize or
   imply a provider call, deployment, production write, feature activation, or
   infrastructure change.
-- Active v8 and the default-off scenario boundary remain unchanged.
+- The merged main history includes a separately approved guarded production
+  activation; TASK-136 does not broaden that authorization or runtime scope.
 - TASK-021 is not complete until the live-demo rehearsal and backup capture
   sequence are finished.
 
 ## Next handoff
 
-Review and commit the TASK-136 Frontend diff when desired. The pre-existing
-TASK-021 presentation edits and untracked output files remain present and were
-not modified by TASK-136.
+TASK-136 loading feedback and its first-question transition follow-up are
+complete. The latest main deployment, production-activation, and data-refresh
+records are preserved in this handoff.
 
 Use the final user-provided `/Users/sonmyeong-gwan/Desktop/2팀 발표a.pptx`,
 which has the four names filled, insert the final 16:9 demo video on slide 5,

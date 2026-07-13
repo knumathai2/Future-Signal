@@ -24,7 +24,9 @@ def test_request_id_runs_only_the_targeted_request(monkeypatch):
         "build_arg_parser",
         lambda: _Parser(request_id=request_id),
     )
-    monkeypatch.setattr(on_demand_worker, "ensure_local_dev_write_allowed", lambda *_: None)
+    monkeypatch.setattr(
+        on_demand_worker, "ensure_generation_worker_allowed", lambda *_args, **_kwargs: None
+    )
     monkeypatch.setattr(on_demand_worker, "build_openai_client", lambda *_args, **_kwargs: object())
     monkeypatch.setattr(on_demand_worker, "get_session_factory", lambda: lambda: session)
     monkeypatch.setattr(
@@ -61,7 +63,9 @@ def test_request_id_follows_context_refresh_successor(monkeypatch):
         "build_arg_parser",
         lambda: _Parser(request_id=request_id),
     )
-    monkeypatch.setattr(on_demand_worker, "ensure_local_dev_write_allowed", lambda *_: None)
+    monkeypatch.setattr(
+        on_demand_worker, "ensure_generation_worker_allowed", lambda *_args, **_kwargs: None
+    )
     monkeypatch.setattr(on_demand_worker, "build_openai_client", lambda *_args, **_kwargs: object())
     monkeypatch.setattr(on_demand_worker, "get_session_factory", lambda: lambda: session)
 
@@ -94,6 +98,6 @@ class _Parser:
             {
                 "request_id": self.request_id,
                 "max_requests": 10,
-                "confirm_local_dev_write": True,
+                "confirm_generation_write": True,
             },
         )()

@@ -757,7 +757,11 @@ def generate_issue_report(
     if result.state == "queued":
         # Generation remains outside this API process. The child receives the
         # committed request ID and owns the provider call plus report write.
-        launch_on_demand_worker(result.request_id, env=settings.env)
+        launch_on_demand_worker(
+            result.request_id,
+            env=settings.env,
+            allow_production=settings.generation_workers_enabled,
+        )
     request_status = "fresh" if result.state == "succeeded" else result.state
     return GenerationRequestResponse(
         request_id=result.request_id,
