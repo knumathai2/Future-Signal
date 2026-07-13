@@ -1,4 +1,5 @@
 """Application configuration loaded from environment variables."""
+
 import os
 
 from dotenv import load_dotenv
@@ -96,12 +97,14 @@ class Settings:
             ).split(",")
             if origin.strip()
         ]
-        # TASK-126: the approved scenario API exists only behind a default-off
-        # local/development feature flag. Production enablement remains outside
-        # the approved boundary.
+        # TASK-126: the approved scenario API remains default-off unless the
+        # deployment explicitly enables the feature and its generation workers.
         self.scenario_conversation_enabled: bool = _enabled(
             os.getenv("SCENARIO_CONVERSATION_ENABLED")
         )
+        # On-demand briefing/scenario workers remain disabled unless the
+        # deployment explicitly opts into provider-backed production work.
+        self.generation_workers_enabled: bool = _enabled(os.getenv("AI_GENERATION_WORKERS_ENABLED"))
         # TASK-015/TASK-042: report generation uses an OpenAI-compatible chat
         # client. OpenRouter is supported without adding a dependency by
         # pointing the existing OpenAI SDK at OpenRouter's compatible endpoint.
@@ -124,9 +127,7 @@ class Settings:
             os.getenv("OPENAI_BASE_URL"),
         )
         self.openrouter_http_referer: str | None = os.getenv("OPENROUTER_HTTP_REFERER")
-        self.openrouter_app_title: str | None = os.getenv(
-            "OPENROUTER_APP_TITLE", "Outlook Signals"
-        )
+        self.openrouter_app_title: str | None = os.getenv("OPENROUTER_APP_TITLE", "Outlook Signals")
         # TASK-058: bounded OpenRouter server-tool research. These limits are
         # clamped at the ADR-038/TASK-055 maxima even if environment values are
         # larger, so configuration cannot silently expand paid research scope.

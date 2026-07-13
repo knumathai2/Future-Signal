@@ -136,7 +136,7 @@ def test_new_turn_launches_worker_once_after_commit(live_client, db_session, mon
     monkeypatch.setattr(
         scenarios,
         "launch_scenario_worker",
-        lambda request_id, *, env: calls.append((request_id, env)) or True,
+        lambda request_id, *, env, **_kwargs: calls.append((request_id, env)) or True,
     )
     path = f"/api/issues/{MARKET_ID}/scenario-sessions/{created['session_id']}/turns"
     idempotency = str(uuid.uuid4())
@@ -173,7 +173,7 @@ def test_stale_attempt_zero_request_is_relaunched_with_bounded_helper(
     monkeypatch.setattr(
         scenarios,
         "launch_scenario_worker",
-        lambda request_id, *, env: calls.append((request_id, env)) or True,
+        lambda request_id, *, env, **_kwargs: calls.append((request_id, env)) or True,
     )
 
     assert (
@@ -234,9 +234,11 @@ def test_eight_turn_limit_fails_before_ninth_append(live_client, db_session):
             json={"message": f"조건 {index + 1}을 살펴봐 주세요."},
         )
         assert response.status_code == 202
-        request = db_session.query(ScenarioGenerationRequest).filter_by(
-            user_turn_id=uuid.UUID(response.json()["turn_id"])
-        ).one()
+        request = (
+            db_session.query(ScenarioGenerationRequest)
+            .filter_by(user_turn_id=uuid.UUID(response.json()["turn_id"]))
+            .one()
+        )
         db_session.add(
             ScenarioGenerationEvent(
                 request_id=request.id,
@@ -277,9 +279,7 @@ def test_turn_status_and_authenticated_stream_replay_validated_blocks(
         json={"message": "조건부 경로를 설명해 주세요."},
     ).json()
     user_turn_id = uuid.UUID(queued["turn_id"])
-    request = db_session.query(ScenarioGenerationRequest).filter_by(
-        user_turn_id=user_turn_id
-    ).one()
+    request = db_session.query(ScenarioGenerationRequest).filter_by(user_turn_id=user_turn_id).one()
     assistant_turn = ScenarioTurn(
         id=uuid.uuid4(),
         session_id=request.session_id,
@@ -433,7 +433,4 @@ def test_openapi_contains_approved_scenario_paths(live_client):
     assert "/api/issues/{issue_id}/scenario-sessions" in paths
     assert "/api/issues/{issue_id}/scenario-sessions/{session_id}" in paths
     assert "/api/issues/{issue_id}/scenario-sessions/{session_id}/turns" in paths
-    assert (
-        "/api/issues/{issue_id}/scenario-sessions/{session_id}/turns/{turn_id}/stream"
-        in paths
-    )
+    assert "/api/issues/{issue_id}/scenario-sessions/{session_id}/turns/{turn_id}/stream" in paths
