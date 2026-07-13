@@ -1,0 +1,287 @@
+{"kind":"deck","id":"pr/x3v2f9","name":"Deck"}
+{"kind":"layout","layoutId":"caf077f1-224f-4711-b510-3f96f257968a","name":"Master","type":"master"}
+{"kind":"layout","layoutId":"8e870fd5-93aa-4da5-8ab9-7be19492cfec","name":"Title Slide","type":"title"}
+{"kind":"slide","id":"sl/b575h8","slide":1,"title":"OUTLOOK SIGNALS","textShapes":4}
+{"kind":"shape","id":"sh/65k3ixsv","slide":1,"bbox":[650,54,582,610]}
+{"kind":"shape","id":"sh/r6t4r2tg","slide":1,"bbox":[48,54,12,64]}
+{"kind":"textbox","id":"sh/gbmlo7ad","slide":1,"text":"OUTLOOK SIGNALS","textPreview":"OUTLOOK SIGNALS","textChars":15,"textLines":1,"bbox":[78,58,430,32]}
+{"kind":"textbox","id":"sh/1wvmxcbi","slide":1,"text":"뉴스가 끝난 뒤,\n기대는 어떻게 달라졌을까?","textPreview":"뉴스가 끝난 뒤, | 기대는 어떻게 달라졌을까?","textChars":24,"textLines":2,"bbox":[48,184,550,210]}
+{"kind":"textbox","id":"sh/e9k3mxs7","slide":1,"text":"공개 예측시장 데이터로 글로벌 이슈의\n기대 변화 흐름을 읽는 모니터링 대시보드","textPreview":"공개 예측시장 데이터로 글로벌 이슈의 | 기대 변화 흐름을 읽는 모니터링 대시보드","textChars":43,"textLines":2,"bbox":[52,430,520,86]}
+{"kind":"shape","id":"sh/fad4v2ts","slide":1,"bbox":[52,570,410,34]}
+{"kind":"textbox","id":"sh/wfilcnut","slide":1,"text":"PUBLIC DATA · TIME SERIES · CAUTION","textPreview":"PUBLIC DATA · TIME SERIES · CAUTION","textChars":35,"textLines":1,"bbox":[64,577,386,20]}
+{"kind":"image","id":"im/cfyt0z6d","slide":1,"name":"","alt":"Outlook Signals 실제 제품 화면","bbox":[650,54,582,610]}
+{"kind":"notes","id":"nt/b575h8","slide":1,"text":""}
+{"kind":"slide","id":"sl/3c18h7","slide":2,"title":"OUTLOOK SIGNALS","textShapes":13}
+{"kind":"textbox","id":"sh/cbqp0rat","slide":2,"text":"OUTLOOK SIGNALS","textPreview":"OUTLOOK SIGNALS","textChars":15,"textLines":1,"bbox":[48,28,350,24]}
+{"kind":"textbox","id":"sh/rahormt8","slide":2,"text":"이슈는 넘치지만, 변화의 강도는 한눈에 보이지 않습니다","textPreview":"이슈는 넘치지만, 변화의 강도는 한눈에 보이지 않습니다","textChars":30,"textLines":1,"bbox":[48,62,1160,68]}
+{"kind":"shape","id":"sh/q987yhsn","slide":2,"bbox":[48,132,1160,0.03]}
+{"kind":"textbox","id":"sh/10j6xgba","slide":2,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[1160,668,48,20]}
+{"kind":"shape","id":"sh/0fqp4bap","slide":2,"bbox":[68,190,330,276]}
+{"kind":"textbox","id":"sh/zehov6tk","slide":2,"text":"뉴스","textPreview":"뉴스","textChars":2,"textLines":1,"bbox":[92,216,280,36]}
+{"kind":"textbox","id":"sh/ed8721sz","slide":2,"text":"무슨 일이 있었는지","textPreview":"무슨 일이 있었는지","textChars":10,"textLines":1,"bbox":[92,282,280,45]}
+{"kind":"textbox","id":"sh/94j61gbm","slide":2,"text":"사건을 빠르게 전달하지만\n기대의 변화량은 직접 연결해야 합니다.","textPreview":"사건을 빠르게 전달하지만 | 기대의 변화량은 직접 연결해야 합니다.","textChars":35,"textLines":2,"bbox":[92,350,280,84]}
+{"kind":"shape","id":"sh/o3ap8ba1","slide":2,"bbox":[451,190,330,276]}
+{"kind":"textbox","id":"sh/6xwjihgr","slide":2,"text":"소셜 피드","textPreview":"소셜 피드","textChars":5,"textLines":1,"bbox":[475,216,280,36]}
+{"kind":"textbox","id":"sh/ry5krmxc","slide":2,"text":"반응은 빠르지만","textPreview":"반응은 빠르지만","textChars":8,"textLines":1,"bbox":[475,282,280,45]}
+{"kind":"textbox","id":"sh/sze1kryx","slide":2,"text":"서로 다른 관점과 잡음이 섞여\n변화의 방향을 분리하기 어렵습니다.","textPreview":"서로 다른 관점과 잡음이 섞여 | 변화의 방향을 분리하기 어렵습니다.","textChars":36,"textLines":2,"bbox":[475,350,280,84]}
+{"kind":"shape","id":"sh/d072twfi","slide":2,"bbox":[834,190,330,276]}
+{"kind":"textbox","id":"sh/e1gjm1g3","slide":2,"text":"전문 보고서","textPreview":"전문 보고서","textChars":6,"textLines":1,"bbox":[858,216,280,36]}
+{"kind":"textbox","id":"sh/f2pkv6xo","slide":2,"text":"깊이는 있지만","textPreview":"깊이는 있지만","textChars":7,"textLines":1,"bbox":[858,282,280,45]}
+{"kind":"textbox","id":"sh/03y1obyt","slide":2,"text":"분석에 시간이 필요해\n매일의 변화를 따라가기 어렵습니다.","textPreview":"분석에 시간이 필요해 | 매일의 변화를 따라가기 어렵습니다.","textChars":31,"textLines":2,"bbox":[858,350,280,84]}
+{"kind":"textbox","id":"sh/1472xgfe","slide":2,"text":"사용자는 결국 세 정보를 직접 연결해 ‘무엇이, 언제, 얼마나 달라졌는지’를 판단해야 합니다.","textPreview":"사용자는 결국 세 정보를 직접 연결해 ‘무엇이, 언제, 얼마나 달라졌는지’를 판단해야 합니다.","textChars":52,"textLines":1,"bbox":[120,530,1040,80]}
+{"kind":"notes","id":"nt/3c18h7","slide":2,"text":""}
+{"kind":"slide","id":"sl/282dyj","slide":3,"title":"OUTLOOK SIGNALS","textShapes":9}
+{"kind":"textbox","id":"sh/ne5wvylc","slide":3,"text":"OUTLOOK SIGNALS","textPreview":"OUTLOOK SIGNALS","textChars":15,"textLines":1,"bbox":[48,28,350,24]}
+{"kind":"textbox","id":"sh/ofex432h","slide":3,"text":"공개 데이터에는 기대가 변한 흔적이 남습니다","textPreview":"공개 데이터에는 기대가 변한 흔적이 남습니다","textChars":24,"textLines":1,"bbox":[48,62,1160,68]}
+{"kind":"shape","id":"sh/pgnexoj2","slide":3,"bbox":[48,132,1160,0.03]}
+{"kind":"textbox","id":"sh/ahwf6tkn","slide":3,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[1160,668,48,20]}
+{"kind":"textbox","id":"sh/b25wzy18","slide":3,"text":"사건 중심 정보","textPreview":"사건 중심 정보","textChars":8,"textLines":1,"bbox":[76,172,340,34]}
+{"kind":"textbox","id":"sh/c3ex832t","slide":3,"text":"정책 발표\n공식 일정 변경\n새로운 조사 결과\n기관 발표","textPreview":"정책 발표 | 공식 일정 변경 | 새로운 조사 결과 | 기관 발표","textChars":30,"textLines":4,"bbox":[90,238,300,230]}
+{"kind":"shape","id":"sh/x4ne18je","slide":3,"bbox":[430,336,148,0.03]}
+{"kind":"shape","id":"sh/y5wfadkz","slide":3,"bbox":[566,323,18,18]}
+{"kind":"textbox","id":"sh/z6pg3i14","slide":3,"text":"시간에 따른 변화","textPreview":"시간에 따른 변화","textChars":9,"textLines":1,"bbox":[690,172,420,34]}
+{"kind":"shape","id":"sh/b2l4r6t0","slide":3,"bbox":[694,494,450,0.03]}
+{"kind":"shape","id":"sh/ahc3y1sf","slide":3,"bbox":[694,246,0.03,248]}
+{"kind":"shape","id":"sh/x43mtgrq","slide":3,"bbox":[706,438,95,0.03]}
+{"kind":"shape","id":"sh/c3ul0bal","slide":3,"bbox":[801,362,0.03,76]}
+{"kind":"shape","id":"sh/nel4n6to","slide":3,"bbox":[801,362,108,0.03]}
+{"kind":"shape","id":"sh/2dc3u1s3","slide":3,"bbox":[909,320,0.03,42]}
+{"kind":"shape","id":"sh/pg3mpwbu","slide":3,"bbox":[909,320,104,0.03]}
+{"kind":"shape","id":"sh/ofulwra9","slide":3,"bbox":[1013,270,0.03,50]}
+{"kind":"shape","id":"sh/7a54zq98","slide":3,"bbox":[1013,270,110,0.03]}
+{"kind":"shape","id":"sh/69w36lsn","slide":3,"bbox":[1115,261,18,18]}
+{"kind":"textbox","id":"sh/i507ypcv","slide":3,"text":"24h  +8%p","textPreview":"24h  +8%p","textChars":9,"textLines":1,"bbox":[748,530,180,38]}
+{"kind":"textbox","id":"sh/369orutg","slide":3,"text":"7d  +13%p","textPreview":"7d  +13%p","textChars":9,"textLines":1,"bbox":[970,530,180,38]}
+{"kind":"textbox","id":"sh/47ip0zu1","slide":3,"text":"단일 숫자가 아니라 ‘재평가의 흐름’을 읽습니다.","textPreview":"단일 숫자가 아니라 ‘재평가의 흐름’을 읽습니다.","textChars":27,"textLines":1,"bbox":[286,620,708,36]}
+{"kind":"notes","id":"nt/282dyj","slide":3,"text":""}
+{"kind":"slide","id":"sl/e2f7pt","slide":4,"title":"OUTLOOK SIGNALS","textShapes":15}
+{"kind":"textbox","id":"sh/y5876hcn","slide":4,"text":"OUTLOOK SIGNALS","textPreview":"OUTLOOK SIGNALS","textChars":15,"textLines":1,"bbox":[48,28,350,24]}
+{"kind":"textbox","id":"sh/lsj6hwbe","slide":4,"text":"10초 안에 변화를 발견하고, 한 이슈를 끝까지 확인합니다","textPreview":"10초 안에 변화를 발견하고, 한 이슈를 끝까지 확인합니다","textChars":32,"textLines":1,"bbox":[48,62,1160,68]}
+{"kind":"shape","id":"sh/0rap8rut","slide":4,"bbox":[48,132,1160,0.03]}
+{"kind":"textbox","id":"sh/nu1oj6tk","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1160,668,48,20]}
+{"kind":"shape","id":"sh/mts7a1cz","slide":4,"bbox":[256,322,124,0.03]}
+{"kind":"shape","id":"sh/9wj6lgba","slide":4,"bbox":[554,322,124,0.03]}
+{"kind":"shape","id":"sh/8vapcbup","slide":4,"bbox":[852,322,124,0.03]}
+{"kind":"shape","id":"sh/3yxo72d0","slide":4,"bbox":[214,285,76,76]}
+{"kind":"textbox","id":"sh/2xonyxcf","slide":4,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[229,303,46,30]}
+{"kind":"textbox","id":"sh/k3ex8vq9","slide":4,"text":"이슈 발견","textPreview":"이슈 발견","textChars":5,"textLines":1,"bbox":[82,394,264,42]}
+{"kind":"textbox","id":"sh/l4ny107u","slide":4,"text":"24h·7d 변화가 큰\n이슈를 먼저 탐색","textPreview":"24h·7d 변화가 큰 | 이슈를 먼저 탐색","textChars":22,"textLines":2,"bbox":[82,454,264,88]}
+{"kind":"shape","id":"sh/y1cf6l83","slide":4,"bbox":[512,285,76,76]}
+{"kind":"textbox","id":"sh/j2lwzqpo","slide":4,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[527,303,46,30]}
+{"kind":"textbox","id":"sh/87excvql","slide":4,"text":"변화 확인","textPreview":"변화 확인","textChars":5,"textLines":1,"bbox":[380,394,264,42]}
+{"kind":"textbox","id":"sh/t8ny507q","slide":4,"text":"차트와 변곡 구간으로\n방향과 크기 확인","textPreview":"차트와 변곡 구간으로 | 방향과 크기 확인","textChars":21,"textLines":2,"bbox":[380,454,264,88]}
+{"kind":"shape","id":"sh/65wfa58f","slide":4,"bbox":[810,285,76,76]}
+{"kind":"textbox","id":"sh/765g3qp0","slide":4,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[825,303,46,30]}
+{"kind":"textbox","id":"sh/obux0bq1","slide":4,"text":"근거 확인","textPreview":"근거 확인","textChars":5,"textLines":1,"bbox":[678,394,264,42]}
+{"kind":"textbox","id":"sh/9c3etgrm","slide":4,"text":"브리핑과 공개 출처로\n현재 확인 가능한 내용 점검","textPreview":"브리핑과 공개 출처로 | 현재 확인 가능한 내용 점검","textChars":27,"textLines":2,"bbox":[678,454,264,88]}
+{"kind":"shape","id":"sh/5gbmh8fe","slide":4,"bbox":[1108,285,76,76]}
+{"kind":"textbox","id":"sh/4f2l83et","slide":4,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[1123,303,46,30]}
+{"kind":"textbox","id":"sh/3ut4fyx8","slide":4,"text":"신중한 해석","textPreview":"신중한 해석","textChars":6,"textLines":1,"bbox":[976,394,264,42]}
+{"kind":"textbox","id":"sh/it036twn","slide":4,"text":"기준 시각과 주의사항으로\n데이터의 한계까지 확인","textPreview":"기준 시각과 주의사항으로 | 데이터의 한계까지 확인","textChars":26,"textLines":2,"bbox":[976,454,264,88]}
+{"kind":"notes","id":"nt/e2f7pt","slide":4,"text":""}
+{"kind":"slide","id":"sl/8iqagi","slide":5,"title":"OUTLOOK SIGNALS","textShapes":24}
+{"kind":"textbox","id":"sh/5ore9cra","slide":5,"text":"OUTLOOK SIGNALS","textPreview":"OUTLOOK SIGNALS","textChars":15,"textLines":1,"bbox":[48,28,350,24]}
+{"kind":"textbox","id":"sh/il0fex8j","slide":5,"text":"홈은 오늘 가장 크게 변한 이슈부터 보여줍니다","textPreview":"홈은 오늘 가장 크게 변한 이슈부터 보여줍니다","textChars":25,"textLines":1,"bbox":[48,62,1160,68]}
+{"kind":"shape","id":"sh/jm9w7294","slide":5,"bbox":[48,132,1160,0.03]}
+{"kind":"textbox","id":"sh/sb2xk7ql","slide":5,"text":"05","textPreview":"05","textChars":2,"textLines":1,"bbox":[1160,668,48,20]}
+{"kind":"shape","id":"sh/tcbedcr6","slide":5,"bbox":[52,164,806,462]}
+{"kind":"textbox","id":"sh/690fih8v","slide":5,"text":"오늘의 변화가 큰 이슈","textPreview":"오늘의 변화가 큰 이슈","textChars":12,"textLines":1,"bbox":[82,190,420,38]}
+{"kind":"textbox","id":"sh/7a9wbm9g","slide":5,"text":"데이터 기준 2026.07.13 09:00","textPreview":"데이터 기준 2026.07.13 09:00","textChars":23,"textLines":1,"bbox":[558,195,260,26]}
+{"kind":"shape","id":"sh/gf2xorqx","slide":5,"bbox":[82,246,96,34]}
+{"kind":"textbox","id":"sh/hgbehwri","slide":5,"text":"24시간","textPreview":"24시간","textChars":4,"textLines":1,"bbox":[94,253,72,20]}
+{"kind":"shape","id":"sh/t4bil0v2","slide":5,"bbox":[188,246,76,34]}
+{"kind":"textbox","id":"sh/832hcvuh","slide":5,"text":"7일","textPreview":"7일","textChars":2,"textLines":1,"bbox":[200,253,52,20]}
+{"kind":"shape","id":"sh/72t0jqdw","slide":5,"bbox":[82,296,736,0.03]}
+{"kind":"textbox","id":"sh/61kzalcb","slide":5,"text":"글로벌 정책 일정 이슈","textPreview":"글로벌 정책 일정 이슈","textChars":12,"textLines":1,"bbox":[84,314,330,30]}
+{"kind":"textbox","id":"sh/hsvip0vy","slide":5,"text":"정책","textPreview":"정책","textChars":2,"textLines":1,"bbox":[84,350,100,22]}
+{"kind":"textbox","id":"sh/grmhgvud","slide":5,"text":"63%","textPreview":"63%","textChars":3,"textLines":1,"bbox":[476,315,100,36]}
+{"kind":"textbox","id":"sh/v6d0nqd8","slide":5,"text":"+8%p","textPreview":"+8%p","textChars":4,"textLines":1,"bbox":[604,318,92,30]}
+{"kind":"textbox","id":"sh/u54zelcn","slide":5,"text":"충분한 데이터","textPreview":"충분한 데이터","textChars":7,"textLines":1,"bbox":[708,322,106,24]}
+{"kind":"shape","id":"sh/xwrydgvu","slide":5,"bbox":[82,392,736,0.03]}
+{"kind":"textbox","id":"sh/wbih4bu9","slide":5,"text":"기술 규제 검토 이슈","textPreview":"기술 규제 검토 이슈","textChars":11,"textLines":1,"bbox":[84,410,330,30]}
+{"kind":"textbox","id":"sh/ofmhkb25","slide":5,"text":"기술","textPreview":"기술","textChars":2,"textLines":1,"bbox":[84,446,100,22]}
+{"kind":"textbox","id":"sh/pgvitg3q","slide":5,"text":"41%","textPreview":"41%","textChars":3,"textLines":1,"bbox":[476,411,100,36]}
+{"kind":"textbox","id":"sh/2d4zi1kz","slide":5,"text":"-6%p","textPreview":"-6%p","textChars":4,"textLines":1,"bbox":[604,414,92,30]}
+{"kind":"textbox","id":"sh/ned0r6lk","slide":5,"text":"해석 주의","textPreview":"해석 주의","textChars":5,"textLines":1,"bbox":[708,418,106,24]}
+{"kind":"shape","id":"sh/cj6hob21","slide":5,"bbox":[82,488,736,0.03]}
+{"kind":"textbox","id":"sh/xkfixg3m","slide":5,"text":"국제 협상 진행 이슈","textPreview":"국제 협상 진행 이슈","textChars":11,"textLines":1,"bbox":[84,506,330,30]}
+{"kind":"textbox","id":"sh/ah4zmlkb","slide":5,"text":"외교","textPreview":"외교","textChars":2,"textLines":1,"bbox":[84,542,100,22]}
+{"kind":"textbox","id":"sh/bid0v6lw","slide":5,"text":"72%","textPreview":"72%","textChars":3,"textLines":1,"bbox":[476,507,100,36]}
+{"kind":"textbox","id":"sh/k76hsv2d","slide":5,"text":"+5%p","textPreview":"+5%p","textChars":4,"textLines":1,"bbox":[604,510,92,30]}
+{"kind":"textbox","id":"sh/l8fi103y","slide":5,"text":"데이터 제한","textPreview":"데이터 제한","textChars":6,"textLines":1,"bbox":[708,514,106,24]}
+{"kind":"shape","id":"sh/v21kru50","slide":5,"bbox":[900,184,310,376]}
+{"kind":"textbox","id":"sh/u183ip4f","slide":5,"text":"첫 화면에서 함께 보이는 것","textPreview":"첫 화면에서 함께 보이는 것","textChars":15,"textLines":1,"bbox":[930,216,250,62]}
+{"kind":"textbox","id":"sh/h4j2t4n6","slide":5,"text":"01  현재 반영 기대값\n\n02  24시간·7일 관측 변화\n\n03  해석 주의 상태\n\n04  데이터 기준 시각","textPreview":"01  현재 반영 기대값 |  | 02  24시간·7일 관측 변화 |  | 03  해석 주의 상태 |  | 04  데이터 기준 시각","textChars":61,"textLines":7,"bbox":[930,316,240,210]}
+{"kind":"notes","id":"nt/8iqagi","slide":5,"text":""}
+{"kind":"slide","id":"sl/7yoeu4","slide":6,"title":"OUTLOOK SIGNALS","textShapes":9}
+{"kind":"textbox","id":"sh/987ytwzm","slide":6,"text":"OUTLOOK SIGNALS","textPreview":"OUTLOOK SIGNALS","textChars":15,"textLines":1,"bbox":[48,28,350,24]}
+{"kind":"textbox","id":"sh/mlgfyhgb","slide":6,"text":"상세 화면은 숫자보다 변화의 흐름을 보여줍니다","textPreview":"상세 화면은 숫자보다 변화의 흐름을 보여줍니다","textChars":25,"textLines":1,"bbox":[48,62,1160,68]}
+{"kind":"shape","id":"sh/76pgrmhg","slide":6,"bbox":[48,132,1160,0.03]}
+{"kind":"textbox","id":"sh/wbih4byd","slide":6,"text":"06","textPreview":"06","textChars":2,"textLines":1,"bbox":[1160,668,48,20]}
+{"kind":"shape","id":"sh/u9gz21g7","slide":6,"bbox":[52,164,760,450]}
+{"kind":"textbox","id":"sh/va9gv6xs","slide":6,"text":"한 화면에서 확인","textPreview":"한 화면에서 확인","textChars":9,"textLines":1,"bbox":[870,182,290,36]}
+{"kind":"textbox","id":"sh/4fih8by9","slide":6,"text":"현재 반영 기대값","textPreview":"현재 반영 기대값","textChars":9,"textLines":1,"bbox":[870,254,290,30]}
+{"kind":"textbox","id":"sh/5gry1gfu","slide":6,"text":"63%","textPreview":"63%","textChars":3,"textLines":1,"bbox":[870,286,290,72]}
+{"kind":"shape","id":"sh/ho729sfi","slide":6,"bbox":[870,378,300,0.03]}
+{"kind":"textbox","id":"sh/wnyl0nyx","slide":6,"text":"24h  +8%p","textPreview":"24h  +8%p","textChars":9,"textLines":1,"bbox":[870,410,150,36]}
+{"kind":"textbox","id":"sh/vmpk7ixc","slide":6,"text":"7d  +13%p","textPreview":"7d  +13%p","textChars":9,"textLines":1,"bbox":[1032,410,150,36]}
+{"kind":"textbox","id":"sh/ulg3ydgr","slide":6,"text":"• 기간별 선형 차트\n• 큰 변화 구간 표시\n• 공개 자료와 출처\n• 해석 주의 및 기준 시각","textPreview":"• 기간별 선형 차트 | • 큰 변화 구간 표시 | • 공개 자료와 출처 | • 해석 주의 및 기준 시각","textChars":52,"textLines":4,"bbox":[870,484,310,130]}
+{"kind":"image","id":"im/4zehsza1","slide":6,"name":"","alt":"Outlook Signals 실제 제품 화면","bbox":[52,164,760,450]}
+{"kind":"notes","id":"nt/7yoeu4","slide":6,"text":""}
+{"kind":"slide","id":"sl/bmnmby","slide":7,"title":"OUTLOOK SIGNALS","textShapes":17}
+{"kind":"textbox","id":"sh/9ojy18na","slide":7,"text":"OUTLOOK SIGNALS","textPreview":"OUTLOOK SIGNALS","textChars":15,"textLines":1,"bbox":[48,28,350,24]}
+{"kind":"textbox","id":"sh/m1sz6toz","slide":7,"text":"AI 브리핑은 검증된 내용부터 단계적으로 공개됩니다","textPreview":"AI 브리핑은 검증된 내용부터 단계적으로 공개됩니다","textChars":28,"textLines":1,"bbox":[48,62,1160,68]}
+{"kind":"shape","id":"sh/7m1gzy5k","slide":7,"bbox":[48,132,1160,0.03]}
+{"kind":"textbox","id":"sh/wrahc3m1","slide":7,"text":"07","textPreview":"07","textChars":2,"textLines":1,"bbox":[1160,668,48,20]}
+{"kind":"shape","id":"sh/upszad4v","slide":7,"bbox":[792,184,416,370]}
+{"kind":"shape","id":"sh/vq1g3i5g","slide":7,"bbox":[202,338,38,0.03]}
+{"kind":"shape","id":"sh/4vuhgnmx","slide":7,"bbox":[388,338,38,0.03]}
+{"kind":"shape","id":"sh/5w3i9sni","slide":7,"bbox":[574,338,38,0.03]}
+{"kind":"shape","id":"sh/h03a5ory","slide":7,"bbox":[54,242,148,214]}
+{"kind":"textbox","id":"sh/wfu9wjqd","slide":7,"text":"01","textPreview":"01","textChars":2,"textLines":1,"bbox":[70,260,40,24]}
+{"kind":"textbox","id":"sh/vels3y9s","slide":7,"text":"고정 근거","textPreview":"고정 근거","textChars":5,"textLines":1,"bbox":[70,304,116,34]}
+{"kind":"textbox","id":"sh/udcrut87","slide":7,"text":"이슈 정의\n관측 수치\n공개 출처","textPreview":"이슈 정의 | 관측 수치 | 공개 출처","textChars":17,"textLines":3,"bbox":[70,360,116,70]}
+{"kind":"shape","id":"sh/54na98ru","slide":7,"bbox":[240,242,148,214]}
+{"kind":"textbox","id":"sh/43et03q9","slide":7,"text":"02","textPreview":"02","textChars":2,"textLines":1,"bbox":[256,260,40,24]}
+{"kind":"textbox","id":"sh/j2ls7y94","slide":7,"text":"AI 작성","textPreview":"AI 작성","textChars":5,"textLines":1,"bbox":[256,304,116,34]}
+{"kind":"textbox","id":"sh/i1cbyt8j","slide":7,"text":"한 번의\n생성 요청","textPreview":"한 번의 | 생성 요청","textChars":10,"textLines":2,"bbox":[256,360,116,70]}
+{"kind":"shape","id":"sh/l8jax4rq","slide":7,"bbox":[426,242,148,214]}
+{"kind":"textbox","id":"sh/k7a9ozq5","slide":7,"text":"03","textPreview":"03","textChars":2,"textLines":1,"bbox":[442,260,40,24]}
+{"kind":"textbox","id":"sh/cre9kjy1","slide":7,"text":"문단 검증","textPreview":"문단 검증","textChars":5,"textLines":1,"bbox":[442,304,116,34]}
+{"kind":"textbox","id":"sh/dsnad4zm","slide":7,"text":"수치·출처\n표현·순서","textPreview":"수치·출처 | 표현·순서","textChars":11,"textLines":2,"bbox":[442,360,116,70]}
+{"kind":"shape","id":"sh/qpwri9gv","slide":7,"bbox":[612,242,148,214]}
+{"kind":"textbox","id":"sh/bq5sbehg","slide":7,"text":"04","textPreview":"04","textChars":2,"textLines":1,"bbox":[628,260,40,24]}
+{"kind":"textbox","id":"sh/0fetojyx","slide":7,"text":"화면 공개","textPreview":"화면 공개","textChars":5,"textLines":1,"bbox":[628,304,116,34]}
+{"kind":"textbox","id":"sh/lgnahozi","slide":7,"text":"완료된 블록\n순차 표시","textPreview":"완료된 블록 | 순차 표시","textChars":12,"textLines":2,"bbox":[628,360,116,70]}
+{"kind":"textbox","id":"sh/ytwbm9g7","slide":7,"text":"검증 실패","textPreview":"검증 실패","textChars":5,"textLines":1,"bbox":[402,510,120,28]}
+{"kind":"shape","id":"sh/zu5sfehs","slide":7,"bbox":[496,456,0.03,42]}
+{"kind":"textbox","id":"sh/8jyts3y9","slide":7,"text":"현재 시도는 공개하지 않고, 이전 정상 브리핑을 유지합니다.","textPreview":"현재 시도는 공개하지 않고, 이전 정상 브리핑을 유지합니다.","textChars":33,"textLines":1,"bbox":[224,562,480,48]}
+{"kind":"image","id":"im/0r2p0vuh","slide":7,"name":"","alt":"Outlook Signals 실제 제품 화면","bbox":[792,184,416,370]}
+{"kind":"notes","id":"nt/bmnmby","slide":7,"text":""}
+{"kind":"slide","id":"sl/9cze25","slide":8,"title":"OUTLOOK SIGNALS","textShapes":12}
+{"kind":"textbox","id":"sh/elkbqtcb","slide":8,"text":"OUTLOOK SIGNALS","textPreview":"OUTLOOK SIGNALS","textChars":15,"textLines":1,"bbox":[48,28,350,24]}
+{"kind":"textbox","id":"sh/1oba18b2","slide":8,"text":"확인된 브리핑과 조건부 대화를 분리했습니다","textPreview":"확인된 브리핑과 조건부 대화를 분리했습니다","textChars":23,"textLines":1,"bbox":[48,62,1160,68]}
+{"kind":"shape","id":"sh/0n2ts3uh","slide":8,"bbox":[48,132,1160,0.03]}
+{"kind":"textbox","id":"sh/ri9svytk","slide":8,"text":"08","textPreview":"08","textChars":2,"textLines":1,"bbox":[1160,668,48,20]}
+{"kind":"shape","id":"sh/qh0rmtcf","slide":8,"bbox":[640,182,0.03,384]}
+{"kind":"shape","id":"sh/dkbax8bq","slide":8,"bbox":[62,180,520,388]}
+{"kind":"shape","id":"sh/cj29o3u5","slide":8,"bbox":[698,180,520,388]}
+{"kind":"textbox","id":"sh/3e9sreto","slide":8,"text":"AI 이슈 브리핑","textPreview":"AI 이슈 브리핑","textChars":9,"textLines":1,"bbox":[92,210,450,38]}
+{"kind":"textbox","id":"sh/2d0ri9c3","slide":8,"text":"현재 확인된 정보를 안정적으로 읽는 문서","textPreview":"현재 확인된 정보를 안정적으로 읽는 문서","textChars":22,"textLines":1,"bbox":[92,268,450,54]}
+{"kind":"textbox","id":"sh/ov21or69","slide":8,"text":"• 이슈 정의와 관측 수치\n• 검증된 공개 자료와 출처\n• 데이터 기준 시각과 주의사항\n• 이전 정상 브리핑 유지","textPreview":"• 이슈 정의와 관측 수치 | • 검증된 공개 자료와 출처 | • 데이터 기준 시각과 주의사항 | • 이전 정상 브리핑 유지","textChars":63,"textLines":4,"bbox":[92,352,430,154]}
+{"kind":"shape","id":"sh/pwb2xw7u","slide":8,"bbox":[92,512,176,34]}
+{"kind":"textbox","id":"sh/290jmho3","slide":8,"text":"현재 핵심 경험","textPreview":"현재 핵심 경험","textChars":8,"textLines":1,"bbox":[104,519,152,20]}
+{"kind":"textbox","id":"sh/natkvmpo","slide":8,"text":"시나리오 대화","textPreview":"시나리오 대화","textChars":7,"textLines":1,"bbox":[728,210,440,38]}
+{"kind":"textbox","id":"sh/07i1k76x","slide":8,"text":"가정을 현재 정보와 분리해 살펴보는 대화","textPreview":"가정을 현재 정보와 분리해 살펴보는 대화","textChars":22,"textLines":1,"bbox":[728,268,440,54]}
+{"kind":"textbox","id":"sh/18r2tc7i","slide":8,"text":"• 이슈별 익명 세션\n• 24시간 · 최대 8개 사용자 턴\n• 외부 도구 접근 없음\n• 검증된 완성 문단만 순차 표시","textPreview":"• 이슈별 익명 세션 | • 24시간 · 최대 8개 사용자 턴 | • 외부 도구 접근 없음 | • 검증된 완성 문단만 순차 표시","textChars":65,"textLines":4,"bbox":[728,352,430,154]}
+{"kind":"shape","id":"sh/e50jiho7","slide":8,"bbox":[728,512,260,34]}
+{"kind":"textbox","id":"sh/f690r2ps","slide":8,"text":"기본 비활성화 · 로컬 검증","textPreview":"기본 비활성화 · 로컬 검증","textChars":15,"textLines":1,"bbox":[740,519,236,20]}
+{"kind":"textbox","id":"sh/k3m1wb6h","slide":8,"text":"가정이 현재 정보처럼 섞이지 않도록 두 경험을 구조적으로 분리했습니다.","textPreview":"가정이 현재 정보처럼 섞이지 않도록 두 경험을 구조적으로 분리했습니다.","textChars":39,"textLines":1,"bbox":[210,618,860,38]}
+{"kind":"notes","id":"nt/9cze25","slide":8,"text":""}
+{"kind":"slide","id":"sl/wz5g4i","slide":9,"title":"OUTLOOK SIGNALS","textShapes":12}
+{"kind":"textbox","id":"sh/w3ehoj21","slide":9,"text":"OUTLOOK SIGNALS","textPreview":"OUTLOOK SIGNALS","textChars":15,"textLines":1,"bbox":[48,28,350,24]}
+{"kind":"textbox","id":"sh/v2l0felg","slide":9,"text":"안전장치는 안내 문구가 아니라 제품 구조입니다","textPreview":"안전장치는 안내 문구가 아니라 제품 구조입니다","textChars":25,"textLines":1,"bbox":[48,62,1160,68]}
+{"kind":"shape","id":"sh/ahczm9kv","slide":9,"bbox":[48,132,1160,0.03]}
+{"kind":"textbox","id":"sh/58niloji","slide":9,"text":"09","textPreview":"09","textChars":2,"textLines":1,"bbox":[1160,668,48,20]}
+{"kind":"shape","id":"sh/k7ehs32d","slide":9,"bbox":[80,188,720,414]}
+{"kind":"shape","id":"sh/j650jyls","slide":9,"bbox":[148,238,584,314]}
+{"kind":"shape","id":"sh/i5wzqtk7","slide":9,"bbox":[218,286,444,220]}
+{"kind":"shape","id":"sh/lc3i943e","slide":9,"bbox":[300,338,280,116]}
+{"kind":"textbox","id":"sh/0bahgz2t","slide":9,"text":"화면 표시","textPreview":"화면 표시","textChars":5,"textLines":1,"bbox":[98,208,180,30]}
+{"kind":"textbox","id":"sh/ylgj218z","slide":9,"text":"출력 검증","textPreview":"출력 검증","textChars":5,"textLines":1,"bbox":[168,258,180,30]}
+{"kind":"textbox","id":"sh/zmp0v6pk","slide":9,"text":"근거 제한","textPreview":"근거 제한","textChars":5,"textLines":1,"bbox":[238,306,180,30]}
+{"kind":"textbox","id":"sh/kny14b6p","slide":9,"text":"집계 데이터","textPreview":"집계 데이터","textChars":6,"textLines":1,"bbox":[330,374,220,42]}
+{"kind":"textbox","id":"sh/lo7ixg7a","slide":9,"text":"모든 수치에 기준 시각과 주의사항","textPreview":"모든 수치에 기준 시각과 주의사항","textChars":18,"textLines":1,"bbox":[846,206,336,58]}
+{"kind":"textbox","id":"sh/m9gjq1ov","slide":9,"text":"수치·출처·표현을 동일한 규칙으로 재검증","textPreview":"수치·출처·표현을 동일한 규칙으로 재검증","textChars":22,"textLines":1,"bbox":[846,300,336,58]}
+{"kind":"textbox","id":"sh/7ap0z6pg","slide":9,"text":"AI가 사용할 수 있는 자료를 사전에 고정","textPreview":"AI가 사용할 수 있는 자료를 사전에 고정","textChars":23,"textLines":1,"bbox":[846,394,336,58]}
+{"kind":"textbox","id":"sh/8bi1sb61","slide":9,"text":"개인 단위 탐색 없이 시장·이슈 단위로만 제공","textPreview":"개인 단위 탐색 없이 시장·이슈 단위로만 제공","textChars":25,"textLines":1,"bbox":[846,488,336,58]}
+{"kind":"textbox","id":"sh/tcri1g7m","slide":9,"text":"결과 단정 없음  ·  임의 관계 연결 없음  ·  개인 식별 없음","textPreview":"결과 단정 없음  ·  임의 관계 연결 없음  ·  개인 식별 없음","textChars":37,"textLines":1,"bbox":[250,630,780,32]}
+{"kind":"notes","id":"nt/wz5g4i","slide":9,"text":""}
+{"kind":"slide","id":"sl/5vvbwn","slide":10,"title":"OUTLOOK SIGNALS","textShapes":11}
+{"kind":"textbox","id":"sh/wz2hszy9","slide":10,"text":"OUTLOOK SIGNALS","textPreview":"OUTLOOK SIGNALS","textChars":15,"textLines":1,"bbox":[48,28,350,24]}
+{"kind":"textbox","id":"sh/vytgjuxo","slide":10,"text":"수집과 생성 경로를 분리해 안정적으로 동작합니다","textPreview":"수집과 생성 경로를 분리해 안정적으로 동작합니다","textChars":26,"textLines":1,"bbox":[48,62,1160,68]}
+{"kind":"shape","id":"sh/axkzq9g3","slide":10,"bbox":[48,132,1160,0.03]}
+{"kind":"textbox","id":"sh/9wbyh4fi","slide":10,"text":"10","textPreview":"10","textChars":2,"textLines":1,"bbox":[1160,668,48,20]}
+{"kind":"shape","id":"sh/8v2hozyx","slide":10,"bbox":[222,304,82,0.03]}
+{"kind":"shape","id":"sh/nu9gfuxc","slide":10,"bbox":[476,304,86,0.03]}
+{"kind":"shape","id":"sh/mt0zmpg7","slide":10,"bbox":[736,304,82,0.03]}
+{"kind":"shape","id":"sh/tsvitofm","slide":10,"bbox":[994,304,74,0.03]}
+{"kind":"shape","id":"sh/srmh0jyh","slide":10,"bbox":[650,414,0.03,74]}
+{"kind":"shape","id":"sh/ut0redc7","slide":10,"bbox":[650,488,342,0.03]}
+{"kind":"shape","id":"sh/vu9snids","slide":10,"bbox":[54,230,168,148]}
+{"kind":"shape","id":"sh/gvitgnud","slide":10,"bbox":[304,230,172,148]}
+{"kind":"shape","id":"sh/hwbapsvy","slide":10,"bbox":[562,230,174,148]}
+{"kind":"shape","id":"sh/6p0ratcb","slide":10,"bbox":[818,230,176,148]}
+{"kind":"shape","id":"sh/7q9sjydw","slide":10,"bbox":[1068,230,158,148]}
+{"kind":"shape","id":"sh/8ri9c3uh","slide":10,"bbox":[820,456,174,128]}
+{"kind":"textbox","id":"sh/tsral8v2","slide":10,"text":"공개 API","textPreview":"공개 API","textChars":6,"textLines":1,"bbox":[78,274,120,32]}
+{"kind":"textbox","id":"sh/qlkbmxcf","slide":10,"text":"4시간 주기\nPython 수집기","textPreview":"4시간 주기 | Python 수집기","textChars":17,"textLines":2,"bbox":[326,264,128,60]}
+{"kind":"textbox","id":"sh/rmtsv2d0","slide":10,"text":"PostgreSQL","textPreview":"PostgreSQL","textChars":10,"textLines":1,"bbox":[584,276,130,32]}
+{"kind":"textbox","id":"sh/n65onutc","slide":10,"text":"FastAPI","textPreview":"FastAPI","textChars":7,"textLines":1,"bbox":[846,276,122,32]}
+{"kind":"textbox","id":"sh/m5w7eps7","slide":10,"text":"React","textPreview":"React","textChars":5,"textLines":1,"bbox":[1084,276,124,32]}
+{"kind":"textbox","id":"sh/98nqp4bi","slide":10,"text":"독립 AI 워커","textPreview":"독립 AI 워커","textChars":8,"textLines":1,"bbox":[840,492,134,32]}
+{"kind":"textbox","id":"sh/o7epgzax","slide":10,"text":"일반 조회 경로","textPreview":"일반 조회 경로","textChars":8,"textLines":1,"bbox":[434,178,430,30]}
+{"kind":"textbox","id":"sh/ba58ruto","slide":10,"text":"사용자 요청이 있을 때만 생성","textPreview":"사용자 요청이 있을 때만 생성","textChars":16,"textLines":1,"bbox":[790,614,280,30]}
+{"kind":"notes","id":"nt/5vvbwn","slide":10,"text":""}
+{"kind":"slide","id":"sl/gkhlbj","slide":11,"title":"OUTLOOK SIGNALS","textShapes":20}
+{"kind":"textbox","id":"sh/o3u54zat","slide":11,"text":"OUTLOOK SIGNALS","textPreview":"OUTLOOK SIGNALS","textChars":15,"textLines":1,"bbox":[48,28,350,24]}
+{"kind":"textbox","id":"sh/32l4bet8","slide":11,"text":"4명이 역할을 나누고, PM이 전체 연결을 지원했습니다","textPreview":"4명이 역할을 나누고, PM이 전체 연결을 지원했습니다","textChars":30,"textLines":1,"bbox":[48,62,1160,68]}
+{"kind":"shape","id":"sh/21cn29sn","slide":11,"bbox":[48,132,1160,0.03]}
+{"kind":"textbox","id":"sh/h03m94bi","slide":11,"text":"11","textPreview":"11","textChars":2,"textLines":1,"bbox":[1160,668,48,20]}
+{"kind":"shape","id":"sh/gzu50zux","slide":11,"bbox":[414,248,78,112]}
+{"kind":"shape","id":"sh/fel47utc","slide":11,"bbox":[414,360,320,0.03]}
+{"kind":"shape","id":"sh/uds3ypcr","slide":11,"bbox":[414,360,562,112]}
+{"kind":"shape","id":"sh/lw7mlobm","slide":11,"bbox":[52,174,362,420]}
+{"kind":"shape","id":"sh/0ve5cja1","slide":11,"bbox":[492,174,220,350]}
+{"kind":"shape","id":"sh/qlwzedsf","slide":11,"bbox":[734,174,220,350]}
+{"kind":"shape","id":"sh/rm5g7it0","slide":11,"bbox":[976,174,220,350]}
+{"kind":"textbox","id":"sh/cnehgnal","slide":11,"text":"PM / Planner","textPreview":"PM / Planner","textChars":12,"textLines":1,"bbox":[80,204,306,36]}
+{"kind":"textbox","id":"sh/dony9sbq","slide":11,"text":"Reviewer · Debugger","textPreview":"Reviewer · Debugger","textChars":19,"textLines":1,"bbox":[80,248,306,30]}
+{"kind":"textbox","id":"sh/2xcfads3","slide":11,"text":"________________","textPreview":"________________","textChars":16,"textLines":1,"bbox":[80,300,250,30]}
+{"kind":"textbox","id":"sh/3ylg3ito","slide":11,"text":"전체 일정·범위 조율\n전 영역 구현 지원\n문구·안전 검토\n통합 리뷰와 디버깅\n발표·데모 구성","textPreview":"전체 일정·범위 조율 | 전 영역 구현 지원 | 문구·안전 검토 | 통합 리뷰와 디버깅 | 발표·데모 구성","textChars":51,"textLines":5,"bbox":[80,358,286,164]}
+{"kind":"textbox","id":"sh/4zuxcna9","slide":11,"text":"Frontend","textPreview":"Frontend","textChars":8,"textLines":1,"bbox":[516,204,172,36]}
+{"kind":"textbox","id":"sh/pkny58bu","slide":11,"text":"Implementer","textPreview":"Implementer","textChars":11,"textLines":1,"bbox":[516,242,172,28]}
+{"kind":"textbox","id":"sh/mtgzmxsn","slide":11,"text":"____________","textPreview":"____________","textChars":12,"textLines":1,"bbox":[526,300,152,28]}
+{"kind":"textbox","id":"sh/nupgf2t8","slide":11,"text":"홈·상세 화면\n차트·반응형\n접근성","textPreview":"홈·상세 화면 | 차트·반응형 | 접근성","textChars":18,"textLines":3,"bbox":[516,368,172,102]}
+{"kind":"textbox","id":"sh/jyhw7u9k","slide":11,"text":"Backend","textPreview":"Backend","textChars":7,"textLines":1,"bbox":[758,204,172,36]}
+{"kind":"textbox","id":"sh/yx8vep8z","slide":11,"text":"Implementer","textPreview":"Implementer","textChars":11,"textLines":1,"bbox":[758,242,172,28]}
+{"kind":"textbox","id":"sh/l0ze94rq","slide":11,"text":"____________","textPreview":"____________","textChars":12,"textLines":1,"bbox":[768,300,152,28]}
+{"kind":"textbox","id":"sh/kzqdgzq5","slide":11,"text":"데이터베이스·API\n수집·복구 경로\n안정성","textPreview":"데이터베이스·API | 수집·복구 경로 | 안정성","textChars":23,"textLines":3,"bbox":[758,368,172,102]}
+{"kind":"textbox","id":"sh/721wbe9g","slide":11,"text":"Data / AI","textPreview":"Data / AI","textChars":9,"textLines":1,"bbox":[1000,204,172,36]}
+{"kind":"textbox","id":"sh/61svi98v","slide":11,"text":"Implementer","textPreview":"Implementer","textChars":11,"textLines":1,"bbox":[1000,242,172,28]}
+{"kind":"textbox","id":"sh/t4jedorm","slide":11,"text":"____________","textPreview":"____________","textChars":12,"textLines":1,"bbox":[1010,300,152,28]}
+{"kind":"textbox","id":"sh/83adkjq1","slide":11,"text":"정규화·변화 지표\n근거 검증\n브리핑 생성","textPreview":"정규화·변화 지표 | 근거 검증 | 브리핑 생성","textChars":22,"textLines":3,"bbox":[1000,368,172,102]}
+{"kind":"textbox","id":"sh/vq1wfe9s","slide":11,"text":"각 역할은 전문 영역을 맡고, PM은 전체 진행을 도우며 리뷰와 디버깅을 함께 담당했습니다.","textPreview":"각 역할은 전문 영역을 맡고, PM은 전체 진행을 도우며 리뷰와 디버깅을 함께 담당했습니다.","textChars":51,"textLines":1,"bbox":[182,624,916,36]}
+{"kind":"notes","id":"nt/gkhlbj","slide":11,"text":""}
+{"kind":"slide","id":"sl/qv9igk","slide":12,"title":"OUTLOOK SIGNALS","textShapes":14}
+{"kind":"textbox","id":"sh/zy5k7y90","slide":12,"text":"OUTLOOK SIGNALS","textPreview":"OUTLOOK SIGNALS","textChars":15,"textLines":1,"bbox":[48,28,350,24]}
+{"kind":"textbox","id":"sh/kze1g3al","slide":12,"text":"작동하는 화면뿐 아니라, 실패 방식까지 검증했습니다","textPreview":"작동하는 화면뿐 아니라, 실패 방식까지 검증했습니다","textChars":28,"textLines":1,"bbox":[48,62,1160,68]}
+{"kind":"shape","id":"sh/l0729or6","slide":12,"bbox":[48,132,1160,0.03]}
+{"kind":"textbox","id":"sh/a9wja9sj","slide":12,"text":"12","textPreview":"12","textChars":2,"textLines":1,"bbox":[1160,668,48,20]}
+{"kind":"textbox","id":"sh/ba503e94","slide":12,"text":"브리핑 생성 실패, 연결 중단, 데이터 부족 상태를 숨기지 않고 안전하게 복구합니다.","textPreview":"브리핑 생성 실패, 연결 중단, 데이터 부족 상태를 숨기지 않고 안전하게 복구합니다.","textChars":47,"textLines":1,"bbox":[80,168,1120,54]}
+{"kind":"shape","id":"sh/cbe1cjap","slide":12,"bbox":[54,274,350,286]}
+{"kind":"textbox","id":"sh/xcni5ora","slide":12,"text":"546","textPreview":"546","textChars":3,"textLines":1,"bbox":[78,302,302,96]}
+{"kind":"textbox","id":"sh/u5gjmdsn","slide":12,"text":"Backend tests","textPreview":"Backend tests","textChars":13,"textLines":1,"bbox":[78,416,302,36]}
+{"kind":"textbox","id":"sh/v6pkfi98","slide":12,"text":"전체 회귀 테스트 통과","textPreview":"전체 회귀 테스트 통과","textChars":12,"textLines":1,"bbox":[78,478,302,54]}
+{"kind":"shape","id":"sh/3u5gn2pc","slide":12,"bbox":[436,274,350,286]}
+{"kind":"textbox","id":"sh/2twzuxor","slide":12,"text":"320px","textPreview":"320px","textChars":5,"textLines":1,"bbox":[460,302,302,96]}
+{"kind":"textbox","id":"sh/pwnyps7i","slide":12,"text":"Responsive UI","textPreview":"Responsive UI","textChars":13,"textLines":1,"bbox":[460,416,302,36]}
+{"kind":"textbox","id":"sh/4vehwn6x","slide":12,"text":"좁은 화면까지 레이아웃 검증","textPreview":"좁은 화면까지 레이아웃 검증","textChars":15,"textLines":1,"bbox":[460,478,302,54]}
+{"kind":"shape","id":"sh/rypgr2p8","slide":12,"bbox":[818,274,350,286]}
+{"kind":"textbox","id":"sh/qxgzyxon","slide":12,"text":"4","textPreview":"4","textChars":1,"textLines":1,"bbox":[842,302,302,96]}
+{"kind":"textbox","id":"sh/d07ytc7e","slide":12,"text":"Frontend checks","textPreview":"Frontend checks","textChars":15,"textLines":1,"bbox":[842,416,302,36]}
+{"kind":"textbox","id":"sh/czyh076t","slide":12,"text":"포맷·타입·린트·빌드 통과","textPreview":"포맷·타입·린트·빌드 통과","textChars":14,"textLines":1,"bbox":[842,478,302,54]}
+{"kind":"textbox","id":"sh/z2pgvm5k","slide":12,"text":"SSE 재생 · 폴링 대체 · 이전 정상 결과 유지 · 잘못된 수치/표현 차단","textPreview":"SSE 재생 · 폴링 대체 · 이전 정상 결과 유지 · 잘못된 수치/표현 차단","textChars":43,"textLines":1,"bbox":[150,614,980,32]}
+{"kind":"notes","id":"nt/qv9igk","slide":12,"text":""}
+{"kind":"slide","id":"sl/2h41xm","slide":13,"title":"OUTLOOK SIGNALS","textShapes":6}
+{"kind":"textbox","id":"sh/gv2hofqp","slide":13,"text":"OUTLOOK SIGNALS","textPreview":"OUTLOOK SIGNALS","textChars":15,"textLines":1,"bbox":[52,40,330,30]}
+{"kind":"textbox","id":"sh/fut0va94","slide":13,"text":"미래를 대신 판단하는 화면이 아니라,\n기대가 변한 순간을 읽는 도구입니다.","textPreview":"미래를 대신 판단하는 화면이 아니라, | 기대가 변한 순간을 읽는 도구입니다.","textChars":41,"textLines":2,"bbox":[64,158,1110,176]}
+{"kind":"shape","id":"sh/utkzmp8j","slide":13,"bbox":[244,442,792,0.03]}
+{"kind":"shape","id":"sh/tsbitkry","slide":13,"bbox":[238,431,24,24]}
+{"kind":"shape","id":"sh/sr2hkfqd","slide":13,"bbox":[628,431,24,24]}
+{"kind":"shape","id":"sh/7qt0ra98","slide":13,"bbox":[1024,431,24,24]}
+{"kind":"textbox","id":"sh/65kzi58n","slide":13,"text":"이슈 발견","textPreview":"이슈 발견","textChars":5,"textLines":1,"bbox":[174,482,150,34]}
+{"kind":"textbox","id":"sh/54bip0r2","slide":13,"text":"변화 이해","textPreview":"변화 이해","textChars":5,"textLines":1,"bbox":[566,482,150,34]}
+{"kind":"textbox","id":"sh/k3ihgvqh","slide":13,"text":"신중한 해석","textPreview":"신중한 해석","textChars":6,"textLines":1,"bbox":[958,482,170,34]}
+{"kind":"textbox","id":"sh/6t8r65kr","slide":13,"text":"공개 데이터로 복잡한 글로벌 이슈의 변화 흐름을 읽습니다.","textPreview":"공개 데이터로 복잡한 글로벌 이슈의 변화 흐름을 읽습니다.","textChars":32,"textLines":1,"bbox":[268,610,744,36]}
+{"kind":"notes","id":"nt/2h41xm","slide":13,"text":""}

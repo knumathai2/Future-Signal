@@ -21,6 +21,16 @@ historical v1-v6 archive followed by separately approved cleanup.
 | TASK-128 | Implement and evaluate the tool-free scenario writer | Data/AI / Backend | Data/AI Implementer | `data-ai/TASK-128-scenario-writer` | in_progress |
 | TASK-122 | Consolidate project documentation phases 1-7 | PM / Reviewer | PM / Planner | `pm/TASK-122-document-consolidation` | review |
 | TASK-109 | Remove superseded v1-v6 runtime code after v7 acceptance | Reviewer / Implementers | Reviewer | `review/TASK-109-legacy-report-cleanup` | assigned |
+| TASK-021 | Finalize presentation assets, rehearse the demo, and capture the backup sequence | PM | PM / Planner | `pm/TASK-021-presentation-assets` | review |
+
+TASK-021 now includes the reviewed 14-slide PowerPoint revision at
+`outputs/outlook-signals-presentation-v3.pptx`. It adds a dedicated 16:9 demo-
+video insertion slide after the user-flow overview and before the product-screen
+breakdown. The deck retains the distinct default-off scenario-conversation
+boundary and the four-person role allocation, with PM owning overall support
+plus review and debugging. Names remain blank for final entry. The slide file
+and wording/layout QA are complete; live-demo rehearsal, actual video insertion,
+and the backup capture sequence remain.
 
 TASK-101~108 and the user-directed TASK-110~111 follow-ups are complete under the
 user's approval of TASK-099 items 1-7.

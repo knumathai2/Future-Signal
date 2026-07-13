@@ -15,7 +15,6 @@ _Current assignments live in `tasks/active.md`; completed work lives in `tasks/c
 | ID | Task | Owner | Resume condition |
 |----|------|-------|------------------|
 | TASK-020 | Deploy the approved service set | Backend Implementer | Explicit deployment approval and target-platform access |
-| TASK-021 | Finalize presentation assets, rehearse the demo, and capture the backup sequence | PM | Presentation work resumes |
 
 ## Reliability Items
 
