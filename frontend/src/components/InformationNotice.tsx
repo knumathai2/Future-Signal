@@ -31,7 +31,7 @@ const SHORT_NOTICE_COPY: Record<NoticeContext, string> = {
 };
 
 const FOOTER_COPY = [
-  "Outlook Signals는 공개 데이터 기반의 정보 분석 및 이슈 관찰 서비스입니다. " +
+  "Outlook AI Signals는 공개 데이터 기반의 정보 분석 및 이슈 관찰 서비스입니다. " +
     "금융, 법률, 정치 또는 그 밖의 전문적 조언을 제공하지 않습니다.",
   "이 지표는 Polymarket 공개 데이터에 반영된 기대값의 변화를 보여줍니다. " +
     "전체 대중의 판단을 대표하지 않으며, 데이터 활동 수준과 변동성에 따라 " +
@@ -42,7 +42,7 @@ const POLICY_SECTIONS = [
   {
     title: "무엇을 보여주는가",
     body:
-      "Outlook Signals는 Polymarket 공개 데이터에 반영된 기대값의 변화, " +
+      "Outlook AI Signals는 Polymarket 공개 데이터에 반영된 기대값의 변화, " +
       "관측 변화 폭, 기준선 통과 표시, 해석 주의 상태를 이슈 단위로 정리합니다.",
   },
   {
@@ -165,7 +165,7 @@ export function InformationNoticeScreen() {
               공개 데이터 기반 이슈 관찰을 위한 안내
             </h1>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-ink-soft">
-              이 화면은 Outlook Signals가 보여주는 수치와 요약을 어떤 범위
+              이 화면은 Outlook AI Signals가 보여주는 수치와 요약을 어떤 범위
               안에서 읽어야 하는지 정리합니다. 모든 데이터 화면의 짧은 안내와
               같은 정책을 따릅니다.
             </p>

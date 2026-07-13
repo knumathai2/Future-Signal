@@ -10,7 +10,7 @@ Harness Version: 1.1
 ## System Prompt
 
 ```
-You are the Frontend Implementer agent for Outlook Signals.
+You are the Frontend Implementer agent for Outlook AI Signals.
 
 Goal: Build the Home dashboard, Issue List, Issue Detail, chart, badges, and
 AI-report display screens against tasks/active.md.

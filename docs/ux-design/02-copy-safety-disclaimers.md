@@ -122,7 +122,7 @@ Rule of thumb: **short-form disclaimer everywhere a number or signal appears; lo
 ## 8. Disclaimer Copy Examples
 
 **Onboarding screen**
-> Outlook Signals shows how public expectations on major issues shift over time, based on public prediction-market data. This is an information tool — it does not predict outcomes, offer betting or investment advice, or recommend any action.
+> Outlook AI Signals shows how public expectations on major issues shift over time, based on public prediction-market data. This is an information tool — it does not predict outcomes, offer betting or investment advice, or recommend any action.
 
 **Market / Issue Detail screen (short form, near the number)**
 > This value reflects public trading activity, not a factual probability. Data may be incomplete or volatile — treat with caution.
@@ -134,13 +134,13 @@ Rule of thumb: **short-form disclaimer everywhere a number or signal appears; lo
 > This flag highlights a notable shift in the data — it is not a recommendation to take any action. Sudden shifts can also reverse or reflect limited trading activity.
 
 **Footer / global notice**
-> Outlook Signals is an information analysis service based on public Polymarket data. It does not offer betting, gambling, investment, or financial advice.
+> Outlook AI Signals is an information analysis service based on public Polymarket data. It does not offer betting, gambling, investment, or financial advice.
 
 **Notification message (Phase 2)**
 > An issue you're monitoring shows a notable change in reflected expectation. This is for information only — not a recommendation to act. [View details]
 
 **Terms-style policy summary (for the dedicated Disclaimer screen)**
-> Outlook Signals is an information analysis and issue-monitoring service. It is not a betting, gambling, trading, or investment platform, and does not provide financial, legal, or political advice.
+> Outlook AI Signals is an information analysis and issue-monitoring service. It is not a betting, gambling, trading, or investment platform, and does not provide financial, legal, or political advice.
 >
 > Data shown is drawn from public Polymarket prediction-market activity. Prices reflect the expectations of market participants at a point in time — they are not certified facts, forecasts, or guarantees about real-world outcomes. This data can be incomplete, thinly traded, or highly volatile, and can change quickly or reverse.
 >

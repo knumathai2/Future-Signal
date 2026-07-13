@@ -5,7 +5,7 @@ Update Trigger: Task started, completed, or blocked
 Harness Version: 1.1
 -->
 
-# Active Tasks — Outlook Signals
+# Active Tasks — Outlook AI Signals
 
 _Last updated: 2026-07-13_
 
@@ -18,6 +18,7 @@ historical v1-v6 archive followed by separately approved cleanup.
 
 | ID | Task | Owner | Assignee | Branch | Status |
 |----|------|-------|----------|--------|--------|
+| TASK-138 | Rename the product display name to Outlook AI Signals across the project | PM | PM / Planner | `pm/TASK-138-outlook-ai-signals` | assigned |
 | TASK-128 | Implement and evaluate the tool-free scenario writer | Data/AI / Backend | Data/AI Implementer | `data-ai/TASK-128-scenario-writer` | in_progress |
 | TASK-109 | Remove superseded v1-v6 runtime code after v7 acceptance | Reviewer / Implementers | Reviewer | `review/TASK-109-legacy-report-cleanup` | assigned |
 | TASK-021 | Finalize presentation assets, rehearse the demo, and capture the backup sequence | PM | PM / Planner | `pm/TASK-021-presentation-assets` | review |

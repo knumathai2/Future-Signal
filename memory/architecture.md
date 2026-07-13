@@ -5,7 +5,7 @@ Update Trigger: Implemented architecture or boundary change
 Harness Version: 1.1
 -->
 
-# Architecture — Outlook Signals
+# Architecture — Outlook AI Signals
 
 _Last updated: 2026-07-13_
 
@@ -222,6 +222,15 @@ separately and deterministically. The validator still rejects a missing or
 unknown ref without correction or retry. All 549 Backend tests and one
 purpose-bound local evaluation passed; the evaluation cost USD 0.0063915 and
 stored one assistant turn plus three validated blocks.
+
+ISS-028 advances the scenario writer to version 5 after a real follow-up turn
+exposed two additional provider-compliance failures. The answer contract now
+requires an exact assumption-framing prefix. The ref contract supplies the
+complete ordered pair of current user-turn and stored market-definition refs,
+allows no additions, and rejects any different array before content storage.
+All 550 Backend tests pass. A v4 evaluation failed closed on an unknown ref at
+USD 0.006011; the subsequent v5 evaluation cost USD 0.0072395 and stored one
+assistant turn plus three validated blocks without retry.
 
 TASK-135 preserves complete response validation and append-only block storage,
 then progressively replays those stored scenario blocks over authenticated SSE.

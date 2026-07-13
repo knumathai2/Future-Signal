@@ -4,7 +4,7 @@ Document version: v1.1
 Date: 2026-07-07
 Document purpose: PRD for a 5-day hackathon submission and 4-person team MVP implementation
 Product status: Concept -> Hackathon MVP planning stage
-Working title: Outlook Signals
+Working title: Outlook AI Signals
 Final verdict: B - Buildable if the core scope is narrowed
 
 ---
@@ -13,7 +13,7 @@ Final verdict: B - Buildable if the core scope is narrowed
 
 ### 1.1 One-line definition
 
-Outlook Signals is an information-analysis dashboard that surfaces global issues whose reflected expectation values have recently shifted significantly in Polymarket's public prediction-market data, and helps users quickly understand how an issue is being reassessed through change magnitude, time-series charts, and interpretation-caution notices.
+Outlook AI Signals is an information-analysis dashboard that surfaces global issues whose reflected expectation values have recently shifted significantly in Polymarket's public prediction-market data, and helps users quickly understand how an issue is being reassessed through change magnitude, time-series charts, and interpretation-caution notices.
 
 ### 1.2 Rescoping direction
 
@@ -30,7 +30,7 @@ The earlier version of this PRD was closer to a "global issue outlook analysis p
 
 ### 1.3 Core product concept
 
-Users can learn about an event itself through mainstream news, but it's hard to tell how public prediction-market participants' expectations were reassessed after that event. Outlook Signals uses time-series changes in Polymarket's public data to show which issues have moved the most recently, along with each issue's change in reflected expectation value, inflection points, and interpretation-caution factors driven by activity level and volatility.
+Users can learn about an event itself through mainstream news, but it's hard to tell how public prediction-market participants' expectations were reassessed after that event. Outlook AI Signals uses time-series changes in Polymarket's public data to show which issues have moved the most recently, along with each issue's change in reflected expectation value, inflection points, and interpretation-caution factors driven by activity level and volatility.
 
 This product is not a tool for guessing future outcomes. It does not encourage choosing any particular outcome, and it does not present Polymarket data as the judgment of the public at large. Language throughout the product is limited to phrases such as "expectation change reflected in public prediction-market data," "movement observed in Polymarket participant data," and "related event candidate."
 
@@ -93,7 +93,7 @@ Users want to quickly understand how expectations are changing around global iss
 
 ### 3.3 Central statement for presentation and product description
 
-News tells you "what happened." Outlook Signals shows you "how expectations, as reflected in public prediction-market data, were reassessed afterward."
+News tells you "what happened." Outlook AI Signals shows you "how expectations, as reflected in public prediction-market data, were reassessed afterward."
 
 ### 3.4 Prohibited vs. replacement wording
 

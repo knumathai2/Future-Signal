@@ -5,7 +5,7 @@ Update Trigger: New domain term introduced, wording policy changed
 Harness Version: 1.1
 -->
 
-# Glossary — Outlook Signals
+# Glossary — Outlook AI Signals
 
 _Last updated: 2026-07-12_
 

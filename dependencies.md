@@ -5,7 +5,7 @@ Update Trigger: Dependency added, removed, or version changed (HUMAN APPROVAL re
 Harness Version: 1.1
 -->
 
-# dependencies.md — Outlook Signals Dependencies
+# dependencies.md — Outlook AI Signals Dependencies
 
 _Last updated: 2026-07-10_
 
