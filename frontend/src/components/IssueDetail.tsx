@@ -62,8 +62,8 @@ const GUIDE_ITEMS = [
     body: "공개 데이터에 반영된 관측값입니다. 실제 사건의 확률이나 전체 대중의 판단으로 단정할 수 없습니다.",
   },
   {
-    title: "%와 pp의 차이",
-    body: "%는 현재 반영 기대값이고, pp는 서로 다른 시점의 기대값 차이를 나타냅니다.",
+    title: "%와 %p의 차이",
+    body: "%는 현재 반영 기대값이고, %p는 서로 다른 시점의 기대값 차이를 나타냅니다.",
   },
   {
     title: "활동 수준과 유동성",
@@ -71,7 +71,7 @@ const GUIDE_ITEMS = [
   },
   {
     title: "변곡점 표시",
-    body: "5pp 기준선을 넘은 관측 구간을 표시합니다. 함께 표시된 자료와의 관계를 뜻하지 않습니다.",
+    body: "5%p 기준선을 넘은 관측 구간을 표시합니다. 함께 표시된 자료와의 관계를 뜻하지 않습니다.",
   },
   {
     title: "데이터 갱신 주기",
@@ -282,7 +282,7 @@ function ChartSection({
         ) : null}
       </div>
       <p className="mt-2 text-xs leading-5 text-ink-faint">
-        차트는 관측 흐름과 5pp 기준선 통과 여부를 보여줍니다. 함께 표시된
+        차트는 관측 흐름과 5%p 기준선 통과 여부를 보여줍니다. 함께 표시된
         자료와의 관계를 뜻하지 않습니다.
       </p>
       <div className="mt-3" aria-live="polite">
@@ -382,7 +382,7 @@ function OverviewPanel({
             <p className="mt-2 text-sm leading-6 text-ink-soft">
               {firstInflection
                 ? `${formatShortDate(firstInflection.timestamp)}에 ${formatPercentagePointChange(firstInflection.change)}의 기준선 통과가 관측되었습니다.`
-                : "선택한 이력에서 5pp 기준선을 넘는 구간이 확인되지 않았습니다."}
+                : "선택한 이력에서 5%p 기준선을 넘는 구간이 확인되지 않았습니다."}
             </p>
           </article>
           <article className="rounded-lg border border-line bg-card px-4 py-4">

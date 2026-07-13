@@ -1,10 +1,10 @@
 import { Link } from "react-router-dom";
 import { CautionBadge } from "./CautionBadge";
+import { DirectionalChange } from "./DirectionalChange";
 import type { ChartWindow, Issue } from "../types/issue";
 import {
   formatCategoryLabel,
   formatExpectationValue,
-  formatPercentagePointChange,
   issueChangeForWindow,
   windowLabel,
 } from "../utils/format";
@@ -52,7 +52,7 @@ export function CompactIssueRow({
             <dt className="text-[11px] font-semibold text-ink-faint">
               현재 기대값
             </dt>
-            <dd className="mt-1 text-lg font-extrabold text-accent">
+            <dd className="mt-1 text-lg font-extrabold text-ink">
               {formatExpectationValue(issue.currentExpectationValue)}
             </dd>
           </div>
@@ -60,10 +60,10 @@ export function CompactIssueRow({
             <dt className="text-[11px] font-semibold text-ink-faint">
               {windowLabel(windowKey)} 변화
             </dt>
-            <dd className="mt-1 text-lg font-extrabold text-comparison">
-              {formatPercentagePointChange(
-                issueChangeForWindow(issue, windowKey),
-              )}
+            <dd className="mt-1 text-lg font-extrabold">
+              <DirectionalChange
+                value={issueChangeForWindow(issue, windowKey)}
+              />
             </dd>
           </div>
         </dl>

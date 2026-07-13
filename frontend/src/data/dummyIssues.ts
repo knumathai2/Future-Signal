@@ -82,7 +82,7 @@ function buildIssue(seed: IssueSeed, dataAsOf: string): Issue {
       return {
         timestamp: point.timestamp,
         change,
-        label: "관측된 변화가 5pp 기준선을 넘었습니다",
+        label: "관측된 변화가 5%p 기준선을 넘었습니다",
       };
     })
     .filter(

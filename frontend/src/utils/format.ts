@@ -74,11 +74,11 @@ export function formatPercentagePointChange(
   }
 
   if (Math.abs(value) < 0.05) {
-    return "0.0pp";
+    return "0.0%p";
   }
 
   const sign = value > 0 ? "+" : "-";
-  return `${sign}${Math.abs(value).toFixed(1)}pp`;
+  return `${sign}${Math.abs(value).toFixed(1)}%p`;
 }
 
 export function windowLabel(windowKey: ChartWindow): string {
@@ -198,7 +198,7 @@ function buildLocalInflectionPoints(
       inflectionPoints.push({
         timestamp: history[index].timestamp,
         change,
-        label: "관측된 변화가 5pp 기준선을 넘었습니다",
+        label: "관측된 변화가 5%p 기준선을 넘었습니다",
       });
     }
   }
@@ -262,7 +262,7 @@ export function mapApiIssueDetailToFrontendIssue(
   const apiSignalPoints = apiDetail.signals.map((signal) => ({
     timestamp: signal.triggered_at,
     change: toPercentagePoint(signal.magnitude) ?? 0,
-    label: `${signalWindowLabel(signal.window)} 관측 변화가 5pp 기준선을 넘었습니다`,
+    label: `${signalWindowLabel(signal.window)} 관측 변화가 5%p 기준선을 넘었습니다`,
   }));
 
   const inflectionPoints = apiSignalPoints.length
