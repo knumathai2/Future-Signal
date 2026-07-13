@@ -272,7 +272,7 @@ export function IssueTrendChart({
             } (${formatPercentagePointChange(
               firstMarker.change,
             )}). 표시는 관측된 기준선 통과를 가리키며 원인을 뜻하지 않습니다.`
-          : "이 구간에는 5pp 기준선을 넘는 관측 변화가 없습니다."}
+          : "이 구간에는 5%p 기준선을 넘는 관측 변화가 없습니다."}
       </p>
       <p className="mt-2 text-xs leading-5 text-ink-faint">
         데이터 기준 시각: {formatDataTimestamp(issue.dataAsOf)}
