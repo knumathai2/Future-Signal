@@ -1,4 +1,5 @@
 import { ShortCautionNotice } from "./InformationNotice";
+import { LoadingSpinner } from "./LoadingSpinner";
 import type {
   IssueReportLoadState,
   IssueReportResponse,
@@ -54,10 +55,18 @@ function ActionButton({
     <button
       type="button"
       disabled={pending}
+      aria-busy={pending}
       onClick={onGenerate}
-      className="inline-flex min-h-11 items-center justify-center rounded-full border border-accent bg-accent px-5 text-sm font-bold text-card transition hover:brightness-95 disabled:cursor-wait disabled:opacity-60"
+      className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-accent bg-accent px-5 text-sm font-bold text-card transition hover:brightness-95 disabled:cursor-wait disabled:opacity-60"
     >
-      {pending ? "요청을 기록하는 중" : label}
+      {pending ? (
+        <>
+          <LoadingSpinner />
+          <span>요청을 기록하는 중</span>
+        </>
+      ) : (
+        label
+      )}
     </button>
   );
 }
@@ -296,9 +305,9 @@ export function IssueReportCard({
           className="mt-5 rounded-lg border border-line-soft px-4 py-5"
           aria-label="브리핑 상태 불러오는 중"
         >
-          <div className="h-3 w-40 animate-pulse rounded-full bg-line" />
-          <div className="mt-4 h-3 w-full max-w-3xl animate-pulse rounded-full bg-line-soft" />
-          <div className="mt-2 h-3 w-2/3 animate-pulse rounded-full bg-line-soft" />
+          <div className="h-3 w-40 animate-pulse rounded-full bg-line motion-reduce:animate-none" />
+          <div className="mt-4 h-3 w-full max-w-3xl animate-pulse rounded-full bg-line-soft motion-reduce:animate-none" />
+          <div className="mt-2 h-3 w-2/3 animate-pulse rounded-full bg-line-soft motion-reduce:animate-none" />
         </div>
       ) : null}
 
@@ -328,11 +337,15 @@ export function IssueReportCard({
       {isGenerating ? (
         <div
           role="status"
+          aria-live="polite"
           className="mt-5 rounded-lg border border-line bg-paper px-4 py-4"
         >
-          <h3 className="text-sm font-bold text-ink">
-            브리핑을 생성하고 있습니다
-          </h3>
+          <div className="flex items-center gap-2 text-accent">
+            <LoadingSpinner />
+            <h3 className="text-sm font-bold text-ink">
+              브리핑을 생성하고 있습니다
+            </h3>
+          </div>
           <p className="mt-1 text-sm leading-6 text-ink-soft">
             작성된 단락은 근거와 문구 검증을 통과한 뒤 순서대로 표시됩니다. 이
             화면을 떠나도 요청 기록은 유지됩니다.
