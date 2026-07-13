@@ -14,10 +14,35 @@ files.
 
 ## Session
 
-- **Role**: Backend / Data-AI Implementer
-- **Branch**: `backend/TASK-135-validated-block-stream`
-- **Goal**: Render scenario answers progressively through validated-block SSE.
-- **Status**: Complete; paced stored-block delivery verified
+- **Role**: PM / Planner
+- **Branch**: `pm/TASK-021-presentation-assets`
+- **Goal**: Finalize the current-project presentation asset.
+- **Status**: Presentation complete and ready for review; rehearsal and backup capture remain
+
+## Completed in TASK-021 so far
+
+- Produced an editable 14-slide PowerPoint covering the user problem, public-
+  data insight, product flow, dashboard/detail experience, validated-block
+  briefing boundary, product safeguards, architecture, implementation evidence,
+  and closing message.
+- Added a dedicated 16:9 demo-video placeholder immediately after the four-step
+  user flow. Its adjacent cues cover home discovery, detail chart/briefing, and
+  interpretation caution plus conditional conversation before later slides
+  explain those scenes individually.
+- Added a separate scenario-conversation slide that keeps the default-off local
+  boundary distinct from the current briefing, and a four-person team slide
+  with blank name lines. PM is shown as the overall coordinator and helper who
+  also owns review, wording/safety inspection, and integrated debugging.
+- Used three stored project UI captures without presenting the default-off
+  scenario conversation as an active core feature.
+- Matched the current warm neutral, terracotta, and muted-blue UI direction and
+  kept data timing and interpretation caution visible in the product story.
+- Rendered and inspected every slide individually, corrected the time-series
+  visual, and passed the automated overflow check with no layout overflow.
+- Preserved the earlier decks and saved the current revision as
+  `outputs/outlook-signals-presentation-v3.pptx`.
+- No provider call, dependency, schema, API, infrastructure, deployment,
+  production write, or wording-policy change occurred.
 
 ## Completed in TASK-135
 
@@ -116,16 +141,16 @@ files.
 
 ## Boundaries
 
-- Both separately approved provider calls are consumed; no automatic retry was
-  attempted.
-- No context/web research, model tool, new dependency, shared rate-limit store,
-  scheduled cleanup, infrastructure, deployment, or production state was added
-  or changed.
-- Active v8 and historical reconstruction remain unchanged.
+- The presentation uses stored project evidence only; it does not authorize or
+  imply a provider call, deployment, production write, feature activation, or
+  infrastructure change.
+- Active v8 and the default-off scenario boundary remain unchanged.
+- TASK-021 is not complete until the live-demo rehearsal and backup capture
+  sequence are finished.
 
 ## Next handoff
 
-TASK-130 may now review both normal and recovered successful local responses.
-TASK-131 remains the explicit activation/rollback decision. Any further model
-call, shared abuse/cleanup infrastructure, deployment, and production action
-remain separately gated.
+Review `outputs/outlook-signals-presentation-v3.pptx`, insert the final 16:9
+demo video on slide 5, fill the four blank name lines, select the final demo issue,
+then rehearse the live sequence and capture the ordered screenshot/video backup.
+TASK-130 and TASK-131 remain separate scenario evaluation and activation work.
