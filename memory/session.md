@@ -14,53 +14,40 @@ files.
 
 ## Session
 
-- **Role**: Data/AI Implementer and Debugger
-- **Branch**: `data-ai/ISS-028-scenario-output-contract`
-- **Goal**: Stabilize the scenario output contract after the first ref fix.
+- **Role**: PM / Planner
+- **Branch**: `pm/TASK-138-outlook-ai-signals`
+- **Goal**: Rename the product display name throughout the project.
 - **Status**: Complete
 
 ## Completed
 
-- Restarted the local Backend and Frontend after the user rotated the provider
-  credential, without reading, printing, or modifying the environment file.
-- Confirmed the existing configuration resolves to OpenRouter, the provider key
-  is present, and both `127.0.0.1:8000` and the Vite proxy return healthy API
-  responses.
-- Reopened `http://127.0.0.1:5173/` in the in-app browser and confirmed the
-  live issue list, categories, chart history, data timestamp, and caution copy
-  load without browser warnings or errors.
-- Matched the reported screen to the session created at
-  `2026-07-13T05:59:41.717500+00:00` and identified terminal
-  `current_turn_ref_missing` validation.
-- Confirmed the reported request and seven immediately preceding requests
-  shared the same failure after normal queue, worker claim, and provider
-  completion.
-- Confirmed the user's next local request passed the ISS-027 current-ref gate
-  but failed `assumption_promotion`.
-- Advanced through a fail-closed v4 evaluation to `scenario-writer-5`, which
-  requires an exact safe prefix and one fixed ordered current-turn plus
-  market-definition ref array with no additions.
-- Retained fail-closed validation without server-side ref injection or
-  automatic retry, and added regressions for the prefix and exact ref array.
-- Confirmed the local reload child restarted after the v5 source change and
-  direct plus Vite-proxied health reads remain successful.
+- Applied `Outlook AI Signals` as the display name in the React UI, page
+  title, information notice, FastAPI title, batch help, provider attribution
+  default, tests, source-of-truth docs, harness files, scripts, and presentation
+  narration.
+- Preserved technical slugs and paths (`outlook-signals-api`, npm package name,
+  scenario local-storage keys, repository/output filenames) so the display-name
+  change does not mutate public or stored contracts.
+- Updated all four tracked PowerPoint decks with inherited formatting intact.
+  Replaced every embedded product screenshot with a verified local-app capture
+  showing the new product name and updated image alternative text.
+- Recorded TASK-138 and ADR-082 without changing product safety policy.
 
 ## Verification
 
-- Local Backend and Frontend remain running in development sessions; no provider
-  generation call was made during the restart check.
-- Ruff passes.
-- All 550 Backend tests pass.
-- The single v4 evaluation cost USD 0.006011 and failed closed with
-  `unknown_premise_ref`; no retry occurred.
-- The single v5 evaluation cost USD 0.0072395, reached `succeeded` without
-  retry, and stored one assistant turn plus three validated response blocks.
-- No public API, schema, dependency, secret, infrastructure, deployment,
-  production, or wording-policy state changed.
+- Backend Ruff passes; `backend/tests/test_ai_report.py` passes 97 tests.
+- Frontend Prettier, typecheck, lint, and production build pass; the known
+  Recharts bundle-size warning remains unchanged.
+- All four decks pass template-fidelity, overflow, ZIP-integrity, and visual
+  checks; identical slide renders were verified by SHA-256 before deduplicated
+  full-size review.
+- The local app DOM and capture show `Outlook AI Signals` with current data
+  timestamp and interpretation caution present.
+- Exact old display-name and changed-surface content-safety scans pass.
+- No schema, dependency, API shape, infrastructure, deployment, database,
+  provider, secret, production, or wording-policy action occurred.
 
 ## Next handoff
 
-ISS-028 is complete in the local development runtime. The historical failed
-browser turn remains failed; a new message or new session uses v5. Public
-deployment remains separately approval-gated. TASK-128, TASK-109, and TASK-021
-remain separate active work.
+TASK-138 is complete. TASK-128, TASK-109, and TASK-021 remain separate active
+work. Deployment and production actions remain separately approval-gated.

@@ -85,6 +85,7 @@ Full active technical debt is in `memory/known-issues.md`.
 
 | Date | Change |
 |---|---|
+| 2026-07-13 | TASK-138 changed the product display name to Outlook AI Signals across UI, metadata, project documentation, scripts, tests, and all tracked presentation assets while preserving technical slugs and public/storage contracts. |
 | 2026-07-13 | ISS-028 advanced the scenario writer to v5 with an exact current-turn plus market-definition ref array and explicit assumption prefix. All 550 Backend tests passed; one v4 evaluation failed closed at USD 0.006011, and one v5 evaluation cost USD 0.0072395 and stored one assistant turn plus three validated blocks without retry. |
 | 2026-07-13 | ISS-027 advanced the scenario writer to v3 with an explicit exact current-turn reference contract and minimum output example. All 549 Backend tests passed, and one purpose-bound local evaluation cost USD 0.0063915 and stored one assistant turn plus three validated blocks without retry. |
 | 2026-07-13 | TASK-122 completed documentation consolidation and Korean localization of all tracked README files, with current code/configuration, link, command, wording, Compose, DNS, and public-health verification. |

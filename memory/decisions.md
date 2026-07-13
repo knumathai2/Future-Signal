@@ -2487,3 +2487,25 @@ all gates, and stored one assistant turn plus three validated blocks. The local
 reload process loaded v5 and both direct and proxied health reads succeed. No
 public API, schema, dependency, secret, infrastructure, deployment, production,
 or wording-policy state changed.
+
+---
+
+### ADR-082: Rename the product display name without changing technical identities
+
+- **Date**: 2026-07-13
+- **Status**: Accepted and implemented in TASK-138
+- **Decided by**: User request to rename the project product
+
+**Decision**: Use `Outlook AI Signals` as the product display name across UI,
+HTML and Backend metadata, provider attribution defaults, project documentation,
+tests, scripts, and presentation assets. Replace embedded presentation screen
+captures with a verified local-app capture showing the new name. Preserve
+existing technical identifiers and paths such as `outlook-signals-api`, the npm
+package name, scenario local-storage keys, output filenames, and repository
+directory names.
+
+**Consequences**: Every user-visible and prose occurrence now uses the new
+display name, while public response values, stored browser state, package
+identity, and file references remain backward compatible. No schema, dependency,
+infrastructure, deployment, database, provider-call, secret, production, or
+wording-policy change was required.
