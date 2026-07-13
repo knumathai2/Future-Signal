@@ -1,19 +1,19 @@
-# Technical Design
+# 기술 설계
 
-Stack, architecture, database schema, API contract, batch pipeline, AI prompts, and build order.
+기술 스택, 아키텍처, 데이터베이스 스키마, API 계약, 배치 파이프라인, AI 설계와
+구현 순서를 절 단위로 나눈 기준 문서입니다.
 
-This document set was split from the former project-root document so `AI Development Harness/` can act as the working root. Use this index as the canonical entry point.
+## 절 구성
 
-## Section Map
+| 절    | 파일                                                                                    |
+| ----- | --------------------------------------------------------------------------------------- |
+| 1~3   | [기술 요약, 기술 스택, 아키텍처 개요](01-architecture-stack-overview.md)                |
+| 4     | [데이터베이스 스키마](02-database-schema.md)                                            |
+| 5~6   | [API 구조와 배치 수집](03-api-and-batch-pipeline.md)                                    |
+| 7~10  | [지표, 변화 감지, AI 보고서 아키텍처](04-metrics-signals-ai-architecture.md)            |
+| 11~17 | [보안, 작업, 구현 순서, 위험, 다음 단계](05-security-tasks-implementation-risk-next.md) |
 
-| Sections | File |
-|---|---|
-| 1-3 | [Technical Summary, Stack, Architecture Overview](01-architecture-stack-overview.md) |
-| 4 | [Database Schema Design](02-database-schema.md) |
-| 5-6 | [API Structure and Batch Collection](03-api-and-batch-pipeline.md) |
-| 7-10 | [Metrics, Signals, AI Report Architecture](04-metrics-signals-ai-architecture.md) |
-| 11-17 | [Security, Tasks, Implementation Order, Risk, Next Steps](05-security-tasks-implementation-risk-next.md) |
+## 교차 참조
 
-## Cross-Reference Rule
-
-When another Harness document cites `Technical Design §N`, resolve the section through the map above.
+다른 문서의 `Technical Design §N` 표기는 위 표에서 해당 절이 포함된 파일을 찾아
+확인합니다.

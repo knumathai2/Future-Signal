@@ -1,19 +1,17 @@
-# PRD
+# 제품 요구사항(PRD)
 
-Product requirements, MVP scope, schedule, presentation strategy, and copy.
+제품 요구사항, MVP 범위, 일정, 발표 전략과 문구를 절 단위로 나눈 기준 문서입니다.
 
-This document set was split from the former project-root document so `AI Development Harness/` can act as the working root. Use this index as the canonical entry point.
+## 절 구성
 
-## Section Map
+| 절    | 파일                                                                                          |
+| ----- | --------------------------------------------------------------------------------------------- |
+| 1~5   | [제품 요약, 포지셔닝, 사용자, 목표](01-product-summary-positioning-users-goals.md)            |
+| 6~8   | [MVP 범위, 사용자 시나리오, 기능 요구사항](02-mvp-scope-scenarios-functional-requirements.md) |
+| 9~14  | [데이터, UX, 성공 지표, 팀, 일정](03-data-ux-success-team-schedule.md)                        |
+| 15~18 | [위험, 기술 요구사항, 운영, 출시](04-risks-technical-operations-release.md)                   |
+| 19~22 | [발표, 미결 사항, 초기 문구, 요약](05-presentation-open-copy-summary.md)                      |
 
-| Sections | File |
-|---|---|
-| 1-5 | [Product Summary, Positioning, Users, Goals](01-product-summary-positioning-users-goals.md) |
-| 6-8 | [MVP Scope, Scenarios, Functional Requirements](02-mvp-scope-scenarios-functional-requirements.md) |
-| 9-14 | [Data, UX, Success Metrics, Team, Schedule](03-data-ux-success-team-schedule.md) |
-| 15-18 | [Risks, Technical Requirements, Operations, Release](04-risks-technical-operations-release.md) |
-| 19-22 | [Presentation, Open Issues, Initial Copy, Summary](05-presentation-open-copy-summary.md) |
+## 교차 참조
 
-## Cross-Reference Rule
-
-When another Harness document cites `PRD §N`, resolve the section through the map above.
+다른 문서의 `PRD §N` 표기는 위 표에서 해당 절이 포함된 파일을 찾아 확인합니다.

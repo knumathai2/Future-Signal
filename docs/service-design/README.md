@@ -1,17 +1,17 @@
-# Service Design
+# 서비스 설계
 
-Polymarket data collection, metrics, AI I/O, signals, participant policy, and safety.
+Polymarket 데이터 수집, 지표, AI 입출력, 변화 감지, 참여자 분석과 안전 정책을 절
+단위로 나눈 기준 문서입니다.
 
-This document set was split from the former project-root document so `AI Development Harness/` can act as the working root. Use this index as the canonical entry point.
+## 절 구성
 
-## Section Map
+| 절   | 파일                                                                                |
+| ---- | ----------------------------------------------------------------------------------- |
+| 1~5  | [서비스 요약, 데이터 범위, 지표](01-data-scope-metrics.md)                          |
+| 6~8  | [AI 입출력, 급변 감지, 참여자 정책](02-ai-signals-participant-policy.md)            |
+| 9~13 | [우선순위, 위험, 윤리, 미결 사항, 다음 단계](03-priority-risk-ethics-next-steps.md) |
 
-| Sections | File |
-|---|---|
-| 1-5 | [Service Summary, Data Scope, Metrics](01-data-scope-metrics.md) |
-| 6-8 | [AI I/O, Sudden Signals, Participant Policy](02-ai-signals-participant-policy.md) |
-| 9-13 | [Priority, Risk, Ethics, Open Questions, Next Steps](03-priority-risk-ethics-next-steps.md) |
+## 교차 참조
 
-## Cross-Reference Rule
-
-When another Harness document cites `Service Design §N`, resolve the section through the map above.
+다른 문서의 `Service Design §N` 표기는 위 표에서 해당 절이 포함된 파일을 찾아
+확인합니다.
