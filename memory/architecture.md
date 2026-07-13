@@ -114,6 +114,9 @@ remain.
 - Backend: FastAPI issue and generation routes; SQLAlchemy models; scoped
   latest-row queries; static fallback; local worker launcher; default-off,
   local/development-only scenario session boundary.
+- Deployment: Docker Compose keeps Backend unpublished on the internal `app`
+  network while attaching a separate outbound-only `egress` network for the
+  PostgreSQL connection; Frontend alone publishes `127.0.0.1:8600` via `edge`.
 - Data: Gamma collector, CLOB historical seed, snapshot/metric calculations,
   fixed signal detection, source research/verification, v8 writer validation.
 - Verification baseline: 526 Backend tests plus Frontend typecheck, lint, v8
