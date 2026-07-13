@@ -14,13 +14,36 @@ files.
 
 ## Session
 
-- **Role**: PM / Planner
-- **Branch**: `pm/TASK-021-presentation-assets`
-- **Goal**: Finalize the current-project presentation asset.
-- **Status**: Presentation complete and ready for review; rehearsal and backup capture remain
+- **Role**: Frontend Implementer
+- **Branch**: `frontend/TASK-136-generation-loading`
+- **Goal**: Add visible, accessible loading feedback to briefing and scenario generation.
+- **Status**: TASK-136 complete and verified; pre-existing TASK-021 presentation work remains preserved
+
+## Completed in TASK-136
+
+- Added one dependency-free neutral spinner component with a reduced-motion
+  fallback.
+- Added visible progress to briefing request submission and queued/running
+  generation while preserving validated-block streaming and the existing
+  caution/timestamp surface.
+- Added visible progress to scenario session loading, question submission, and
+  pending validated response blocks.
+- Added an immediate ref-backed submission guard so a repeated click or Enter
+  cannot start a second turn while the first POST is still awaiting its queued
+  response.
+- Preserved the default-off scenario boundary and made no provider, API, schema,
+  database, dependency, infrastructure, deployment, production, or wording-
+  policy change.
+- Passed Prettier, typecheck, lint, report/scenario parser checks, production
+  build, changed-string wording scan, and local Browser verification. The known
+  Recharts bundle-size warning remains unchanged.
 
 ## Completed in TASK-021 so far
 
+- Reviewed the final user-provided 14-slide deck `2팀 발표a.pptx` at full size
+  and produced `outputs/2팀_발표대본.md`, a roughly 7.5-minute Korean script
+  with slide transitions, a 45-60-second demo cue, a live-demo fallback, a
+  one-page cue sheet, and rehearsal notes.
 - Produced an editable 14-slide PowerPoint covering the user problem, public-
   data insight, product flow, dashboard/detail experience, validated-block
   briefing boundary, product safeguards, architecture, implementation evidence,
@@ -141,6 +164,9 @@ files.
 
 ## Boundaries
 
+- TASK-136 is Frontend-only and does not authorize or perform a provider call,
+  feature activation, API/schema change, database action, infrastructure change,
+  deployment, or production write.
 - The presentation uses stored project evidence only; it does not authorize or
   imply a provider call, deployment, production write, feature activation, or
   infrastructure change.
@@ -150,7 +176,12 @@ files.
 
 ## Next handoff
 
-Review `outputs/outlook-signals-presentation-v3.pptx`, insert the final 16:9
-demo video on slide 5, fill the four blank name lines, select the final demo issue,
-then rehearse the live sequence and capture the ordered screenshot/video backup.
-TASK-130 and TASK-131 remain separate scenario evaluation and activation work.
+Review and commit the TASK-136 Frontend diff when desired. The pre-existing
+TASK-021 presentation edits and untracked output files remain present and were
+not modified by TASK-136.
+
+Use the final user-provided `/Users/sonmyeong-gwan/Desktop/2팀 발표a.pptx`,
+which has the four names filled, insert the final 16:9 demo video on slide 5,
+select the final demo issue, then rehearse with `outputs/2팀_발표대본.md` and
+capture the ordered screenshot/video backup. TASK-130 and TASK-131 remain
+separate scenario evaluation and activation work.

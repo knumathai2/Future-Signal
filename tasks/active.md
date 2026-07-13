@@ -29,8 +29,10 @@ video insertion slide after the user-flow overview and before the product-screen
 breakdown. The deck retains the distinct default-off scenario-conversation
 boundary and the four-person role allocation, with PM owning overall support
 plus review and debugging. Names remain blank for final entry. The slide file
-and wording/layout QA are complete; live-demo rehearsal, actual video insertion,
-and the backup capture sequence remain.
+and wording/layout QA are complete. The final user-provided revision was reviewed
+with all four names filled, and a roughly 7.5-minute slide-by-slide Korean script
+with demo and fallback cues was added at `outputs/2팀_발표대본.md`; live-demo
+rehearsal, actual video insertion, and the backup capture sequence remain.
 
 TASK-101~108 and the user-directed TASK-110~111 follow-ups are complete under the
 user's approval of TASK-099 items 1-7.
