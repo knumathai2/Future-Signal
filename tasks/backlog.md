@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Backlog — Outlook Signals
 
-_Last updated: 2026-07-12_
+_Last updated: 2026-07-13_
 _Current assignments live in `tasks/active.md`; completed work lives in `tasks/completed.md`._
 
 ## Release and Presentation
@@ -23,6 +23,19 @@ _Current assignments live in `tasks/active.md`; completed work lives in `tasks/c
 |----|------|-------|------------------|
 | ISS-017 | Recover queued requests that outlive a worker process | Backend Implementer | Recovery behavior is approved for implementation |
 | ISS-018 | Evaluate cited-source compatibility with the active writer | Data/AI Implementer | A new bounded provider evaluation is approved |
+
+## Summary and Scenario Chat — Phase 2 Proposal
+
+TASK-123~125 record the plan, approved next-contract policy, and approval-ready
+threat/API/storage proposal. The rows below are not authorized implementation
+work. They enter active work only after their stated scope and approval gates
+are satisfied.
+
+| ID | Task | Owner | Resume condition |
+|----|------|-------|------------------|
+| TASK-127 | Implement a feature-flagged relaxed summary writer and validator | Data/AI Implementer | TASK-124 approval; provider evaluation remains separately gated |
+| TASK-130 | Run security red-team and bounded local/development evaluation | Reviewer | Explicit provider-call and any local migration approval |
+| TASK-131 | Decide activation, rollback period, and v8 transition | PM / Reviewer | TASK-130 evidence reviewed and human activation approval received |
 
 ## Maintenance
 

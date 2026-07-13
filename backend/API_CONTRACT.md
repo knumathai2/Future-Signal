@@ -296,6 +296,69 @@ and strict payload. `Last-Event-ID` resumes after the last received block.
 Connection comments are keep-alives only. Raw provider fragments are never
 emitted.
 
+## Scenario conversation (TASK-126, default off)
+
+The approved scenario API is registered but returns `404 feature_unavailable`
+unless `SCENARIO_CONVERSATION_ENABLED=true` and `ENV` is `local` or
+`development`. The API process never constructs a provider client.
+
+### `POST /api/issues/{id}/scenario-sessions`
+
+Creates one issue-scoped, fixed 24-hour session and returns HTTP `201`. The
+response contains session ID, issue ID, creation/expiry/data times, eight-turn
+limit, policy version, caution, and a random 256-bit `session_capability`. The
+capability is returned only here; only its hash is stored. The response uses
+`Cache-Control: no-store` and `Referrer-Policy: no-referrer`.
+
+### Owned session operations
+
+Every later operation requires:
+
+```text
+Authorization: Bearer <session capability>
+```
+
+- `GET /api/issues/{id}/scenario-sessions/{session_id}` returns validated owned
+  turns, premise classes, remaining turns, data time, and caution.
+- `POST /api/issues/{id}/scenario-sessions/{session_id}/turns` requires a UUID
+  `Idempotency-Key`, appends one user turn plus immutable queued request/event,
+  and returns HTTP `202`. After a newly created request commits, TASK-132 starts
+  one isolated local/development worker; an idempotent replay does not spawn a
+  duplicate. The API process itself never calls a provider.
+- `GET /api/issues/{id}/scenario-sessions/{session_id}/turns/{turn_id}` returns
+  queued/running/succeeded/failed state and safe terminal metadata.
+- `GET /api/issues/{id}/scenario-sessions/{session_id}/turns/{turn_id}/stream`
+  uses authenticated fetch-SSE to replay only stored complete paragraph/list
+  blocks. Capabilities are forbidden in URLs; raw provider chunks are never
+  events.
+- `DELETE /api/issues/{id}/scenario-sessions/{session_id}` returns `204` and
+  hard-deletes only the authenticated ephemeral scenario graph.
+
+Unknown, mismatched, expired, deleted, and wrong-capability sessions return the
+same non-enumerating `404 session_unavailable` code. A missing/malformed bearer
+header returns `401 session_token_required`. Fixed message/session/in-flight/
+rate limits return safe `409`, `413`, or `429` codes. Storage/current-bundle
+failure returns `409` or `503` without provider or database detail.
+
+Migration 006 is applied only to the approved local development database. The
+API must not be enabled against another database without that migration and a
+separate environment-specific application approval.
+
+TASK-128 adds a guarded local/development worker outside the public API process
+for exactly one queued request. TASK-132 connects newly committed turns to that
+worker without exposing a new endpoint or capability. It uses no model tools
+and stores only a completely validated assistant turn and paragraph/list
+blocks. Three bounded provider responses have failed closed before content
+storage. TASK-133 subsequently stored and reconstructed the first validated
+writer-v2 response; the feature remains default-off.
+
+TASK-134 permits authenticated status and SSE reads to relaunch only a request
+that has remained `queued` at attempt zero for at least five seconds. Relaunch
+uses a process-local 20-second cooldown and three-launch cap. The worker locks
+the immutable request row before changing it to `running`, so concurrent child
+processes cannot create duplicate provider calls. Running, succeeded, and
+failed attempts are not automatically retried.
+
 ## Validation and fallback
 
 - Invalid enum/query values use FastAPI's `422` detail response.

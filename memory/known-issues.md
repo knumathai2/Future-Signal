@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Known Issues — Outlook Signals
 
-_Last updated: 2026-07-12_
+_Last updated: 2026-07-13_
 
 Resolved forensic history remains available in Git, `memory/decisions.md`, and
 `tasks/completed.md`. This file contains only current action items and durable
@@ -43,6 +43,12 @@ data limitations.
 
 ## Recently closed
 
+- **ISS-023**: TASK-134 reduced each PostgreSQL process from SQLAlchemy's
+  effective 15-connection default to a bounded 3+1 pool. The preserved queued
+  scenario request recovered and completed without another pool-ceiling error.
+- **ISS-022**: writer version 2 excluded ordered-list presentation indices from
+  factual number comparison, and one bounded post-fix evaluation stored and
+  reconstructed the first validated scenario response.
 - **ISS-020**: public source validation now rejects local/private targets,
   public IPv6 canonicalization preserves brackets, exact stored source links
   remain unchanged in the Frontend, invalid detail tabs normalize to overview,

@@ -198,3 +198,75 @@ export type StreamingBriefingState = {
   summary: string;
   sections: V8ReportSection[];
 };
+
+export type ScenarioPremiseClass =
+  | "confirmed_fact"
+  | "stored_observation"
+  | "user_assumption"
+  | "model_scenario"
+  | "unverified_context";
+
+export type ScenarioTurn = {
+  turn_id: string;
+  sequence: number;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+};
+
+export type ScenarioPremise = {
+  premise_id: string;
+  premise_class: ScenarioPremiseClass;
+  text: string;
+  origin_turn_id: string;
+};
+
+export type ScenarioSession = {
+  session_id: string;
+  issue_id: string;
+  created_at: string;
+  expires_at: string;
+  max_turns: 8;
+  remaining_turns: number;
+  policy_version: string;
+  data_as_of: string;
+  caution_note: string;
+  turns: ScenarioTurn[];
+  premises: ScenarioPremise[];
+};
+
+export type ScenarioSessionCreated = Omit<
+  ScenarioSession,
+  "remaining_turns" | "turns" | "premises"
+> & {
+  session_capability: string;
+};
+
+export type ScenarioTurnCreated = {
+  turn_id: string;
+  sequence: number;
+  status: "queued";
+  created: boolean;
+  requested_at: string;
+  stream_path: string;
+};
+
+export type ScenarioTurnStatus = {
+  turn_id: string;
+  sequence: number;
+  state: "queued" | "running" | "succeeded" | "failed";
+  attempt_number: number;
+  requested_at: string;
+  updated_at: string;
+  assistant_turn_id: string | null;
+  error_code: string | null;
+};
+
+export type ScenarioContentBlock =
+  | { sequence: number; block_type: "paragraph"; text: string }
+  | {
+      sequence: number;
+      block_type: "list";
+      ordered: boolean;
+      items: string[];
+    };

@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Glossary — Outlook Signals
 
-_Last updated: 2026-07-11_
+_Last updated: 2026-07-12_
 
 ## Domain Terms (use these exact framings in UI copy and AI output)
 
@@ -30,6 +30,9 @@ _Last updated: 2026-07-11_
 | Fail closed | Withhold a candidate or report from the public API whenever citation provenance, hard-gate verification, independent verification, evidence references, schema, timing, or safety validation is missing or inconsistent |
 | v8 issue-centered briefing | The TASK-112 report shape that preserves v7 evidence/source controls while organizing the narrative around current situation, recent change, interpretation, key conditions, later information, and optional limitations. |
 | v8 source-level-2 context | The TASK-113 retrieval policy that uses a bounded 90/180-day horizon and deterministic aliases while keeping every public claim tied to an exact accepted annotation excerpt and visible A-C source attribution. |
+| Current summary | The TASK-124 next-contract surface for issue definition, exact stored observations, accepted current material, timing, and limitations. Ordinary safe prose may be flexible; exact data and current facts remain reconstructible. Active v8 remains public until TASK-131 acceptance. |
+| Scenario conversation | The TASK-124 free-form, issue-scoped conditional exploration surface. It has no required visible section template and cannot promote an assumption to a current fact. |
+| Premise class | Server-owned scenario state: `confirmed_fact`, `stored_observation`, `user_assumption`, `model_scenario`, or `unverified_context`. The model may discuss but never change a class. |
 
 ## Abbreviations
 
@@ -75,6 +78,27 @@ historical flat block.
 
 Policy/lint documents and tests may quote prohibited expressions only to define
 or verify the blocking rule.
+
+### Approved next-contract summary and scenario policy
+
+TASK-124 permits a more natural current summary and a substantially freer
+scenario conversation without changing the permanent product boundary.
+
+- Current-summary exact values, dates, definitions, source identities, and
+  current external facts remain blocking and reconstructible.
+- Ordinary explanation, organization, section count, and zero-source coverage
+  are quality diagnostics unless they create a current factual claim.
+- Scenario answers may explore user assumptions, generic counter-cases,
+  distinguishing variables, and information that would change an assessment.
+- Every assumption remains visibly conditional and keeps its server-owned
+  premise class across turns and conversation compaction.
+- A scenario may explore a relationship only as a hypothesis; it cannot state
+  that external material explains observed movement.
+- The existing hard blocks, contextual-expression rules, privacy boundary,
+  aggregate-only participant policy, data timing, and interpretation caution
+  remain unchanged.
+- Active v8 remains the runtime policy until TASK-131 records an activation
+  decision for a newly versioned contract.
 
 ### Use-carefully wording — only with a qualifying phrase attached, never standalone
 

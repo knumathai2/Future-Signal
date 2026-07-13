@@ -3,20 +3,34 @@ import type {
   GenerationRequestStatusResponse,
   GenerationStreamBlock,
   IssueReportLoadState,
+  ScenarioContentBlock,
+  ScenarioSession,
+  ScenarioSessionCreated,
+  ScenarioTurnCreated,
+  ScenarioTurnStatus,
 } from "../types/issue";
 import {
   parseGenerationStreamBlock,
   parseReportResponse,
 } from "./reportParser";
+import {
+  parseScenarioSession,
+  parseScenarioSessionCreated,
+  parseScenarioStreamBlock,
+  parseScenarioTurnCreated,
+  parseScenarioTurnStatus,
+} from "./scenarioParser";
 import { apiUrl } from "./apiUrl";
 
 export class HttpError extends Error {
   status: number;
+  code: string | null;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, code: string | null = null) {
     super(message);
     this.name = "HttpError";
     this.status = status;
+    this.code = code;
   }
 }
 
@@ -140,3 +154,250 @@ export function subscribeToGenerationStream(
   };
   return () => source.close();
 }
+
+async function scenarioResponse<T>(
+  response: Response,
+  parser: (value: unknown) => T | null,
+  message: string,
+): Promise<T> {
+  if (!response.ok) {
+    let code: string | null = null;
+    try {
+      const body: unknown = await response.json();
+      if (
+        typeof body === "object" &&
+        body !== null &&
+        "detail" in body &&
+        typeof body.detail === "object" &&
+        body.detail !== null &&
+        "code" in body.detail &&
+        typeof body.detail.code === "string"
+      ) {
+        code = body.detail.code;
+      }
+    } catch {
+      // The public status remains enough for a generic, non-enumerating UI error.
+    }
+    throw new HttpError(message, response.status, code);
+  }
+  const parsed = parser(await response.json());
+  if (!parsed) throw new HttpError(`${message}: invalid response`, 502);
+  return parsed;
+}
+
+function scenarioHeaders(capability: string): HeadersInit {
+  return {
+    Authorization: `Bearer ${capability}`,
+    "Content-Type": "application/json",
+  };
+}
+
+/** Create an anonymous issue-scoped scenario session and receive its capability once. */
+export async function createScenarioSession(
+  issueId: string,
+  signal?: AbortSignal,
+): Promise<ScenarioSessionCreated> {
+  const response = await fetch(
+    apiUrl(`/api/issues/${encodeURIComponent(issueId)}/scenario-sessions`),
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: "{}",
+      signal,
+    },
+  );
+  return scenarioResponse(
+    response,
+    parseScenarioSessionCreated,
+    "Failed to create scenario session",
+  );
+}
+
+/** Read one caller-owned scenario session using a bearer capability. */
+export async function loadScenarioSession(
+  issueId: string,
+  sessionId: string,
+  capability: string,
+  signal?: AbortSignal,
+): Promise<ScenarioSession> {
+  const response = await fetch(
+    apiUrl(
+      `/api/issues/${encodeURIComponent(issueId)}/scenario-sessions/${encodeURIComponent(sessionId)}`,
+    ),
+    { headers: scenarioHeaders(capability), signal },
+  );
+  return scenarioResponse(
+    response,
+    parseScenarioSession,
+    "Failed to load scenario session",
+  );
+}
+
+/** Append one idempotent user turn without placing the capability in a URL. */
+export async function createScenarioTurn(
+  issueId: string,
+  sessionId: string,
+  capability: string,
+  message: string,
+  idempotencyKey: string,
+  signal?: AbortSignal,
+): Promise<ScenarioTurnCreated> {
+  const response = await fetch(
+    apiUrl(
+      `/api/issues/${encodeURIComponent(issueId)}/scenario-sessions/${encodeURIComponent(sessionId)}/turns`,
+    ),
+    {
+      method: "POST",
+      headers: {
+        ...scenarioHeaders(capability),
+        "Idempotency-Key": idempotencyKey,
+      },
+      body: JSON.stringify({ message }),
+      signal,
+    },
+  );
+  return scenarioResponse(
+    response,
+    parseScenarioTurnCreated,
+    "Failed to create scenario turn",
+  );
+}
+
+/** Poll one owned scenario turn as a fallback for interrupted streaming. */
+export async function loadScenarioTurnStatus(
+  issueId: string,
+  sessionId: string,
+  turnId: string,
+  capability: string,
+  signal?: AbortSignal,
+): Promise<ScenarioTurnStatus> {
+  const response = await fetch(
+    apiUrl(
+      `/api/issues/${encodeURIComponent(issueId)}/scenario-sessions/${encodeURIComponent(sessionId)}/turns/${encodeURIComponent(turnId)}`,
+    ),
+    { headers: scenarioHeaders(capability), signal },
+  );
+  return scenarioResponse(
+    response,
+    parseScenarioTurnStatus,
+    "Failed to load scenario turn",
+  );
+}
+
+/** Delete only the caller-owned ephemeral scenario graph. */
+export async function deleteScenarioSession(
+  issueId: string,
+  sessionId: string,
+  capability: string,
+  signal?: AbortSignal,
+): Promise<void> {
+  const response = await fetch(
+    apiUrl(
+      `/api/issues/${encodeURIComponent(issueId)}/scenario-sessions/${encodeURIComponent(sessionId)}`,
+    ),
+    { method: "DELETE", headers: scenarioHeaders(capability), signal },
+  );
+  if (!response.ok)
+    throw new HttpError("Failed to delete scenario session", response.status);
+}
+
+type ScenarioStreamHandlers = {
+  onSnapshot: (state: ScenarioTurnStatus["state"]) => void;
+  onBlock: (block: ScenarioContentBlock) => void;
+  onComplete: () => void;
+  onFailed: () => void;
+  onTransportError: () => void;
+};
+
+/** Replay authenticated validated blocks with a bounded cursor-preserving reconnect. */
+export function subscribeToScenarioStream(
+  streamPath: string,
+  capability: string,
+  handlers: ScenarioStreamHandlers,
+): () => void {
+  const controller = new AbortController();
+  let lastEventId = "";
+
+  const dispatch = (rawEvent: string) => {
+    let eventName = "message";
+    let data = "";
+    for (const line of rawEvent.split(/\r?\n/)) {
+      if (line.startsWith("id:")) lastEventId = line.slice(3).trim();
+      if (line.startsWith("event:")) eventName = line.slice(6).trim();
+      if (line.startsWith("data:")) data += line.slice(5).trim();
+    }
+    if (!data) return false;
+    let payload: unknown;
+    try {
+      payload = JSON.parse(data);
+    } catch {
+      throw new Error("Invalid scenario stream event");
+    }
+    if (eventName === "block") {
+      const block = parseScenarioStreamBlock(payload);
+      if (!block) throw new Error("Invalid scenario stream block");
+      handlers.onBlock(block);
+    } else if (
+      eventName === "snapshot" &&
+      typeof payload === "object" &&
+      payload !== null &&
+      "state" in payload &&
+      typeof payload.state === "string" &&
+      TURN_STREAM_STATES.has(payload.state)
+    ) {
+      handlers.onSnapshot(payload.state as ScenarioTurnStatus["state"]);
+    } else if (eventName === "complete") {
+      handlers.onComplete();
+      return true;
+    } else if (eventName === "failed") {
+      handlers.onFailed();
+      return true;
+    }
+    return false;
+  };
+
+  const connect = async () => {
+    for (
+      let attempt = 0;
+      attempt < 3 && !controller.signal.aborted;
+      attempt += 1
+    ) {
+      try {
+        const headers: HeadersInit = { Authorization: `Bearer ${capability}` };
+        if (lastEventId) headers["Last-Event-ID"] = lastEventId;
+        const response = await fetch(apiUrl(streamPath), {
+          headers,
+          signal: controller.signal,
+        });
+        if (!response.ok || !response.body)
+          throw new Error("Scenario stream unavailable");
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+        while (!controller.signal.aborted) {
+          const { value, done } = await reader.read();
+          buffer += decoder.decode(value, { stream: !done });
+          const events = buffer.split(/\r?\n\r?\n/);
+          buffer = events.pop() ?? "";
+          for (const event of events) if (dispatch(event)) return;
+          if (done) break;
+        }
+      } catch {
+        if (controller.signal.aborted) return;
+      }
+      if (attempt < 2)
+        await new Promise((resolve) => window.setTimeout(resolve, 1500));
+    }
+    if (!controller.signal.aborted) handlers.onTransportError();
+  };
+
+  void connect();
+  return () => controller.abort();
+}
+
+const TURN_STREAM_STATES = new Set([
+  "queued",
+  "running",
+  "succeeded",
+  "failed",
+]);

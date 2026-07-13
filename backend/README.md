@@ -10,6 +10,39 @@ exist in the target database before this path is enabled. It was subsequently
 applied only to the explicitly approved `ENV=local` development database;
 other environments remain separately gated.
 
+TASK-126 adds a default-off, local/development-only scenario-session API and
+migration 006, applied only to the approved local DB. Setting
+`SCENARIO_CONVERSATION_ENABLED=true` exposes
+capability-authenticated session/turn/request storage and validated-block
+replay. TASK-132 starts the existing isolated worker after a newly created turn
+commits, while the API process itself never constructs a provider client.
+Idempotent replay does not launch a second worker. The feature remains
+unavailable outside `ENV=local` or `ENV=development`. Migration 006 must exist
+before enabling the flag against a database.
+
+TASK-128 adds the guarded local/development worker for one queued scenario
+request. It can still be invoked manually for recovery:
+
+```bash
+python -m app.core.scenario_worker --request-id <uuid> --confirm-local-dev-write
+```
+
+It performs one tool-free call and stores only output that passes the complete
+premise, safety, leakage, number, and restricted-Markdown gates. TASK-132 may
+launch it only after a new local/development turn commits; the scheduled
+collector never launches it.
+
+TASK-134 recovers only requests that remain at `queued`, attempt zero, for at
+least five seconds. Authenticated status/SSE reads may relaunch the child with a
+20-second process-local cooldown and a three-launch cap; the worker serializes
+claim with a database row lock before any provider call. Running and terminal
+attempts are never automatically retried.
+
+PostgreSQL engines default to three pooled plus one overflow connection per
+process (`DB_POOL_SIZE`, `DB_MAX_OVERFLOW`, and `DB_POOL_TIMEOUT_SECONDS` are
+optional bounded overrides). This leaves room for the API and detached worker
+under small session-mode pool ceilings without modifying `.env` for local use.
+
 ## Setup
 
 Use Python 3.11 for local setup on macOS arm. The pinned Postgres binary driver may not install under the system Python 3.9 runtime on this machine.

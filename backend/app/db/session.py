@@ -14,12 +14,30 @@ _engine = None
 _SessionLocal = None
 
 
+def _engine_options(database_url: str) -> dict:
+    """Return conservative pool settings without affecting SQLite fixtures."""
+    options = {"pool_pre_ping": True}
+    if not database_url.startswith("sqlite"):
+        options.update(
+            {
+                "pool_size": settings.db_pool_size,
+                "max_overflow": settings.db_max_overflow,
+                "pool_timeout": settings.db_pool_timeout_seconds,
+                "pool_recycle": 300,
+            }
+        )
+    return options
+
+
 def get_engine():
     global _engine
     if _engine is None:
         if not settings.database_url:
             raise RuntimeError("DATABASE_URL is not set")
-        _engine = create_engine(settings.database_url, pool_pre_ping=True)
+        _engine = create_engine(
+            settings.database_url,
+            **_engine_options(settings.database_url),
+        )
     return _engine
 
 
