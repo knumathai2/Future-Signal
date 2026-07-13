@@ -2404,3 +2404,30 @@ restricted rendering, source/evidence checks, and owner deletion.
 briefing reached `succeeded` and public `fresh`; a scenario turn reached
 `succeeded`, replayed through authenticated SSE as snapshot, validated blocks, and
 complete, then the test session was deleted.
+
+---
+
+### ADR-079: Keep sports and catch-all labels out of public category navigation
+
+- **Date**: 2026-07-13
+- **Status**: Accepted and implemented in TASK-137
+- **Decided by**: User request after category-scope review
+
+**Context**: The broad category taxonomy exposed `스포츠` and `기타` alongside
+the product's core global-issue groups. The configured local data contained two
+sports issues and one catch-all USDT issue; the USDT classification was a
+taxonomy gap rather than a meaningful reader-facing group. Deleting stored
+source data would reduce traceability and unnecessarily couple navigation to
+collection.
+
+**Decision**: Publish only `정치`, `경제`, `환경`, `기술`, and `세계` from
+`/api/categories`, limited to groups with servable issues. Preserve underlying
+issue rows, the unfiltered list, and direct category matching. Classify
+stablecoin, Tether, USDC, and USDT topics as `경제` before fallback.
+
+**Consequences**: Home category summaries and issue-list filter controls no
+longer show sports or catch-all groups, while existing issue URLs and source
+records remain valid. The configured local response is currently `정치`,
+`경제`, `기술`, and `세계`; `환경` will appear only when it has a servable issue.
+No schema, database write, dependency, provider call, infrastructure,
+deployment, production action, or wording-policy change was required.

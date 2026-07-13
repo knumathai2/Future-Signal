@@ -69,6 +69,10 @@ def issue_category_labels(title: str, category: str) -> tuple[str, ...]:
         (
             "crypto",
             "bitcoin",
+            "stablecoin",
+            "tether",
+            "usdc",
+            "usdt",
             "token",
             "airdrop",
             "kraken",
