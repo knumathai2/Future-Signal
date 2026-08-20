@@ -128,11 +128,11 @@ ENV=local ./.venv/bin/python -m app.core.historical_seed \
   --confirm-local-dev-write
 ```
 
-## 정기 시장 데이터 수집
+## 수동 시장 데이터 수집
 
-현재 GitHub Actions 워크플로는 UTC 기준 4시간마다 17분에 실행됩니다. 활성 이진
-시장 최대 50개를 가져와 스냅샷·지표·변화 감지 결과·수집 상태를 추가하며, AI 관련
-단계는 명시적으로 건너뜁니다.
+현재 GitHub Actions 워크플로에는 자동 실행 일정이 없으며 수동으로만 실행할 수
+있습니다. 실행하면 활성 이진 시장 최대 50개를 가져와 스냅샷·지표·변화 감지
+결과·수집 상태를 추가하며, AI 관련 단계는 명시적으로 건너뜁니다.
 
 ```bash
 ENV=local ./.venv/bin/python -m app.core.scheduled_batch \

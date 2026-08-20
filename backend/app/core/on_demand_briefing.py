@@ -1,6 +1,6 @@
 """TASK-104 cache-backed on-demand v8 briefing service.
 
-The scheduled collector never imports or calls this module. API and approved
+The market-data collector never imports or calls this module. API and approved
 development evaluation paths explicitly enqueue requests; a worker claims an
 append-only lease event and appends one v8 report plus an outcome event.
 """

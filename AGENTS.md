@@ -11,7 +11,7 @@ Harness Version: 1.1
 > In case of conflict, this document takes highest priority.
 > Product-level source of truth lives in [PRD](docs/prd/README.md), [Service Design](docs/service-design/README.md), [Technical Design](docs/tech-design/README.md), [UX Design](docs/ux-design/README.md) — this file governs _how agents work_, those four govern _what the product is_.
 
-_Last updated: 2026-07-13_
+_Last updated: 2026-08-20_
 
 ---
 
@@ -48,7 +48,7 @@ _Last updated: 2026-07-13_
 | Application | React 18 + Vite + TypeScript frontend; FastAPI + Python backend and workers                                                               |
 | Data        | PostgreSQL with append-only market, evidence, report, and scenario records                                                                |
 | Deployment  | Docker Compose and Caddy on the configured VPS                                                                                            |
-| Automation  | GitHub Actions market-data collection every four hours                                                                                    |
+| Automation  | Manual-only GitHub Actions market-data collection; no automatic schedule                                                                   |
 
 ---
 
