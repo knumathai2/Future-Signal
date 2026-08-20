@@ -1,6 +1,6 @@
 # Technical Architecture Design: Outlook AI Signals
 
-_Status: implemented final architecture, 2026-07-13._
+_Status: implemented final architecture, 2026-08-20._
 
 Companion documents: [PRD](../prd/README.md),
 [Service Design](../service-design/README.md), and
@@ -19,7 +19,7 @@ directly.
 Polymarket APIs
       |
       v
-scheduled collector -> PostgreSQL <- FastAPI <- React/Vite
+manual collector -> PostgreSQL <- FastAPI <- React/Vite
                             ^           |
                             |           +-- briefing request
                             |           +-- scenario request
@@ -39,7 +39,7 @@ last-known-good fallbacks.
 | Frontend    | React 18, Vite, TypeScript, Tailwind CSS, Recharts                 | Responsive issue, chart, briefing, and scenario UI                         |
 | Backend     | Python 3.11, FastAPI, Pydantic                                     | Public API and strict request/response validation                          |
 | Persistence | PostgreSQL, SQLAlchemy, psycopg                                    | Append-only market, evidence, report, request, and ephemeral session state |
-| Collection  | Python scheduled batch + GitHub Actions                            | Four-hour public market-data collection                                    |
+| Collection  | Python batch + manually dispatched GitHub Actions                  | On-demand public market-data collection                                    |
 | Generation  | OpenAI-compatible Python SDK with isolated workers                 | Bounded context research, v8 briefing, and tool-free scenario responses    |
 | Streaming   | Server-sent events                                                 | Replay of complete validated briefing and scenario blocks                  |
 | Deployment  | Docker Compose, Caddy, VPS                                         | Isolated Backend/Frontend networks and TLS termination                     |
@@ -52,10 +52,10 @@ financial charting library is included.
 
 ### 3.1 Collection path
 
-The scheduled workflow fetches public Gamma records, normalizes active binary
-issues, writes snapshots, calculates metrics and signals, and records collection
-status. It receives no provider credentials and skips context and briefing
-generation.
+The manually dispatched workflow fetches public Gamma records, normalizes active
+binary issues, writes snapshots, calculates metrics and signals, and records
+collection status. It receives no provider credentials and skips context and
+briefing generation. No automatic collection schedule is configured.
 
 ### 3.2 Read path
 
@@ -88,7 +88,7 @@ Backend uses a separate outbound network for PostgreSQL and provider access.
 ### 3.6 Architectural invariants
 
 - The API process does not call Polymarket or an AI provider.
-- Scheduled collection does not run provider-backed generation.
+- Manual collection does not run provider-backed generation.
 - Missing data and evidence are never fabricated.
 - Raw provider fragments never cross the public boundary.
 - Previous valid reports remain available when a new request fails.

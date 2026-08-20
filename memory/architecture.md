@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Architecture — Outlook AI Signals
 
-_Last updated: 2026-07-13_
+_Last updated: 2026-08-20_
 
 ## System overview
 
@@ -36,9 +36,9 @@ PostgreSQL <-> FastAPI <-> React/Vite
 
 ### Market collection
 
-- `.github/workflows/four-hour-collection.yml` runs at minute 17 every four
-  UTC hours and supports manual dispatch.
-- Scheduled collection receives database configuration only and explicitly skips
+- `.github/workflows/four-hour-collection.yml` supports manual dispatch only;
+  it has no automatic schedule.
+- Manual collection receives database configuration only and explicitly skips
   context research and briefing generation.
 - Gamma records are normalized to active binary issues. Invalid records are
   quarantined without stopping the batch.

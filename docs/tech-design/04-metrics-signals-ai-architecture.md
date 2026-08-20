@@ -32,7 +32,7 @@ _Source: former project-root Technical Design sections 7-10._
 Market collection and briefing generation are separate runtime paths.
 
 ```text
-four-hour workflow
+manually dispatched workflow
   Gamma fetch -> normalize -> snapshots -> metrics -> signals -> collection log
   (no provider client, no context research, no briefing writer)
 

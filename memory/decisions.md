@@ -2552,3 +2552,21 @@ rather than the development process. Maintenance context loads from canonical
 documents only. No runtime, API, schema, dependency, database, provider,
 infrastructure, deployment, production, secret, or product-safety behavior
 changed.
+
+---
+
+### ADR-085: Make market-data collection manual-only
+
+- **Date**: 2026-08-20
+- **Status**: Accepted and implemented in TASK-142
+- **Decided by**: Explicit user approval to stop the four-hour collector
+
+**Decision**: Remove the GitHub Actions `schedule` trigger from
+`.github/workflows/four-hour-collection.yml` and retain `workflow_dispatch`.
+Keep the existing market-data-only batch command and its explicit context and
+briefing-generation skips unchanged.
+
+**Consequences**: After review and merge into the default branch, GitHub Actions
+will no longer start market-data collection automatically. Maintainers can
+still run the workflow manually. No deployment, provider call, database write,
+schema, dependency, public API, secret, or wording-policy change occurred.

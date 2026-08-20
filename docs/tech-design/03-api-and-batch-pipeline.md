@@ -101,10 +101,10 @@ terminal attempts never enter this recovery path.
 
 ## 6. Collection and Worker Pipelines
 
-### 6.1 Scheduled market-data collection
+### 6.1 Manual market-data collection
 
-GitHub Actions runs the collection workflow every four hours at minute 17 UTC.
-The sequential Python batch performs:
+GitHub Actions runs the collection workflow only when manually dispatched; no
+automatic schedule is configured. The sequential Python batch performs:
 
 1. Fetch public Gamma records with bounded pagination and retry.
 2. Normalize active binary issues and quarantine malformed records.

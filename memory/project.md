@@ -7,7 +7,7 @@ Harness Version: 1.1
 
 # Project: Outlook AI Signals
 
-_Last updated: 2026-07-13_
+_Last updated: 2026-08-20_
 
 ## Summary
 
@@ -20,7 +20,7 @@ context as the explanation for an observed movement.
 ## Completion state
 
 Application development is complete. The repository contains the implemented
-Frontend, Backend, workers, database migrations, scheduled collector, production
+Frontend, Backend, workers, database migrations, manual collector, production
 Compose profile, public API contract, product/design documents, and final
 presentation assets. There is no active development queue or planned feature
 roadmap in the working documentation.
@@ -35,7 +35,7 @@ roadmap in the working documentation.
 | Briefing   | V8 issue-centered evidence reconstruction, bounded context refresh, validated NDJSON blocks, cache fingerprints, polling fallback, and last-known-good behavior          |
 | Scenario   | Issue-scoped 24-hour anonymous sessions, bearer-capability ownership, tool-free request workers, strict premise/output validation, authenticated SSE, and owner deletion |
 | Storage    | PostgreSQL migrations 001-006 for market, evidence, report, generation, streaming-block, and ephemeral scenario state                                                    |
-| Automation | Market-data-only GitHub Actions collection every four hours; scheduled collection does not invoke AI generation                                                          |
+| Automation | Manual-only GitHub Actions market-data collection; no automatic schedule; collection does not invoke AI generation                                                       |
 | Deployment | Docker Compose and Caddy configuration for the configured VPS; the production profile explicitly enables generation workers and scenario conversations                   |
 
 ## Permanent boundaries
@@ -68,8 +68,8 @@ roadmap in the working documentation.
   warning.
 - Python 3.11 is the supported local Backend runtime.
 - Invalid enum query values use FastAPI's standard `422` response.
-- The GitHub Actions workflow may emit a non-blocking action-runtime maintenance
-  warning.
+- The manually dispatched GitHub Actions workflow may emit a non-blocking
+  action-runtime maintenance warning.
 
 ## Canonical documentation
 

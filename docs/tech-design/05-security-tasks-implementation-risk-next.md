@@ -54,7 +54,7 @@ _Source: implemented security boundaries and accepted operating risks._
 
 - Existing migrations are immutable; schema changes use a new append-only
   migration.
-- Normal scheduled collection never invokes provider-backed generation.
+- Manual collection never invokes provider-backed generation.
 - Production-data writes, deployment, schema, dependency, infrastructure,
   provider, and wording-policy changes follow `AGENTS.md`.
 - Security, API, and safety behavior changes must update the corresponding

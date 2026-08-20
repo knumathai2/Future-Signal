@@ -171,7 +171,7 @@ def _add_context(db_session):
             policy_version="v7-source-level-1",
             evidence_hash="api-context-hash",
             collected_at=NOW,
-            expires_at=NOW + timedelta(days=30),
+            expires_at=datetime.max.replace(tzinfo=UTC),
         )
     )
     db_session.commit()
